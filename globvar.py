@@ -13,3 +13,8 @@ class Pauli:
     Z = np.array(((1, 0),
                   (0, -1)))
 
+class UnitSystem:
+    pass
+
+class SystemSI(UnitSystem):
+    pass
