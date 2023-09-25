@@ -70,7 +70,8 @@ class TestFourierShift(unittest.TestCase):
         plt.show()
         apertureIFT = 1 / dx * np.fft.ifft(apertureFT)
 
-
+class TestSources(unittest.TestCase):
+    ...
 class TestBox(unittest.TestCase):
     def test_point_sources_initialization(self):
         source1 = PointSource((0, 0, 0), 10)
@@ -108,19 +109,21 @@ class TestBox(unittest.TestCase):
         k = 2 ** 0.5
         k1 = k * np.sin(theta)
         k2 = k * (np.cos(theta) - 1)
-        waves = [Sources.IntensityPlaneWave(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
-                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((k1, 0, k2))),
-                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((-k1, 0, k2))),
-                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, k1, k2))),
-                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, -k1, k2))),
-                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((k1, 0, -k2))),
-                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((-k1, 0, -k2))),
-                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, k1, -k2))),
-                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))]
+        waves = [
+                 # Sources.IntensityPlaneWave(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
+                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
+                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
+                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
+                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
+                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, k2))),
+                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, k2))),
+                 # Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, k1, k2))),
+                 # Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, -k1, k2))),
+                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, -k2))),
+                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, -k2))),
+                 # Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, k1, -k2))),
+                 # Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))
+                ]
         box = Box(waves, 10, 40)
         box.compute_intensity_from_spacial_waves()
         box.plot_intensity_slices()
@@ -160,6 +163,25 @@ class TestParser(unittest.TestCase):
 
 
 class TestAnalyticResults(unittest.TestCase):
+    def test_pattern(self):
+        theta = np.pi / 4
+        b = 1
+        k = 2 ** 0.5
+        k1 = k * np.sin(theta)
+        k2 = k * (np.cos(theta) - 1)
+        x = np.linspace(-5, 4.75, 40)
+        y = np.linspace(-5, 4.75, 40)
+        X, Y = np.meshgrid(x, y)
+        Z = np.exp(1j * k1 * X) + np.exp(-1j * k1 * X)
+        print(Z)
+        fig, ax = plt.subplots()
+        maxValue = min(np.amax(Z), 100.0)
+        print(maxValue)
+        levels = np.linspace(0, maxValue + 1, 30)
+        cf = ax.contourf(X, Y, Z, levels)
+        plt.colorbar(cf)
+        contour_axis = ax
+        plt.show()
     def test_five_waves(self):
         theta = np.pi / 4
         b = 1

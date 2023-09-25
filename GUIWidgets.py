@@ -6,7 +6,6 @@ class SourceWidget(QWidget):
     @abstractmethod
     def __init__(self, source):
         super().__init__()
-        self.init_ui(source)
         self.identifier = 0
 
     @abstractmethod
@@ -53,7 +52,6 @@ class IntensityPlaneWaveWidget(SourceWidget):
 
             self.setLayout(layout)
             # self.isSet.emit(True)
-            self.setLayout(layout)
 
     def on_receive_info(self, info):
         A, phase = [complex(value) for value in info[:2]]
@@ -65,7 +63,7 @@ class IntensityPlaneWaveWidget(SourceWidget):
         self.isSet.emit(True)
 
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('PlaneWave'))
+        layout.addWidget(QLabel('IntensityPlaneWave'))
         layout.addWidget(QLabel('A = ' + str(A)))
         layout.addWidget(QLabel('Phase = ' + str(phase)))
         layout.addWidget(QLabel('Wavevector = ' + str(wavevector)))
