@@ -12,20 +12,22 @@ class FieldHolder:
         self.identifier = identifier
         self.field_type = source.get_source_type()[:-6]
         self.source = source
-        if self.field_type ==  "ElectricField":
+        if self.field_type == "ElectricField":
             self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2]), 3), dtype = np.complex128)
             for i, j, k in [(i, j, k) for i in range(len(grid[0])) for j in range(len(grid[1])) for k in
                             range(len(grid[2]))]:
                 self.field[i, j, k] = self.field[i, j, k] + source.get_electric_field(grid[i, j, k])
+
         elif self.field_type == "Intensity":
-            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2])), dtype = np.float64)
+            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2])), dtype = np.complex128)
             for i, j, k in [(i, j, k) for i in range(len(grid[0])) for j in range(len(grid[1])) for k in
                             range(len(grid[2]))]:
                 self.field[i, j, k] = self.field[i, j, k] + source.get_intensity(grid[i, j, k])
 
 
 class Box:
-    def __init__(self, sources, box_size, point_number):
+    def __init__(self, sources, box_size, point_number, additional_info = None):
+        self.info = additional_info
         self.point_number = point_number
         self.box_size = box_size
         self.fields = []
@@ -46,6 +48,7 @@ class Box:
             self.grid[i, j, k] = self.box_size * (np.array((i, j, k)) / self.point_number - 1 /2)
 
     def compute_electric_field(self):
+        self.electric_field = np.zeros(self.electric_field.shape, dtype=np.complex128)
         for field in self.fields:
             if field.field_type == "ElectricField":
                 self.electric_field += field.field
@@ -55,10 +58,11 @@ class Box:
             self.intensity[i, j, k] = np.vdot(self.electric_field[i, j, k], self.electric_field[i, j, k]).real
 
     def compute_intensity_from_spacial_waves(self):
+        self.intensity = np.zeros(self.intensity.shape)
         for field in self.fields:
             if field.field_type == "Intensity":
-                self.intensity += field.field
-
+                self.intensity = self.intensity + field.field
+        self.intensity = self.intensity.real
     def compute_intensity_fourier_space(self):
         self.intensity_fourier_space = wrappers.wrapped_fftn(self.intensity) * (self.box_size/self.point_number)**3
 
@@ -80,11 +84,12 @@ class Box:
         values = (np.arange(self.point_number) / self.point_number - 1 / 2) * self.box_size
         X, Y = np.meshgrid(values, values)
         Z = array3d[:, :, int(k_init)]
+        print(Z)
         minValue = np.amin(self.intensity)
         maxValue = min(np.amax(self.intensity), 100.0)
         print(maxValue)
-        levels = np.linspace(0, maxValue + 1, 30)
-        cf = ax.contourf(X, Y, Z, levels)
+        levels = np.linspace(minValue, maxValue + 1, 30)
+        cf = ax.contourf(X, Y, Z[:, :], levels)
         plt.colorbar(cf)
         contour_axis = ax
 
