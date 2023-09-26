@@ -107,11 +107,11 @@ class MainWindow(QMainWindow):
         setup_sources_button.clicked.connect(self.compute_and_plot_from_electric_field)
         setup_frequencies_button = QPushButton("Set up from spatial frequencies")
         setup_frequencies_button.clicked.connect(self.compute_and_plot_from_intensity_sources)
-        reset_button = QPushButton("Reset")
-        reset_button.clicked.connect(self.reset_graph)
+        setup_fourier_space_button = QPushButton("Fourier space")
+        setup_fourier_space_button.clicked.connect(self.compute_and_plot_fourier_space)
         self.initialization_layout.addWidget(setup_sources_button, 1)
         self.initialization_layout.addWidget(setup_frequencies_button, 1)
-        self.initialization_layout.addWidget(reset_button, 1)
+        self.initialization_layout.addWidget(setup_fourier_space_button, 1)
 
         # Add sections to the main layout
         self.main_layout.addLayout(self.options_layout, 1)
@@ -144,12 +144,11 @@ class MainWindow(QMainWindow):
                 self.clear_layout(self.sources_layout)
                 parser = ConfigParser()
                 conf = parser.read_configuration(filename)
-                self.box = Box.Box(conf.sources, conf.box_size, conf.point_number, filename)
+                self.box = Box.Box(conf.sources, conf.box_size, conf.point_number, filename + conf.info)
                 for field in self.box.fields:
                     self.add_source(field.source)
-                self.showMinimized()
-                self.showNormal()
-                # self.setWindowState(Qt.WindowMinimized)
+                self.compute_and_plot_from_intensity_sources()
+                self.plot_intensity_slices()
 
             else:
                 # Show an error message for invalid file format
@@ -194,9 +193,60 @@ class MainWindow(QMainWindow):
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
 
+
+    def plot_fourier_space_slices(self):
+        self.canvas.figure.clear()
+        ax = self.canvas.figure.add_subplot(111)
+        intensity = abs(self.box.intensity_fourier_space)
+
+        if not self.slider:
+            self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
+            self.canvas_layout.addWidget(self.slider)
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.box.point_number - 1)
+            k_init = self.box.point_number / 2
+        else:
+            k_init = self.slider.value()
+
+        values = np.linspace(- self.box.point_number / self.box.box_size / 2.,
+                             (self.box.point_number - 1)/ self.box.box_size /2, self.box.point_number) \
+
+        Fx, Fy = np.meshgrid(values, values)
+        Z = intensity[:, :, int(k_init)]
+        minValue = min(np.amin(intensity), 0.0)
+        maxValue = min(np.amax(intensity), 100.0)
+        print(maxValue)
+        levels = np.linspace(minValue, maxValue + 1, 30)
+        cf = ax.contourf(Fx, Fy, Z, levels)
+
+        self.colorbar = self.canvas.figure.colorbar(cf)
+        fz_val = k_init/self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+        ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
+        ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
+        ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
+        if self.box.info:
+            ax.text(np.abs(values[0]), 1.05 * np.abs(values[0]), self.box.info, color='red')
+
+        self.canvas.draw()
+
+        def update(slider_val):
+            ax.clear()
+            fz_val = slider_val / self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+            ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
+            ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
+            ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
+            Z = intensity[:, :, int(slider_val)]
+            ax.contourf(Fx, Fy, Z, levels)
+            if self.box.info:
+                ax.text(np.abs(values[0]), 1.05 * np.abs(values[0]), self.box.info, color='red')
+            self.canvas.draw()
+
+        self.slider.valueChanged.connect(update)
+
     def plot_intensity_slices(self):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
+        intensity = self.box.intensity.real
 
         if not self.slider:
             self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
@@ -209,9 +259,9 @@ class MainWindow(QMainWindow):
 
         values = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size
         X, Y = np.meshgrid(values, values)
-        Z = self.box.intensity[:, :, int(k_init)]
-        minValue = min(np.amin(self.box.intensity.real), 0.0)
-        maxValue = min(np.amax(self.box.intensity.real), 100.0)
+        Z = intensity[:, :, int(k_init)]
+        minValue = min(np.amin(intensity), 0.0)
+        maxValue = min(np.amax(intensity), 100.0)
         print(maxValue)
         levels = np.linspace(minValue, maxValue + 1, 30)
         cf = ax.contourf(X, Y, Z, levels)
@@ -222,14 +272,18 @@ class MainWindow(QMainWindow):
         ax.set_xlabel("X, $\lambda$")
         ax.set_ylabel("Y, $\lambda$")
         if self.box.info:
-            ax.text(1, 1, self.box.info, color = 'red')
+            ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
 
         self.canvas.draw()
 
         def update(slider_val):
+            ax.clear()
             z_val = (slider_val/self.box.point_number - 1/2) * self.box.box_size
-            Z = self.box.intensity[:, :, int(slider_val)]
+            ax.set_title("Intensity, z = {:.2f}".format(z_val))
+            Z = intensity[:, :, int(slider_val)]
             ax.contourf(X, Y, Z, levels)
+            if self.box.info:
+                ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
             self.canvas.draw()
 
 
@@ -241,13 +295,12 @@ class MainWindow(QMainWindow):
         self.plot_intensity_slices()
 
     def compute_and_plot_from_intensity_sources(self):
-        print(self.box.fields)
         self.box.compute_intensity_from_spacial_waves()
         self.plot_intensity_slices()
 
-    def reset_graph(self):
-        self.canvas.figure.clear()
-
+    def compute_and_plot_fourier_space(self):
+        self.box.compute_intensity_fourier_space()
+        self.plot_fourier_space_slices()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
