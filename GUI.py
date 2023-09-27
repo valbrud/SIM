@@ -23,6 +23,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         np.set_printoptions(precision=2, suppress=True)
+
         self.init_ui()
 
         if not box:
@@ -70,8 +71,8 @@ class MainWindow(QMainWindow):
 
         # Left Column (Canvas)
         self.canvas = FigureCanvas(plt.figure())
-        self.canvas_layout.addWidget(self.canvas, 5)
-        self.config_layout.addLayout(self.canvas_layout, 4)
+        self.canvas_layout.addWidget(self.canvas, 8)
+        self.config_layout.addLayout(self.canvas_layout, 8)
 
         # Second Column(Sources)
         scroll_area = QScrollArea(self)
@@ -118,8 +119,7 @@ class MainWindow(QMainWindow):
         self.main_layout.addLayout(self.config_layout, 8)
         self.main_layout.addLayout(self.initialization_layout, 1)
 
-        self.setWindowTitle("PyQt5 Window")
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle("Interference patterns GUI")
 
         self.show()
 
@@ -197,7 +197,9 @@ class MainWindow(QMainWindow):
     def plot_fourier_space_slices(self):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
-        intensity = abs(self.box.intensity_fourier_space)
+        ax.set_aspect('equal')
+
+        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size/self.box.point_number)**3
 
         if not self.slider:
             self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
@@ -221,6 +223,7 @@ class MainWindow(QMainWindow):
 
         self.colorbar = self.canvas.figure.colorbar(cf)
         fz_val = k_init/self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+
         ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
         ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
         ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
@@ -238,7 +241,7 @@ class MainWindow(QMainWindow):
             Z = intensity[:, :, int(slider_val)]
             ax.contourf(Fx, Fy, Z, levels)
             if self.box.info:
-                ax.text(np.abs(values[0]), 1.05 * np.abs(values[0]), self.box.info, color='red')
+                ax.text(np.abs(values[0]*0.9), 1.05 * np.abs(values[0]), self.box.info, color='red')
             self.canvas.draw()
 
         self.slider.valueChanged.connect(update)
@@ -246,6 +249,8 @@ class MainWindow(QMainWindow):
     def plot_intensity_slices(self):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
+        ax.set_aspect('equal')
+
         intensity = self.box.intensity.real
 
         if not self.slider:
