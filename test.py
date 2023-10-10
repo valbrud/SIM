@@ -213,7 +213,7 @@ class TestAnalyticResults(unittest.TestCase):
             ax.clear()
             contour_axis.contourf(X, Y, Z, levels)
 
-        slider_loc = plt.axes([0.2, 0.02, 0.65, 0.03])  # slider location and size
+        slider_loc = plt.axes((0.2, 0.02, 0.65, 0.03))  # slider location and size
         slider = Slider(slider_loc, 'z', 0, 40 - 1)  # slider properties
         slider.on_changed(update)
 

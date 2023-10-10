@@ -84,10 +84,8 @@ class Box:
         values = (np.arange(self.point_number) / self.point_number - 1 / 2) * self.box_size
         X, Y = np.meshgrid(values, values)
         Z = array3d[:, :, int(k_init)]
-        print(Z)
         minValue = np.amin(self.intensity)
         maxValue = min(np.amax(self.intensity), 100.0)
-        print(maxValue)
         levels = np.linspace(minValue, maxValue + 1, 30)
         cf = ax.contourf(X, Y, Z[:, :], levels)
         plt.colorbar(cf)
