@@ -14,7 +14,7 @@ class Pauli:
                   (0, -1)))
 
 class UnitSystem:
-    pass
+    ...
 
 class SystemSI(UnitSystem):
     pass
