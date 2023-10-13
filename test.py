@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 
 import Sources
+import wrappers
 from VectorOperations import VectorOperations
 from Sources import PlaneWave, PointSource
 from Box import Box
@@ -128,21 +129,6 @@ class TestBox(unittest.TestCase):
         box.compute_intensity_from_spacial_waves()
         box.plot_intensity_slices()
 
-    # Change order of parameters in Waves
-    # def test_icos_isin_wave_initialization(self):
-    #     theta = np.pi / 4
-    #     b = 1
-    #     k = 2 ** 0.5
-    #     k1 = k * np.sin(theta)
-    #     k2 = k * (np.cos(theta) - 1)
-    #     waves = [Sources.IntensityCosineWave(np.array((0, 0, 0)), 2 + 4 * b ** 2),
-    #              Sources.IntensityCosineWave(np.array((2 * k1, 0, 0)), -2 * b ** 2),
-    #              Sources.IntensityCosineWave(np.array((0, 2 * k1, 0)), -2 * b ** 2),
-    #              Sources.IntensitySineWave(np.array((0, 0, k2)), 4 * 2 ** 0.5, np.pi/4)]
-    #     box = Box(waves, 10, 40)
-    #     box.compute_intensity_from_spacial_waves()
-    #     box.plot_intensity_slices()
-
     def test_adding_sources(self):
         box = Box({}, box_size=10, point_number=40)
         source1 = PointSource((0, 0, 0), 10)
@@ -152,8 +138,6 @@ class TestBox(unittest.TestCase):
 
 
 class TestParser(unittest.TestCase):
-
-
     def test_configurations_import(self):
         spec = spec_from_loader("example_config.conf",
                                 SourceFileLoader("example_config.conf", "./config/example_config.conf"))
@@ -161,7 +145,37 @@ class TestParser(unittest.TestCase):
         spec.loader.exec_module(conf)
         print(len(conf.sources))
 
+class TestPlottingPercularities(unittest.TestCase):
+    def test_indexing(self):
+        a = np.array([[[0, 1], [10, 11]], [[100, 101], [110, 111]]])
+        print(a[:, :, 0])
+    def test_axis(self):
+        x = np.arange(10)
+        y = np.arange(10)
+        z = np.arange(10)
+        X, Y = np.meshgrid(x, y)
+        Z = np.zeros((10, 10, 10))
+        for i in range(10):
+            Z[:, :, i][X % 2 == 0] = 1
+        print(Z)
+        plt.imshow(Z[:, :, 5])
+        plt.show()
 
+class TestFourierProperties(unittest.TestCase):
+    def test_shift(self):
+        x = np.arange(-10, 10, 0.1)
+        f = np.arange(-100/20, 100/20, 1/20)
+        fx = np.zeros(len(x))
+        fx[abs(x) < 1] = 1
+        fxk = np.fft.fftshift(np.fft.ifft(np.fft.fftshift(fx)))
+
+        fy = fx * np.exp(1j * 2 * np.pi * x)
+        fyk = wrappers.wrapped_ifft(fy)
+        # plt.plot(x)
+        # plt.plot(y.real)
+        plt.plot(f, fxk)
+        plt.plot(f, fyk)
+        plt.show()
 class TestAnalyticResults(unittest.TestCase):
     def test_pattern(self):
         theta = np.pi / 4

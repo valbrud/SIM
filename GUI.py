@@ -193,13 +193,18 @@ class MainWindow(QMainWindow):
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
 
+    def plotting_mode(self, Z,  mode="linear"):
+        if mode == "linear":
+            return Z
+        elif mode == "logarithmic":
+            return np.log10(Z)
+        elif mode == "mixed":
+            return np.log10(1 + Z)
 
-    def plot_fourier_space_slices(self):
+    def plot_fourier_space_slices(self, mode="linear"):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
         ax.set_aspect('equal')
-
-        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size/self.box.point_number)**3
 
         if not self.slider:
             self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
@@ -207,14 +212,18 @@ class MainWindow(QMainWindow):
             self.slider.setMinimum(0)
             self.slider.setMaximum(self.box.point_number - 1)
             k_init = self.box.point_number / 2
-        else:
+        elif self.slider:
             k_init = self.slider.value()
 
-        values = np.linspace(- self.box.point_number / self.box.box_size / 2.,
+        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size/self.box.point_number)**3
+
+        fx = np.linspace(- self.box.point_number / self.box.box_size / 2.,
                              (self.box.point_number - 1)/ self.box.box_size /2, self.box.point_number) \
 
-        Fx, Fy = np.meshgrid(values, values)
-        Z = intensity[:, :, int(k_init)]
+        Fx, Fy = np.meshgrid(fx, fx)
+
+        Z = self.plotting_mode(intensity[:, :, int(k_init)].T, mode)
+
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
         print(maxValue)
@@ -227,8 +236,9 @@ class MainWindow(QMainWindow):
         ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
         ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
         ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
+
         if self.box.info:
-            ax.text(np.abs(values[0]), 1.05 * np.abs(values[0]), self.box.info, color='red')
+            ax.text(np.abs(fx[0]), 1.05 * np.abs(fx[0]), self.box.info, color='red')
 
         self.canvas.draw()
 
@@ -238,10 +248,10 @@ class MainWindow(QMainWindow):
             ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
             ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
             ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
-            Z = intensity[:, :, int(slider_val)]
+            Z = self.plotting_mode(intensity[:, :, int(slider_val)].T, mode)
             ax.contourf(Fx, Fy, Z, levels)
             if self.box.info:
-                ax.text(np.abs(values[0]*0.9), 1.05 * np.abs(values[0]), self.box.info, color='red')
+                ax.text(np.abs(fx[0]*0.9), 1.05 * np.abs(fx[0]), self.box.info, color='red')
             self.canvas.draw()
 
         self.slider.valueChanged.connect(update)
@@ -264,7 +274,7 @@ class MainWindow(QMainWindow):
 
         values = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size
         X, Y = np.meshgrid(values, values)
-        Z = intensity[:, :, int(k_init)]
+        Z = intensity[:, :, int(k_init)].T
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
         print(maxValue)
@@ -285,13 +295,11 @@ class MainWindow(QMainWindow):
             ax.clear()
             z_val = (slider_val/self.box.point_number - 1/2) * self.box.box_size
             ax.set_title("Intensity, z = {:.2f}".format(z_val))
-            Z = intensity[:, :, int(slider_val)]
+            Z = intensity[:, :, int(slider_val)].T
             ax.contourf(X, Y, Z, levels)
             if self.box.info:
                 ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
             self.canvas.draw()
-
-
         self.slider.valueChanged.connect(update)
 
     def compute_and_plot_from_electric_field(self):

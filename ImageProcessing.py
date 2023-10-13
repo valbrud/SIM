@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 import wrappers
-
+import multiprocessing as mp
+import time
+n = 0
 class Lens:
     def __init__(self, alpha = 0.3, regularization_parameter = 0.01):
         self.alpha = alpha
@@ -11,6 +13,9 @@ class Lens:
         self.psf = None
         self.otf = None
         self.otf_frequencies = None
+        self.psf_coordinates = None
+        self.shifted_otfs = {}
+        self.wvdiff_otfs = {}
     def compute_PSF_and_OTF(self, psf_size, N):
 
         dx = psf_size[0]/N
@@ -20,6 +25,8 @@ class Lens:
         x = np.arange(-psf_size[0]/2, psf_size[0]/2, dx)
         y = np.arange(-psf_size[1]/2, psf_size[1]/2, dy)
         z = np.arange(-psf_size[2]/2, psf_size[2]/2, dz)
+
+        self.psf_coordinates = [x, y, z]
 
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / psf_size[0], N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / psf_size[1], N)
@@ -35,6 +42,41 @@ class Lens:
 
         self.psf = psf / np.sum(psf[:, :, int(N/2)])
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf))
+
+    def compute_wvdiff_otfs(self, wv_group1, wv_group2 = None):
+        begin = time.time()
+        if not wv_group2:
+            wv_group2 = np.copy(wv_group1)
+        for wv1 in wv_group1:
+            for wv2 in wv_group2:
+                wvdiff = wv2 - wv1
+                if not tuple(wvdiff) in self.wvdiff_otfs.keys():
+                    x = self.psf_coordinates[0]
+                    y = self.psf_coordinates[1]
+                    z = self.psf_coordinates[2]
+                    psf_phase_shifted = np.zeros((len(x), len(y), len(z)), dtype=np.complex128)
+                    for i, j, k in [(i, j, k) for i in range(len(x)) for j in range(len(y)) for k in range(len(z))]:
+                        c_vector = np.array((x[i], y[j], z[k]))
+                        psf_phase_shifted[i, j, k] = self.psf[i, j, k] * np.exp(1j * np.dot(wvdiff, c_vector))
+                    self.wvdiff_otfs[tuple(wvdiff)] = (
+                        np.abs(wrappers.wrapped_ifftn(psf_phase_shifted)))[int(len(x)/2), int(len(y)/2), int(len(z)/2)]
+        end = time.time()
+        return self.wvdiff_otfs
+    def compute_shifted_otf(self, wavevectors):
+        for wavevector in wavevectors:
+            if np.sum(np.abs(wavevector)) == 0:
+                self.shifted_otfs[tuple(wavevector)] = self.otf
+            else:
+                x = self.psf_coordinates[0]
+                y = self.psf_coordinates[1]
+                z = self.psf_coordinates[2]
+                psf_phase_shifted = np.zeros((len(x), len(y), len(z)), dtype = np.complex128)
+                for i, j, k in [(i, j, k) for i in range(len(x)) for j in range(len(y)) for k in range(len(z))]:
+                    c_vector = np.array((x[i], y[j], z[k]))
+                    psf_phase_shifted[i, j, k] = self.psf[i, j, k] * np.exp(1j * np.dot(wavevector, c_vector))
+                self.shifted_otfs[tuple(wavevector)] = np.abs(wrappers.wrapped_ifftn(psf_phase_shifted))
+        return self.shifted_otfs
+
     def get_otf(self, q_j):
         f_j = q_j / (2 * np.pi)
         f_x = f_j[0]
@@ -57,19 +99,25 @@ class Lens:
         diff_z = f_z - self.otf_frequencies[2][idz]
 
         if self.otf_frequencies[0][idx] < f_x:
-            der_x = (self.otf[idx + 1, idy, idz] - self.otf[idx, idy, idz]) / (self.otf_frequencies[0][idx + 1] - self.otf_frequencies[0][idx])
+            der_x = ((self.otf[idx + 1, idy, idz] - self.otf[idx, idy, idz])
+                     / (self.otf_frequencies[0][idx + 1] - self.otf_frequencies[0][idx]))
         else:
-            der_x = (self.otf[idx, idy, idz] - self.otf[idx - 1, idy, idz]) / (self.otf_frequencies[0][idx] - self.otf_frequencies[0][idx - 1])
+            der_x = ((self.otf[idx, idy, idz] - self.otf[idx - 1, idy, idz])
+                     / (self.otf_frequencies[0][idx] - self.otf_frequencies[0][idx - 1]))
 
         if self.otf_frequencies[0][idy] < f_y:
-            der_y = (self.otf[idx, idy + 1, idz] - self.otf[idx, idy, idz]) / (self.otf_frequencies[0][idy + 1] - self.otf_frequencies[0][idy])
+            der_y = ((self.otf[idx, idy + 1, idz] - self.otf[idx, idy, idz])
+                     / (self.otf_frequencies[0][idy + 1] - self.otf_frequencies[0][idy]))
         else:
-            der_y = (self.otf[idx, idy, idz] - self.otf[idx, idy - 1, idz]) / (self.otf_frequencies[0][idy] - self.otf_frequencies[0][idy - 1])
+            der_y = ((self.otf[idx, idy, idz] - self.otf[idx, idy - 1, idz])
+                     / (self.otf_frequencies[0][idy] - self.otf_frequencies[0][idy - 1]))
 
         if self.otf_frequencies[0][idz] < f_z:
-            der_z = (self.otf[idx, idy, idz + 1] - self.otf[idx, idy, idz]) / (self.otf_frequencies[0][idz + 1] - self.otf_frequencies[0][idz])
+            der_z = ((self.otf[idx, idy, idz + 1] - self.otf[idx, idy, idz])
+                     / (self.otf_frequencies[0][idz + 1] - self.otf_frequencies[0][idz]))
         else:
-            der_z = (self.otf[idx, idy, idz] - self.otf[idx, idy, idz - 1]) / (self.otf_frequencies[0][idz] - self.otf_frequencies[0][idz - 1])
+            der_z = ((self.otf[idx, idy, idz] - self.otf[idx, idy, idz - 1])
+                     / (self.otf_frequencies[0][idz] - self.otf_frequencies[0][idz - 1]))
 
         otf = self.otf[idx, idy, idz] + der_x * diff_x + der_y * diff_y + der_z * diff_z
 
@@ -119,50 +167,58 @@ class Illumination:
         self.M_t = len(self.spacial_shifts)
         self.waves = intensity_plane_waves
 
-class ImageProcessingFunctions:
-    @staticmethod
-    def Dj(q_j, illumination, optical_system):
+class NoiseEstimator:
+    def __init__(self, illumination, optical_system):
+        self.illumination = illumination
+        self.optical_system = optical_system
+    def Dj(self, q_j, indices):
         d_j = 0
         if np.isclose(q_j[2], 0) and np.isclose(q_j[1], 0) and np.abs(q_j[0] - 9) < 1:
             print(q_j[0]/(2 * np.pi))
             ...
-        for m in range(len(illumination.waves)):
-            a_m = illumination.waves[m].amplitude
-            k_m = illumination.waves[m].wavevector
-            d_j += np.abs(a_m)**2 * np.abs(optical_system.get_otf(q_j - k_m))**2
-        d_j *= illumination.M_t
+        for m in range(len(self.illumination.waves)):
+            a_m = self.illumination.waves[m].amplitude
+            k_m = self.illumination.waves[m].wavevector
+            if not indices:
+                d_j += np.abs(a_m)**2 * np.abs(self.optical_system.get_otf(q_j - k_m))**2
+            else:
+                d_j += np.abs(a_m)**2 * np.abs(self.optical_system.shifted_otfs[tuple(k_m)][indices])**2
+        d_j *= self.illumination.M_t
         return d_j
 
-    @staticmethod
-    def Vj(q_j, illumination, optical_system):
+    def Vj(self, q_j, indices):
         v_j = 0
-        for m1 in range(len(illumination.waves)):
-            for m2 in range(len(illumination.waves)):
-                a_m1 = illumination.waves[m1].amplitude
-                a_m2 = illumination.waves[m2].amplitude
-                a_m12 = illumination.waves[m1 - m2].amplitude
-                k_m1 = illumination.waves[m1].wavevector
-                k_m2 = illumination.waves[m2].wavevector
+        for m1 in range(len(self.illumination.waves)):
+            for m2 in range(len(self.illumination.waves)):
+                a_m1 = self.illumination.waves[m1].amplitude
+                a_m2 = self.illumination.waves[m2].amplitude
+                a_m12 = self.illumination.waves[m1 - m2].amplitude
+                k_m1 = self.illumination.waves[m1].wavevector
+                k_m2 = self.illumination.waves[m2].wavevector
+                if indices:
+                    otf1 = self.optical_system.shifted_otfs[tuple(k_m1)][indices]
+                    otf2 = self.optical_system.shifted_otfs[tuple(k_m2)][indices]
+                    otf3 = self.optical_system.wvdiff_otfs[tuple(k_m2 - k_m1)]
+                else:
+                    otf1 = self.optical_system.get_otf(q_j - k_m1)
+                    if otf1 == 0:
+                        continue
+                    otf2 = self.optical_system.get_otf(q_j - k_m2)
+                    if otf2 == 0:
+                        continue
+                    otf3 = self.optical_system.get_otf(k_m2 - k_m1)
+                    if otf3 == 0:
+                        continue
 
-                otf1 = optical_system.get_otf(q_j - k_m1)
-                if otf1 == 0:
-                    continue
-                otf2 = optical_system.get_otf(q_j - k_m2)
-                if otf2 == 0:
-                    continue
-                otf3 = optical_system.get_otf(k_m2 - k_m1)
-                if otf3 == 0:
-                    continue
                 v_j += a_m1 * a_m2.conjugate() * a_m12 * otf1.conjugate() * otf2 * otf3
-        v_j *= illumination.M_t
+        v_j *= self.illumination.M_t
         return v_j
 
-    @staticmethod
-    def SSNR(q_j, illumination, optical_system):
-        dj = ImageProcessingFunctions.Dj(q_j, illumination, optical_system)
+    def SSNR(self,q_j, indices = None):
+        dj = self.Dj(q_j, indices)
         if dj == 0:
             return 0
-        vj = ImageProcessingFunctions.Vj(q_j, illumination, optical_system)
+        vj = self.Vj(q_j, indices)
         if vj == 0:
             return 0
         ssnr = np.abs(dj)**2 / vj
