@@ -83,7 +83,7 @@ class Box:
             fig, ax = plt.subplots()
         values = (np.arange(self.point_number) / self.point_number - 1 / 2) * self.box_size
         X, Y = np.meshgrid(values, values)
-        Z = array3d[:, :, int(k_init)]
+        Z = array3d[:, :, int(k_init)].T
         minValue = np.amin(self.intensity)
         maxValue = min(np.amax(self.intensity), 100.0)
         levels = np.linspace(minValue, maxValue + 1, 30)
@@ -94,7 +94,7 @@ class Box:
         if slider is None or type(slider) == Slider:
             def update(val):
                 contour_axis.clear()
-                Z = array3d[:, :, int(val)]
+                Z = array3d[:, :, int(val)].T
                 ax.clear()
                 contour_axis.contourf(X, Y, Z, levels)
 
