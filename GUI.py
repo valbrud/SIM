@@ -1,25 +1,19 @@
-# main_window.py
 import sys
 import os
 import numpy as np
-
 import Box
 import Sources
 import GUIWidgets
-import time
-
-os.path.dirname(os.path.abspath(__file__))
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-                             QComboBox, QFileDialog, QLabel, QSlider, QScrollArea)
+from input_parser import ConfigParser
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-
-from parser import ConfigParser
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+                             QComboBox, QFileDialog, QLabel, QSlider, QScrollArea)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, box = None):
+    def __init__(self, box=None):
         super().__init__()
 
         np.set_printoptions(precision=2, suppress=True)
@@ -60,8 +54,7 @@ class MainWindow(QMainWindow):
         self.load_button = QPushButton("Load Config")
         self.load_button.clicked.connect(self.load_config)
 
-
-        self.options_layout.addWidget(self.options_label,1)
+        self.options_layout.addWidget(self.options_label, 1)
         self.options_layout.addWidget(self.load_button, 1)
         self.options_layout.addStretch(5)
 
@@ -102,7 +95,7 @@ class MainWindow(QMainWindow):
         self.source_buttons_layout.addWidget(add_spacial_frequency_button)
         self.source_buttons_layout.addStretch()
 
-        #Initialization layout
+        # Initialization layout
         self.initialization_layout = QHBoxLayout()
         setup_sources_button = QPushButton("Set up from sources")
         setup_sources_button.clicked.connect(self.compute_and_plot_from_electric_field)
@@ -193,7 +186,7 @@ class MainWindow(QMainWindow):
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
 
-    def plotting_mode(self, Z,  mode="linear"):
+    def plotting_mode(self, Z, mode="linear"):
         if mode == "linear":
             return Z
         elif mode == "logarithmic":
@@ -215,10 +208,10 @@ class MainWindow(QMainWindow):
         elif self.slider:
             k_init = self.slider.value()
 
-        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size/self.box.point_number)**3
+        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size / self.box.point_number) ** 3
 
         fx = np.linspace(- self.box.point_number / self.box.box_size / 2.,
-                             (self.box.point_number - 1)/ self.box.box_size /2, self.box.point_number) \
+                         (self.box.point_number - 1) / self.box.box_size / 2, self.box.point_number)
 
         Fx, Fy = np.meshgrid(fx, fx)
 
@@ -231,7 +224,7 @@ class MainWindow(QMainWindow):
         cf = ax.contourf(Fx, Fy, Z, levels)
 
         self.colorbar = self.canvas.figure.colorbar(cf)
-        fz_val = k_init/self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+        fz_val = k_init / self.box.box_size - self.box.point_number / (2 * self.box.box_size)
 
         ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
         ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
@@ -251,7 +244,7 @@ class MainWindow(QMainWindow):
             Z = self.plotting_mode(intensity[:, :, int(slider_val)].T, mode)
             ax.contourf(Fx, Fy, Z, levels)
             if self.box.info:
-                ax.text(np.abs(fx[0]*0.9), 1.05 * np.abs(fx[0]), self.box.info, color='red')
+                ax.text(np.abs(fx[0] * 0.9), 1.05 * np.abs(fx[0]), self.box.info, color='red')
             self.canvas.draw()
 
         self.slider.valueChanged.connect(update)
@@ -268,7 +261,7 @@ class MainWindow(QMainWindow):
             self.canvas_layout.addWidget(self.slider)
             self.slider.setMinimum(0)
             self.slider.setMaximum(self.box.point_number - 1)
-            k_init = self.box.point_number/2
+            k_init = self.box.point_number / 2
         else:
             k_init = self.slider.value()
 
@@ -293,13 +286,14 @@ class MainWindow(QMainWindow):
 
         def update(slider_val):
             ax.clear()
-            z_val = (slider_val/self.box.point_number - 1/2) * self.box.box_size
+            z_val = (slider_val / self.box.point_number - 1 / 2) * self.box.box_size
             ax.set_title("Intensity, z = {:.2f}".format(z_val))
             Z = intensity[:, :, int(slider_val)].T
             ax.contourf(X, Y, Z, levels)
             if self.box.info:
                 ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
             self.canvas.draw()
+
         self.slider.valueChanged.connect(update)
 
     def compute_and_plot_from_electric_field(self):
@@ -314,6 +308,7 @@ class MainWindow(QMainWindow):
     def compute_and_plot_fourier_space(self):
         self.box.compute_intensity_fourier_space()
         self.plot_fourier_space_slices()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

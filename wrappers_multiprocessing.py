@@ -1,11 +1,22 @@
-import ImageProcessing
 import numpy as np
-import time
-def SSNR_multiprocesssing(i, f, noise_estimator):
-    SSNR = np.zeros((len(f[1]), len(f[2])))
-    for j in range(len(f[1])):
-        for k in range(len(f[2])):
-            ft = np.array((f[0][i], f[1][j], f[2][k]))
-            q = ft * 2 * np.pi
-            SSNR[j, k] = np.abs(noise_estimator.SSNR(q, (i, j, k)))
-    return (i, SSNR)
+import multiprocessing as mp
+
+
+def SSNR_inner_cycle(i, q_axes, noise_estimator):
+    q_axes_yz = (q_axes[0][i], q_axes[1], q_axes[2])
+    SSNRpart = np.abs(noise_estimator.SSNR(q_axes_yz))
+    return i, SSNRpart
+
+
+def get_SSNR_multi(noise_estimator, q_axes):
+    pool = mp.Pool(mp.cpu_count())
+    SSNR = np.zeros((len(q_axes[0]), len(q_axes[1]), len(q_axes[2])))
+    SSNR_enum = [pool.apply_async(SSNR_inner_cycle, args=(i, q_axes, noise_estimator)) for i in range(len(q_axes[0]))]
+    pool.close()
+    pool.join()
+
+    for i in range(len(q_axes[0])):
+        j, SSNRj = SSNR_enum[i].get()
+        SSNR[j] = SSNRj
+
+    return SSNR

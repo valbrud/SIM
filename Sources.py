@@ -2,8 +2,6 @@ import numpy as np
 import cmath
 from abc import abstractmethod
 
-# Any source of electric field generates electric field in the whole space.
-# So I create an interface with a method get_electric_field(coordinates), which is inherited by all sources.
 
 class Source:
     @abstractmethod
@@ -13,7 +11,7 @@ class Source:
 class ElectricFieldSource(Source):
 
     def get_source_type(self):
-        return "ElectricFieldSource"
+        return "ElectricField"
 
     @abstractmethod
     def get_electric_field(self, coordinates): ...
@@ -21,7 +19,7 @@ class ElectricFieldSource(Source):
 
 class IntensitySource(Source):
     def get_source_type(self):
-        return "IntensitySource"
+        return "Intensity"
 
     @abstractmethod
     def get_intensity(self, coordinates): ...
@@ -38,20 +36,13 @@ class PlaneWave(ElectricFieldSource):
         self.field_vectors = [Ep, Es]
         self.phases = [phase1, phase2]
 
-        ####################################################################################################
-        # Previously used for X-Y polarization
-        # zvector = np.array((0, 0, 1))
-        # rot_vector = np.cross(zvector, wavevector)
-        # rot_angle = np.arccos(np.dot(zvector, wavevector)/np.linalg.norm(wavevector))
-        # E1 = VectorOperations.rotate_vector3d(np.array((electric_field_x, 0, 0)), rot_vector, rot_angle)
-        # E2 = VectorOperations.rotate_vector3d(np.array((0, electric_field_y, 0)), rot_vector, rot_angle)
-        ####################################################################################################
-
     def get_electric_field(self, coordinates):
-        electric_field = np.zeros(3)
+        shape = list(coordinates.shape)
+        electric_field = np.zeros(shape, dtype=np.complex128)
         for p in [0, 1]:
-            electric_field = electric_field + self.field_vectors[p] * np.exp(1j * (self.wavevector.dot(
-                np.array(coordinates)) + self.phases[p]))
+            electric_field += self.field_vectors[p] * np.exp(
+                1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
+                      + self.phases[p]))[:, :, :, None]
         return electric_field
 
 
@@ -60,21 +51,15 @@ class PointSource(ElectricFieldSource):
         self.coordinates = np.array(coordinates)
         self.brightness = brightness
 
-    def get_source_type(self):
-        return "PointSource"
-
     def get_electric_field(self, coordinates):
-        rvector = np.array(coordinates - self.coordinates)
+        rvectors = np.array(coordinates - self.coordinates)
+        rnorms = np.einsum('ijkl, ijkl->ijk', rvectors, rvectors) ** 0.5
         upper_limit = 1000
-        if np.linalg.norm(rvector) == 0:
-            return np.array((1, 1, 1)) * upper_limit * np.sign(self.brightness)
-        electric_field = self.brightness / (np.linalg.norm(rvector) ** 3) * rvector
-
-        if (np.abs(electric_field) > upper_limit).any():
-            pass
-        electric_field[np.abs(electric_field) > upper_limit] = (upper_limit * np.sign(self.brightness))
-        if len(electric_field) > 3:
-            pass
+        electric_field = np.zeros(coordinates.shape)
+        electric_field[rnorms == 0] = np.array((1, 1, 1)) * upper_limit * np.sign(self.brightness)
+        electric_field[rnorms != 0] = self.brightness / (rnorms[rnorms > 0] ** 3)[:, None] * rvectors[rnorms != 0]
+        electric_field_norms = np.einsum('ijkl, ijkl->ijk', electric_field, electric_field.conjugate()).real ** 0.5
+        electric_field[electric_field_norms > upper_limit] = (upper_limit * np.sign(self.brightness))
         return electric_field
 
 
@@ -85,7 +70,9 @@ class IntensityPlaneWave(IntensitySource):
         self.phase = phase
 
     def get_intensity(self, coordinates):
-        return self.amplitude * np.exp(1j * np.dot(self.wavevector, coordinates) + self.phase)
+        inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
+                                                 + self.phase))
+        return inensity
 
 
 class IntensityCosineWave(IntensitySource):
@@ -95,7 +82,9 @@ class IntensityCosineWave(IntensitySource):
         self.phase = phase
 
     def get_intensity(self, coordinates):
-        return self.amplitude * np.cos(np.dot(self.wavevector, coordinates) + self.phase)
+        inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
+                                                 + self.phase))
+        return inensity
 
 
 class IntensitySineWave(IntensitySource):
@@ -105,4 +94,6 @@ class IntensitySineWave(IntensitySource):
         self.phase = phase
 
     def get_intensity(self, coordinates):
-        return self.amplitude * np.sin(np.dot(self.wavevector, coordinates) + self.phase)
+        inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
+                                                 + self.phase))
+        return inensity
