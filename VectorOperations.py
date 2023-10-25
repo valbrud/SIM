@@ -1,6 +1,7 @@
 import numpy as np
 import globvar
 import cmath
+import cupy
 
 class VectorOperations:
     @staticmethod
