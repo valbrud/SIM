@@ -15,7 +15,8 @@ from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
-from parser import ConfigParser
+from input_parser import ConfigParser
+# from parser import ConfigParser
 
 
 class MainWindow(QMainWindow):

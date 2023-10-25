@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from importlib.util import spec_from_loader, module_from_spec
 from importlib.machinery import SourceFileLoader
+import multiprocessing as mp
 # import parser
 
 class TestRotations(unittest.TestCase):
@@ -79,7 +80,6 @@ class TestBox(unittest.TestCase):
         source2 = PointSource((0, 2, 0), 5)
         source3 = PointSource((0, -2, 0), 5)
         sources = [source1, source2, source3]
-        sources = {"PointSources": sources}
         box = Box(sources, 10, 40)
         box.compute_electric_field()
         box.compute_intensity_from_electric_field()
@@ -111,19 +111,19 @@ class TestBox(unittest.TestCase):
         k1 = k * np.sin(theta)
         k2 = k * (np.cos(theta) - 1)
         waves = [
-                 # Sources.IntensityPlaneWave(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
-                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
-                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
-                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
-                 # Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
+                 Sources.IntensityPlaneWave(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
+                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
+                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
+                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
+                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
                  Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, k2))),
                  Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, k2))),
-                 # Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, k1, k2))),
-                 # Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, -k1, k2))),
+                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, k1, k2))),
+                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, -k1, k2))),
                  Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, -k2))),
                  Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, -k2))),
-                 # Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, k1, -k2))),
-                 # Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))
+                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, k1, -k2))),
+                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))
                 ]
         box = Box(waves, 10, 40)
         box.compute_intensity_from_spacial_waves()
@@ -149,6 +149,7 @@ class TestPlottingPercularities(unittest.TestCase):
     def test_indexing(self):
         a = np.array([[[0, 1], [10, 11]], [[100, 101], [110, 111]]])
         print(a[:, :, 0])
+
     def test_axis(self):
         x = np.arange(10)
         y = np.arange(10)
@@ -160,6 +161,24 @@ class TestPlottingPercularities(unittest.TestCase):
         print(Z)
         plt.imshow(Z[:, :, 5])
         plt.show()
+
+class TestNumpyFeatures(unittest.TestCase):
+    def test_meshgrid(self):
+        x = np.linspace(1, 2, 2)
+        y = np.copy(x)
+        z = np.copy(x)
+        unordered = np.array(np.meshgrid(x, y, z))
+        combinations = np.array(np.meshgrid(x, y, z)).T.reshape(-1,3)
+        sorted = combinations[np.lexsort((combinations[:, 2], combinations[:, 1], combinations[:, 0]))]
+        vector = np.array((1, 0, -1))
+        print(sorted)
+        print(np.dot(sorted, vector))
+
+    def test_array_indexing(self):
+        a = np.array([[2, 3, 4], [5, 6, 7]])
+        b = np.array([[2], [5]])
+        print(a / b)
+
 
 class TestFourierProperties(unittest.TestCase):
     def test_shift(self):
@@ -176,6 +195,7 @@ class TestFourierProperties(unittest.TestCase):
         plt.plot(f, fxk)
         plt.plot(f, fyk)
         plt.show()
+
 class TestAnalyticResults(unittest.TestCase):
     def test_pattern(self):
         theta = np.pi / 4
@@ -196,6 +216,7 @@ class TestAnalyticResults(unittest.TestCase):
         plt.colorbar(cf)
         contour_axis = ax
         plt.show()
+
     def test_five_waves(self):
         theta = np.pi / 4
         b = 1
