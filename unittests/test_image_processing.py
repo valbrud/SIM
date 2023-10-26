@@ -1,4 +1,3 @@
-import numba
 import numpy as np
 import Sources
 import ImageProcessing
@@ -10,6 +9,56 @@ import time
 import scipy as sp
 from matplotlib.widgets import Slider
 import tqdm
+
+theta = np.pi / 4
+b = 1
+k = 2 * np.pi
+k1 = k * np.sin(theta)
+k2 = k * (np.cos(theta) - 1)
+
+Mt = 4
+a0 = (1 + 2 * b ** 2)
+s_polarized_waves = [
+    Sources.IntensityPlaneWave((1 + 2 * b ** 2) / (Mt * a0), 0, np.array((0, 0, 0))),
+    Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((-2 * k1, 0, 0))),
+    Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((2 * k1, 0, 0))),
+    Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((0, 2 * k1, 0))),
+    Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((0, -2 * k1, 0))),
+    Sources.IntensityPlaneWave((-1j * b / 2) / (Mt * a0), 0, np.array((k1, 0, k2))),
+    Sources.IntensityPlaneWave((1j * b / 2) / (Mt * a0), 0, np.array((-k1, 0, k2))),
+    Sources.IntensityPlaneWave((-1 * b / 2) / (Mt * a0), 0, np.array((0, k1, k2))),
+    Sources.IntensityPlaneWave((1 * b / 2) / (Mt * a0), 0, np.array((0, -k1, k2))),
+    Sources.IntensityPlaneWave((-1j * b / 2) / (Mt * a0), 0, np.array((k1, 0, -k2))),
+    Sources.IntensityPlaneWave((1j * b / 2) / (Mt * a0), 0, np.array((-k1, 0, -k2))),
+    Sources.IntensityPlaneWave((1 * b / 2) / (Mt * a0), 0, np.array((0, k1, -k2))),
+    Sources.IntensityPlaneWave((-1 * b / 2) / (Mt * a0), 0, np.array((0, -k1, -k2)))
+]
+
+Mt = 32
+a0 = (2 + 8 * b ** 2)
+circular_intensity_waves = [
+    Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((k1, k1, 0))),
+    Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((-k1, k1, 0))),
+    Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((k1, -k1, 0))),
+    Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((-k1, -k1, 0))),
+
+    Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((0, 2 * k1, 0))),
+    Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((0, -2 * k1, 0))),
+    Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((2 * k1, 0, 0))),
+    Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((-2 * k1, 0, 0))),
+
+    Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((k1, 0, -k2))),
+    Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((-k1, 0, k2))),
+    Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((k1, 0, k2))),
+    Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((-k1, 0, -k2))),
+
+    Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, k1, -k2))),
+    Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, k1, k2))),
+    Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, -k1, k2))),
+    Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, -k1, -k2))),
+
+    Sources.IntensityPlaneWave(a0 / (Mt * a0), 0, np.array((0, 0, 0)))
+]
 
 
 class TestOpticalSystems(unittest.TestCase):
@@ -285,7 +334,7 @@ class TestOpticalSystems(unittest.TestCase):
         # ax_otf_z = fig.add_subplot(223)
 
         # FS, FZ = np.meshgrid(fx, fz)
-        # ax_otf_z.plot(fz, otf[int(N/2), int(N/2), :])
+        # ax_otf_z.plot(fz, otf[N//2, N//2, :])
         def update_psf(val):
             ax_psf.clear()
             ax_psf.set_xlabel("x")
@@ -398,9 +447,9 @@ class TestOpticalSystems(unittest.TestCase):
         plt.show()
 
     def test_SSNR(self):
-        max_r = 2.5
-        max_z = 2.5
-        N = 50
+        max_r = 10
+        max_z = 10
+        N = 100
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -412,28 +461,7 @@ class TestOpticalSystems(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
 
-        theta = np.pi / 4
-        b = 1
-        k = 2 * np.pi
-        k1 = k * np.sin(theta)
-        k2 = k * (np.cos(theta) - 1)
-        Mt = 4
-        a0 = (1 + 2 * b ** 2)
-        waves = [
-            Sources.IntensityPlaneWave((1 + 2 * b ** 2) / (Mt * a0), 0, np.array((0, 0, 0))),
-            Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((-2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave((-b ** 2 / 2) / (Mt * a0), 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave((-b ** 2 / 2)/(Mt * a0), 0, np.array((0, 2 * k1, 0))),
-            Sources.IntensityPlaneWave((-b ** 2 / 2)/(Mt * a0), 0, np.array((0, -2 * k1, 0))),
-            Sources.IntensityPlaneWave((-1j * b / 2)/(Mt * a0), 0, np.array((k1, 0, k2))),
-            Sources.IntensityPlaneWave((1j * b / 2)/(Mt * a0), 0, np.array((-k1, 0, k2))),
-            Sources.IntensityPlaneWave((-1 * b / 2)/(Mt * a0), 0, np.array((0, k1, k2))),
-            Sources.IntensityPlaneWave((1 * b / 2)/(Mt * a0), 0, np.array((0, -k1, k2))),
-            Sources.IntensityPlaneWave((-1j * b / 2)/(Mt * a0), 0, np.array((k1, 0, -k2))),
-            Sources.IntensityPlaneWave((1j * b / 2)/(Mt * a0), 0, np.array((-k1, 0, -k2))),
-            Sources.IntensityPlaneWave((1 * b / 2)/(Mt * a0), 0, np.array((0, k1, -k2))),
-            Sources.IntensityPlaneWave((-1 * b / 2)/(Mt * a0), 0, np.array((0, -k1, -k2)))
-        ]
+        waves = s_polarized_waves
 
         base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
         base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
@@ -442,16 +470,19 @@ class TestOpticalSystems(unittest.TestCase):
         for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
             spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
 
-        IlluminationPolarized = ImageProcessing.Illumination(waves, spacial_shifts)
+        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
         optical_system = ImageProcessing.Lens()
         optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
 
-        SSNR = np.zeros((N, N, N))
-        for i, j, k in tqdm.tqdm([(i, j, k) for i in range(len(fx)) for j in range(len(fy)) for k in range(len(fz))]):
-            f = np.array((fx[i], fy[j], fz[k]))
-            q = f * 2 * np.pi
-            SSNR[i, j, k] = np.abs(
-                ImageProcessing.ImageProcessingFunctions.SSNR(q, IlluminationPolarized, optical_system))
+        wavevectors=[]
+        for spacial_wave in illumination_polarized.waves:
+            wavevectors.append(spacial_wave.wavevector)
+        optical_system.compute_shifted_otf(wavevectors)
+        optical_system.compute_wvdiff_otfs(wavevectors)
+
+        noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
+        SSNR = np.abs(noise_estimator.SSNR(2 * np.pi * np.array((fx, fy, fz))))
+
 
         fig = plt.figure()
         ax = fig.add_subplot(121, projection='3d')
@@ -488,9 +519,9 @@ class TestOpticalSystems(unittest.TestCase):
         plt.show()
 
     def test_SSNR_interpolations(self):
-        max_r = 3
-        max_z = 3
-        N = 50
+        max_r = 10
+        max_z = 10
+        N = 30
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -502,36 +533,7 @@ class TestOpticalSystems(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
 
-        theta = np.pi / 4
-        b = 1
-        k = 2 * np.pi
-        k1 = k * np.sin(theta)
-        k2 = k * (np.cos(theta) - 1)
-        Mt = 32
-        a0 = (2 + 8 * b ** 2)
-        waves = [
-            Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((k1, k1, 0))),
-            Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((-k1, k1, 0))),
-            Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((k1, -k1, 0))),
-            Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt * a0), 0, np.array((-k1, -k1, 0))),
-
-            Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((0, 2 * k1, 0))),
-            Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((0, -2 * k1, 0))),
-            Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt * a0), 0, np.array((-2 * k1, 0, 0))),
-
-            Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((k1, 0, -k2))),
-            Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((-k1, 0, k2))),
-            Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((k1, 0, k2))),
-            Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((-k1, 0, -k2))),
-
-            Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, k1, -k2))),
-            Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, k1, k2))),
-            Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, -k1, k2))),
-            Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt * a0), 0, np.array((0, -k1, -k2))),
-
-            Sources.IntensityPlaneWave(a0 / (Mt * a0), 0, np.array((0, 0, 0)))
-        ]
+        waves = s_polarized_waves
 
         base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
         base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
@@ -557,11 +559,11 @@ class TestOpticalSystems(unittest.TestCase):
         end_shifted = time.time()
         print(end_shifted - begin_shifted)
 
-        begin_interpolation = time.time()
-        SSNR_I = np.zeros((N, N, N))
-        SSNR_I = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
-        end_interpolation = time.time()
-        print(end_interpolation - begin_interpolation)
+        # begin_interpolation = time.time()
+        # SSNR_I = np.zeros((N, N, N))
+        # SSNR_I = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        # end_interpolation = time.time()
+        # print(end_interpolation - begin_interpolation)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure()
@@ -575,8 +577,105 @@ class TestOpticalSystems(unittest.TestCase):
         ax2 = fig.add_subplot(122)
         mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]))
         cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
-        mp2 = ax2.imshow(np.log10(SSNR_I[:, :, int(N / 2)]))
-        cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
+        # mp2 = ax2.imshow(np.log10(SSNR_I[:, :, int(N / 2)]))
+        # cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
+
+        def update1(val):
+            ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+            ax1.set_xlabel("fx, $\lambda^{-1}$")
+            ax1.set_ylabel("fy, $\lambda^{-1}$")
+            Z = (np.log10(SSNR[:, :, int(val)]))
+            mp1.set_data(Z)
+            mp1.set_clim(vmin=Z.min(), vmax=Z.max())
+            plt.draw()
+            print(np.amax(SSNR[:, :, int(val)]))
+
+        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        slider_ssnr.on_changed(update1)
+
+        # def update2(val):
+        #     ax2.set_title("SSNR_I, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+        #     ax2.set_xlabel("fx, $\lambda^{-1}$")
+        #     ax2.set_ylabel("fy, $\lambda^{-1}$")
+        #     print(int(val))
+        #     Z = (np.log10(SSNR_I[:, :, int(val)]))
+        #     mp2.set_data(Z)
+        #     min = Z.min()
+        #     max = Z.max()
+        #     mp2.set_clim(vmin=min, vmax=max)
+        #     # plt.draw()
+        #     print(np.amax(np.abs(SSNR[:, :, int(val)])))
+        #
+        # slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
+        # slider_ssnri = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        # slider_ssnri.on_changed(update2)
+
+        plt.show()
+
+    def test_SSNR_ring_averages(self):
+        max_r = 10
+        max_z = 10
+        N = 100
+        dx = 2 * max_r / N
+        dy = 2 * max_r / N
+        dz = 2 * max_z / N
+        x = np.arange(-max_r, max_r, dx)
+        y = np.copy(x)
+        z = np.arange(-max_z, max_z, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
+
+        waves = s_polarized_waves
+
+        base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
+        base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
+        base_vector_z_shift = np.array((0, 0, 1 / (2 * (1 - np.cos(theta)))))
+        spacial_shifts = np.zeros((4, 4, 2, 3))
+        for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
+            spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
+
+        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
+        optical_system = ImageProcessing.Lens()
+        noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
+
+        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
+        wavevectors = []
+        for spacial_wave in illumination_polarized.waves:
+            wavevectors.append(spacial_wave.wavevector)
+        optical_system.compute_shifted_otf(wavevectors)
+        optical_system.compute_wvdiff_otfs(wavevectors)
+
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Fourier"))
+        SSNR_ring_averaged = noise_estimator.ring_average_SSNR(q_axes, SSNR)
+        print(SSNR_ring_averaged.shape)
+
+        Fx, Fy = np.meshgrid(fx, fy)
+        fig = plt.figure()
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.4)
+        ax1 = fig.add_subplot(121)
+        ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
+        ax1.set_xlabel("fx, $\lambda^{-1}$")
+        ax1.set_ylabel("fy, $\lambda^{-1}$")
+        ax2 = fig.add_subplot(122)
+        ax2.set_title("Ring averaged, fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
+        ax2.set_xlabel("fx, $\lambda^{-1}$")
+        ax2.set_ylabel("fy, $\lambda^{-1}$")
+        ax2.set_yscale("log")
+
+        mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]))
+        cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
+        ax2.plot(q_axes[2][q_axes[2] >= 0], np.log10(SSNR_ring_averaged[:, N//2]))
+        ax2.set_aspect(1. / ax2.get_data_ratio())
+
 
         def update1(val):
             ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
@@ -593,24 +692,114 @@ class TestOpticalSystems(unittest.TestCase):
         slider_ssnr.on_changed(update1)
 
         def update2(val):
-            ax2.set_title("SSNR_I, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+            ax2.clear()
+            ax2.set_title("Ring averaged, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
             ax2.set_xlabel("fx, $\lambda^{-1}$")
-            ax2.set_ylabel("fy, $\lambda^{-1}$")
-            print(int(val))
-            Z = (np.log10(SSNR_I[:, :, int(val)]))
-            mp2.set_data(Z)
-            min = Z.min()
-            max = Z.max()
-            mp2.set_clim(vmin=min, vmax=max)
-            # plt.draw()
-            print(np.amax(np.abs(SSNR[:, :, int(val)])))
+            ax2.set_ylabel("SSNR, $\lambda^{-1}$")
+            ssnr_r_sliced = (SSNR_ring_averaged[:, int(val)])
+            ax2.plot(q_axes[2][q_axes[2] >= 0], ssnr_r_sliced)
+            ax2.set_yscale("log")
+            ax2.set_aspect(1. / ax2.get_data_ratio())
 
         slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ssnri = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        slider_ssnri.on_changed(update2)
+        slider_ra = Slider(slider_loc, 'fz', 0, len(SSNR_ring_averaged[0]))  # slider properties
+        slider_ra.on_changed(update2)
 
         plt.show()
 
+    def test_SSNR_projections(self):
+        max_r = 10
+        max_z = 10
+        N = 100
+        dx = 2 * max_r / N
+        dy = 2 * max_r / N
+        dz = 2 * max_z / N
+        x = np.arange(-max_r, max_r, dx)
+        y = np.copy(x)
+        z = np.arange(-max_z, max_z, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
+
+        waves = circular_intensity_waves
+
+        base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
+        base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
+        base_vector_z_shift = np.array((0, 0, 1 / (2 * (1 - np.cos(theta)))))
+        spacial_shifts = np.zeros((4, 4, 2, 3))
+        for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
+            spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
+
+        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
+        optical_system = ImageProcessing.Lens()
+        noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
+
+        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
+        wavevectors = []
+        for spacial_wave in illumination_polarized.waves:
+            wavevectors.append(spacial_wave.wavevector)
+        optical_system.compute_shifted_otf(wavevectors)
+        optical_system.compute_wvdiff_otfs(wavevectors)
+
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Fourier"))
+
+        Fx, Fy = np.meshgrid(fx, fy)
+        fig = plt.figure()
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.4)
+        ax1 = fig.add_subplot(121)
+        ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
+        ax1.set_xlabel("fx, $\lambda^{-1}$")
+        ax1.set_ylabel("fy, $\lambda^{-1}$")
+        ax2 = fig.add_subplot(122)
+        ax2.set_title("Projection fx = {:.2f}, fz = {:.2f}, ".format(fx[N//2], fz[N//2]) + "$\\lambda^{-1}$")
+        ax2.set_xlabel("fy, $\lambda^{-1}$")
+        ax2.set_ylabel("SSNR, $\lambda^{-1}$")
+        ax2.set_yscale("log")
+
+        mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]))
+        cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
+        ax2.plot(q_axes[1], SSNR[N//2, :, N//2])
+        ax2.set_aspect(1. / ax2.get_data_ratio())
+
+
+        def update1(val):
+            ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+            ax1.set_xlabel("fx, $\lambda^{-1}$")
+            ax1.set_ylabel("fy, $\lambda^{-1}$")
+            Z = (np.log10(SSNR[:, :, int(val)]))
+            mp1.set_data(Z)
+            mp1.set_clim(vmin=Z.min(), vmax=Z.max())
+            plt.draw()
+            print(np.amax(SSNR[:, :, int(val)]))
+
+        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        slider_ssnr.on_changed(update1)
+
+        def update2(val):
+            ax2.clear()
+            ax2.set_title("Projection fx = {:.2f}, fz = {:.2f}, ".format(fx[N//2], fz[int(val)]) + "$\\lambda^{-1}$")
+            ax2.set_xlabel("fy, $\lambda^{-1}$")
+            ax2.set_ylabel("SSNR, $\lambda^{-1}$")
+            ax2.plot(q_axes[1][q_axes[1] >=0], SSNR[N//2, N//2:, int(val)])
+            ax2.set_yscale("log")
+            ax2.set_aspect(1. / ax2.get_data_ratio())
+
+        slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
+        slider_proj = Slider(slider_loc, 'fz', 0, N-1)  # slider properties
+        slider_proj.on_changed(update2)
+
+        plt.show()
+
+    # mutliprocessing died after the vectorization. But the is already very fast and gets only slower while moveing data
+    # between cores
     def test_multiprocessing_acelleration(self):
         max_r = 3
         max_z = 3

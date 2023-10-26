@@ -3,7 +3,7 @@ import numpy as np
 import scipy as sp
 import scipy.interpolate
 import wrappers
-
+from stattools import average_ring
 
 class Lens:
     def __init__(self, alpha=0.3, regularization_parameter=0.01):
@@ -188,7 +188,7 @@ class NoiseEstimator:
         if method == "Fourier":
             if len(self.optical_system.shifted_otfs) == 0 or len(self.optical_system.wvdiff_otfs) == 0:
                 raise AttributeError("Shifted OTFs required for this method are not calculated. \
-                    Use OpticalSystem.compute_shifted_otfs and OpticalSystem.compute_wvdiff_otfs to compute them")
+Use OpticalSystem.compute_shifted_otfs and OpticalSystem.compute_wvdiff_otfs to compute them")
 
         qx, qy, qz = np.array(q_axes[0]), np.array(q_axes[1]), np.array(q_axes[2])
         q_vectors = np.array(np.meshgrid(qx, qy, qz)).T.reshape(-1, 3)
@@ -201,3 +201,14 @@ class NoiseEstimator:
         mask = (vj != 0) * (dj != 0)
         numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
         return ssnr
+
+    def ring_average_SSNR(self, q_axes, SSNR):
+        SSNR = np.copy(SSNR)
+        if q_axes[0].size != SSNR.shape[0] or q_axes[1].size != SSNR.shape[1]:
+            raise ValueError("Wrong axes are provided for the SSNR")
+        averaged_slices = []
+        for i in range(SSNR.shape[2]):
+            averaged_slices.append(average_ring(SSNR[:, :, i], (q_axes[0], q_axes[1])))
+        return np.array(averaged_slices).T
+
+
