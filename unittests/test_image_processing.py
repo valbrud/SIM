@@ -9,11 +9,8 @@ import wrappers
 import time
 import scipy as sp
 from matplotlib.widgets import Slider
-from matplotlib import cm
 import tqdm
-import Box
-import multiprocessing as mp
-import wrappers_multiprocessing
+
 
 class TestOpticalSystems(unittest.TestCase):
     def test_lens_otf(self):
@@ -556,19 +553,15 @@ class TestOpticalSystems(unittest.TestCase):
         optical_system.compute_wvdiff_otfs(wavevectors)
 
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Fourier"))
         end_shifted = time.time()
         print(end_shifted - begin_shifted)
 
-        # begin_interpolation = time.time()
-        # SSNR_I = np.zeros((N, N, N))
-        # for i, j, k in tqdm.tqdm([(i, j, k) for i in range(len(fx)) for j in range(len(fy)) for k in range(len(fz))]):
-        #     f = np.array((fx[i], fy[j], fz[k]))
-        #     q = f * 2 * np.pi
-        #     SSNR_I[i, j, k] = np.abs(
-        #         noise_estimator.SSNR(q, optical_system))
-        # end_interpolation = time.time()
-        # print(end_interpolation - begin_interpolation)
+        begin_interpolation = time.time()
+        SSNR_I = np.zeros((N, N, N))
+        SSNR_I = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        end_interpolation = time.time()
+        print(end_interpolation - begin_interpolation)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure()
@@ -580,16 +573,16 @@ class TestOpticalSystems(unittest.TestCase):
                             hspace=0.4)
         ax1 = fig.add_subplot(121)
         ax2 = fig.add_subplot(122)
-        mp1 = ax1.imshow((SSNR[:, :, int(N / 2)]))
+        mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]))
         cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
-        # mp2 = ax2.imshow(np.log10(SSNR_I[:, :, int(N / 2)]))
-        # cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
+        mp2 = ax2.imshow(np.log10(SSNR_I[:, :, int(N / 2)]))
+        cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
 
         def update1(val):
             ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
             ax1.set_xlabel("fx, $\lambda^{-1}$")
             ax1.set_ylabel("fy, $\lambda^{-1}$")
-            Z = ((SSNR[:, :, int(val)]))
+            Z = (np.log10(SSNR[:, :, int(val)]))
             mp1.set_data(Z)
             mp1.set_clim(vmin=Z.min(), vmax=Z.max())
             plt.draw()
@@ -599,29 +592,29 @@ class TestOpticalSystems(unittest.TestCase):
         slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
         slider_ssnr.on_changed(update1)
 
-        # def update2(val):
-        #     ax2.set_title("SSNR_I, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-        #     ax2.set_xlabel("fx, $\lambda^{-1}$")
-        #     ax2.set_ylabel("fy, $\lambda^{-1}$")
-        #     print(int(val))
-        #     Z = (SSNR_I[:, :, int(val)])
-        #     mp2.set_data(Z)
-        #     min = Z.min()
-        #     max = Z.max()
-        #     mp2.set_clim(vmin=min, vmax=max)
-        #     # plt.draw()
-        #     print(np.amax(SSNR_I[:, :, int(val)]))
-        #
-        # slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
-        # slider_ssnri = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        # slider_ssnri.on_changed(update2)
+        def update2(val):
+            ax2.set_title("SSNR_I, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+            ax2.set_xlabel("fx, $\lambda^{-1}$")
+            ax2.set_ylabel("fy, $\lambda^{-1}$")
+            print(int(val))
+            Z = (np.log10(SSNR_I[:, :, int(val)]))
+            mp2.set_data(Z)
+            min = Z.min()
+            max = Z.max()
+            mp2.set_clim(vmin=min, vmax=max)
+            # plt.draw()
+            print(np.amax(np.abs(SSNR[:, :, int(val)])))
+
+        slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
+        slider_ssnri = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        slider_ssnri.on_changed(update2)
 
         plt.show()
 
     def test_multiprocessing_acelleration(self):
         max_r = 3
         max_z = 3
-        N = 50
+        N = 20
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -695,10 +688,10 @@ class TestOpticalSystems(unittest.TestCase):
         print("single cwo = ", end_single_cwo - begin_single_cwo)
 
         begin_single_ssnr = time.time()
-        SSNR = noise_estimator.SSNR(2 * np.pi * np.array((fx, fy, fz)))
+        SSNR = noise_estimator.SSNR(2 * np.pi * np.array((fx, fy, fz)), method="Scipy")
         end_single_ssnr = time.time()
         print("single ssnr = ", end_single_ssnr - begin_single_ssnr)
-
+        print(np.abs(SSNR[:, :, 10]))
         # optical_system.shifted_otfs = {}
         # pool = mp.Pool(mp.cpu_count())
         # begin_multi_cso = time.time()

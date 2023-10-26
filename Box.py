@@ -1,11 +1,8 @@
-import math
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import wrappers
-from PyQt5.QtWidgets import QSlider
-from PyQt5.QtCore import pyqtSignal
+
 
 class FieldHolder:
     def __init__(self, source, grid, identifier):

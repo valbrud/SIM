@@ -2,8 +2,6 @@ import numpy as np
 import cmath
 from abc import abstractmethod
 
-# Any source of electric field generates electric field in the whole space.
-# So I create an interface with a method get_electric_field(coordinates), which is inherited by all sources.
 
 class Source:
     @abstractmethod
@@ -37,15 +35,6 @@ class PlaneWave(ElectricFieldSource):
         Es = electric_field_s * np.array((-np.sin(phi), np.cos(phi), 0))
         self.field_vectors = [Ep, Es]
         self.phases = [phase1, phase2]
-
-        ####################################################################################################
-        # Previously used for X-Y polarization
-        # zvector = np.array((0, 0, 1))
-        # rot_vector = np.cross(zvector, wavevector)
-        # rot_angle = np.arccos(np.dot(zvector, wavevector)/np.linalg.norm(wavevector))
-        # E1 = VectorOperations.rotate_vector3d(np.array((electric_field_x, 0, 0)), rot_vector, rot_angle)
-        # E2 = VectorOperations.rotate_vector3d(np.array((0, electric_field_y, 0)), rot_vector, rot_angle)
-        ####################################################################################################
 
     def get_electric_field(self, coordinates):
         shape = list(coordinates.shape)
