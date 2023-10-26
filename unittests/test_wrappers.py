@@ -2,10 +2,12 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import wrappers
-class test_wrapper_ft(unittest.TestCase):
 
+N = 100
+
+
+class TestWrappersFT(unittest.TestCase):
     def test_1d(self):
-        N = 512
         L = 250 / 10 ** 6
         b = 5 / 10 ** 6
         dx = L / N
