@@ -2,6 +2,7 @@ import Sources
 import numpy as np
 from GUIInitializationWidgets import *
 
+
 class SourceWidget(QWidget):
     @abstractmethod
     def __init__(self, source):
@@ -92,7 +93,8 @@ class IntensityPlaneWaveWidget(SourceWidget):
 
 class PlaneWaveWidget(SourceWidget):
     isSet = pyqtSignal(bool)
-    def __init__(self, pw = None):
+
+    def __init__(self, pw=None):
         super().__init__(pw)
         self.init_ui(pw)
 

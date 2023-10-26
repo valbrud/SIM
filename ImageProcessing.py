@@ -5,11 +5,10 @@ import scipy.interpolate
 import wrappers
 
 
-
 class Lens:
     def __init__(self, alpha=0.3, regularization_parameter=0.01):
         self.alpha = alpha
-        self.e = regularization_parameter / (4 * np.sin(self.alpha/2)**2)
+        self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
 
         self.psf = np.zeros((1, 1, 1))
         self.otf = np.zeros((1, 1, 1))
@@ -19,13 +18,14 @@ class Lens:
         self.wvdiff_otfs = {}
 
     def PSF(self, c_vectors):
-        r = (c_vectors[:, :, :,  0]**2 + c_vectors[:, :, :, 1]**2)**0.5
+        r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * np.sin(self.alpha)
-        u = 2 * np.pi * z * np.sin(self.alpha/2)**2
+        u = 2 * np.pi * z * np.sin(self.alpha / 2) ** 2
 
         def integrand(rho):
-            return np.exp(- 1j * (u[:, :, :, None] / 2 * rho**2)) * sp.special.j0(rho * v[:, :, :, None]) * 2 * np.pi * rho
+            return np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(
+                rho * v[:, :, :, None]) * 2 * np.pi * rho
 
         rho = np.linspace(0, 1, 100)
         integrands = integrand(rho)
@@ -33,35 +33,35 @@ class Lens:
         I = (h * h.conjugate()).real
         return I
 
-    #Could not get good numbers yet
+    # Could not get good numbers yet
     def regularized_analytic_OTF(self, f_vector):
         f_r = (f_vector[0] ** 2 + f_vector[1] ** 2) ** 0.5
         f_z = f_vector[2]
         l = f_r / np.sin(self.alpha)
-        s = f_z / (4 * np.sin(self.alpha/2)**2)
+        s = f_z / (4 * np.sin(self.alpha / 2) ** 2)
         if l > 2:
             return 0
+
         def p_max(theta):
-            D = 4 - l ** 2 * (1 - np.cos(theta)**2)
-            return (-l * np.cos(theta) + D**0.5)/2
+            D = 4 - l ** 2 * (1 - np.cos(theta) ** 2)
+            return (-l * np.cos(theta) + D ** 0.5) / 2
 
         def integrand(p, theta):
-            denum = self.e ** 2 + (abs(s) - p * l * np.cos(theta))**2
+            denum = self.e ** 2 + (abs(s) - p * l * np.cos(theta)) ** 2
             return 8 * self.e * p / denum
 
         otf, _ = sp.integrate.dblquad(integrand, 0, np.pi / 2, lambda x: 0, p_max)
-        return(otf)
-
+        return (otf)
 
     def compute_PSF_and_OTF(self, psf_size, N):
 
-        dx = psf_size[0]/N
-        dy = psf_size[1]/N
-        dz = psf_size[2]/N
+        dx = psf_size[0] / N
+        dy = psf_size[1] / N
+        dz = psf_size[2] / N
 
-        x = np.arange(-psf_size[0]/2, psf_size[0]/2, dx)
-        y = np.arange(-psf_size[1]/2, psf_size[1]/2, dy)
-        z = np.arange(-psf_size[2]/2, psf_size[2]/2, dz)
+        x = np.arange(-psf_size[0] / 2, psf_size[0] / 2, dx)
+        y = np.arange(-psf_size[1] / 2, psf_size[1] / 2, dy)
+        z = np.arange(-psf_size[2] / 2, psf_size[2] / 2, dz)
 
         self.psf_coordinates = np.array((x, y, z))
 
@@ -76,7 +76,7 @@ class Lens:
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
         psf = self.PSF(grid)
-        self.psf = psf / np.sum(psf[:, :, int(N/2)])
+        self.psf = psf / np.sum(psf[:, :, int(N / 2)])
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf))
 
     def compute_wvdiff_otfs(self, wv_group1, wv_group2=None):
@@ -122,9 +122,9 @@ class Lens:
         interpolation_points = interpolation_points[np.lexsort((interpolation_points[:, 2], interpolation_points[:, 1],
                                                                 interpolation_points[:, 0]))]
         otf_interpolated = interpolator(interpolation_points)
-        otf_interpolated = otf_interpolated.reshape(self.otf_frequencies[0].size, self.otf_frequencies[1].size, self.otf_frequencies[2].size)
+        otf_interpolated = otf_interpolated.reshape(self.otf_frequencies[0].size, self.otf_frequencies[1].size,
+                                                    self.otf_frequencies[2].size)
         return otf_interpolated
-
 
     def interpolate_otf_at_one_point(self, q):
         axes = 2 * np.pi * self.otf_frequencies
@@ -153,9 +153,9 @@ class NoiseEstimator:
             a_m = self.illumination.waves[m].amplitude
             k_m = self.illumination.waves[m].wavevector
             if method == "Fourier":
-                d_j += np.abs(a_m)**2 * np.abs(self.optical_system.shifted_otfs[tuple(k_m)])**2
+                d_j += np.abs(a_m) ** 2 * np.abs(self.optical_system.shifted_otfs[tuple(k_m)]) ** 2
             elif method == "Scipy":
-                d_j += np.abs(a_m)**2 * np.abs(self.optical_system.interpolate_otf(k_m))**2
+                d_j += np.abs(a_m) ** 2 * np.abs(self.optical_system.interpolate_otf(k_m)) ** 2
 
         d_j *= self.illumination.M_t
         return d_j
@@ -199,5 +199,5 @@ class NoiseEstimator:
         print(ssnr.shape)
         vj = self.Vj(q_grid, method)
         mask = (vj != 0) * (dj != 0)
-        numpy.putmask(ssnr, mask, np.abs(dj)**2 / vj)
+        numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
         return ssnr

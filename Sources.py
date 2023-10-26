@@ -40,8 +40,9 @@ class PlaneWave(ElectricFieldSource):
         shape = list(coordinates.shape)
         electric_field = np.zeros(shape, dtype=np.complex128)
         for p in [0, 1]:
-            electric_field += self.field_vectors[p] * np.exp(1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
-                                                                                + self.phases[p]))[:, :, :, None]
+            electric_field += self.field_vectors[p] * np.exp(
+                1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
+                      + self.phases[p]))[:, :, :, None]
         return electric_field
 
 
@@ -52,12 +53,12 @@ class PointSource(ElectricFieldSource):
 
     def get_electric_field(self, coordinates):
         rvectors = np.array(coordinates - self.coordinates)
-        rnorms = np.einsum('ijkl, ijkl->ijk', rvectors, rvectors)**0.5
+        rnorms = np.einsum('ijkl, ijkl->ijk', rvectors, rvectors) ** 0.5
         upper_limit = 1000
         electric_field = np.zeros(coordinates.shape)
         electric_field[rnorms == 0] = np.array((1, 1, 1)) * upper_limit * np.sign(self.brightness)
         electric_field[rnorms != 0] = self.brightness / (rnorms[rnorms > 0] ** 3)[:, None] * rvectors[rnorms != 0]
-        electric_field_norms = np.einsum('ijkl, ijkl->ijk', electric_field, electric_field.conjugate()).real**0.5
+        electric_field_norms = np.einsum('ijkl, ijkl->ijk', electric_field, electric_field.conjugate()).real ** 0.5
         electric_field[electric_field_norms > upper_limit] = (upper_limit * np.sign(self.brightness))
         return electric_field
 
@@ -73,6 +74,7 @@ class IntensityPlaneWave(IntensitySource):
                                                  + self.phase))
         return inensity
 
+
 class IntensityCosineWave(IntensitySource):
     def __init__(self, amplitude, phase, wavevector):
         self.wavevector = wavevector
@@ -81,8 +83,9 @@ class IntensityCosineWave(IntensitySource):
 
     def get_intensity(self, coordinates):
         inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
-                                                               + self.phase))
+                                                 + self.phase))
         return inensity
+
 
 class IntensitySineWave(IntensitySource):
     def __init__(self, amplitude, phase, wavevector):
@@ -92,5 +95,5 @@ class IntensitySineWave(IntensitySource):
 
     def get_intensity(self, coordinates):
         inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
-                                                               + self.phase))
+                                                 + self.phase))
         return inensity
