@@ -4,12 +4,12 @@ from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtCore import pyqtSignal
 
 from abc import abstractmethod
+
+
 class InitializationWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
-
-
 
     @abstractmethod
     def request_data(self): ...

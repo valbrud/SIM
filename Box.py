@@ -10,16 +10,16 @@ class FieldHolder:
         self.field_type = source.get_source_type()
         self.source = source
         if self.field_type == "ElectricField":
-            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2]), 3), dtype = np.complex128)
+            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2]), 3), dtype=np.complex128)
             self.field += source.get_electric_field(grid)
 
         elif self.field_type == "Intensity":
-            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2])), dtype = np.complex128)
+            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2])), dtype=np.complex128)
             self.field = source.get_intensity(grid)
 
 
 class Box:
-    def __init__(self, sources, box_size, point_number, additional_info = None):
+    def __init__(self, sources, box_size, point_number, additional_info=None):
         self.info = additional_info
         self.point_number = point_number
         self.box_size = box_size
@@ -27,7 +27,8 @@ class Box:
         self.source_identifier = 0
         self.grid = np.zeros((self.point_number, self.point_number, self.point_number, 3))
         self.compute_grid()
-        self.electric_field = np.zeros((self.point_number, self.point_number, self.point_number, 3), dtype=np.complex128)
+        self.electric_field = np.zeros((self.point_number, self.point_number, self.point_number, 3),
+                                       dtype=np.complex128)
         self.intensity = np.zeros((self.point_number, self.point_number, self.point_number))
         self.intensity_fourier_space = np.zeros((self.point_number, self.point_number, self.point_number))
         self.analytic_frequencies = []
@@ -38,7 +39,7 @@ class Box:
 
     def compute_grid(self):
         indices = np.array(np.meshgrid(np.arange(self.point_number), np.arange(self.point_number),
-                              np.arange(self.point_number))).T.reshape(-1, 3)
+                                       np.arange(self.point_number))).T.reshape(-1, 3)
         indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
             self.point_number, self.point_number, self.point_number, 3)
         self.grid = self.box_size * (indices / self.point_number - 1 / 2)
@@ -60,7 +61,7 @@ class Box:
         self.intensity = self.intensity.real
 
     def compute_intensity_fourier_space(self):
-        self.intensity_fourier_space = wrappers.wrapped_fftn(self.intensity) * (self.box_size/self.point_number)**3
+        self.intensity_fourier_space = wrappers.wrapped_fftn(self.intensity) * (self.box_size / self.point_number) ** 3
 
     def add_source(self, source):
         self.fields.append(FieldHolder(source, self.grid, self.source_identifier))
@@ -96,6 +97,5 @@ class Box:
             slider_loc = plt.axes([0.2, 0.02, 0.65, 0.03])  # slider location and size
             slider = Slider(slider_loc, 'z', 0, self.point_number - 1)  # slider properties
             slider.on_changed(update)
-
 
         plt.show()

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Pauli:
     I = np.array(((1, 0),
                   (0, 1)))
@@ -23,6 +24,7 @@ class SI:
         k = 1.380649 * 10 ** (-23)
         NAvogadro = 6.02214076 * 10 ** (-23)
         Kcd = 683
+
     class Length:
         km = 10 ** 3
         m = 1
@@ -60,6 +62,7 @@ class SI:
         nN = 10 ** (-9)
         pN = 10 ** (-12)
         fN = 10 ** (-15)
+
     class Energy:
         GJ = 10 ** 9
         MJ = 10 ** 6
@@ -72,5 +75,3 @@ class SI:
         fJ = 10 ** (-15)
         aJ = 10 ** (-18)
         eV = 1.602176634 ** (-19)
-
-

@@ -6,6 +6,7 @@ import Box
 import sys
 import os
 
+
 class ConfigParser:
     def __init__(self):
         self.parser = argparse.ArgumentParser()
@@ -14,6 +15,7 @@ class ConfigParser:
         self.parser.add_argument("--gui", action="store_true", help="Call a gui initializer")
         self.parser.add_argument("-p", "--plot", action="store_true", help="Plot data")
         self.args = self.parser.parse_args()
+
     def read_configuration(self, file):
         spec = spec_from_loader("config_file",
                                 SourceFileLoader("config_file", os.getcwd() + "/config/" + file))
