@@ -4,12 +4,11 @@ import scipy as sp
 import scipy.interpolate
 import wrappers
 from stattools import average_ring
-
+import VectorOperations
 class Lens:
-    def __init__(self, alpha=0.3, regularization_parameter=0.01):
+    def __init__(self, alpha=np.pi/4, regularization_parameter=0.01):
         self.alpha = alpha
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
-
         self.psf = np.zeros((1, 1, 1))
         self.otf = np.zeros((1, 1, 1))
         self.otf_frequencies = None
@@ -71,13 +70,12 @@ class Lens:
 
         self.otf_frequencies = np.array((fx, fy, fz))
 
-        psf = np.zeros((N, N, N))
         c_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
         psf = self.PSF(grid)
         self.psf = psf / np.sum(psf[:, :, int(N / 2)])
-        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf))
+        self.otf = wrappers.wrapped_ifftn(self.psf)
 
     def compute_wvdiff_otfs(self, wv_group1, wv_group2=None):
         if not wv_group2:
@@ -104,8 +102,10 @@ class Lens:
             if np.sum(np.abs(wavevector)) == 0:
                 self.shifted_otfs[tuple(wavevector)] = self.otf
             else:
-                phases = np.dot(c_vectors_sorted, wavevector)
+                phases = np.einsum('ij, j -> i', c_vectors_sorted, wavevector)
                 phases = phases.reshape((len(x), len(y), len(z)))
+                if wavevector[2] != 0:
+                    ...
                 psf_phase_shifted = self.psf * np.exp(1j * phases)
                 self.shifted_otfs[tuple(wavevector)] = np.abs(wrappers.wrapped_ifftn(psf_phase_shifted))
         return self.shifted_otfs
@@ -126,9 +126,10 @@ class Lens:
                                                     self.otf_frequencies[2].size)
         return otf_interpolated
 
-    def interpolate_otf_at_one_point(self, q):
+    def interpolate_otf_at_one_point(self, q, otf = None):
         axes = 2 * np.pi * self.otf_frequencies
-        otf = self.otf
+        if otf is None:
+            otf = self.otf
         interpolator = scipy.interpolate.RegularGridInterpolator(axes, otf, method="linear", bounds_error=False,
                                                                  fill_value=0.)
         otf_interpolated = interpolator(q)
@@ -136,52 +137,144 @@ class Lens:
 
 
 class Illumination:
-    def __init__(self, intensity_plane_waves, spacial_shifts):
-        self.spacial_shifts = spacial_shifts
+    def __init__(self, intensity_plane_waves, spacial_shifts=(np.array((0, 0, 0)), ), M_r=1):
+        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / M_r)
+        self._spacial_shifts = spacial_shifts
+        self._M_r = M_r
         self.M_t = len(self.spacial_shifts)
         self.waves = intensity_plane_waves
 
+    @property
+    def M_r(self):
+        return self._M_r
+
+    @M_r.setter
+    def M_r(self, new_M_r):
+        self.M_r = new_M_r
+        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / new_M_r)
+
+    @property
+    def spacial_shifts(self):
+        return self._spacial_shifts
+
+    @spacial_shifts.setter
+    def spacial_shifts(self, new_spacial_shifts):
+        self._spacial_shifts = new_spacial_shifts
+        self.M_t = len(new_spacial_shifts)
+
+    def get_wavevectors(self):
+        wavevectors = []
+        for angle in self.angles:
+            for spacial_wave in self.waves.values():
+                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+                    spacial_wave.wavevector, np.array((0, 0, 1)), angle)
+                wavevectors.append(wavevector)
+        return wavevectors
+
 
 class NoiseEstimator:
+    class VjParrametersHolder:
+        def __init__(self, a_m, otf, wavevector2d):
+            self.a_m = a_m
+            self.otf = otf
+            self.wavevector = wavevector2d
+
     def __init__(self, illumination, optical_system):
         self.illumination = illumination
         self.optical_system = optical_system
+        self.vj_parameters = {}
+        self.vj_otf_diffs = {}
 
     def Dj(self, q_grid, method="Fourier"):
-        d_j = 0
-        for m in range(len(self.illumination.waves)):
-            a_m = self.illumination.waves[m].amplitude
-            k_m = self.illumination.waves[m].wavevector
-            if method == "Fourier":
-                d_j += np.abs(a_m) ** 2 * np.abs(self.optical_system.shifted_otfs[tuple(k_m)]) ** 2
-            elif method == "Scipy":
-                d_j += np.abs(a_m) ** 2 * np.abs(self.optical_system.interpolate_otf(k_m)) ** 2
-
+        d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
+        for m in self.vj_parameters.keys():
+            d_j += np.abs(self.vj_parameters[m].a_m)**2 * np.abs(self.vj_parameters[m].otf)**2
         d_j *= self.illumination.M_t
+        print(d_j[25, 25, 25])
         return d_j
+    def compute_parameters_for_Vj(self, method="Scipy"):
+        waves = self.illumination.waves
+        otfs = self.optical_system.shifted_otfs
+        for angle in self.illumination.angles:
+            for indices in waves.keys():
+                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+                    waves[indices].wavevector, np.array((0, 0, 1)), angle)
+                wavevector2d = wavevector[:2]
+                wavevector_dual = np.array((wavevector[0], wavevector[1], -wavevector[2]))
 
-    def Vj(self, q_grid, method="Fourier"):
-        v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
-        for m1 in range(len(self.illumination.waves)):
-            for m2 in range(len(self.illumination.waves)):
-                a_m1 = self.illumination.waves[m1].amplitude
-                a_m2 = self.illumination.waves[m2].amplitude
-                a_m12 = self.illumination.waves[m1 - m2].amplitude
-                k_m1 = self.illumination.waves[m1].wavevector
-                k_m2 = self.illumination.waves[m2].wavevector
                 if method == "Fourier":
-                    otf1 = self.optical_system.shifted_otfs[tuple(k_m1)]
-                    otf2 = self.optical_system.shifted_otfs[tuple(k_m2)]
-                    otf3 = self.optical_system.wvdiff_otfs[tuple(k_m2 - k_m1)]
-                elif method == "Scipy":
-                    otf1 = self.optical_system.interpolate_otf(k_m1)
-                    otf2 = self.optical_system.interpolate_otf(k_m2)
-                    otf3 = self.optical_system.interpolate_otf_at_one_point(k_m2 - k_m1)
+                    if indices[2] == 0:
+                        otf = otfs[wavevector]
+                        self.vj_parameters[indices[:2]] = self.VjParrametersHolder(
+                            waves[indices].Amplitude, otf, wavevector2d)
+                    else:
+                        if indices[:2] not in self.vj_parameters.keys():
+                            otf = 1/2 * (otfs[wavevector] + otfs[wavevector_dual])
+                            self.vj_parameters[indices[:2]] = self.VjParrametersHolder(
+                                waves[indices].Amplitude * 2, otf, wavevector2d)
+
+                if method == "Scipy":
+                    if indices[2] == 0:
+                        otf = self.optical_system.interpolate_otf(wavevector)
+                        self.vj_parameters[(indices[0], indices[1], angle)] = (
+                            self.VjParrametersHolder(waves[indices].amplitude, otf,wavevector2d))
+                    else:
+                        if indices[:2] not in self.vj_parameters.keys():
+                            otf = 1/2 * (self.optical_system.interpolate_otf(wavevector) +
+                                         self.optical_system.interpolate_otf(wavevector_dual))
+                            self.vj_parameters[(indices[0], indices[1], angle)] = (
+                                self.VjParrametersHolder(waves[indices].amplitude * 2, otf, wavevector2d))
+
                 else:
                     raise ValueError("The interpolation method is unknown")
 
-                v_j += a_m1 * a_m2.conjugate() * a_m12 * otf1.conjugate() * otf2 * otf3
+    def compute_wfdiff_otfs_for_Vj(self, method="Scipy"):
+        indices = self.vj_parameters.keys()
+        for angle in self.illumination.angles:
+            for index1 in indices:
+                for index2 in indices:
+                    idx_diff = np.array(index1[:2]) - np.array(index2[:2])
+                    idx_diff = (idx_diff[0], idx_diff[1], angle)
+                    if idx_diff not in indices:
+                        continue
+                    wavevector1 = VectorOperations.VectorOperations.rotate_vector2d(
+                        self.vj_parameters[index1].wavevector, angle)
+                    wavevector2 = VectorOperations.VectorOperations.rotate_vector2d(
+                        self.vj_parameters[index2].wavevector,  angle)
+                    # print(wavevector2, wavevector1)
+                    wvdiff = wavevector2 - wavevector1
+                    wvdiff3d = np.array((wvdiff[0], wvdiff[1], 0))
+
+                    if method == "Scipy":
+                        index = (index1[0], index1[1], index2[0], index2[1], angle)
+                        self.vj_otf_diffs[index] = self.optical_system.interpolate_otf_at_one_point(wvdiff3d, self.vj_parameters[idx_diff].otf)
+
+                    else:
+                        raise ValueError("The interpolation method is unknown")
+
+    def Vj(self, q_grid):
+        v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
+        for angle in self.illumination.angles:
+            for m1 in self.vj_parameters.keys():
+                for m2 in self.vj_parameters.keys():
+                    if m1[2] != angle or m2[2] != angle:
+                        continue
+                    a_m1 = self.vj_parameters[m1].a_m
+                    a_m2 = self.vj_parameters[m2].a_m
+                    idx_diff = np.array(m1) - np.array(m2)
+                    idx = (idx_diff[0], idx_diff[1], angle)
+                    if idx not in self.vj_parameters.keys():
+                        continue
+                    a_m12 = self.vj_parameters[idx].a_m
+                    otf1 = self.vj_parameters[m1].otf
+                    otf2 = self.vj_parameters[m2].otf
+                    otf3 = self.vj_otf_diffs[(m1[0], m1[1], m2[0], m2[1], angle)]
+                    term = a_m1 * a_m2.conjugate() * a_m12 * otf1.conjugate() * otf2 * otf3
+                    v_j += term
+                    # if (k_m1 == np.array((0, 0, 0))).all() and (k_m2 == np.array((0, 0, 0))).all():
+                    #     print(k_m1, k_m2, term[25,25,25])
         v_j *= self.illumination.M_t
+        print(v_j[25, 25, 25])
         return v_j
 
     def SSNR(self, q_axes, method="Fourier"):
@@ -197,9 +290,10 @@ Use OpticalSystem.compute_shifted_otfs and OpticalSystem.compute_wvdiff_otfs to 
         dj = self.Dj(q_grid, method)
         ssnr = np.zeros(dj.shape, dtype=np.complex128)
         print(ssnr.shape)
-        vj = self.Vj(q_grid, method)
+        vj = self.Vj(q_grid)
         mask = (vj != 0) * (dj != 0)
         numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
+        print(ssnr[25, 25, 25])
         return ssnr
 
     def ring_average_SSNR(self, q_axes, SSNR):
