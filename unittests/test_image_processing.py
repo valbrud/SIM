@@ -1,4 +1,6 @@
 import numpy as np
+
+import ApodizationFilters
 import Sources
 import ImageProcessing
 import matplotlib.pyplot as plt
@@ -94,9 +96,9 @@ widefield = {
 
 class TestOpticalSystems(unittest.TestCase):
     def test_shifted_otf(self):
-        max_r = 5
-        max_z = 5
-        N = 50
+        max_r = 10
+        max_z = 25
+        N = 80
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -111,7 +113,7 @@ class TestOpticalSystems(unittest.TestCase):
         illumination = ImageProcessing.Illumination(s_polarized_waves)
 
         # wavevectors = [np.array([ 4.44288294,  0.        , -1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16, -1.84030237e+00]), np.array([ 2.72048118e-16,  4.44288294e+00, -1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00, -1.84030237e+00]), np.array([4.44288294, 0.        , 1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16,  1.84030237e+00]), np.array([2.72048118e-16, 4.44288294e+00, 1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00,  1.84030237e+00])]
-        wavevectors = [np.array([ 1.5 * np.pi,  0.        , 1.5 * np.pi])]
+        wavevectors = [np.array([0.0 * np.pi,  0.        , 0.3 *  np.pi])]
         # print(wavevectors)
         optical_system = ImageProcessing.Lens(interpolation_method="Fourier")
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
@@ -122,7 +124,7 @@ class TestOpticalSystems(unittest.TestCase):
         print(optical_system)
         # print(otf_sum[:, :, 10])
         fig = plt.figure()
-        IM = otf_sum[:, :, int(N / 2)]
+        IM = otf_sum[:, int(N/2), :]
 
         ax = fig.add_subplot(111)
         mp1 = ax.imshow(np.abs(IM))
@@ -130,13 +132,15 @@ class TestOpticalSystems(unittest.TestCase):
         plt.colorbar(mp1)
         def update(val):
             ax.clear()
-            ax.set_title("otf_sum, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
+            ax.set_title("otf_sum, fy = {:.2f}, ".format(fy[int(val)]) + "$\\lambda^{-1}$")
             ax.set_xlabel("fx, $\lambda^{-1}$")
             ax.set_ylabel("fy, $\lambda^{-1}$")
-            IM = otf_sum[:, :, int(val)].real
+            # IM = abs(otf_sum[:, int(val), :])
+            IM = abs(optical_system.psf[:, int(val), :])
             mp1.set_clim(vmin=IM.min(), vmax=IM.max())
+            ax.imshow(np.abs(IM), extent=(x[0], x[-1], z[0], z[-1]))
+            ax.set_aspect(1. / ax.get_data_ratio())
 
-            ax.imshow(np.abs(IM), extent=(fx[0], fx[-1], fy[0], fy[-1]))
 
         slider_loc = plt.axes((0.2, 0.1, 0.65, 0.03))  # slider location and size
         slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
@@ -473,8 +477,9 @@ class TestOpticalSystems(unittest.TestCase):
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
 
-        optical_system = ImageProcessing.Lens()
-        optical_system.compute_psf_and_otf((psf_size, N))
+        optical_system = ImageProcessing.Lens(interpolation_method="Fourier")
+        optical_system.compute_psf_and_otf((psf_size, N),
+                                           apodization_filter=None)
 
         illumination_s_polarized = ImageProcessing.Illumination(s_polarized_waves)
         illumination_s_polarized.M_t = Mt_s_polarized
@@ -488,19 +493,19 @@ class TestOpticalSystems(unittest.TestCase):
         illumination_widefield = ImageProcessing.Illumination(widefield)
 
         noise_estimator = ImageProcessing.NoiseEstimator(illumination_s_polarized, optical_system)
-        SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_s_polarized_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_s_polarized)
 
         noise_estimator.illumination = illumination_circular
-        SSNR_circular = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_circular = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_circular_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_circular)
 
         noise_estimator.illumination = illumination_3waves
-        SSNR_3waves = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_3waves = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_3waves_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_3waves)
 
         noise_estimator.illumination = illumination_widefield
-        SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_widefield_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
 
         Fx, Fy = np.meshgrid(fx, fy)
