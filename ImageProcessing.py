@@ -4,12 +4,12 @@ import scipy as sp
 import scipy.interpolate
 import wrappers
 from stattools import average_ring
-import VectorOperations
+import VectorOperations, ApodizationFilters
 from abc import abstractmethod
 
 class OpticalSystem:
     # Other scipy interpolation methods are not directly supported, because they require too much computation time.
-    # Nevertheless, extension of the code is straightforward if needed
+    # Nevertheless, just add them to the list if needed
     supported_interpolation_methods = ["linear", "Fourier"]
     def __init__(self, interpolation_method):
         self.psf = None
@@ -155,7 +155,7 @@ class Lens(OpticalSystem):
         self.alpha = alpha
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
 
-    def PSF(self, c_vectors):
+    def PSF(self, c_vectors, apodization_filter = None):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * np.sin(self.alpha)
@@ -169,6 +169,10 @@ class Lens(OpticalSystem):
         integrands = integrand(rho)
         h = sp.integrate.simpson(integrands, rho)
         I = (h * h.conjugate()).real
+        if apodization_filter:
+            shape = np.array(c_vectors.shape[:-1])
+            mask = apodization_filter(shape, np.amin(shape)//5)
+            I *= mask
         return I
 
     # Could not get good numbers yet
@@ -191,7 +195,7 @@ class Lens(OpticalSystem):
         otf, _ = sp.integrate.dblquad(integrand, 0, np.pi / 2, lambda x: 0, p_max)
         return (otf)
 
-    def compute_psf_and_otf(self, parameters = None):
+    def compute_psf_and_otf(self, parameters = None, apodization_filter = None):
         if not self.psf_coordinates and not parameters:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters:
@@ -204,7 +208,7 @@ class Lens(OpticalSystem):
         c_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
-        psf = self.PSF(grid)
+        psf = self.PSF(grid, apodization_filter)
         self.psf = psf / np.sum(psf[:, :, int(N / 2)])
         self.otf = wrappers.wrapped_ifftn(self.psf)
 
