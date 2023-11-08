@@ -9,37 +9,38 @@ from matplotlib.widgets import Slider
 import tqdm
 
 theta = np.pi / 4
-b = 1/2**0.5
 k = 2 * np.pi
 k1 = k * np.sin(theta)
 k2 = k * (np.cos(theta) - 1)
 
+
+b = 1
 Mt_s_polarized = 32
 a0 = (2 + 4 * b ** 2)
 
 norm = a0 * Mt_s_polarized
 s_polarized_waves = {
-    (0, 0, 0) : Sources.IntensityPlaneWave(a0 / norm, 0, np.array((0, 0, 0))),
+    (0, 0, 0)  : Sources.IntensityPlaneWave(a0 / norm, 0, np.array((0, 0, 0))),
 
     (-2, 0, 0) : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((-2 * k1, 0, 0))),
-    (2, 0, 0) : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((2 * k1, 0, 0))),
-    (0, 2, 0) : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((0, 2 * k1, 0))),
+    (2, 0, 0)  : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((2 * k1, 0, 0))),
+    (0, 2, 0)  : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((0, 2 * k1, 0))),
     (0, -2, 0) : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((0, -2 * k1, 0))),
 
-    (1, 0, 1) : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, k2))),
-    (-1, 0, 1): Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, k2))),
-    (0, 1, 1) : Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, k1, k2))),
+    (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, k2))),
+    (-1, 0, 1) : Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, k2))),
+    (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, k1, k2))),
     (0, -1, 1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, -k1, k2))),
 
     (1, 0, -1) : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, -k2))),
-    (-1, 0, -1) : Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, -k2))),
+    (-1, 0, -1): Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, -k2))),
     (0, 1, -1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, k1, -k2))),
-    (0, -1, -1) : Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, -k1, -k2)))
+    (0, -1, -1): Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, -k1, -k2)))
 }
 
 Mt_circular = 32
 theta = np.pi/4
-b = 1 / 2
+b = 1/2**0.5
 k = 2 * np.pi
 k1 = k * np.sin(theta)
 k2 = k * (1 - np.cos(theta))
@@ -50,38 +51,38 @@ circular_intensity_waves = {
     (1, -1, 0) : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt_circular * a0), 0, np.array((k1, -k1, 0))),
     (-1, -1, 0): Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2 / (Mt_circular * a0), 0, np.array((-k1, -k1, 0))),
 
-    (0, 2, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((0, 2 * k1, 0))),
-    (0, -2, 0): Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((0, -2 * k1, 0))),
-    (2, 0, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((2 * k1, 0, 0))),
-    (-2, 0, 0): Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((-2 * k1, 0, 0))),
+    (0, 2, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((0, 2 * k1, 0))),
+    (0, -2, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((0, -2 * k1, 0))),
+    (2, 0, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((2 * k1, 0, 0))),
+    (-2, 0, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2 / (Mt_circular * a0), 0, np.array((-2 * k1, 0, 0))),
 
     (1, 0, -1) : Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((k1, 0, -k2))),
     (-1, 0, 1) : Sources.IntensityPlaneWave(b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((-k1, 0, k2))),
-    (1, 0, 1): Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((k1, 0, k2))),
-    (-1, 0, -1):Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((-k1, 0, -k2))),
+    (1, 0, 1)  : Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((k1, 0, k2))),
+    (-1, 0, -1): Sources.IntensityPlaneWave(-b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((-k1, 0, -k2))),
 
     (0, 1, -1) : Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((0, k1, -k2))),
     (0, 1, 1)  : Sources.IntensityPlaneWave(-1j * b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((0, k1, k2))),
     (0, -1, 1) : Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((0, -k1, k2))),
     (0, -1, -1): Sources.IntensityPlaneWave(1j * b * (1 + np.cos(theta)) / (Mt_circular * a0), 0, np.array((0, -k1, -k2))),
 
-    (0, 0, 0): Sources.IntensityPlaneWave(a0 / (Mt_circular * a0), 0, np.array((0, 0, 0)))
+    (0, 0, 0)  : Sources.IntensityPlaneWave(a0 / (Mt_circular * a0), 0, np.array((0, 0, 0)))
 }
 
-b = 1/2**0.5
+b = 1
 a0 = 1 + 2 * b**2
 Mr_tree_waves = 3
 Mt_three_waves = 4
 norm = a0 * Mr_tree_waves * Mt_three_waves
 three_waves_illumination = {
-    (0, 0, 0): Sources.IntensityPlaneWave(a0 / norm, 0, np.array((0, 0, 0))),
+    (0, 0, 0)  : Sources.IntensityPlaneWave(a0 / norm, 0, np.array((0, 0, 0))),
 
-    (0, 2, 0): Sources.IntensityPlaneWave(b**2 / norm, 0, np.array((0, 2 * k1, 0))),
-    (0, -2, 0): Sources.IntensityPlaneWave(b**2 / norm, 0, np.array((0, -2 * k1, 0))),
+    (0, 2, 0)  : Sources.IntensityPlaneWave(b**2 / norm, 0, np.array((0, 2 * k1, 0))),
+    (0, -2, 0) : Sources.IntensityPlaneWave(b**2 / norm, 0, np.array((0, -2 * k1, 0))),
 
-    (0, 1, 1): Sources.IntensityPlaneWave(b / norm, 0, np.array((0, k1, k2))),
-    (0, -1, 1):  Sources.IntensityPlaneWave(b / norm, 0, np.array((0, -k1, k2))),
-    (0, 1, -1): Sources.IntensityPlaneWave(b / norm, 0, np.array((0,  k1, -k2))),
+    (0, 1, 1)  : Sources.IntensityPlaneWave(b / norm, 0, np.array((0, k1, k2))),
+    (0, -1, 1) :  Sources.IntensityPlaneWave(b / norm, 0, np.array((0, -k1, k2))),
+    (0, 1, -1) : Sources.IntensityPlaneWave(b / norm, 0, np.array((0,  k1, -k2))),
     (0, -1, -1): Sources.IntensityPlaneWave(b / norm, 0, np.array((0, -k1, -k2))),
 }
 
@@ -95,7 +96,7 @@ class TestOpticalSystems(unittest.TestCase):
     def test_shifted_otf(self):
         max_r = 5
         max_z = 5
-        N = 100
+        N = 50
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -107,22 +108,25 @@ class TestOpticalSystems(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
 
-        wavevectors = [wave.wavevector for wave in s_polarized_waves]
+        illumination = ImageProcessing.Illumination(s_polarized_waves)
 
-        optical_system = ImageProcessing.Lens()
-        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        optical_system.compute_shifted_otf(wavevectors)
+        # wavevectors = [np.array([ 4.44288294,  0.        , -1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16, -1.84030237e+00]), np.array([ 2.72048118e-16,  4.44288294e+00, -1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00, -1.84030237e+00]), np.array([4.44288294, 0.        , 1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16,  1.84030237e+00]), np.array([2.72048118e-16, 4.44288294e+00, 1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00,  1.84030237e+00])]
+        wavevectors = [np.array([ 1.5 * np.pi,  0.        , 1.5 * np.pi])]
+        # print(wavevectors)
+        optical_system = ImageProcessing.Lens(interpolation_method="Fourier")
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
+        optical_system.prepare_Fourier_interpolation(wavevectors)
         otf_sum = np.zeros((len(x), len(y), len(z)), dtype=np.complex128)
-        for otf in optical_system.shifted_otfs:
-            otf_sum += optical_system.shifted_otfs[otf]
-        print(otf_sum[:, :, 10])
+        for otf in optical_system._shifted_otfs:
+            otf_sum += optical_system._shifted_otfs[otf]
+        print(optical_system)
+        # print(otf_sum[:, :, 10])
         fig = plt.figure()
         IM = otf_sum[:, :, int(N / 2)]
 
         ax = fig.add_subplot(111)
         mp1 = ax.imshow(np.abs(IM))
 
-        print(IM)
         plt.colorbar(mp1)
         def update(val):
             ax.clear()
@@ -142,7 +146,7 @@ class TestOpticalSystems(unittest.TestCase):
     def test_SSNR(self):
         max_r = 10
         max_z = 10
-        N = 100
+        N = 50
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -156,22 +160,12 @@ class TestOpticalSystems(unittest.TestCase):
 
         waves = circular_intensity_waves
 
-        base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
-        base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
-        base_vector_z_shift = np.array((0, 0, 1 / (2 * (1 - np.cos(theta)))))
-        spacial_shifts = np.zeros((4, 4, 2, 3))
-        for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
-            spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
-
-        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
+        illumination_polarized = ImageProcessing.Illumination(waves)
         optical_system = ImageProcessing.Lens()
-        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
+        optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
-        wavevectors=[]
-        for spacial_wave in illumination_polarized.waves:
-            wavevectors.append(spacial_wave.wavevector)
-        optical_system.compute_shifted_otf(wavevectors)
-        optical_system.compute_wvdiff_otfs(wavevectors)
+        # wavevectors=illumination_polarized.get_wavevectors()
+        # optical_system.prepare_Fourier_interpolation(wavevectors)
 
         noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
         SSNR = np.abs(noise_estimator.SSNR(2 * np.pi * np.array((fx, fy, fz))))
@@ -188,7 +182,7 @@ class TestOpticalSystems(unittest.TestCase):
             ax.set_title("SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
             ax.set_xlabel("fx, $\lambda^{-1}$")
             ax.set_ylabel("fy, $\lambda^{-1}$")
-            IM = SSNR[:, :, int(val / 2)].T
+            IM = SSNR[:, :, int(val)].T
             ax.plot_wireframe(Fx, Fy, np.log10(IM))
 
         slider_loc = plt.axes((0.2, 0.1, 0.65, 0.03))  # slider location and size
@@ -212,9 +206,9 @@ class TestOpticalSystems(unittest.TestCase):
         plt.show()
 
     def test_SSNR_interpolations(self):
-        max_r = 10
+        max_r = 5
         max_z = 10
-        N = 30
+        N = 60
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -226,29 +220,19 @@ class TestOpticalSystems(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
 
-        waves = three_waves_illumination
+        waves = s_polarized_waves
 
-        base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
-        base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
-        base_vector_z_shift = np.array((0, 0, 1 / (2 * (1 - np.cos(theta)))))
-        spacial_shifts = np.zeros((4, 4, 2, 3))
-        for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
-            spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
+        illumination_polarized = ImageProcessing.Illumination(waves)
+        optical_system = ImageProcessing.Lens(interpolation_method="Fourier")
+        begin_shifted = time.time()
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
+        wavevectors = illumination_polarized.get_wavevectors()
+        optical_system.prepare_Fourier_interpolation(wavevectors)
 
-        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
-        optical_system = ImageProcessing.Lens()
         noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
 
-        begin_shifted = time.time()
-        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        wavevectors = []
-        for spacial_wave in illumination_polarized.waves:
-            wavevectors.append(spacial_wave.wavevector)
-        optical_system.compute_shifted_otf(wavevectors)
-        optical_system.compute_wvdiff_otfs(wavevectors)
-
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Fourier"))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes))
         end_shifted = time.time()
         print(end_shifted - begin_shifted)
 
@@ -336,7 +320,7 @@ class TestOpticalSystems(unittest.TestCase):
         noise_estimator.compute_wfdiff_otfs_for_Vj()
 
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes,))
         SSNR_ring_averaged = noise_estimator.ring_average_SSNR(q_axes, SSNR)
         print(SSNR_ring_averaged.shape)
 
@@ -411,26 +395,13 @@ class TestOpticalSystems(unittest.TestCase):
 
         waves = s_polarized_waves
 
-        base_vector_x_shift = np.array((1 / (4 * np.sin(theta)), 0, 0))
-        base_vector_y_shift = np.array((0, 1 / (4 * np.sin(theta)), 0))
-        base_vector_z_shift = np.array((0, 0, 1 / (2 * (1 - np.cos(theta)))))
-        spacial_shifts = np.zeros((4, 4, 2, 3))
-        for i, j, k in [(i, j, k) for i in range(4) for j in range(4) for k in range(2)]:
-            spacial_shifts[i, j, k] = i * base_vector_x_shift + j * base_vector_y_shift + k * base_vector_z_shift
-
-        illumination_polarized = ImageProcessing.Illumination(waves, spacial_shifts)
+        illumination_polarized = ImageProcessing.Illumination(waves)
         optical_system = ImageProcessing.Lens()
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
 
-        optical_system.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        wavevectors = []
-        for spacial_wave in illumination_polarized.waves:
-            wavevectors.append(spacial_wave.wavevector)
-        optical_system.compute_shifted_otf(wavevectors)
-        optical_system.compute_wvdiff_otfs(wavevectors)
-
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR = np.abs(noise_estimator.SSNR(q_axes))
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure()
@@ -489,6 +460,7 @@ class TestOpticalSystems(unittest.TestCase):
         max_r = 3
         max_z = 5
         N = 50
+        psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -498,59 +470,38 @@ class TestOpticalSystems(unittest.TestCase):
 
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
+
+        optical_system = ImageProcessing.Lens()
+        optical_system.compute_psf_and_otf((psf_size, N))
 
         illumination_s_polarized = ImageProcessing.Illumination(s_polarized_waves)
         illumination_s_polarized.M_t = Mt_s_polarized
-        optical_system_s_polarized = ImageProcessing.Lens()
-        optical_system_s_polarized.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        optical_system_s_polarized.compute_shifted_otf(illumination_s_polarized.get_wavevectors())
-        optical_system_s_polarized.compute_wvdiff_otfs(illumination_s_polarized.get_wavevectors())
-
-        noise_estimator_polarized = ImageProcessing.NoiseEstimator(illumination_s_polarized, optical_system_s_polarized)
-        noise_estimator_polarized.compute_parameters_for_Vj()
-        noise_estimator_polarized.compute_wfdiff_otfs_for_Vj()
 
         illumination_circular = ImageProcessing.Illumination(circular_intensity_waves)
         illumination_circular.M_t = Mt_circular
-        optical_system_circular = ImageProcessing.Lens()
-        optical_system_circular.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        optical_system_s_polarized.compute_shifted_otf(illumination_circular.get_wavevectors())
-        optical_system_s_polarized.compute_wvdiff_otfs(illumination_circular.get_wavevectors())
-        noise_estimator_circular = ImageProcessing.NoiseEstimator(illumination_circular, optical_system_circular)
-        noise_estimator_circular.compute_parameters_for_Vj()
-        noise_estimator_circular.compute_wfdiff_otfs_for_Vj()
 
         illumination_3waves = ImageProcessing.Illumination(three_waves_illumination, M_r=3)
         illumination_3waves.M_t = Mt_three_waves
-        optical_system_3waves = ImageProcessing.Lens()
-        optical_system_3waves.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        optical_system_3waves.compute_shifted_otf(illumination_3waves.get_wavevectors())
-        optical_system_3waves.compute_wvdiff_otfs(illumination_3waves.get_wavevectors())
-        noise_estimator_3waves = ImageProcessing.NoiseEstimator(illumination_3waves, optical_system_3waves)
-        noise_estimator_3waves.compute_parameters_for_Vj()
-        noise_estimator_3waves.compute_wfdiff_otfs_for_Vj()
 
         illumination_widefield = ImageProcessing.Illumination(widefield)
-        optical_system_widefield = ImageProcessing.Lens()
-        optical_system_widefield.compute_PSF_and_OTF(np.array((2 * max_r, 2 * max_r, 2 * max_z)), N)
-        optical_system_widefield.compute_wvdiff_otfs(illumination_widefield.get_wavevectors())
-        noise_estimator_widefield = ImageProcessing.NoiseEstimator(illumination_widefield, optical_system_widefield)
-        noise_estimator_widefield.compute_parameters_for_Vj()
-        noise_estimator_widefield.compute_wfdiff_otfs_for_Vj()
 
-        q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR_s_polarized = np.abs(noise_estimator_polarized.SSNR(q_axes, method="Scipy"))
-        SSNR_s_polarized_ra = noise_estimator_polarized.ring_average_SSNR(q_axes, SSNR_s_polarized)
+        noise_estimator = ImageProcessing.NoiseEstimator(illumination_s_polarized, optical_system)
+        SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_s_polarized_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_s_polarized)
 
-        SSNR_circular = np.abs(noise_estimator_circular.SSNR(q_axes, method="Scipy"))
-        SSNR_circular_ra = noise_estimator_circular.ring_average_SSNR(q_axes, SSNR_circular)
+        noise_estimator.illumination = illumination_circular
+        SSNR_circular = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_circular_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_circular)
 
-        SSNR_3waves = np.abs(noise_estimator_3waves.SSNR(q_axes, method="Scipy"))
-        SSNR_3waves_ra = noise_estimator_3waves.ring_average_SSNR(q_axes, SSNR_3waves)
+        noise_estimator.illumination = illumination_3waves
+        SSNR_3waves = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_3waves_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_3waves)
 
-        SSNR_widefield = np.abs(noise_estimator_widefield.SSNR(q_axes, method="Scipy"))
-        SSNR_widefield_ra = noise_estimator_widefield.ring_average_SSNR(q_axes, SSNR_widefield)
+        noise_estimator.illumination = illumination_widefield
+        SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes, method="Scipy"))
+        SSNR_widefield_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure()
@@ -581,15 +532,15 @@ class TestOpticalSystems(unittest.TestCase):
         ax2.grid()
 
         multiplier = 10 ** 8
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, N//2], label="S-polarized")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, N//2], label="Circular")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, N//2], label="3 waves")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, N//2], label="Widefield")
+        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(N/2)], label="S-polarized")
+        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(N/2)], label="Circular")
+        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(N/2)], label="3 waves")
+        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(N/2)], label="Widefield")
 
-        ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_s_polarized[:, :, N//2])[q_axes[1] >= 0], label="S-polarized")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_circular[:, :, N//2])[q_axes[1] >= 0], label="Circular")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_3waves[:, :, N//2])[q_axes[1] >= 0], label="3 waves")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_widefield[:, :, N//2])[q_axes[1] >= 0], label="Widefield")
+        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, int(N/2)][fx >= 0], label="S-polarized")
+        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, int(N/2)][fx >= 0], label="Circular")
+        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, int(N/2)][fx >= 0], label="3 waves")
+        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, int(N/2)][fx >= 0], label="Widefield")
 
         ax1.set_aspect(1. / ax1.get_data_ratio())
         ax2.set_aspect(1. / ax2.get_data_ratio())
@@ -604,12 +555,11 @@ class TestOpticalSystems(unittest.TestCase):
             ax1.set_xlim(0, fx[-1])
             ax1.grid()
             ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(val)], label="S-polarized")
-            ax1.plot(fx[fx >= 0], (1 + multiplier * SSNR_circular_ra[:, int(val)]), label="Circular")
-            ax1.plot(fx[fx >= 0], (1 + multiplier * SSNR_3waves_ra[:, int(val)]), label="3 waves")
-            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)], label="Widefield")
+            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(val)],    label="Circular")
+            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(val)],      label="3 waves")
+            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)],   label="Widefield")
             ax1.legend()
             ax1.set_aspect(1. / ax1.get_data_ratio())
-
 
         slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
         slider_ra_s = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
@@ -624,16 +574,14 @@ class TestOpticalSystems(unittest.TestCase):
             ax2.set_ylim(1, 10**6)
             ax2.set_xlim(0, fx[-1])
             ax2.grid()
+
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N/2), :, int(val)][q_axes[1] >= 0],
-                     label="S-polarized")
-            ax2.plot(fx[fx >= 0], (1 + multiplier * SSNR_circular[int(N/2), :, int(val)][q_axes[1] >= 0]),
-                     label="Circular")
-            ax2.plot(fx[fx >= 0], (1 + multiplier * SSNR_3waves[int(N/2), :, int(val)][q_axes[1] >= 0]),
-                     label="3 waves")
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N/2), :, int(val)][q_axes[1] >= 0],
-                     label="Widefield")
+
+            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, int(val)][fx >= 0],label="S-polarized")
+            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, int(val)][fx >= 0], label="Circular")
+            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, int(val)][fx >= 0], label="3 waves")
+            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, int(val)][fx >= 0], label="Widefield")
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
