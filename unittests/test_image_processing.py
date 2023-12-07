@@ -1,5 +1,8 @@
-import numpy as np
+import sys
 
+import numpy as np
+import sys
+sys.path.append('../')
 import ApodizationFilters
 import Sources
 import ImageProcessing
@@ -9,6 +12,8 @@ import unittest
 import time
 import skimage
 from matplotlib.widgets import Slider
+from matplotlib.animation import FuncAnimation
+from matplotlib import colors
 import tqdm
 
 theta = np.pi / 4
@@ -16,6 +21,7 @@ k = 2 * np.pi
 k1 = k * np.sin(theta)
 k2 = k * (np.cos(theta) - 1)
 
+NA = np.sin(theta)
 
 b = 1
 Mt_s_polarized = 32
@@ -30,19 +36,18 @@ s_polarized_waves = {
     (0, 2, 0)  : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((0, 2 * k1, 0))),
     (0, -2, 0) : Sources.IntensityPlaneWave((-b ** 2) / norm, 0, np.array((0, -2 * k1, 0))),
 
-    # (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, k2))),
-    # (-1, 0, 1) : Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, k2))),
-    # (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, k1, k2))),
-    # (0, -1, 1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, -k1, k2))),
-    #
-    # (1, 0, -1) : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, -k2))),
-    # (-1, 0, -1): Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, -k2))),
-    # (0, 1, -1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, k1, -k2))),
-    # (0, -1, -1): Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, -k1, -k2)))
+    (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, k2))),
+    (-1, 0, 1) : Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, k2))),
+    (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, k1, k2))),
+    (0, -1, 1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, -k1, k2))),
+
+    (1, 0, -1) : Sources.IntensityPlaneWave((-1j * b) / norm, 0, np.array((k1, 0, -k2))),
+    (-1, 0, -1): Sources.IntensityPlaneWave((1j * b) / norm, 0, np.array((-k1, 0, -k2))),
+    (0, 1, -1) : Sources.IntensityPlaneWave((1 * b) / norm, 0, np.array((0, k1, -k2))),
+    (0, -1, -1): Sources.IntensityPlaneWave((-1 * b) / norm, 0, np.array((0, -k1, -k2)))
 }
 
 Mt_circular = 32
-theta = np.pi/4
 b = 1/2**0.5
 k = 2 * np.pi
 k1 = k * np.sin(theta)
@@ -114,7 +119,7 @@ class TestOpticalSystems(unittest.TestCase):
         illumination = ImageProcessing.Illumination(s_polarized_waves)
 
         # wavevectors = [np.array([ 4.44288294,  0.        , -1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16, -1.84030237e+00]), np.array([ 2.72048118e-16,  4.44288294e+00, -1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00, -1.84030237e+00]), np.array([4.44288294, 0.        , 1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16,  1.84030237e+00]), np.array([2.72048118e-16, 4.44288294e+00, 1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00,  1.84030237e+00])]
-        wavevectors = [np.array([0.0 * np.pi,  0.        , 0.3 *  np.pi])]
+        wavevectors = [np.array([0.0 * np.pi,  0., 0.3 *  np.pi])]
         # print(wavevectors)
         optical_system = ImageProcessing.Lens(interpolation_method="Fourier")
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
@@ -148,10 +153,11 @@ class TestOpticalSystems(unittest.TestCase):
         slider_ssnr.on_changed(update)
         plt.show()
 
-    def test_SSNR(self):
-        max_r = 10
-        max_z = 10
-        N = 50
+    def test_SSNR_old(self):
+        max_r = 6
+        max_z = 6
+        N = 80
+        psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
@@ -161,8 +167,8 @@ class TestOpticalSystems(unittest.TestCase):
 
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
-
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
         waves = circular_intensity_waves
 
         illumination_polarized = ImageProcessing.Illumination(waves)
@@ -211,15 +217,21 @@ class TestOpticalSystems(unittest.TestCase):
         plt.show()
 
     def test_SSNR_interpolations(self):
-        max_r = 5
-        max_z = 10
-        N = 60
+        max_r = 6
+        max_z = 6
+        N = 80
+        psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
         x = np.arange(-max_r, max_r, dx)
         y = np.copy(x)
         z = np.arange(-max_z, max_z, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
 
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
@@ -298,26 +310,51 @@ class TestOpticalSystems(unittest.TestCase):
 
         plt.show()
 
-    def test_SSNR_ring_averages(self):
-        max_r = 3
-        max_z = 3
-        N = 50
+
+    def test_SSNR(self):
+        max_r = 10
+        max_z = 40
+        N = 100
+        psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
         x = np.arange(-max_r, max_r, dx)
         y = np.copy(x)
         z = np.arange(-max_z, max_z, dz)
-
+        print(x)
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+        print(fx)
+
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
 
         waves = s_polarized_waves
+        if waves == three_waves_illumination:
+            Mr = 3
+            Mt = Mt_three_waves
+            title = "State of art SIM"
+            label = "three_waves"
+        elif waves == s_polarized_waves:
+            Mr = 1
+            Mt = Mt_s_polarized
+            title = "Lattice SIM with polarized waves"
+            label = "s_polarized"
+        elif waves == circular_intensity_waves:
+            Mr = 1
+            Mt = Mt_circular
+            title = "Lattice SIM with circular waves"
+            label = "circular"
+        elif waves == widefield:
+            Mr = 1
+            Mt = Mt_widefield
+            title = "Widefield"
+            label = "widefield"
 
-        illumination_polarized = ImageProcessing.Illumination(waves, M_r=1)
-        illumination_polarized.M_t = 32
-        optical_system = ImageProcessing.Lens(alpha=np.pi/4)
+        illumination_polarized = ImageProcessing.Illumination(waves, M_r=Mr)
+        illumination_polarized.M_t = Mt
+        optical_system = ImageProcessing.Lens(alpha=theta)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
@@ -325,82 +362,110 @@ class TestOpticalSystems(unittest.TestCase):
 
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
         SSNR = np.abs(noise_estimator.SSNR(q_axes,))
+        scaling_factor = 10**8
+        SSNR_scaled = 1 + scaling_factor * SSNR
         SSNR_ring_averaged = noise_estimator.ring_average_SSNR(q_axes, SSNR)
-        print(SSNR_ring_averaged.shape)
+        SSNR_ra_scaled = 1 + scaling_factor * SSNR_ring_averaged
 
         Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 6), constrained_layout=True)
+        fig.suptitle(title, fontsize = 30)
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
                             top=0.9,
-                            wspace=0.4,
-                            hspace=0.4)
+                            wspace=0.1,
+                            hspace=0)
         ax1 = fig.add_subplot(121)
-        ax1.set_title("log10(SSNR), fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
-        ax1.set_xlabel("fx, $\lambda^{-1}$")
-        ax1.set_ylabel("fy, $\lambda^{-1}$")
-        ax2 = fig.add_subplot(122)
-        ax2.set_title("Ring averaged, fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
-        ax2.set_xlabel("fx, $\lambda^{-1}$")
-        ax2.set_ylabel("fy, $\lambda^{-1}$")
-        ax2.set_yscale("log")
+        ax1.tick_params(labelsize = 20)
+        # ax1.set_title(title)
+        ax1.set_xlabel("$f_z$", fontsize = 25)
+        ax1.set_ylabel("$f_y$", fontsize = 25)
+        mp1 = ax1.imshow(SSNR_scaled[int(N / 2),:, :], extent=(fz[0]/(2 * NA), fz[-1]/(2 *NA), fy[0]/(2 * NA), fy[-1]/(2 * NA)), norm=colors.LogNorm())
+        # cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
+        # cb1.set_label("$1 + 10^8$ SSNR")
+        ax1.set_aspect(1. / ax1.get_data_ratio())
 
-        mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]), extent=(fx[0], fx[-1], fy[0], fy[-1]))
-        cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
-        ax2.plot(q_axes[2][q_axes[2] >= 0], np.log10(SSNR_ring_averaged[:, N//2]))
+        ax2 = fig.add_subplot(122, sharey=ax1)
+        ax2.set_xlabel("$f_x$", fontsize = 25)
+        ax2.tick_params(labelsize = 20)
+        ax2.tick_params('y', labelleft=False)
+        # ax2.set_ylabel("fy, $\\frac{2NA}{\\lambda}$")
+        mp2 = ax2.imshow(SSNR_scaled[:, :, int(N//2)], extent=(fy[0]/(2 * NA), fy[-1]/(2 *NA), fx[0]/(2 * NA), fx[-1]/(2 * NA)), norm=colors.LogNorm())
+        cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
+        cb2.ax.tick_params(labelsize=20)
+        cb2.set_label("$1 + 10^8$ SSNR", fontsize = 25)
         ax2.set_aspect(1. / ax2.get_data_ratio())
 
+        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/'
+                 + label + '_waves_SSNR.png')
 
         def update1(val):
-            ax1.set_title("log10(SSNR), fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax1.set_xlabel("fx, $\lambda^{-1}$")
-            ax1.set_ylabel("fy, $\lambda^{-1}$")
-            Z = (np.log10(SSNR[:, :, int(val)]))
+            ax1.set_title("SSNR, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+            ax1.set_xlabel("fz, $\lambda^{-1}$")
+            ax1.set_ylabel("fx, $\lambda^{-1}$")
+            Z = (SSNR_scaled[:, int(val), :])
             mp1.set_data(Z)
             mp1.set_clim(vmin=Z.min(), vmax=Z.max())
+            ax1.set_aspect(1. / ax1.get_data_ratio())
             plt.draw()
-            print(np.amax(SSNR[:, :, int(val)]))
 
-        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        slider_ssnr.on_changed(update1)
+            # ax2.clear()
+            # ax2.set_title("Ring averaged SSNR, fz = {:.2f}, ".format(fz[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+            # ax2.set_xlabel("fx, $\lambda^{-1}$")
+            # ax2.set_ylabel("$1 + 10^8 \\langle SSNR \\rangle_{ra}$")
+            # ssnr_r_sliced = (SSNR_ra_scaled[:, int(val)])
+            # ax2.plot(q_axes[2][q_axes[2] >= 0] / (2 * np.pi), ssnr_r_sliced)
+            # ax2.set_yscale("log")
+            # ax2.set_aspect(1. / ax2.get_data_ratio())
 
-        def update2(val):
-            ax2.clear()
-            ax2.set_title("Ring averaged, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax2.set_xlabel("fx, $\lambda^{-1}$")
-            ax2.set_ylabel("SSNR, $\lambda^{-1}$")
-            ssnr_r_sliced = (SSNR_ring_averaged[:, int(val)])
-            ax2.plot(q_axes[2][q_axes[2] >= 0] / (2 * np.pi), ssnr_r_sliced)
-            ax2.set_yscale("log")
-            ax2.set_aspect(1. / ax2.get_data_ratio())
+        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        # slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        # slider_ssnr.on_changed(update1)
 
-        slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ra = Slider(slider_loc, 'fz', 0, len(SSNR_ring_averaged[0]))  # slider properties
-        slider_ra.on_changed(update2)
 
         plt.show()
 
     def test_isosurface_visualisation(self):
-        max_r = 6
-        max_z = 6
-        N = 80
+        max_r = 10
+        max_z = 40
+        N = 100
+        psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
+        dfx = 1 / (2 * max_r)
+        dfy = 1 / (2 * max_r)
+        dfz = 1 / (2 * max_z)
         x = np.arange(-max_r, max_r, dx)
         y = np.copy(x)
         z = np.arange(-max_z, max_z, dz)
 
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
 
-        waves = s_polarized_waves
+        waves = circular_intensity_waves
 
-        illumination_polarized = ImageProcessing.Illumination(waves, M_r=1)
-        illumination_polarized.M_t = 32
+        if waves == three_waves_illumination:
+            Mr = 3
+            Mt = Mt_three_waves
+            label = "three"
+            title = "State of art SIM"
+        elif waves == s_polarized_waves:
+            Mr = 1
+            Mt = Mt_s_polarized
+            label = "s_polarized"
+            title = "Lattice SIM with polarized waves"
+        elif waves == circular_intensity_waves:
+            Mr = 1
+            Mt = Mt_circular
+            label = "circular"
+            title = "Lattice SIM with circular waves"
+
+        illumination_polarized = ImageProcessing.Illumination(waves, M_r= Mr)
+        illumination_widefield = ImageProcessing.Illumination(widefield, M_r =1)
+        illumination_polarized.M_t = Mt
         optical_system = ImageProcessing.Lens(alpha=np.pi/4)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
@@ -410,11 +475,14 @@ class TestOpticalSystems(unittest.TestCase):
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
         SSNR = np.abs(noise_estimator.SSNR(q_axes,))
         SSNR_scaled = np.log10(1 + 10**8 * np.abs(SSNR))
-        constant_value = SSNR_scaled[N//2, N//2, N//2]
-        print(np.amax(SSNR_scaled))
-        verts, faces, _, _ = skimage.measure.marching_cubes(SSNR_scaled, level = np.amax(SSNR_scaled)/2 )
+        noise_estimator.illumination = illumination_widefield
+        SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_widefield_scaled = np.log10(1 + 10**8 * np.abs(SSNR_widefield))
+        constant_value = 0.2
+        verts, faces, _, _ = skimage.measure.marching_cubes(SSNR_scaled, level=constant_value)
+        w_verts, w_faces, _, _ = skimage.measure.marching_cubes(SSNR_widefield_scaled, level=constant_value)
         Fx, Fy, Fz = np.meshgrid(fx, fy, fz)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 6))
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
@@ -422,109 +490,64 @@ class TestOpticalSystems(unittest.TestCase):
                             wspace=0.4,
                             hspace=0.4)
         ax1 = fig.add_subplot(111, projection = '3d')
-        ax1.set_title("$log(1 + 10^8 SSNR)$" +"= {}".format(3))
-        ax1.set_xlabel("fx, $\lambda^{-1}$")
-        ax1.set_ylabel("fy, $\lambda^{-1}$")
-        ax1.set_zlabel("fz, $\lambda^{-1}$")
-        indices = np.where(np.abs(SSNR - 10**-5) < 10**-7)
+        ax1.set_title(title, fontsize = 20)
+        ax1.set_xlabel(r"$f_x$", fontsize = 20, labelpad = 15)
+        ax1.set_ylabel(r"$f_y$", fontsize = 20, labelpad = 15)
+        ax1.set_zlabel(r"$f_z$", fontsize = 20, labelpad = 15)
         ax1.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2],  alpha=0.7)
+        ax1.plot_trisurf(w_verts[:, 0], w_verts[:, 1], w_faces, w_verts[:, 2],  alpha=1, color = "red")
+
+        ax1.set_xlim(N // 4, 3 * N // 4)
+        ax1.set_ylim(N // 4, 3 * N // 4)
+        ax1.set_zlim(0, N)
+        xticks = np.round((ax1.get_xticks() - N / 2) * dfx / NA, 2)
+        yticks = np.round((ax1.get_yticks() - N / 2) * dfy / NA, 2)
+        zticks = np.round((ax1.get_zticks() - N / 2) * dfz / NA, 2)
+        ax1.set_xticklabels(xticks)
+        ax1.set_yticklabels(yticks)
+        ax1.set_zticklabels(zticks)
+        ax1.tick_params(labelsize = 15)
+        ax1.view_init(elev=20, azim=45)
+        plt.draw()
+        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/'
+                 + label + '_waves_SSNR_isosurface.png')
 
         def update1(val):
             ax1.clear()
-            ax1.set_title("$log(1 + 10^8 SSNR)$" + "= {:.2f}".format(val/10))
-            ax1.set_xlabel("fx, $\lambda^{-1}$")
-            ax1.set_ylabel("fy, $\lambda^{-1}$")
-            ax1.set_zlabel("fz, $\lambda^{-1}$")
-            verts, faces, _, _ = skimage.measure.marching_cubes(SSNR_scaled, level=val/10)
-            ax1.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2], alpha=0.7)
+            ax1.set_title(title + "\n1 + $10^8 SSNR$ = {:.2f}".format(val/15), fontsize=18)
+            ax1.set_xlabel(r"$f_x$", fontsize=18, labelpad=15)
+            ax1.set_ylabel(r"$f_y$", fontsize=18, labelpad=15)
+            ax1.set_zlabel(r"$f_z$", fontsize=18, labelpad=15)
+            verts, faces, _, _ = skimage.measure.marching_cubes(SSNR_scaled, level=val/15)
+            w_verts, w_faces, _, _ = skimage.measure.marching_cubes(SSNR_widefield_scaled, level=val/15)
+            ax1.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2], alpha=0.5, color="blue")
+            ax1.plot_trisurf(w_verts[:, 0], w_verts[:, 1], w_faces, w_verts[:, 2], alpha=1, color="red")
+
+            ax1.set_xlim(N//4, 3 * N//4)
+            ax1.set_ylim(N//4, 3 * N//4)
+            ax1.set_zlim(0, N)
+
+            xticks = np.round((ax1.get_xticks() - N / 2) * dfx / NA, 2)
+            yticks = np.round((ax1.get_yticks() - N / 2) * dfy / NA, 2)
+            zticks = np.round((ax1.get_zticks() - N / 2) * dfz / NA, 2)
+            ax1.set_xticklabels(xticks)
+            ax1.set_yticklabels(yticks)
+            ax1.set_zticklabels(zticks)
             plt.draw()
 
-        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, 50)  # slider properties
-        slider_ssnr.on_changed(update1)
-        plt.show()
-    def test_SSNR_projections(self):
-        max_r = 6
-        max_z = 6
-        N = 50
-        dx = 2 * max_r / N
-        dy = 2 * max_r / N
-        dz = 2 * max_z / N
-        x = np.arange(-max_r, max_r, dx)
-        y = np.copy(x)
-        z = np.arange(-max_z, max_z, dz)
+        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        # slider_ssnr = Slider(slider_loc, 'fz', 0, 50)  # slider properties
+        # slider_ssnr.on_changed(update1)
 
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
-        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
-
-        waves = s_polarized_waves
-
-        illumination_polarized = ImageProcessing.Illumination(waves)
-        optical_system = ImageProcessing.Lens()
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
-        noise_estimator = ImageProcessing.NoiseEstimator(illumination_polarized, optical_system)
-
-        q_axes = 2 * np.pi * np.array((fx, fy, fz))
-        SSNR = np.abs(noise_estimator.SSNR(q_axes))
-
-        Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure()
-        plt.subplots_adjust(left=0.1,
-                            bottom=0.1,
-                            right=0.9,
-                            top=0.9,
-                            wspace=0.4,
-                            hspace=0.4)
-        ax1 = fig.add_subplot(121)
-        ax1.set_title("SSNR, fz = {:.2f}, ".format(fz[N//2]) + "$\\lambda^{-1}$")
-        ax1.set_xlabel("fx, $\lambda^{-1}$")
-        ax1.set_ylabel("fy, $\lambda^{-1}$")
-        ax2 = fig.add_subplot(122)
-        ax2.set_title("Projection fx = {:.2f}, fz = {:.2f}, ".format(fx[N//2], fz[N//2]) + "$\\lambda^{-1}$")
-        ax2.set_xlabel("fy, $\lambda^{-1}$")
-        ax2.set_ylabel("SSNR, $\lambda^{-1}$")
-        ax2.set_yscale("log")
-
-        mp1 = ax1.imshow(np.log10(SSNR[:, :, int(N / 2)]), extent=(fx[0], fx[-1], fy[0], fy[-1]))
-        cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
-        ax2.plot(q_axes[1], SSNR[N//2, :, N//2])
-        ax2.set_aspect(1. / ax2.get_data_ratio())
-
-
-        def update1(val):
-            ax1.set_title("log10(SSNR), fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax1.set_xlabel("fx, $\lambda^{-1}$")
-            ax1.set_ylabel("fy, $\lambda^{-1}$")
-            Z = (np.log10(SSNR[:, :, int(val)]))
-            mp1.set_data(Z)
-            mp1.set_clim(vmin=Z.min(), vmax=Z.max())
-            plt.draw()
-            print(np.amax(SSNR[:, :, int(val)]))
-
-        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        slider_ssnr.on_changed(update1)
-
-        def update2(val):
-            ax2.clear()
-            ax2.set_title("Projection fx = fy, fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax2.set_xlabel("fy, $\lambda^{-1}$")
-            ax2.set_ylabel("SSNR, $\lambda^{-1}$")
-            ax2.plot(q_axes[1][q_axes[1] >= 0] / (2 * np.pi), np.diagonal(SSNR[:, :, int(val)])[q_axes[1] >= 0])
-            ax2.set_yscale("log")
-            ax2.set_aspect(1. / ax2.get_data_ratio())
-
-        slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
-        slider_proj = Slider(slider_loc, 'fz', 0, N-1)  # slider properties
-        slider_proj.on_changed(update2)
-
+        ani = FuncAnimation(fig, update1, frames=range(2, 40), repeat=False, interval=100)
+        ani.save('/home/valerii/Documents/projects/SIM/SSNR_article_1/Animations/'
+                 'Animation_' + label + '_waves_SSNR_isosurface.mp4', writer="ffmpeg")
         plt.show()
 
     def test_compare_SSNR(self):
-        max_r = 3
-        max_z = 5
-        N = 50
+        max_r = 10
+        max_z = 40
+        N = 100
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
@@ -536,9 +559,16 @@ class TestOpticalSystems(unittest.TestCase):
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+
+        arg = N // 2
+        print(fz[arg])
+
+        two_NA_fx = fx / (2 * np.sin(np.pi/4))
+        two_NA_fy = fy / (2 * np.sin(np.pi/4))
+        two_NA_fz = fz / (2 * np.sin(np.pi/4))
         q_axes = 2 * np.pi * np.array((fx, fy, fz))
 
-        optical_system = ImageProcessing.Lens(interpolation_method="linear")
+        optical_system = ImageProcessing.Lens()
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
 
@@ -551,7 +581,7 @@ class TestOpticalSystems(unittest.TestCase):
         illumination_3waves = ImageProcessing.Illumination(three_waves_illumination, M_r=3)
         illumination_3waves.M_t = Mt_three_waves
 
-        illumination_widefield = ImageProcessing.Illumination(widefield)
+        illumination_widefield = ImageProcessing.Illumination(widefield, M_r = 1)
 
         noise_estimator = ImageProcessing.NoiseEstimator(illumination_s_polarized, optical_system)
         SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes))
@@ -570,7 +600,7 @@ class TestOpticalSystems(unittest.TestCase):
         SSNR_widefield_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
 
         Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure()
+        fig = plt.figure(figsize=(12, 6), constrained_layout = True)
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
@@ -580,81 +610,81 @@ class TestOpticalSystems(unittest.TestCase):
         ax1 = fig.add_subplot(121)
         ax2 = fig.add_subplot(122)
 
-
-        ax1.set_title("Ring averaged SSNR, \n fz = {:.2f}, ".format(fz[int(N/2)]) + "$\\lambda^{-1}$")
-        ax1.set_xlabel("fr, $\lambda^{-1}$")
-        ax1.set_ylabel("$SSNR_{ra}$, $\lambda^{-1}$")
+        ax1.set_title("Ring averaged", fontsize=20, pad=15)
+        ax1.set_xlabel(r"$f_r$", fontsize=20)
+        ax1.set_ylabel(r"$SSNR_{ra}$", fontsize=20)
         ax1.set_yscale("log")
-        ax1.set_ylim(1, 10**6)
-        ax1.set_xlim(0, fx[-1])
-        ax1.grid()
+        ax1.set_ylim(1, 3 * 10**2)
+        ax1.set_xlim(0, fx[-1]/(2 * NA))
+        ax1.grid(which = 'major')
+        ax1.grid(which='minor', linestyle = '--')
+        ax1.tick_params(labelsize = 15)
 
-        ax2.set_title("SSNR projection fx = fy , \n fz = {:.2f}, ".format(fz[int(N/2)]) + "$\\lambda^{-1}$")
-        ax2.set_xlabel("fx, $\lambda^{-1}$")
-        ax2.set_ylabel("SSNR, $\lambda^{-1}$")
+        ax2.set_title("Slice $f_y$ = 0", fontsize = 20)
+        ax2.set_xlabel(r"$f_x$", fontsize=20)
         ax2.set_yscale("log")
-        ax2.set_ylim(1, 10**6)
-        ax2.set_xlim(0, fx[-1])
-        ax2.grid()
+        ax2.set_ylim(1, 3 * 10**2)
+        ax2.set_xlim(0, fx[-1]/(2 * NA))
+        ax2.grid(which='major')
+        ax2.grid(which='minor', linestyle = '--')
+        ax2.tick_params('y', labelleft=False)
+        ax2.tick_params(labelsize = 15)
 
         multiplier = 10 ** 8
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(N/2)], label="S-polarized")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(N/2)], label="Circular")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(N/2)], label="3 waves")
-        ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(N/2)], label="Widefield")
+        print(np.log10(1 + multiplier * SSNR_widefield))
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, arg], label="S-polarized")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, arg],    label="Circular"   )
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, arg],      label="3 waves"    )
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, arg],   label="Widefield"  )
 
-        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, int(N/2)][fx >= 0], label="S-polarized")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, int(N/2)][fx >= 0], label="Circular")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, int(N/2)][fx >= 0], label="3 waves")
-        ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, int(N/2)][fx >= 0], label="Widefield")
+        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, arg][fx >= 0], label="S-polarized")
+        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, arg][fx >= 0],    label="Circular"   )
+        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, arg][fx >= 0],      label="3 waves"    )
+        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, arg][fx >= 0],   label="Widefield"  )
 
         ax1.set_aspect(1. / ax1.get_data_ratio())
         ax2.set_aspect(1. / ax2.get_data_ratio())
 
         def update1(val):
             ax1.clear()
-            ax1.set_title("Ring averaged SSNR \n for s-polarized waves, \n fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax1.set_xlabel("fr, $\lambda^{-1}$")
-            ax1.set_ylabel("$SSNR_{ra}$, $\lambda^{-1}$")
+            ax1.set_title("Ring averaged", fontsize = 30)
+            ax1.set_xlabel(r"$f_r$", fontsize = 25)
+            ax1.set_ylabel(r"$SSNR$", fontsize = 25)
             ax1.set_yscale("log")
-            ax1.set_ylim(1, 10**6)
-            ax1.set_xlim(0, fx[-1])
+            ax1.set_ylim(1, 3 * 10**2)
+            ax1.set_xlim(0, fx[-1]/(2 * NA))
             ax1.grid()
-            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(val)], label="S-polarized")
-            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(val)],    label="Circular")
-            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(val)],      label="3 waves")
-            ax1.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)],   label="Widefield")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(val)], label="S-polarized")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(val)],    label="Circular"   )
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(val)],      label="3 waves"    )
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)],   label="Widefield"  )
             ax1.legend()
             ax1.set_aspect(1. / ax1.get_data_ratio())
-
-        slider_loc = plt.axes((0.2, 0.1, 0.3, 0.03))  # slider location and size
-        slider_ra_s = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        slider_ra_s.on_changed(update1)
-
-        def update2(val):
+            
             ax2.clear()
-            ax2.set_title("SSNR projection fx = 0 \n for s-polarized waves, \n fz = {:.2f}, ".format(fz[int(val)]) + "$\\lambda^{-1}$")
-            ax2.set_xlabel("fx, $\lambda^{-1}$")
-            ax2.set_ylabel("SSNR, $\lambda^{-1}$")
+            ax2.set_title("Slice $f_y$ = 0")
+            ax2.set_xlabel(r"$f_x$")
+            # ax2.set_ylabel(r"SSNR")
+
             ax2.set_yscale("log")
-            ax2.set_ylim(1, 10**6)
-            ax2.set_xlim(0, fx[-1])
+            ax2.set_ylim(1, 3 * 10**2)
+            ax2.set_xlim(0, fx[-1]/(2 * NA))
             ax2.grid()
 
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(SSNR_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
 
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, int(val)][fx >= 0],label="S-polarized")
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, int(val)][fx >= 0], label="Circular")
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, int(val)][fx >= 0], label="3 waves")
-            ax2.plot(fx[fx >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, int(val)][fx >= 0], label="Widefield")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_s_polarized[int(N / 2), :, int(val)][fx >= 0], label="S-polarized")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_circular[int(N / 2), :, int(val)][fx >= 0],    label="Circular"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_3waves[int(N / 2), :, int(val)][fx >= 0],      label="3 waves"    )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[int(N / 2), :, int(val)][fx >= 0],   label="Widefield"  )
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
-        slider_loc = plt.axes((0.6, 0.1, 0.3, 0.03))  # slider location and size
-        slider_proj_s = Slider(slider_loc, 'fz', 0, N-1)  # slider properties
-        slider_proj_s.on_changed(update2)
+        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        # slider_ssnr = Slider(slider_loc, 'fz', 0, 50)  # slider properties
+        # slider_ssnr.on_changed(update1)
 
         ax1.legend()
         ax2.legend()
-        plt.show()
+        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/fz={:.2f}_compare_SSNR.png'.format(fz[arg]))
