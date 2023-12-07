@@ -16,7 +16,8 @@ class ConfigParser:
         self.parser.add_argument("-p", "--plot", action="store_true", help="Plot data")
         self.args = self.parser.parse_args()
 
-    def read_configuration(self, file):
+    @staticmethod
+    def read_configuration(file):
         spec = spec_from_loader("config_file",
                                 SourceFileLoader("config_file", os.getcwd() + "/config/" + file))
         conf = module_from_spec(spec)

@@ -139,7 +139,7 @@ class OpticalSystem:
         if self.interpolation_method == "Fourier":
             if tuple(q) not in self._wvdiff_otfs:
                 print("Shifted otf for a wavevector ", q, " is not stored for this optical system. Computing...")
-                self._compute_wvdiff_otfs((q, np.array((0, 0, 0) )))
+                self._compute_wvdiff_otfs((q, np.array((0, 0, 0))))
             return self._wvdiff_otfs[tuple(q)]
 
         else:
@@ -159,7 +159,7 @@ class Lens(OpticalSystem):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * np.sin(self.alpha)
-        u = 2 * np.pi * z * np.sin(self.alpha / 2) ** 2
+        u = 8 * np.pi * z * np.sin(self.alpha / 2) ** 2
 
         def integrand(rho):
             return np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(
@@ -306,6 +306,7 @@ class NoiseEstimator:
         waves = self.illumination.waves
         for angle in self.illumination.angles:
             for indices in waves.keys():
+                indices_dual = (indices[0], indices[1], -indices[2])
                 wavevector = VectorOperations.VectorOperations.rotate_vector3d(
                     waves[indices].wavevector, np.array((0, 0, 1)), angle)
                 wavevector2d = wavevector[:2]
@@ -317,10 +318,11 @@ class NoiseEstimator:
                         self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
                 else:
                     if indices[:2] not in self.vj_parameters.keys():
-                        otf = 1/2 * (self.optical_system.interpolate_otf(wavevector) +
-                                     self.optical_system.interpolate_otf(wavevector_dual))
+                        coeff = waves[indices_dual].amplitude/waves[indices].amplitude
+                        otf = (self.optical_system.interpolate_otf(wavevector) +
+                               coeff * self.optical_system.interpolate_otf(wavevector_dual))
                         self.vj_parameters[(indices[0], indices[1], angle)] = (
-                            self.VjParrametersHolder(waves[indices].amplitude * 2, otf, wavevector2d))
+                            self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
 
 
     def _compute_wfdiff_otfs_for_Vj(self):
@@ -336,7 +338,6 @@ class NoiseEstimator:
                         self.vj_parameters[index1].wavevector, angle)
                     wavevector2 = VectorOperations.VectorOperations.rotate_vector2d(
                         self.vj_parameters[index2].wavevector,  angle)
-                    # print(wavevector2, wavevector1)
                     wvdiff = wavevector2 - wavevector1
                     wvdiff3d = np.array((wvdiff[0], wvdiff[1], 0))
 
