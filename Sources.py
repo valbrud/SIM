@@ -28,9 +28,12 @@ class IntensitySource(Source):
 class PlaneWave(ElectricFieldSource):
     def __init__(self, electric_field_p, electric_field_s, phase1, phase2, wavevector):
         self.wavevector = np.array(wavevector)
-
-        theta = np.arccos(wavevector[2] / np.linalg.norm(wavevector))
-        phi = cmath.phase(wavevector[0] + 1j * wavevector[1])
+        if not np.linalg.norm(wavevector) == 0:
+            theta = np.arccos(wavevector[2] / np.linalg.norm(wavevector))
+            phi = cmath.phase(wavevector[0] + 1j * wavevector[1])
+        else:
+            theta = 0
+            phi = 0
         Ep = electric_field_p * np.array((np.cos(theta) * np.cos(phi), np.cos(theta) * np.sin(phi), -np.sin(theta)))
         Es = electric_field_s * np.array((-np.sin(phi), np.cos(phi), 0))
         self.field_vectors = [Ep, Es]
