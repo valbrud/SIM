@@ -31,8 +31,6 @@ class MainWindow(QMainWindow):
         self.colorbar = None
 
     def init_ui(self):
-        self.setFocusPolicy(Qt.StrongFocus)
-        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
         width = 1200
         height = 800
         self.setMinimumSize(width, height)
@@ -165,6 +163,8 @@ class MainWindow(QMainWindow):
         if type(source) == Sources.PlaneWave:
             self.add_plane_wave(source)
 
+    def remove_source(self, initializer):
+        self.box.remove_source(initializer)
     def add_point_source(self):
         source = GUIWidgets.PointSourceWidget()
         self.sources_layout.addWidget(source)
@@ -180,11 +180,13 @@ class MainWindow(QMainWindow):
         source = GUIWidgets.PlaneWaveWidget(ipw)
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.plane_wave))
+        source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
 
     def add_intensity_plane_wave(self, ipw=None):
         source = GUIWidgets.IntensityPlaneWaveWidget(ipw)
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
+        source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
 
     def plotting_mode(self, Z, mode="linear"):
         if mode == "linear":
@@ -204,18 +206,25 @@ class MainWindow(QMainWindow):
             self.canvas_layout.addWidget(self.slider)
             self.slider.setMinimum(0)
             self.slider.setMaximum(self.box.point_number - 1)
-            k_init = self.box.point_number / 2
+            k_init = self.box.point_number // 2
         elif self.slider:
             k_init = self.slider.value()
 
-        intensity = abs(self.box.intensity_fourier_space) * (self.box.box_size / self.box.point_number) ** 3
+        intensity = (np.abs(self.box.intensity_fourier_space) *
+                     self.box.box_size[0] * self.box.box_size[1] * self.box.box_size[2] / self.box.point_number ** 3)
 
-        fx = np.linspace(- self.box.point_number / self.box.box_size / 2.,
-                         (self.box.point_number - 1) / self.box.box_size / 2, self.box.point_number)
+        fx = np.linspace(- self.box.point_number / self.box.box_size[0] / 2.,
+                         (self.box.point_number - 1) / self.box.box_size[0] / 2, self.box.point_number)
 
-        Fx, Fy = np.meshgrid(fx, fx)
+        fy = np.linspace(- self.box.point_number / self.box.box_size[1] / 2.,
+                         (self.box.point_number - 1) / self.box.box_size[1] / 2, self.box.point_number)
 
-        Z = self.plotting_mode(intensity[:, :, int(k_init)].T, mode)
+        fz = np.linspace(- self.box.point_number / self.box.box_size[2] / 2.,
+                         (self.box.point_number - 1) / self.box.box_size[2] / 2, self.box.point_number)
+
+        Fx, Fy = np.meshgrid(fx, fy)
+
+        Z = self.plotting_mode(intensity[:, :, k_init].T, mode)
 
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
@@ -224,20 +233,20 @@ class MainWindow(QMainWindow):
         cf = ax.contourf(Fx, Fy, Z, levels)
 
         self.colorbar = self.canvas.figure.colorbar(cf)
-        fz_val = k_init / self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+        fz_val = fz[k_init]
 
         ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
         ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
         ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
 
         if self.box.info:
-            ax.text(np.abs(fx[0]), 1.05 * np.abs(fx[0]), self.box.info, color='red')
+            ax.text(np.abs(fx[0]), 1.05 * np.abs(fy[0]), self.box.info, color='red')
 
         self.canvas.draw()
 
         def update(slider_val):
             ax.clear()
-            fz_val = slider_val / self.box.box_size - self.box.point_number / (2 * self.box.box_size)
+            fz_val = fz[slider_val]
             ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
             ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
             ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
@@ -261,12 +270,12 @@ class MainWindow(QMainWindow):
             self.canvas_layout.addWidget(self.slider)
             self.slider.setMinimum(0)
             self.slider.setMaximum(self.box.point_number - 1)
-            k_init = self.box.point_number / 2
+            k_init = self.box.point_number // 2
         else:
             k_init = self.slider.value()
 
-        values = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size
-        X, Y = np.meshgrid(values, values)
+        x, y, z = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size[:, None]
+        X, Y = np.meshgrid(x, y)
         Z = intensity[:, :, int(k_init)].T
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
@@ -275,23 +284,23 @@ class MainWindow(QMainWindow):
         cf = ax.contourf(X, Y, Z, levels)
 
         self.colorbar = self.canvas.figure.colorbar(cf)
-        z_val = (k_init / self.box.point_number - 1 / 2) * self.box.box_size
+        z_val = z[k_init]
         ax.set_title("Intensity, z = {:.2f}".format(z_val))
         ax.set_xlabel("X, $\lambda$")
         ax.set_ylabel("Y, $\lambda$")
         if self.box.info:
-            ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
+            ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
 
         self.canvas.draw()
 
         def update(slider_val):
             ax.clear()
-            z_val = (slider_val / self.box.point_number - 1 / 2) * self.box.box_size
+            z_val = z[slider_val]
             ax.set_title("Intensity, z = {:.2f}".format(z_val))
             Z = intensity[:, :, int(slider_val)].T
             ax.contourf(X, Y, Z, levels)
             if self.box.info:
-                ax.text(self.box.box_size / 2, 1.05 * self.box.box_size / 2, self.box.info, color='red')
+                ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
             self.canvas.draw()
 
         self.slider.valueChanged.connect(update)

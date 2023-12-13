@@ -1,5 +1,4 @@
 import sys
-import sys
 sys.path.append('../')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -157,8 +156,8 @@ class TestSSNR(unittest.TestCase):
             title = "Hexagonal lattice SIM with seven waves"
             label = "hexagonal"
 
-        illumination_polarized = Illumination(waves, M_r = Mr)
-        illumination_polarized.M_t = Mt
+        illumination_polarized = Illumination(waves, Mr = Mr)
+        illumination_polarized.Mt = Mt
         optical_system = Lens(alpha=theta)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
@@ -274,9 +273,9 @@ class TestSSNR(unittest.TestCase):
             label = "hexagonal"
 
 
-        illumination_polarized = Illumination(waves, M_r= Mr)
-        illumination_widefield = Illumination(widefield, M_r =1)
-        illumination_polarized.M_t = Mt
+        illumination_polarized = Illumination(waves, Mr= Mr)
+        illumination_widefield = Illumination(widefield, Mr =1)
+        illumination_polarized.Mt = Mt
         optical_system = Lens(alpha=np.pi/4)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
@@ -363,6 +362,7 @@ class TestSSNR(unittest.TestCase):
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
+        dV = dx * dy * dz
         x = np.arange(-max_r, max_r, dx)
         y = np.copy(x)
         z = np.arange(-max_z, max_z, dz)
@@ -384,38 +384,49 @@ class TestSSNR(unittest.TestCase):
                                            apodization_filter=None)
 
         illumination_s_polarized = Illumination(s_polarized_waves)
-        illumination_s_polarized.M_t = Mt_s_polarized
+        illumination_s_polarized.Mt = Mt_s_polarized
 
         illumination_circular = Illumination(circular_intensity_waves)
-        illumination_circular.M_t = Mt_circular
+        illumination_circular.Mt = Mt_circular
 
         illumination_seven_waves = Illumination(seven_waves_illumination)
-        illumination_seven_waves.M_t = Mt_seven_waves
+        illumination_seven_waves.Mt = Mt_seven_waves
 
-        illumination_3waves = Illumination(three_waves_illumination, M_r=3)
-        illumination_3waves.M_t = Mt_three_waves
+        illumination_3waves = Illumination(three_waves_illumination, Mr=3)
+        illumination_3waves.Mt = Mt_three_waves
 
-        illumination_widefield = Illumination(widefield, M_r = 1)
+        illumination_widefield = Illumination(widefield, Mr = 1)
 
         noise_estimator = SNRCalculator(illumination_s_polarized, optical_system)
         SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_s_polarized_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_s_polarized)
+        volume_s_polarized = noise_estimator.compute_SSNR_volume(SSNR_s_polarized, dV)
 
         noise_estimator.illumination = illumination_circular
         SSNR_circular = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_circular_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_circular)
+        volume_circular = noise_estimator.compute_SSNR_volume(SSNR_circular, dV)
 
         noise_estimator.illumination = illumination_seven_waves
         SSNR_seven_waves = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_seven_waves_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_seven_waves)
+        volume_seven_waves = noise_estimator.compute_SSNR_volume(SSNR_seven_waves, dV)
 
         noise_estimator.illumination = illumination_3waves
         SSNR_3waves = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_3waves_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_3waves)
+        volume_3waves = noise_estimator.compute_SSNR_volume(SSNR_3waves, dV)
 
         noise_estimator.illumination = illumination_widefield
         SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_widefield_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
+        volume_widefield = noise_estimator.compute_SSNR_volume(SSNR_widefield, dV)
+
+        print("Volume SSNR widefield = ", volume_widefield)
+        print("Volume SSNR s_polarized = ", volume_s_polarized)
+        print("Volume SSNR three_waves = ", volume_3waves)
+        print("Volume SSNR seven_waves = ", volume_seven_waves)
+        print("Volume SSNR circular = ", volume_circular)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(12, 6), constrained_layout = True)
@@ -449,7 +460,6 @@ class TestSSNR(unittest.TestCase):
         ax2.tick_params(labelsize = 15)
 
         multiplier = 10 ** 8
-        print(np.log10(1 + multiplier * SSNR_widefield))
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, arg], label="S-polarized")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, arg],    label="Circular")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, arg],    label="7 waves")
