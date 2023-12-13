@@ -1,17 +1,25 @@
 import numpy as np
 import VectorOperations
+import matplotlib.pyplot as plt
+import stattools
 class Illumination:
-    def __init__(self, intensity_plane_waves_dict, spacial_shifts=(np.array((0, 0, 0)), ), M_r = 1):
-        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / M_r)
-        self._spacial_shifts = spacial_shifts
-        self._M_r = M_r
-        self.M_t = len(self.spacial_shifts)
+    def __init__(self, intensity_plane_waves_dict,  Mr = 1):
+        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / Mr)
+        self._spacial_shifts = np.array((0, 0, 0))
+        self._Mr = Mr
+        self.Mt = len(self.spacial_shifts)
         self.waves = intensity_plane_waves_dict
 
     @classmethod
-    def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, spacial_shifts=(np.array((0, 0, 0))), M_r = 1):
+    def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, Mr = 1):
         intensity_plane_waves_dict = cls.index_frequencies(intensity_plane_waves_list, base_vector_lengths)
-        return cls(intensity_plane_waves_dict, spacial_shifts = spacial_shifts, M_r = M_r)
+        return cls(intensity_plane_waves_dict, Mr = Mr)
+    
+    @classmethod
+    def init_from_numerical_intensity_fourier_domain(cls, numerical_intensity_fourier_domain, axes, Mr = 1):
+        fourier_peaks, amplitudes = stattools.estimate_localized_peaks(numerical_intensity_fourier_domain, axes)
+
+
     @staticmethod
     def index_frequencies(waves_list, base_vector_lengths):
         intensity_plane_waves_dict = {}
@@ -23,13 +31,13 @@ class Illumination:
         return intensity_plane_waves_dict
 
     @property
-    def M_r(self):
-        return self._M_r
+    def Mr(self):
+        return self._Mr
 
-    @M_r.setter
-    def M_r(self, new_M_r):
-        self.M_r = new_M_r
-        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / new_M_r)
+    @Mr.setter
+    def Mr(self, new_Mr):
+        self.Mr = new_Mr
+        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / new_Mr)
 
     @property
     def spacial_shifts(self):
@@ -38,7 +46,7 @@ class Illumination:
     @spacial_shifts.setter
     def spacial_shifts(self, new_spacial_shifts):
         self._spacial_shifts = new_spacial_shifts
-        self.M_t = len(new_spacial_shifts)
+        self.Mt = len(new_spacial_shifts)
 
     def get_wavevectors(self):
         wavevectors = []
@@ -48,3 +56,4 @@ class Illumination:
                     spacial_wave.wavevector, np.array((0, 0, 1)), angle)
                 wavevectors.append(wavevector)
         return wavevectors
+    

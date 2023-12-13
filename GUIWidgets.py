@@ -4,10 +4,13 @@ from GUIInitializationWidgets import *
 
 
 class SourceWidget(QWidget):
+    identifier = 0
+    isDeleted = pyqtSignal(int)
     @abstractmethod
     def __init__(self, source):
         super().__init__()
-        self.identifier = 0
+        self.identifier = SourceWidget.identifier
+        SourceWidget.identifier += 1
 
     @abstractmethod
     def init_ui(self, source): ...
@@ -15,16 +18,15 @@ class SourceWidget(QWidget):
     @abstractmethod
     def contextMenuEvent(self, event): ...
 
-    @abstractmethod
-    def remove_widget(self): ...
-
+    def remove_widget(self):
+        self.isDeleted.emit(self.identifier)
+        self.close()
     @abstractmethod
     def change_widget(self): ...
 
 
 class IntensityPlaneWaveWidget(SourceWidget):
     isSet = pyqtSignal(bool)
-
     def __init__(self, ipw):
         super().__init__(ipw)
         self.init_ui(ipw)
@@ -83,8 +85,6 @@ class IntensityPlaneWaveWidget(SourceWidget):
 
         context_menu.exec_(event.globalPos())
 
-    def remove_widget(self):
-        self.close()
 
     def change_widget(self):
         # Implement the logic to change the widget
@@ -93,6 +93,7 @@ class IntensityPlaneWaveWidget(SourceWidget):
 
 class PlaneWaveWidget(SourceWidget):
     isSet = pyqtSignal(bool)
+    isDeleted = pyqtSignal(int)
 
     def __init__(self, pw=None):
         super().__init__(pw)
@@ -151,8 +152,6 @@ class PlaneWaveWidget(SourceWidget):
 
         context_menu.exec_(event.globalPos())
 
-    def remove_widget(self):
-        self.close()
 
     def change_widget(self):
         # Implement the logic to change the widget
@@ -269,9 +268,6 @@ class PointSourceWidget(SourceWidget):
         context_menu.addAction(change_action)
 
         context_menu.exec_(event.globalPos())
-
-    def remove_widget(self):
-        self.close()
 
     def change_widget(self):
         # Implement the logic to change the widget
