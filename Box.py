@@ -22,7 +22,9 @@ class Box:
     def __init__(self, sources, box_size, point_number, additional_info=None):
         self.info = additional_info
         self.point_number = point_number
-        self.box_size = box_size
+        if type(box_size) == float or type(box_size) == int:
+            box_size = (box_size, box_size, box_size)
+        self.box_size = np.array(box_size)
         self.fields = []
         self.source_identifier = 0
         self.grid = np.zeros((self.point_number, self.point_number, self.point_number, 3))
@@ -42,7 +44,7 @@ class Box:
                                        np.arange(self.point_number))).T.reshape(-1, 3)
         indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
             self.point_number, self.point_number, self.point_number, 3)
-        self.grid = self.box_size * (indices / self.point_number - 1 / 2)
+        self.grid = self.box_size[None, None, None, :] * (indices / self.point_number - 1 / 2)
 
     def compute_electric_field(self):
         self.electric_field = np.zeros(self.electric_field.shape, dtype=np.complex128)
@@ -53,6 +55,8 @@ class Box:
     def compute_intensity_from_electric_field(self):
         self.intensity = np.einsum('ijkl, ijkl->ijk', self.electric_field, self.electric_field.conjugate()).real
 
+    def compute_spacial_waves_numerically(self):
+        ...
     def compute_intensity_from_spacial_waves(self):
         self.intensity = np.zeros(self.intensity.shape)
         for field in self.fields:
@@ -61,12 +65,17 @@ class Box:
         self.intensity = self.intensity.real
 
     def compute_intensity_fourier_space(self):
-        self.intensity_fourier_space = wrappers.wrapped_fftn(self.intensity) * (self.box_size / self.point_number) ** 3
-
+        self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) *
+                                    (self.box_size[0] * self.box_size[1] * self.box_size[2] / self.point_number ** 3))
     def add_source(self, source):
         self.fields.append(FieldHolder(source, self.grid, self.source_identifier))
         self.source_identifier += 1
 
+    def remove_source(self, source_identifier):
+        for field in self.fields:
+            if field.identifier == source_identifier:
+                self.fields.remove(field)
+                return
     def plot_intensity_slices(self, ax=None, slider=None):
         self.plot_slices(self.intensity, ax, slider)
 
@@ -77,13 +86,13 @@ class Box:
         k_init = self.point_number / 2
         if ax is None:
             fig, ax = plt.subplots()
-        values = (np.arange(self.point_number) / self.point_number - 1 / 2) * self.box_size
-        X, Y = np.meshgrid(values, values)
-        Z = array3d[:, :, int(k_init)].T
+        x, y, z = (np.arange(self.point_number) / self.point_number - 1 / 2) * self.box_size[:, None]
+        X, Y = np.meshgrid(x, y)
+        slice = array3d[:, :, int(k_init)].T
         minValue = np.amin(self.intensity)
         maxValue = min(np.amax(self.intensity), 100.0)
         levels = np.linspace(minValue, maxValue + 1, 30)
-        cf = ax.contourf(X, Y, Z[:, :], levels)
+        cf = ax.contourf(X, Y, slice[:, :], levels)
         plt.colorbar(cf)
         contour_axis = ax
 

@@ -1,5 +1,10 @@
 import unittest
 from config.IlluminationConfigurations import *
+from Box import Box
+from Sources import PlaneWave, IntensityPlaneWave
+from VectorOperations import VectorOperations
+import matplotlib.pyplot as plt
+import stattools
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):
         sources = [
@@ -36,3 +41,41 @@ class TestIllumination(unittest.TestCase):
 
     def test_seven_waves_illumination(self):
         print(seven_waves_illumination)
+
+    def test_numerical_peaks_search(self):
+        theta = np.pi / 4
+        b = 1
+        k = 2 * np.pi
+        k1 = k * np.sin(theta)
+        k2 = k * (np.cos(theta) - 1)
+        vec_x = np.array((k/2 * np.sin(theta), 0, k * np.cos(theta)))
+        vec_mx = np.array((-k * np.sin(theta), 0, k * np.cos(theta)))
+        ax_z = np.array((0, 0, 1))
+
+        sources = [
+
+            PlaneWave(0, b, 0, 0, vec_x),
+            PlaneWave(0, b, 0, 0, vec_mx),
+            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z,  2 * np.pi/3)),
+            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z,  2 * np.pi/3)),
+            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi / 3)),
+            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi / 3)),
+
+            PlaneWave(1, 1j * 1, 0, 0, np.array((0, 0, k))),
+        ]
+        box = Box(sources, 15, 100)
+        axes = (box.grid[:, 0, 0, 0], box.grid[0, :, 0, 1], box.grid[0, 0, :, 2])
+        box.compute_electric_field()
+        box.compute_intensity_from_electric_field()
+        box.compute_intensity_fourier_space()
+        fourier_peaks, amplitudes = stattools.estimate_localized_peaks(box.intensity_fourier_space, axes)
+        print(len(fourier_peaks))
+        intensity_sources_discrete = []
+        for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
+            intensity_sources_discrete.append(IntensityPlaneWave(amplitude, 0, np.array(fourier_peak)))
+        box2 = Box(intensity_sources_discrete, (20, 20, 80), 100)
+        box2.compute_intensity_from_spacial_waves()
+        box2.compute_intensity_fourier_space()
+        plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
+        plt.show()
+

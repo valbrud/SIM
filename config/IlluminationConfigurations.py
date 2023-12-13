@@ -96,14 +96,14 @@ seven_waves_list = [
     Sources.IntensityPlaneWave(-1j * b/norm, 0, np.array((k1, 0, k2))),
     Sources.IntensityPlaneWave(-1j * b/norm, 0, np.array((k1, 0, -k2))),
 
-    Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, 3**0.5/2 * k1, -k2))),
-    Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, -3**0.5/2 * k1, -k2))),
-    Sources.IntensityPlaneWave((2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, 3**0.5/2 * k1, -k2))),
-    Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, -3**0.5/2 * k1, -k2))),
-    Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, 3**0.5/2 * k1, k2))),
-    Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, -3**0.5/2 * k1, k2))),
-    Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, 3**0.5/2 * k1, k2))),
-    Sources.IntensityPlaneWave((2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, -3**0.5/2 * k1, k2))),
+    Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, 3**0.5/2 * k1, k2))),
+    Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, -3**0.5/2 * k1, k2))),
+    Sources.IntensityPlaneWave((2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, 3**0.5/2 * k1, k2))),
+    Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, -3**0.5/2 * k1, k2))),
+    Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, 3**0.5/2 * k1, -k2))),
+    Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b/norm, 0, np.array((k1/2, -3**0.5/2 * k1, -k2))),
+    Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, 3**0.5/2 * k1, -k2))),
+    Sources.IntensityPlaneWave((2*3**0.5 + 2j)/4 * b/norm, 0, np.array((-k1/2, -3**0.5/2 * k1, -k2))),
 ]
 seven_waves_illumination = Illumination.index_frequencies(seven_waves_list, (k1/2, 3**0.5/2 * k1, k2))
 

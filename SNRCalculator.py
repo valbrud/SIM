@@ -50,7 +50,7 @@ class SNRCalculator:
         d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
         for m in self.vj_parameters.keys():
             d_j += np.abs(self.vj_parameters[m].a_m)**2 * np.abs(self.vj_parameters[m].otf)**2
-        d_j *= self.illumination.M_t
+        d_j *= self.illumination.Mt
         print(d_j[25, 25, 25])
         return d_j
     def _compute_parameters_for_Vj(self):
@@ -125,7 +125,7 @@ class SNRCalculator:
                     v_j += term
                     # if (k_m1 == np.array((0, 0, 0))).all() and (k_m2 == np.array((0, 0, 0))).all():
                     #     print(k_m1, k_m2, term[25,25,25])
-        v_j *= self.illumination.M_t
+        v_j *= self.illumination.Mt
         print(v_j[25, 25, 25])
         return v_j
 
@@ -152,4 +152,6 @@ class SNRCalculator:
             averaged_slices.append(average_ring(SSNR[:, :, i], (q_axes[0], q_axes[1])))
         return np.array(averaged_slices).T
 
+    def compute_SSNR_volume(self, SSNR, volume_element):
+        return np.sum(SSNR) * volume_element
 
