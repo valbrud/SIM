@@ -88,27 +88,42 @@ class MainWindow(QMainWindow):
         add_spacial_frequency_button = QPushButton("Add a Spatial Frequency")
         add_spacial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
 
+        find_fourier_peaks_numerically = QPushButton("Find Fourier peaks numerically")
+        find_fourier_peaks_numerically.clicked.connect(self.compute_numerically_approximated_intensities)
+        
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
         self.source_buttons_layout.addWidget(add_spacial_frequency_button)
+        self.source_buttons_layout.addWidget(find_fourier_peaks_numerically)
         self.source_buttons_layout.addStretch()
 
         # Initialization layout
-        self.initialization_layout = QHBoxLayout()
-        setup_sources_button = QPushButton("Set up from sources")
-        setup_sources_button.clicked.connect(self.compute_and_plot_from_electric_field)
-        setup_frequencies_button = QPushButton("Set up from spatial frequencies")
-        setup_frequencies_button.clicked.connect(self.compute_and_plot_from_intensity_sources)
-        setup_fourier_space_button = QPushButton("Fourier space")
-        setup_fourier_space_button.clicked.connect(self.compute_and_plot_fourier_space)
-        self.initialization_layout.addWidget(setup_sources_button, 1)
-        self.initialization_layout.addWidget(setup_frequencies_button, 1)
-        self.initialization_layout.addWidget(setup_fourier_space_button, 1)
+        self.plot_layout = QHBoxLayout()
 
+        plot_from_electric_fields_button = QPushButton("Intensity from electric fields")
+        plot_from_electric_fields_button.clicked.connect(self.compute_and_plot_from_electric_field)
+
+        plot_from_frequencies_button = QPushButton("Intensity from spatial frequencies")
+        plot_from_frequencies_button.clicked.connect(self.compute_and_plot_from_intensity_sources)
+
+        plot_fourier_space_button = QPushButton("Fourier space")
+        plot_fourier_space_button.clicked.connect(self.compute_and_plot_fourier_space)
+
+        plot_approximate_intensity_button = QPushButton("Approximate intensity")
+        plot_approximate_intensity_button.clicked.connect(self.plot_numerically_approximated_intensity)
+
+        plot_approximate_intensity_fourier_space_button = QPushButton("Approximate Fourier space")
+        plot_approximate_intensity_fourier_space_button.clicked.connect(self.plot_numerically_approximated_intensity_fourier_space)
+
+        self.plot_layout.addWidget(plot_from_electric_fields_button, 1)
+        self.plot_layout.addWidget(plot_from_frequencies_button, 1)
+        self.plot_layout.addWidget(plot_fourier_space_button, 1)
+        self.plot_layout.addWidget(plot_approximate_intensity_button, 1)
+        self.plot_layout.addWidget(plot_approximate_intensity_fourier_space_button, 1)
         # Add sections to the main layout
         self.main_layout.addLayout(self.options_layout, 1)
         self.main_layout.addLayout(self.config_layout, 8)
-        self.main_layout.addLayout(self.initialization_layout, 1)
+        self.main_layout.addLayout(self.plot_layout, 1)
 
         self.setWindowTitle("Interference patterns GUI")
 
@@ -196,7 +211,54 @@ class MainWindow(QMainWindow):
         elif mode == "mixed":
             return np.log10(1 + Z)
 
-    def plot_fourier_space_slices(self, mode="linear"):
+    def plot_intensity_slices(self, intensity = None):
+        self.canvas.figure.clear()
+        ax = self.canvas.figure.add_subplot(111)
+        ax.set_aspect('equal')
+
+        intensity = self.box.intensity.real if intensity is None else intensity
+
+        if not self.slider:
+            self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
+            self.canvas_layout.addWidget(self.slider)
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.box.point_number - 1)
+            k_init = self.box.point_number // 2
+        else:
+            k_init = self.slider.value()
+
+        x, y, z = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size[:, None]
+        X, Y = np.meshgrid(x, y)
+        Z = intensity[:, :, int(k_init)].T
+        minValue = min(np.amin(intensity), 0.0)
+        maxValue = min(np.amax(intensity), 100.0)
+        print(maxValue)
+        levels = np.linspace(minValue, maxValue + 1, 30)
+        cf = ax.contourf(X, Y, Z, levels)
+
+        self.colorbar = self.canvas.figure.colorbar(cf)
+        z_val = z[k_init]
+        ax.set_title("Intensity, z = {:.2f}".format(z_val))
+        ax.set_xlabel("X, $\lambda$")
+        ax.set_ylabel("Y, $\lambda$")
+        if self.box.info:
+            ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
+
+        self.canvas.draw()
+
+        def update(slider_val):
+            ax.clear()
+            z_val = z[slider_val]
+            ax.set_title("Intensity, z = {:.2f}".format(z_val))
+            Z = intensity[:, :, int(slider_val)].T
+            ax.contourf(X, Y, Z, levels)
+            if self.box.info:
+                ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
+            self.canvas.draw()
+
+        self.slider.valueChanged.connect(update)
+
+    def plot_fourier_space_slices(self, intensity = None, mode="linear"):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
         ax.set_aspect('equal')
@@ -210,8 +272,9 @@ class MainWindow(QMainWindow):
         elif self.slider:
             k_init = self.slider.value()
 
-        intensity = (np.abs(self.box.intensity_fourier_space) *
+        intensity = ((np.abs(self.box.intensity_fourier_space) *
                      self.box.box_size[0] * self.box.box_size[1] * self.box.box_size[2] / self.box.point_number ** 3)
+                     if intensity is None else intensity)
 
         fx = np.linspace(- self.box.point_number / self.box.box_size[0] / 2.,
                          (self.box.point_number - 1) / self.box.box_size[0] / 2, self.box.point_number)
@@ -258,52 +321,11 @@ class MainWindow(QMainWindow):
 
         self.slider.valueChanged.connect(update)
 
-    def plot_intensity_slices(self):
-        self.canvas.figure.clear()
-        ax = self.canvas.figure.add_subplot(111)
-        ax.set_aspect('equal')
-
-        intensity = self.box.intensity.real
-
-        if not self.slider:
-            self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
-            self.canvas_layout.addWidget(self.slider)
-            self.slider.setMinimum(0)
-            self.slider.setMaximum(self.box.point_number - 1)
-            k_init = self.box.point_number // 2
-        else:
-            k_init = self.slider.value()
-
-        x, y, z = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size[:, None]
-        X, Y = np.meshgrid(x, y)
-        Z = intensity[:, :, int(k_init)].T
-        minValue = min(np.amin(intensity), 0.0)
-        maxValue = min(np.amax(intensity), 100.0)
-        print(maxValue)
-        levels = np.linspace(minValue, maxValue + 1, 30)
-        cf = ax.contourf(X, Y, Z, levels)
-
-        self.colorbar = self.canvas.figure.colorbar(cf)
-        z_val = z[k_init]
-        ax.set_title("Intensity, z = {:.2f}".format(z_val))
-        ax.set_xlabel("X, $\lambda$")
-        ax.set_ylabel("Y, $\lambda$")
-        if self.box.info:
-            ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
-
-        self.canvas.draw()
-
-        def update(slider_val):
-            ax.clear()
-            z_val = z[slider_val]
-            ax.set_title("Intensity, z = {:.2f}".format(z_val))
-            Z = intensity[:, :, int(slider_val)].T
-            ax.contourf(X, Y, Z, levels)
-            if self.box.info:
-                ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
-            self.canvas.draw()
-
-        self.slider.valueChanged.connect(update)
+    def plot_numerically_approximated_intensity(self):
+        self.plot_intensity_slices(intensity=self.box.numerically_approximated_intensity)
+    def plot_numerically_approximated_intensity_fourier_space(self):
+        intensity = np.abs(self.box.numerically_approximated_intensity_fourier_space) * self.box.box_volume / self.box.point_number**3
+        self.plot_fourier_space_slices(intensity = intensity)
 
     def compute_and_plot_from_electric_field(self):
         self.box.compute_electric_field()
@@ -318,6 +340,8 @@ class MainWindow(QMainWindow):
         self.box.compute_intensity_fourier_space()
         self.plot_fourier_space_slices()
 
+    def compute_numerically_approximated_intensities(self):
+        self.box.compute_intensity_and_spacial_waves_numerically()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

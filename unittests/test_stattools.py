@@ -25,3 +25,8 @@ class TestRingAveraging(unittest.TestCase):
         plt.plot(averages)
         plt.plot(np.sin(y / 100))
         plt.show()
+
+class TestGridFitting(unittest.TestCase):
+    y = np.array((1.01, 2.04, 1.98, 3.9, 4.1, 5.05, 6, 7.03, 6.9))
+    base_vector, indices = stattools.find_optimal_base_vectors(y)
+    print(base_vector)

@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
-import wrappers
 
+import Sources
+import wrappers
+import stattools
 
 class FieldHolder:
     def __init__(self, source, grid, identifier):
@@ -25,20 +27,38 @@ class Box:
         if type(box_size) == float or type(box_size) == int:
             box_size = (box_size, box_size, box_size)
         self.box_size = np.array(box_size)
+        self.box_volume = self.box_size[0] * self.box_size[1] * self.box_size[2]
         self.fields = []
+        self.numerically_approximated_intensity_fields = []
         self.source_identifier = 0
+        self.axes, self.frequency_axes = self.compute_axes()
         self.grid = np.zeros((self.point_number, self.point_number, self.point_number, 3))
         self.compute_grid()
         self.electric_field = np.zeros((self.point_number, self.point_number, self.point_number, 3),
                                        dtype=np.complex128)
         self.intensity = np.zeros((self.point_number, self.point_number, self.point_number))
+        self.numerically_approximated_intensity = np.zeros((self.point_number, self.point_number, self.point_number))
         self.intensity_fourier_space = np.zeros((self.point_number, self.point_number, self.point_number))
+        self.numerically_approximated_intensity_fourier_space = np.zeros((self.point_number, self.point_number, self.point_number))
         self.analytic_frequencies = []
 
         for source in sources:
-            self.fields.append(FieldHolder(source, self.grid, self.source_identifier))
-            self.source_identifier += 1
+            self.add_source(source)
 
+    def compute_axes(self):
+        N = self.point_number
+        dx = self.box_size[0] / N
+        dy = self.box_size[1] / N
+        dz = self.box_size[2] / N
+
+        x = np.arange(-self.box_size[0]/2, self.box_size[0]/2, dx)
+        y = np.arange(-self.box_size[1]/2, self.box_size[1]/2, dy)
+        z = np.arange(-self.box_size[2]/2, self.box_size[2]/2, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / self.box_size[0], N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / self.box_size[1], N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / self.box_size[2], N)
+        return (x, y, z), (fx, fy, fz)
     def compute_grid(self):
         indices = np.array(np.meshgrid(np.arange(self.point_number), np.arange(self.point_number),
                                        np.arange(self.point_number))).T.reshape(-1, 3)
@@ -55,8 +75,6 @@ class Box:
     def compute_intensity_from_electric_field(self):
         self.intensity = np.einsum('ijkl, ijkl->ijk', self.electric_field, self.electric_field.conjugate()).real
 
-    def compute_spacial_waves_numerically(self):
-        ...
     def compute_intensity_from_spacial_waves(self):
         self.intensity = np.zeros(self.intensity.shape)
         for field in self.fields:
@@ -64,9 +82,25 @@ class Box:
                 self.intensity = self.intensity + field.field
         self.intensity = self.intensity.real
 
+    def compute_intensity_and_spacial_waves_numerically(self):
+        self.compute_electric_field()
+        self.compute_intensity_from_electric_field()
+        self.compute_intensity_fourier_space()
+        fourier_peaks, amplitudes = stattools.estimate_localized_peaks(self.intensity_fourier_space, self.frequency_axes)
+        numeric_spacial_waves = []
+        for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
+            numeric_spacial_waves.append(Sources.IntensityPlaneWave(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+        for wave in numeric_spacial_waves:
+            self.numerically_approximated_intensity_fields.append(FieldHolder(wave, self.grid, self.source_identifier))
+            self.source_identifier += 1
+        self.numerically_approximated_intensity = np.zeros(self.intensity.shape, dtype = np.complex128)
+        for field in self.numerically_approximated_intensity_fields:
+            self.numerically_approximated_intensity += field.field
+        self.numerically_approximated_intensity = self.numerically_approximated_intensity.real
+        self.numerically_approximated_intensity_fourier_space = (
+                wrappers.wrapped_ifftn(self.numerically_approximated_intensity) * self.box_volume)
     def compute_intensity_fourier_space(self):
-        self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) *
-                                    (self.box_size[0] * self.box_size[1] * self.box_size[2] / self.point_number ** 3))
+        self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) * (self.box_volume / self.point_number ** 3))
     def add_source(self, source):
         self.fields.append(FieldHolder(source, self.grid, self.source_identifier))
         self.source_identifier += 1
@@ -76,6 +110,12 @@ class Box:
             if field.identifier == source_identifier:
                 self.fields.remove(field)
                 return
+
+    def plot_approximate_intensity_slices(self, ax = None, slider=None):
+        self.plot_slices(self.numerically_approximated_intensity, ax, slider)
+
+    def plot_approximate_intensity_fourier_space_slices(self, ax=None, slider=None):
+        self.plot_slices(self.numerically_approximated_intensity_fourier_space, ax, slider)
     def plot_intensity_slices(self, ax=None, slider=None):
         self.plot_slices(self.intensity, ax, slider)
 
