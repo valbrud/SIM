@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.optimize import minimize
 def average_ring(array, axes=None):
     if not axes:
         ax1, ax2 = np.arange(array.shape[0]) - array.shape[0]/ 2, np.arange(array.shape[1]) - array.shape[1] / 2
@@ -31,7 +31,7 @@ def estimate_localized_peaks(array, axes):
         raise ValueError("Estimation is only available for 3d arrays now")
     array_abs = np.abs(array)
     max_value = np.amax(array_abs)
-    array = np.where(array_abs > max_value * 10**-3, array, 0)
+    array = np.where(array_abs > max_value * 10**-4, array, 0)
     array_abs = np.where(array_abs > max_value * 10**-2, array_abs, 0)
     maxima_indices = np.array(np.where((array_abs[1:-1, 1:-1, 1:-1] > array_abs[0:-2, 1:-1, 1:-1]) * (array_abs[1:-1, 1:-1, 1:-1] > array_abs[2:, 1:-1, 1:-1]) *
                                        (array_abs[1:-1, 1:-1, 1:-1] > array_abs[1:-1, 0:-2, 1:-1]) * (array_abs[1:-1, 1:-1, 1:-1] > array_abs[1:-1, 2:, 1:-1]) *
@@ -79,3 +79,6 @@ def gaussian_maxima_fitting(array, axes, maxima_indices, size=5):
         std.append(sigma)
 
     return np.array(maxima_fitted), np.array(std)
+
+
+

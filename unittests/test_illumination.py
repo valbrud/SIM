@@ -38,7 +38,6 @@ class TestIllumination(unittest.TestCase):
         ]
         five_waves_dict = Illumination.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
         assert (five_waves_dict.keys() == s_polarized_waves.keys())
-
     def test_seven_waves_illumination(self):
         print(seven_waves_illumination)
 
@@ -72,10 +71,14 @@ class TestIllumination(unittest.TestCase):
         print(len(fourier_peaks))
         intensity_sources_discrete = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
-            intensity_sources_discrete.append(IntensityPlaneWave(amplitude, 0, np.array(fourier_peak)))
+            intensity_sources_discrete.append(IntensityPlaneWave(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+            print(fourier_peak*np.pi * 2)
+        res = stattools.find_optimal_base_vectors(fourier_peaks)
+        print(fourier_peaks[:10])
+        print(res)
         box2 = Box(intensity_sources_discrete, (20, 20, 80), 100)
         box2.compute_intensity_from_spacial_waves()
         box2.compute_intensity_fourier_space()
-        plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
-        plt.show()
+        # plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
+        # plt.show()
 
