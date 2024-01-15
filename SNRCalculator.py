@@ -40,10 +40,10 @@ class SNRCalculator:
         self.vj_otf_diffs = {}
         self._compute_parameters_for_Vj()
         self._compute_wfdiff_otfs_for_Vj()
-    class VjParrametersHolder:
-        def __init__(self, a_m, otf, wavevector2d):
+    class VjParametersHolder:
+        def __init__(self, a_m, otf_times_amplitude_conjugate, wavevector2d):
             self.a_m = a_m
-            self.otf = otf
+            self.product = otf_times_amplitude_conjugate
             self.wavevector = wavevector2d
 
     def Dj(self, q_grid, method="Fourier"):
@@ -53,35 +53,57 @@ class SNRCalculator:
         d_j *= self.illumination.Mt
         print(d_j[25, 25, 25])
         return d_j
+
+    def _rearrange_indices(self, indices):
+        result_dict = {}
+        for index in indices:
+            key = index[:2]
+            value = index[2]
+            if key not in result_dict:
+                result_dict[key] = []
+            result_dict[key].append(value)
+        result_dict = {key: tuple(values) for key, values in result_dict.items()}
+        print(result_dict)
+        return result_dict
     def _compute_parameters_for_Vj(self):
         waves = self.illumination.waves
         for angle in self.illumination.angles:
-            for indices in waves.keys():
-                indices_dual = (indices[0], indices[1], -indices[2])
-                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                    waves[indices].wavevector, np.array((0, 0, 1)), angle)
-                wavevector2d = wavevector[:2]
-                wavevector_dual = np.array((wavevector[0], wavevector[1], -wavevector[2]))
-
-                if indices[2] == 0:
-                    otf = self.optical_system.interpolate_otf(wavevector)
-                    self.vj_parameters[(indices[0], indices[1], angle)] = (
-                        self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
-                else:
-                    if indices[:2] not in self.vj_parameters.keys():
-                        coeff = waves[indices_dual].amplitude/waves[indices].amplitude
-
-                        otf = (self.optical_system.interpolate_otf(wavevector) +
-                               coeff * self.optical_system.interpolate_otf(wavevector_dual))
-
-                        indices_in_plane = (indices[0], indices[1], 0)
-                        if indices_in_plane in waves.keys():
-                            coeff_in_plane = waves[indices_in_plane].amplitude/waves[indices].amplitude
-                            wavevector_in_plane = np.array((wavevector[0], wavevector[1], 0))
-                            otf += coeff_in_plane * self.optical_system.interpolate_otf(wavevector_in_plane)
-
-                        self.vj_parameters[(indices[0], indices[1], angle)] = (
-                            self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
+            indices = self._rearrange_indices(waves.keys())
+            for xy_indices in indices.keys():
+                otf = 0
+                for z_index in indices[xy_indices]:
+                    wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+                        waves[(xy_indices[0], xy_indices[1], z_index)].wavevector, np.array((0, 0, 1)), angle)
+                    amplitude = waves[(xy_indices[0], xy_indices[1], z_index)].amplitude
+                    otf += amplitude.conjugate() * self.optical_system.interpolate_otf(wavevector)
+                self.vj_parameters[(indices[0], indices[1], angle)] = (
+                    self.VjParametersHolder(waves[indices].amplitude, otf, xy_indices))
+            # for indices in waves.keys():
+            #     indices_dual = (indices[0], indices[1], -indices[2])
+            #     wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+            #         waves[indices].wavevector, np.array((0, 0, 1)), angle)
+            #     wavevector2d = wavevector[:2]
+            #     wavevector_dual = np.array((wavevector[0], wavevector[1], -wavevector[2]))
+            #
+            #     if indices[2] == 0:
+            #         otf = self.optical_system.interpolate_otf(wavevector)
+            #         self.vj_parameters[(indices[0], indices[1], angle)] = (
+            #             self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
+            #     else:
+            #         if indices[:2] not in self.vj_parameters.keys():
+            #             coeff = waves[indices_dual].amplitude/waves[indices].amplitude
+            #
+            #             otf = (self.optical_system.interpolate_otf(wavevector) +
+            #                    coeff * self.optical_system.interpolate_otf(wavevector_dual))
+            #
+            #             indices_in_plane = (indices[0], indices[1], 0)
+            #             if indices_in_plane in waves.keys():
+            #                 coeff_in_plane = waves[indices_in_plane].amplitude/waves[indices].amplitude
+            #                 wavevector_in_plane = np.array((wavevector[0], wavevector[1], 0))
+            #                 otf += coeff_in_plane * self.optical_system.interpolate_otf(wavevector_in_plane)
+            #
+            #             self.vj_parameters[(indices[0], indices[1], angle)] = (
+            #                 self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
 
 
     def _compute_wfdiff_otfs_for_Vj(self):

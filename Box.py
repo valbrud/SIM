@@ -90,6 +90,7 @@ class Box:
         numeric_spacial_waves = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
             numeric_spacial_waves.append(Sources.IntensityPlaneWave(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+        print(len(numeric_spacial_waves), fourier_peaks)
         for wave in numeric_spacial_waves:
             self.numerically_approximated_intensity_fields.append(FieldHolder(wave, self.grid, self.source_identifier))
             self.source_identifier += 1

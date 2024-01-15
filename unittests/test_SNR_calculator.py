@@ -371,7 +371,7 @@ class TestSSNR(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
 
-        arg = N // 2 - 24
+        arg = N // 2 #- 24
         print(fz[arg])
 
         two_NA_fx = fx / (2 * NA)
@@ -396,6 +396,7 @@ class TestSSNR(unittest.TestCase):
         illumination_3waves.Mt = Mt_three_waves
 
         illumination_widefield = Illumination(widefield, Mr = 1)
+        illumination_widefield.Mt = Mt_widefield
 
         noise_estimator = SNRCalculator(illumination_s_polarized, optical_system)
         SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes))
@@ -460,16 +461,16 @@ class TestSSNR(unittest.TestCase):
         ax2.tick_params(labelsize = 15)
 
         multiplier = 10 ** 8
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, arg], label="S-polarized")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, arg],    label="Circular")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, arg],    label="7 waves")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, arg],      label="3 waves")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, arg], label="lattice SIM, 5 waves, s-polarized")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, arg],    label="lattice SIM, 5 waves, circularly polarized")
+        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, arg],    label="7 waves")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, arg],      label="Conventional SIM")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, arg],   label="Widefield")
 
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_s_polarized[:, int(N / 2), arg][fx >= 0], label="S-polarized")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_circular[:, int(N / 2), arg][fx >= 0], label="Circular")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2), arg][fx >= 0], label="7 waves")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_3waves[:, int(N / 2), arg][fx >= 0], label="3 waves")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_s_polarized[:, int(N / 2), arg][fx >= 0], label="lattice SIM, 5 waves, s-polarized")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_circular[:, int(N / 2), arg][fx >= 0], label="lattice SIM, 5 waves, circularly polarized")
+        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2), arg][fx >= 0], label="7 waves")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_3waves[:, int(N / 2), arg][fx >= 0], label="Conventional SIM")
         ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
         ax1.set_aspect(1. / ax1.get_data_ratio())
         ax2.set_aspect(1. / ax2.get_data_ratio())
@@ -485,7 +486,7 @@ class TestSSNR(unittest.TestCase):
             ax1.grid()
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(val)], label="S-polarized")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(val)],    label="Circular")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, int(val)],    label="7 waves")
+            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, int(val)],    label="7 waves")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(val)],      label="3 waves")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)],   label="Widefield")
             ax1.legend()
@@ -506,7 +507,7 @@ class TestSSNR(unittest.TestCase):
 
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_s_polarized[:, int(N / 2), int(val)][fx >= 0], label="S-polarized")
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_circular[:, int(N / 2), int(val)][fx >= 0],    label="Circular"   )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
+            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_3waves[:, int(N / 2), int(val)][fx >= 0],      label="3 waves"    )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[:, int(N / 2), int(val)][fx >= 0],   label="Widefield"  )
             ax2.legend()
@@ -518,5 +519,5 @@ class TestSSNR(unittest.TestCase):
 
         ax1.legend()
         ax2.legend()
-        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/fz={:.2f}_compare_SSNR.png'.format(fz[arg]))
+        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/fz={:.2f}_compare_SSNR_conf_version.png'.format(fz[arg]))
         plt.show()
