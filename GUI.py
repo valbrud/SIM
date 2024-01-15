@@ -10,8 +10,16 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QComboBox, QFileDialog, QLabel, QSlider, QScrollArea)
+from enum import Enum
+class View(Enum):
+    XY = 0
+    YZ = 1
+    XZ = 2
 
-
+class PlottingMode(Enum):
+    linear = 0
+    logarithmic = 1
+    mixed = 2
 class MainWindow(QMainWindow):
     def __init__(self, box=None):
         super().__init__()
@@ -29,7 +37,8 @@ class MainWindow(QMainWindow):
 
         self.slider = None
         self.colorbar = None
-
+        self.view = View.XY
+        self.plotting_mode = PlottingMode.linear
     def init_ui(self):
         width = 1200
         height = 800
@@ -120,10 +129,22 @@ class MainWindow(QMainWindow):
         self.plot_layout.addWidget(plot_fourier_space_button, 1)
         self.plot_layout.addWidget(plot_approximate_intensity_button, 1)
         self.plot_layout.addWidget(plot_approximate_intensity_fourier_space_button, 1)
+
+        self.view_layout = QHBoxLayout()
+        change_view_button = QPushButton("Change view")
+        change_view_button.clicked.connect(self.change_view3d)
+
+        change_plotting_mode_button = QPushButton("Change plotting mode")
+        change_plotting_mode_button.clicked.connect(self.change_plotting_mode)
+
+        self.view_layout.addWidget(change_view_button, 1)
+        self.view_layout.addWidget(change_plotting_mode_button, 1)
+
         # Add sections to the main layout
         self.main_layout.addLayout(self.options_layout, 1)
         self.main_layout.addLayout(self.config_layout, 8)
         self.main_layout.addLayout(self.plot_layout, 1)
+        self.main_layout.addLayout(self.view_layout, 1)
 
         self.setWindowTitle("Interference patterns GUI")
 
@@ -203,13 +224,29 @@ class MainWindow(QMainWindow):
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
         source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
 
-    def plotting_mode(self, Z, mode="linear"):
-        if mode == "linear":
+    def choose_plotting_mode(self, Z):
+        if self.plotting_mode == PlottingMode.linear:
             return Z
-        elif mode == "logarithmic":
+        elif self.plotting_mode == PlottingMode.logarithmic:
             return np.log10(Z)
-        elif mode == "mixed":
+        elif self.plotting_mode == PlottingMode.mixed:
             return np.log10(1 + Z)
+
+    def change_plotting_mode(self):
+        modes = list(PlottingMode)
+        self.plotting_mode = modes[(self.plotting_mode.value + 1) % len(modes)]
+
+    def choose_view3d(self, array, number):
+        if self.view == View.XY:
+            Z = array[:, :, number].T
+        elif self.view == View.YZ:
+            Z = array[number, :, :]
+        elif self.view == View.XZ:
+            Z = array[:, number, :]
+        return Z
+    def change_view3d(self):
+        views = list(View)
+        self.view = views[(self.view.value + 1) % len(views)]
 
     def plot_intensity_slices(self, intensity = None):
         self.canvas.figure.clear()
@@ -225,11 +262,15 @@ class MainWindow(QMainWindow):
             self.slider.setMaximum(self.box.point_number - 1)
             k_init = self.box.point_number // 2
         else:
+            self.slider.setMaximum(self.box.point_number - 1)
             k_init = self.slider.value()
 
         x, y, z = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size[:, None]
         X, Y = np.meshgrid(x, y)
-        Z = intensity[:, :, int(k_init)].T
+        Z = self.choose_view3d(intensity, k_init)
+        # self.choose_labels(ax)
+        Z = self.choose_plotting_mode(Z)
+
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
         print(maxValue)
@@ -250,7 +291,8 @@ class MainWindow(QMainWindow):
             ax.clear()
             z_val = z[slider_val]
             ax.set_title("Intensity, z = {:.2f}".format(z_val))
-            Z = intensity[:, :, int(slider_val)].T
+            Z = self.choose_view3d(intensity, slider_val)
+            Z = self.choose_plotting_mode(Z)
             ax.contourf(X, Y, Z, levels)
             if self.box.info:
                 ax.text(self.box.box_size[0] / 2, 1.05 * self.box.box_size[1] / 2, self.box.info, color='red')
@@ -258,7 +300,7 @@ class MainWindow(QMainWindow):
 
         self.slider.valueChanged.connect(update)
 
-    def plot_fourier_space_slices(self, intensity = None, mode="linear"):
+    def plot_fourier_space_slices(self, intensity = None):
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
         ax.set_aspect('equal')
@@ -269,7 +311,7 @@ class MainWindow(QMainWindow):
             self.slider.setMinimum(0)
             self.slider.setMaximum(self.box.point_number - 1)
             k_init = self.box.point_number // 2
-        elif self.slider:
+        else:
             k_init = self.slider.value()
 
         intensity = ((np.abs(self.box.intensity_fourier_space) *
@@ -277,17 +319,18 @@ class MainWindow(QMainWindow):
                      if intensity is None else intensity)
 
         fx = np.linspace(- self.box.point_number / self.box.box_size[0] / 2.,
-                         (self.box.point_number - 1) / self.box.box_size[0] / 2, self.box.point_number)
+                         (self.box.point_number - 2) / self.box.box_size[0] / 2, self.box.point_number)
 
         fy = np.linspace(- self.box.point_number / self.box.box_size[1] / 2.,
-                         (self.box.point_number - 1) / self.box.box_size[1] / 2, self.box.point_number)
+                         (self.box.point_number - 2) / self.box.box_size[1] / 2, self.box.point_number)
 
         fz = np.linspace(- self.box.point_number / self.box.box_size[2] / 2.,
-                         (self.box.point_number - 1) / self.box.box_size[2] / 2, self.box.point_number)
+                         (self.box.point_number - 2) / self.box.box_size[2] / 2, self.box.point_number)
 
         Fx, Fy = np.meshgrid(fx, fy)
 
-        Z = self.plotting_mode(intensity[:, :, k_init].T, mode)
+        Z = self.choose_view3d(intensity, k_init)
+        Z = self.choose_plotting_mode(Z)
 
         minValue = min(np.amin(intensity), 0.0)
         maxValue = min(np.amax(intensity), 100.0)
@@ -313,7 +356,8 @@ class MainWindow(QMainWindow):
             ax.set_title("Intensity, fz = {:.2f}".format(fz_val))
             ax.set_xlabel("Fx, $\\frac{1}{\lambda}$")
             ax.set_ylabel("Fy, $\\frac{1}{\lambda}$")
-            Z = self.plotting_mode(intensity[:, :, int(slider_val)].T, mode)
+            Z = self.choose_view3d(intensity, slider_val)
+            Z = self.choose_plotting_mode(intensity[:, :, int(slider_val)].T)
             ax.contourf(Fx, Fy, Z, levels)
             if self.box.info:
                 ax.text(np.abs(fx[0] * 0.9), 1.05 * np.abs(fx[0]), self.box.info, color='red')
