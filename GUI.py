@@ -3,6 +3,7 @@ import os
 import numpy as np
 import Box
 import Sources
+from Illumination import Illumination
 import GUIWidgets
 from input_parser import ConfigParser
 from PyQt5.QtCore import Qt
@@ -26,8 +27,7 @@ class MainWindow(QMainWindow):
 
         np.set_printoptions(precision=2, suppress=True)
 
-        self.init_ui()
-
+        self.init_ui(box)
         if not box:
             self.box = Box.Box({}, box_size=10, point_number=40)
         else:
@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
         self.colorbar = None
         self.view = View.XY
         self.plotting_mode = PlottingMode.linear
-    def init_ui(self):
+    def init_ui(self, box):
         width = 1200
         height = 800
         self.setMinimumSize(width, height)
@@ -97,13 +97,17 @@ class MainWindow(QMainWindow):
         add_spacial_frequency_button = QPushButton("Add a Spatial Frequency")
         add_spacial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
 
-        find_fourier_peaks_numerically = QPushButton("Find Fourier peaks numerically")
-        find_fourier_peaks_numerically.clicked.connect(self.compute_numerically_approximated_intensities)
-        
+        find_fourier_peaks_numerically_button = QPushButton("Find Fourier peaks numerically")
+        find_fourier_peaks_numerically_button.clicked.connect(self.compute_numerically_approximated_intensities)
+
+        find_ipw_from_pw_button = QPushButton("Get spacial waves from plane waves")
+        find_ipw_from_pw_button.clicked.connect(self.get_ipw_from_pw)
+
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
         self.source_buttons_layout.addWidget(add_spacial_frequency_button)
-        self.source_buttons_layout.addWidget(find_fourier_peaks_numerically)
+        self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
+        self.source_buttons_layout.addWidget(find_ipw_from_pw_button)
         self.source_buttons_layout.addStretch()
 
         # Initialization layout
@@ -386,6 +390,12 @@ class MainWindow(QMainWindow):
 
     def compute_numerically_approximated_intensities(self):
         self.box.compute_intensity_and_spacial_waves_numerically()
+
+    def get_ipw_from_pw(self):
+        for source in Illumination.find_ipw_from_pw(self.box.get_plane_waves()):
+            self.add_source(source)
+            self.box.add_source(source)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
