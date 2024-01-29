@@ -8,14 +8,14 @@ class SNRCalculator:
     def __init__(self, illumination, optical_system):
         self._illumination = illumination
         self._optical_system = optical_system
-        self.vj_parameters = {}
-        self.vj_otf_diffs = {}
+        self.effective_otfs = {}
+        self.effective_otfs_at_point_k_diff = {}
 
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
 
-        self._compute_parameters_for_Vj()
-        self._compute_wfdiff_otfs_for_Vj()
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
 
     @property
     def optical_system(self):
@@ -24,10 +24,10 @@ class SNRCalculator:
     @optical_system.setter
     def optical_system(self, new_optical_system):
         self._optical_system = new_optical_system
-        self.vj_parameters = {}
-        self.vj_otf_diffs = {}
-        self._compute_parameters_for_Vj()
-        self._compute_wfdiff_otfs_for_Vj()
+        self.effective_otfs = {}
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
 
     @property
     def illumination(self):
@@ -36,23 +36,10 @@ class SNRCalculator:
     @illumination.setter
     def illumination(self, new_illumination):
         self._illumination = new_illumination
-        self.vj_parameters = {}
-        self.vj_otf_diffs = {}
-        self._compute_parameters_for_Vj()
-        self._compute_wfdiff_otfs_for_Vj()
-    class VjParametersHolder:
-        def __init__(self, a_m, otf_times_amplitude_conjugate, wavevector2d):
-            self.a_m = a_m
-            self.product = otf_times_amplitude_conjugate
-            self.wavevector = wavevector2d
-
-    def Dj(self, q_grid, method="Fourier"):
-        d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
-        for m in self.vj_parameters.keys():
-            d_j += np.abs(self.vj_parameters[m].a_m)**2 * np.abs(self.vj_parameters[m].otf)**2
-        d_j *= self.illumination.Mt
-        print(d_j[25, 25, 25])
-        return d_j
+        self.effective_otfs = {}
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
 
     def _rearrange_indices(self, indices):
         result_dict = {}
@@ -63,9 +50,10 @@ class SNRCalculator:
                 result_dict[key] = []
             result_dict[key].append(value)
         result_dict = {key: tuple(values) for key, values in result_dict.items()}
-        print(result_dict)
+        # print(result_dict)
         return result_dict
-    def _compute_parameters_for_Vj(self):
+
+    def _compute_effective_otfs(self):
         waves = self.illumination.waves
         for angle in self.illumination.angles:
             indices = self._rearrange_indices(waves.keys())
@@ -73,82 +61,41 @@ class SNRCalculator:
                 otf = 0
                 for z_index in indices[xy_indices]:
                     wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                        waves[(xy_indices[0], xy_indices[1], z_index)].wavevector, np.array((0, 0, 1)), angle)
-                    amplitude = waves[(xy_indices[0], xy_indices[1], z_index)].amplitude
-                    otf += amplitude.conjugate() * self.optical_system.interpolate_otf(wavevector)
-                self.vj_parameters[(indices[0], indices[1], angle)] = (
-                    self.VjParametersHolder(waves[indices].amplitude, otf, xy_indices))
-            # for indices in waves.keys():
-            #     indices_dual = (indices[0], indices[1], -indices[2])
-            #     wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-            #         waves[indices].wavevector, np.array((0, 0, 1)), angle)
-            #     wavevector2d = wavevector[:2]
-            #     wavevector_dual = np.array((wavevector[0], wavevector[1], -wavevector[2]))
-            #
-            #     if indices[2] == 0:
-            #         otf = self.optical_system.interpolate_otf(wavevector)
-            #         self.vj_parameters[(indices[0], indices[1], angle)] = (
-            #             self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
-            #     else:
-            #         if indices[:2] not in self.vj_parameters.keys():
-            #             coeff = waves[indices_dual].amplitude/waves[indices].amplitude
-            #
-            #             otf = (self.optical_system.interpolate_otf(wavevector) +
-            #                    coeff * self.optical_system.interpolate_otf(wavevector_dual))
-            #
-            #             indices_in_plane = (indices[0], indices[1], 0)
-            #             if indices_in_plane in waves.keys():
-            #                 coeff_in_plane = waves[indices_in_plane].amplitude/waves[indices].amplitude
-            #                 wavevector_in_plane = np.array((wavevector[0], wavevector[1], 0))
-            #                 otf += coeff_in_plane * self.optical_system.interpolate_otf(wavevector_in_plane)
-            #
-            #             self.vj_parameters[(indices[0], indices[1], angle)] = (
-            #                 self.VjParrametersHolder(waves[indices].amplitude, otf, wavevector2d))
+                        waves[(*xy_indices, z_index)].wavevector, np.array((0, 0, 1)), angle)
+                    amplitude = waves[(*xy_indices, z_index)].amplitude
+                    otf += amplitude * self.optical_system.interpolate_otf(wavevector)
+                self.effective_otfs[(*xy_indices, angle)] = otf
 
+    def _compute_otfs_at_point(self):
+        indices = self.effective_otfs.keys()
+        size_x, size_y, size_z = self.optical_system.otf.shape
+        for index in indices:
+            self.effective_otfs_at_point_k_diff[index] = self.effective_otfs[index][size_x//2, size_y//2, size_z//2]
 
-    def _compute_wfdiff_otfs_for_Vj(self):
-        indices = self.vj_parameters.keys()
-        for angle in self.illumination.angles:
-            for index1 in indices:
-                for index2 in indices:
-                    idx_diff = np.array(index1[:2]) - np.array(index2[:2])
-                    idx_diff = (idx_diff[0], idx_diff[1], angle)
-                    if idx_diff not in indices:
-                        continue
-                    wavevector1 = VectorOperations.VectorOperations.rotate_vector2d(
-                        self.vj_parameters[index1].wavevector, angle)
-                    wavevector2 = VectorOperations.VectorOperations.rotate_vector2d(
-                        self.vj_parameters[index2].wavevector,  angle)
-                    wvdiff = wavevector2 - wavevector1
-                    wvdiff3d = np.array((wvdiff[0], wvdiff[1], 0))
-
-                    index = (index1[0], index1[1], index2[0], index2[1], angle)
-                    self.vj_otf_diffs[index] = self.optical_system.interpolate_otf_at_one_point(wvdiff3d, self.vj_parameters[idx_diff].otf)
-
+    def Dj(self, q_grid):
+        d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
+        for m in self.effective_otfs.keys():
+            d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
+        d_j *= self.illumination.Mt
+        return d_j
 
     def Vj(self, q_grid):
         v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
-        for angle in self.illumination.angles:
-            for m1 in self.vj_parameters.keys():
-                for m2 in self.vj_parameters.keys():
-                    if m1[2] != angle or m2[2] != angle:
-                        continue
-                    a_m1 = self.vj_parameters[m1].a_m
-                    a_m2 = self.vj_parameters[m2].a_m
-                    idx_diff = np.array(m1) - np.array(m2)
-                    idx = (idx_diff[0], idx_diff[1], angle)
-                    if idx not in self.vj_parameters.keys():
-                        continue
-                    a_m12 = self.vj_parameters[idx].a_m
-                    otf1 = self.vj_parameters[m1].otf
-                    otf2 = self.vj_parameters[m2].otf
-                    otf3 = self.vj_otf_diffs[(m1[0], m1[1], m2[0], m2[1], angle)]
-                    term = a_m1 * a_m2.conjugate() * a_m12 * otf1.conjugate() * otf2 * otf3
-                    v_j += term
-                    # if (k_m1 == np.array((0, 0, 0))).all() and (k_m2 == np.array((0, 0, 0))).all():
-                    #     print(k_m1, k_m2, term[25,25,25])
+        for m1 in self.effective_otfs.keys():
+            for m2 in self.effective_otfs.keys():
+                if m1[2] != m2[2]:
+                    continue
+                xy_idx_diff = np.array(m2)[:2] - np.array(m1)[:2]
+                idx_diff = (*xy_idx_diff, m1[2])
+                if idx_diff not in self.effective_otfs_at_point_k_diff.keys():
+                    continue
+                otf1 = self.effective_otfs[m1]
+                otf2 = self.effective_otfs[m2]
+                otf3 = self.effective_otfs_at_point_k_diff[idx_diff]
+                v_j += otf1 * otf2.conjugate() * otf3
+                # if (k_m1 == np.array((0, 0, 0))).all() and (k_m2 == np.array((0, 0, 0))).all():
+                #     print(k_m1, k_m2, term[25,25,25])
         v_j *= self.illumination.Mt
-        print(v_j[25, 25, 25])
         return v_j
 
     def SSNR(self, q_axes):
@@ -158,11 +105,9 @@ class SNRCalculator:
         q_grid = q_sorted.reshape(qx.size, qy.size, qz.size, 3)
         dj = self.Dj(q_grid)
         ssnr = np.zeros(dj.shape, dtype=np.complex128)
-        print(ssnr.shape)
         vj = self.Vj(q_grid)
         mask = (vj != 0) * (dj != 0)
         numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
-        print(ssnr[25, 25, 25])
         return ssnr
 
     def ring_average_SSNR(self, q_axes, SSNR):
@@ -174,6 +119,6 @@ class SNRCalculator:
             averaged_slices.append(average_ring(SSNR[:, :, i], (q_axes[0], q_axes[1])))
         return np.array(averaged_slices).T
 
-    def compute_SSNR_volume(self, SSNR, volume_element):
-        return np.sum(SSNR) * volume_element
+    def compute_SSNR_volume(self, SSNR, volume_element, factor = 10**8):
+        return np.sum(np.log10(1 + 10**8 * np.abs(SSNR))) * volume_element
 

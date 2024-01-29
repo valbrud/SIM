@@ -73,9 +73,9 @@ class IntensityPlaneWave(IntensitySource):
         self.phase = phase
 
     def get_intensity(self, coordinates):
-        inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
                                                  + self.phase))
-        return inensity
+        return intensity
 
 
 class IntensityCosineWave(IntensitySource):
@@ -85,9 +85,9 @@ class IntensityCosineWave(IntensitySource):
         self.phase = phase
 
     def get_intensity(self, coordinates):
-        inensity = self.amplitude * np.exp(1j * (np.dot(coordinates, self.wavevector)
-                                                 + self.phase))
-        return inensity
+        intensity = self.amplitude * np.exp(1j * np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
+                                                 + self.phase)
+        return intensity
 
 
 class IntensitySineWave(IntensitySource):
