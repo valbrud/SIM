@@ -26,15 +26,15 @@ class BFPConfiguration:
             (0, 2, 0)  : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, 2 * k1, 0))),
             (0, -2, 0) : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, -2 * k1, 0))),
 
-            (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * b), 0, np.array((k1, 0, k2))),
-            (-1, 0, 1) : Sources.IntensityPlaneWave((1j * b), 0, np.array((-k1, 0, k2))),
-            (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * b), 0, np.array((0, k1, k2))),
-            (0, -1, 1) : Sources.IntensityPlaneWave((1 * b), 0, np.array((0, -k1, k2))),
+            (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, k2))),
+            (-1, 0, 1) : Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, k2))),
+            (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, k1, k2))),
+            (0, -1, 1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, -k1, k2))),
 
-            (1, 0, -1) : Sources.IntensityPlaneWave((-1j * b), 0, np.array((k1, 0, -k2))),
-            (-1, 0, -1): Sources.IntensityPlaneWave((1j * b), 0, np.array((-k1, 0, -k2))),
-            (0, 1, -1) : Sources.IntensityPlaneWave((1 * b), 0, np.array((0, k1, -k2))),
-            (0, -1, -1): Sources.IntensityPlaneWave((-1 * b), 0, np.array((0, -k1, -k2)))
+            (1, 0, -1) : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, -k2))),
+            (-1, 0, -1): Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, -k2))),
+            (0, 1, -1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, k1, -k2))),
+            (0, -1, -1): Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, -k1, -k2)))
         }
 
         illumination = Illumination(s_polarized_waves)
@@ -47,7 +47,7 @@ class BFPConfiguration:
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
-        k2 = self.k * (1 - np.cos(theta))
+        k2 = self.k * (np.cos(theta) - 1)
 
         p = strength_s_normal
         b = strength_s_oblique
@@ -97,8 +97,6 @@ class BFPConfiguration:
         seven_waves_list = [
             Sources.IntensityPlaneWave(-b**2, 0, np.array((2 * k1, 0, 0))),
             Sources.IntensityPlaneWave(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave(b**2, 0, np.array((k1, 0, 0))),
-            Sources.IntensityPlaneWave(b**2, 0, np.array((-k1, 0, 0))),
             Sources.IntensityPlaneWave(-b ** 2, 0, np.array((-k1, 3**0.5*k1, 0))),
             Sources.IntensityPlaneWave(-b ** 2, 0, np.array((k1, 3**0.5*k1, 0))),
             Sources.IntensityPlaneWave(-b ** 2, 0, np.array((-k1, -3**0.5*k1, 0))),
@@ -107,6 +105,9 @@ class BFPConfiguration:
             Sources.IntensityPlaneWave(-b ** 2, 0, np.array((0, -3**0.5*k1, 0))),
 
             Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0))),
+
+            Sources.IntensityPlaneWave(b ** 2, 0, np.array((k1, 0, 0))),
+            Sources.IntensityPlaneWave(b ** 2, 0, np.array((-k1, 0, 0))),
 
             Sources.IntensityPlaneWave(b**2, 0, np.array((k1/2, 3**0.5/2 * k1, 0))),
             Sources.IntensityPlaneWave(b**2, 0, np.array((-k1/2, 3**0.5/2 * k1, 0))),
@@ -118,10 +119,10 @@ class BFPConfiguration:
             Sources.IntensityPlaneWave(-b**2, 0, np.array((3/2 * k1, 3**0.5/2 * k1, 0))),
             Sources.IntensityPlaneWave(-b**2, 0, np.array((-3/2 * k1, 3**0.5/2 * k1, 0))),
 
-            Sources.IntensityPlaneWave(1j * b, 0, np.array((-k1, 0, k2))),
-            Sources.IntensityPlaneWave(1j * b, 0, np.array((-k1, 0, -k2))),
-            Sources.IntensityPlaneWave(-1j * b, 0, np.array((k1, 0, k2))),
-            Sources.IntensityPlaneWave(-1j * b, 0, np.array((k1, 0, -k2))),
+            Sources.IntensityPlaneWave(1j * b * p, 0, np.array((-k1, 0, k2))),
+            Sources.IntensityPlaneWave(1j * b * p, 0, np.array((-k1, 0, -k2))),
+            Sources.IntensityPlaneWave(-1j * b * p, 0, np.array((k1, 0, k2))),
+            Sources.IntensityPlaneWave(-1j * b * p, 0, np.array((k1, 0, -k2))),
 
             Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b * p, 0, np.array((k1/2, 3**0.5/2 * k1, k2))),
             Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b * p, 0, np.array((k1/2, -3**0.5/2 * k1, k2))),
@@ -144,7 +145,7 @@ class BFPConfiguration:
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
-        k2 = self.k * (1 - np.cos(theta))
+        k2 = self.k * (np.cos(theta) - 1)
 
         p = strength_s_normal
         b = strength_oblique
@@ -168,7 +169,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def widefield(self):
+    def get_widefield(self):
 
         widefield = {
             (0, 0, 0) : Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))
@@ -202,7 +203,7 @@ class BFPConfiguration:
             Sources.PlaneWave(0, c, 0, 0, vec_mx),
             Sources.PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, np.pi)),
             Sources.PlaneWave(0, c, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, np.pi)),
-            Sources.PlaneWave(0, 1 * p, 0, 0, np.array((0, 10**-10, self.k))),
+            Sources.PlaneWave(0, 1 * p, 0, 0, np.array((10**(-10), 0, self.k))),
         ]
 
         five_waves_2z_illumination = Illumination.find_ipw_from_pw(five_waves_2z_illumination)
@@ -212,7 +213,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_two_oblique_triangles_at_different_angles_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
+    def get_two_oblique_triangles_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
                                                                           strength_normal=1, mutually_rotated=True, Mt=1):
         angle2 = np.arcsin(k_ratio * np.sin(angle1))
 
@@ -249,7 +250,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_two_oblique_squares_at_different_angles_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
+    def get_two_oblique_squares_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
                                                                           strength_normal=1, mutually_rotated=True, Mt=1):
         angle2 = np.arcsin(k_ratio * np.sin(angle1))
 
