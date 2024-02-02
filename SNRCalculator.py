@@ -120,5 +120,13 @@ class SNRCalculator:
         return np.array(averaged_slices).T
 
     def compute_SSNR_volume(self, SSNR, volume_element, factor = 10**8):
-        return np.sum(np.log10(1 + 10**8 * np.abs(SSNR))) * volume_element
+        return np.sum(np.log10(1 + factor * np.abs(SSNR))) * volume_element
 
+    def compute_analytic_SSNR_sum(self):
+        g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate().real)
+        g0 = np.abs(np.amax(self.optical_system.otf))
+        a0 = 1 / self.illumination.Mt
+        weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
+        weighted_sum = np.sum(weights * weights.conjugate().real)
+        volume = (self.illumination.Mt * self.illumination.Mr)**2 * weighted_sum * g2 / g0
+        return volume.real

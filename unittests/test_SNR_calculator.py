@@ -393,7 +393,7 @@ class TestSSNR(unittest.TestCase):
         theta = np.pi/4
         NA = np.sin(theta)
         max_r = 10
-        max_z = 40
+        max_z = 20
         N = 100
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
@@ -421,10 +421,10 @@ class TestSSNR(unittest.TestCase):
                                            apodization_filter=None)
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
-        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1, 1, Mt=64)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1/2**0.5, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
-        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 2**0.5, 3, Mt=1)
-        illumination_widefield = configurations.widefield()
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+        illumination_widefield = configurations.get_widefield()
 
         noise_estimator = SNRCalculator(illumination_s_polarized, optical_system)
         SSNR_s_polarized = np.abs(noise_estimator.SSNR(q_axes))
@@ -514,7 +514,7 @@ class TestSSNR(unittest.TestCase):
             ax1.grid()
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_s_polarized_ra[:, int(val)], label="S-polarized")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_circular_ra[:, int(val)],    label="Circular")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, int(val)],    label="7 waves")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_seven_waves_ra[:, int(val)],    label="7 waves")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3waves_ra[:, int(val)],      label="3 waves")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)],   label="Widefield")
             ax1.legend()
@@ -535,9 +535,197 @@ class TestSSNR(unittest.TestCase):
 
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_s_polarized[:, int(N / 2), int(val)][fx >= 0], label="S-polarized")
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_circular[:, int(N / 2), int(val)][fx >= 0],    label="Circular"   )
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_3waves[:, int(N / 2), int(val)][fx >= 0],      label="3 waves"    )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[:, int(N / 2), int(val)][fx >= 0],   label="Widefield"  )
+            ax2.legend()
+            ax2.set_aspect(1. / ax2.get_data_ratio())
+
+        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, 50)  # slider properties
+        slider_ssnr.on_changed(update1)
+
+        ax1.legend()
+        ax2.legend()
+        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/fz={:.2f}_compare_SSNR_conf_version.png'.format(two_NA_fz[arg]))
+        plt.show()
+
+    def test_compare_SSNR_weird_configurations(self):
+        theta = np.pi / 4
+        NA = np.sin(theta)
+        max_r = 10
+        max_z = 40
+        N = 100
+        psf_size = 2 * np.array((max_r, max_r, max_z))
+        dx = 2 * max_r / N
+        dy = 2 * max_r / N
+        dz = 2 * max_z / N
+        dV = dx * dy * dz
+        x = np.arange(-max_r, max_r, dx)
+        y = np.copy(x)
+        z = np.arange(-max_z, max_z, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+
+        arg = N // 2
+        print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        two_NA_fy = fy / (2 * NA)
+        two_NA_fz = fz / (2 * NA)
+        q_axes = 2 * np.pi * np.array((fx, fy, fz))
+
+        optical_system = Lens()
+        optical_system.compute_psf_and_otf((psf_size, N),
+                                           apodization_filter=None)
+
+        illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1,  Mt=32, mutually_rotated=False)
+        illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
+        illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
+        illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
+        illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
+        illumination_widefield = configurations.get_widefield()
+
+        noise_estimator = SNRCalculator(illumination_two_triangles_not_rotated, optical_system)
+        SSNR_ttnr = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_ttnr_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_ttnr)
+        volume_ttnr = np.sum(SSNR_ttnr)
+        volume_ttnr_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        noise_estimator.illumination = illumination_two_triangles_rotated
+        SSNR_ttr= np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_ttr_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_ttr)
+        volume_ttr = np.sum(np.abs(SSNR_ttr))
+        volume_ttr_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        noise_estimator.illumination = illumination_two_squares_not_rotated
+        SSNR_tsnr = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_tsnr_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_tsnr)
+        volume_tsnr = np.sum(np.abs(SSNR_tsnr))
+        volume_tsnr_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        noise_estimator.illumination = illumination_two_squares_rotated
+        SSNR_tsr = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_tsr_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_tsr)
+        volume_tsr = np.sum(np.abs(SSNR_tsr))
+        volume_tsr_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        noise_estimator.illumination = illumination_five_waves_two_angles
+        SSNR_5w = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_5w_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_5w)
+        volume_5w = np.sum(np.abs(SSNR_5w))
+        volume_5w_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        noise_estimator.illumination = illumination_widefield
+        SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes))
+        SSNR_widefield_ra = noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
+        volume_widefield = np.sum(np.abs(SSNR_widefield))
+        volume_widefield_a = noise_estimator.compute_analytic_SSNR_sum()
+
+        print("Volume SSNR widefield = ", volume_widefield)
+        print("Volume SSNR widefield_a = ", volume_widefield_a)
+        print("Volume SSNR ttnr = ", volume_ttnr)
+        print("Volume SSNR ttnr_a = ", volume_ttnr_a)
+        print("Volume SSNR ttr = ", volume_ttr)
+        print("Volume SSNR ttr_a = ", volume_ttr_a)
+        print("Volume SSNR tsnr = ", volume_tsnr)
+        print("Volume SSNR tsnr_a = ", volume_tsnr_a)
+        print("Volume SSNR tsr = ", volume_tsr)
+        print("Volume SSNR tsr_a = ", volume_tsr_a)
+        print("Volume SSNR 5w = ", volume_5w)
+        print("Volume SSNR 5w_a = ", volume_5w_a)
+
+        Fx, Fy = np.meshgrid(fx, fy)
+        fig = plt.figure(figsize=(12, 6), constrained_layout=True)
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.4)
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+
+        ax1.set_title("Ring averaged", fontsize=20, pad=15)
+        ax1.set_xlabel(r"$f_r$", fontsize=20)
+        ax1.set_ylabel(r"$SSNR_{ra}$", fontsize=20)
+        ax1.set_yscale("log")
+        ax1.set_ylim(1, 3 * 10 ** 2)
+        ax1.set_xlim(0, fx[-1] / (2 * NA))
+        ax1.grid(which='major')
+        ax1.grid(which='minor', linestyle='--')
+        ax1.tick_params(labelsize=15)
+
+        ax2.set_title("Slice $f_y$ = 0", fontsize=20)
+        ax2.set_xlabel(r"$f_x$", fontsize=20)
+        ax2.set_yscale("log")
+        ax2.set_ylim(1, 3 * 10 ** 2)
+        ax2.set_xlim(0, fx[-1] / (2 * NA))
+        ax2.grid(which='major')
+        ax2.grid(which='minor', linestyle='--')
+        ax2.tick_params('y', labelleft=False)
+        ax2.tick_params(labelsize=15)
+
+        multiplier = 10 ** 8
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_ttnr_ra[:, arg], label="two triangles not rotated")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_ttr_ra[:, arg], label="two triangles rotated")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_tsnr_ra[:, arg], label="two squares not rotated")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_tsr_ra[:, arg], label="two squares rotated")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_5w_ra[:, arg], label="fiwe waves two angles")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, arg], label="widefield")
+
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_ttr[:, int(N / 2), arg][fx >= 0], label="two triangles not rotated")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_ttr[:, int(N / 2), arg][fx >= 0], label="two triangles rotated")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_tsnr[:, int(N / 2), arg][fx >= 0], label="two squares not rotated")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_tsr[:, int(N / 2), arg][fx >= 0], label="two squares rotated")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_5w[:, int(N / 2), arg][fx >= 0], label="five waves two angles")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[:, int(N / 2), arg][fx >= 0], label="widefield")
+        ax1.set_aspect(1. / ax1.get_data_ratio())
+        ax2.set_aspect(1. / ax2.get_data_ratio())
+
+        def update1(val):
+            ax1.clear()
+            ax1.set_title("Ring averaged", fontsize=30)
+            ax1.set_xlabel(r"$f_r$", fontsize=25)
+            ax1.set_ylabel(r"$SSNR$", fontsize=25)
+            ax1.set_yscale("log")
+            ax1.set_ylim(1, 3 * 10 ** 2)
+            ax1.set_xlim(0, fx[-1] / (2 * NA))
+            ax1.grid()
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_ttnr_ra[:, int(val)], label="two triangles not rotated")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_ttr_ra[:, int(val)], label="two triangles rotated")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_tsnr_ra[:, int(val)], label="two squares not rotated")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_tsr_ra[:, int(val)], label="two squares rotated")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_5w_ra[:, int(val)], label="five waves two angles")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, int(val)], label="widefield")
+
+            ax1.legend()
+            ax1.set_aspect(1. / ax1.get_data_ratio())
+
+            ax2.clear()
+            ax2.set_title("Slice $f_y$ = 0")
+            ax2.set_xlabel(r"$f_x$")
+            # ax2.set_ylabel(r"SSNR")
+
+            ax2.set_yscale("log")
+            ax2.set_ylim(1, 3 * 10 ** 2)
+            ax2.set_xlim(0, fx[-1] / (2 * NA))
+            ax2.grid()
+
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_ttr[:, int(N / 2), int(val)][fx >= 0],
+                     label="two triangles not rotated")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_ttr[:, int(N / 2), int(val)][fx >= 0],
+                     label="two triangles rotated")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_tsnr[:, int(N / 2), int(val)][fx >= 0],
+                     label="two squares not rotated")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_tsr[:, int(N / 2), int(val)][fx >= 0],
+                     label="two squares rotated")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_5w[:, int(N / 2), int(val)][fx >= 0],
+                     label="five waves two angles")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * SSNR_widefield[:, int(N / 2), int(val)][fx >= 0],
+                     label="widefield")
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
@@ -578,7 +766,23 @@ class TestSSNR(unittest.TestCase):
         optical_system = Lens(alpha = np.pi/3)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
-        sources = ttillum
+
+        k = 2 * np.pi
+        theta = np.pi/3
+        vec_x = np.array((k * np.sin(np.pi/3), 0, k * np.cos(np.pi/3)))
+        vec_mx = np.array((-k * np.sin(np.arcsin(5/7 * np.sin(np.pi/3))), 0, k * np.cos(np.arcsin(5/7 * np.sin(np.pi/3)))))
+        ax_z = np.array((0, 0, 1))
+
+        sources = [
+            Sources.PlaneWave(0, 1, 0, 0, vec_x),
+            Sources.PlaneWave(0, 1, 0, 0, vec_mx),
+            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi/3)),
+            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 2 * np.pi/3)),
+            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi/3)),
+            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi/3)),
+
+            Sources.PlaneWave(1, 1j, 0, 0, np.array((0, 10**-10, 2 * np.pi))),
+        ]
         size = (2 * max_r, 2 * max_r, 2 * max_z)
         box = Box.Box(sources, size, N)
         box.compute_intensity_and_spacial_waves_numerically()
@@ -608,14 +812,14 @@ class TestSSNR(unittest.TestCase):
         volume_3w = noise_estimator.compute_SSNR_volume(SSNR_3w, dV)
 
         widefield = Illumination({
-        (0, 0, 0) : Sources.IntensityPlaneWave(1/Mt_widefield, 0, np.array((0, 0, 0)))}, Mr=1)
+        (0, 0, 0) : Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))}, Mr=1)
         widefield.Mt = 1
         noise_estimator.illumination = widefield
         SSNR_widefield = np.abs(noise_estimator.SSNR(q_axes))
         SSNR_widefield_ra= noise_estimator.ring_average_SSNR(q_axes, SSNR_widefield)
         volume_w = noise_estimator.compute_SSNR_volume(SSNR_widefield, dV)
         print("volume 3 waves = ", volume_3w)
-        print("volume 5 waves = ", volume_2z)
+        print("volume two triangles = ", volume_2z)
         print("volume widefield = ", volume_w)
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(12, 6), constrained_layout=True)
@@ -649,7 +853,7 @@ class TestSSNR(unittest.TestCase):
         ax2.tick_params(labelsize=15)
 
         multiplier = 10 ** 8
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_2z_ra[:, arg], label="5 waves, 2 z angles")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_2z_ra[:, arg], label="2 triangles")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_3w_ra[:, arg], label="3 waves")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * SSNR_widefield_ra[:, arg], label="widefield")
 
@@ -705,7 +909,7 @@ class TestSSNR(unittest.TestCase):
 
     def testFourWavesVSFiveWaves(self):
         max_r = 10
-        max_z = 40
+        max_z = 20
         N = 100
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
@@ -732,68 +936,22 @@ class TestSSNR(unittest.TestCase):
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
 
-        angle = 7 * np.pi / 20
+        angle = 8 * np.pi / 20
         a = 0.9
-        b, c = 2, 2
+        b, c = 1, 1
 
         k = 2 * np.pi
-        k1 = k * np.sin(angle)
-        k3 = k * a * np.sin(angle)
-        k2 = k * (np.cos(angle) - 1)
-        k4 = k * (np.cos(np.arcsin(a * np.sin(angle))) - 1)
-
-        basevector_lengths = (0.01 * np.sin(angle) * k, 100 * k, 0.001 * k)
-        four_waves = [
-            IntensityPlaneWave(2 * b ** 2 + 2 * c ** 2, 0, np.array((0, 0, 0))),
-            IntensityPlaneWave(-b ** 2, 0, np.array((2 * k1, 0, 0))),
-            IntensityPlaneWave(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
-            IntensityPlaneWave(-c ** 2, 0, np.array((2 * k3, 0, 0))),
-            IntensityPlaneWave(-c ** 2, 0, np.array((-2 * k3, 0, 0))),
-            IntensityPlaneWave(b * c, 0, np.array((k3 - k1, 0, k4 - k2))),
-            IntensityPlaneWave(b * c, 0, np.array((k3 - k1, 0, k2 - k4))),
-            IntensityPlaneWave(b * c, 0, np.array((k1 - k3, 0, k4 - k2))),
-            IntensityPlaneWave(b * c, 0, np.array((k1 - k3, 0, k2 - k4))),
-            IntensityPlaneWave(-b * c, 0, np.array((k3 + k1, 0, k4 - k2))),
-            IntensityPlaneWave(-b * c, 0, np.array((k3 + k1, 0, k2 - k4))),
-            IntensityPlaneWave(-b * c, 0, np.array((-k1 - k3, 0, k4 - k2))),
-            IntensityPlaneWave(-b * c, 0, np.array((-k1 - k3, 0, k2 - k4))),
-        ]
-
-        five_waves = [
-            IntensityPlaneWave(1 + 2 * b ** 2 + 2 * c ** 2, 0, np.array((0, 0, 0))),
-            IntensityPlaneWave(-b ** 2, 0, np.array((2 * k1, 0, 0))),
-            IntensityPlaneWave(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
-            IntensityPlaneWave(-c ** 2, 0, np.array((2 * k3, 0, 0))),
-            IntensityPlaneWave(-c ** 2, 0, np.array((-2 * k3, 0, 0))),
-            IntensityPlaneWave(b * c, 0, np.array((k3 - k1, 0, k4 - k2))),
-            IntensityPlaneWave(b * c, 0, np.array((k3 - k1, 0, k2 - k4))),
-            IntensityPlaneWave(b * c, 0, np.array((k1 - k3, 0, k4 - k2))),
-            IntensityPlaneWave(b * c, 0, np.array((k1 - k3, 0, k2 - k4))),
-            IntensityPlaneWave(-b * c, 0, np.array((k3 + k1, 0, k4 - k2))),
-            IntensityPlaneWave(-b * c, 0, np.array((k3 + k1, 0, k2 - k4))),
-            IntensityPlaneWave(-b * c, 0, np.array((-k1 - k3, 0, k4 - k2))),
-            IntensityPlaneWave(-b * c, 0, np.array((-k1 - k3, 0, k2 - k4))),
-            IntensityPlaneWave(b, 0, np.array((k1, 0, k2))),
-            IntensityPlaneWave(-b, 0, np.array((k1, 0, -k2))),
-            IntensityPlaneWave(-b, 0, np.array((-k1, 0, k2))),
-            IntensityPlaneWave(b, 0, np.array((-k1, 0, -k2))),
-            IntensityPlaneWave(c, 0, np.array((k3, 0, k4))),
-            IntensityPlaneWave(-c, 0, np.array((k3, 0, -k4))),
-            IntensityPlaneWave(-c, 0, np.array((-k3, 0, k4))),
-            IntensityPlaneWave(c, 0, np.array((-k3, 0, -k4))),
-        ]
-        il4 = Illumination.init_from_list(four_waves, basevector_lengths, Mr=3)
-        il4.normalize_spacial_waves()
-        il5 = Illumination.init_from_list(five_waves, basevector_lengths, Mr=3)
-        il5.normalize_spacial_waves()
+        il4 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 0)
         noise4 = SNRCalculator(il4, optical_system)
         SSNR4 = noise4.SSNR(q_axes)
+
+        il5 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
         noise5 = SNRCalculator(il5, optical_system)
         SSNR5 = noise5.SSNR(q_axes)
         ra4 = noise4.ring_average_SSNR(q_axes, SSNR4)
         ra5 = noise5.ring_average_SSNR(q_axes, SSNR5)
-        volume4 = noise4.compute_SSNR_volume(SSNR4, dV)
-        volume5 = noise5.compute_SSNR_volume(SSNR5, dV)
+        volume4 = noise4.compute_SSNR_volume(SSNR4, 1)
+        volume5 = noise5.compute_SSNR_volume(SSNR5, 1)
 
         print("volume 4 waves = ", volume4)
         print("volume 5 waves = ", volume5)
@@ -842,7 +1000,7 @@ class TestSSNR(unittest.TestCase):
 
         def update1(val):
             ax1.clear()
-            ax1.set_title("Ring averaged", fontsize=30)
+            ax1.set_title("fz = {:.2f}".format(two_NA_fz[int(val)]), fontsize=30)
             ax1.set_xlabel(r"$f_r$", fontsize=25)
             ax1.set_ylabel(r"$SSNR$", fontsize=25)
             ax1.set_yscale("log")
@@ -857,7 +1015,7 @@ class TestSSNR(unittest.TestCase):
             ax1.set_aspect(1. / ax1.get_data_ratio())
 
             ax2.clear()
-            ax2.set_title("Slice $f_y$ = 0")
+            ax2.set_title("Slice $f_y$ = {:.2f}".format(two_NA_fy[int(val)]))
             ax2.set_xlabel(r"$f_x$")
             # ax2.set_ylabel(r"SSNR")
 
@@ -884,3 +1042,4 @@ class TestSSNR(unittest.TestCase):
         #     '/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/fz={:.2f}_compare_SSNR_conf_version.png'.format(
         #         fz[arg]))
         plt.show()
+
