@@ -1,8 +1,6 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from Sources import IntensityPlaneWave
-from Illumination import Illumination
 from SNRCalculator import SNRCalculator
 from OpticalSystems import Lens
 
@@ -33,28 +31,37 @@ if __name__ == "__main__":
     two_NA_fx = fx / (2 * NA)
     two_NA_fy = fy / (2 * NA)
     two_NA_fz = fz / (2 * NA)
+    factor = 10**5
+
     q_axes = 2 * np.pi * np.array((fx, fy, fz))
 
-    headers = ["ThetaIncident", "SineRatio", "Power1", "Power2", "sum(log(1 + 10^8 SSNR))"]
+    headers = ["ThetaIncident", "SineRatio", "Power1", "Power2", "volume", "total", "total_a", "entropy"]
 
-    power1, power2 = np.array((1, )), np.array((1, ))
-    theta = np.linspace(np.pi/20, np.pi/2, 10)
-    ratios = np.linspace(0.3, 0.7, 3)
+    power1, power2 = np.array((0.5, 1, 2)), np.array((0.5, 1, 2))
+    theta = np.linspace(1 * np.pi/20, np.pi/2, 10)
+    ratios = np.linspace(0.1, 1, 10)
 
     optical_system = Lens(alpha=alpha_lens)
     optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
 
-    with open("sanity_check2.csv", 'w', newline='') as file:
+    with open("simulations/5waves_new", 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
         illumination_widefield.normalize_spacial_waves()
-        SSNR_widefield = SNRCalculator(illumination_widefield, optical_system)
-        SSNR = SSNR_widefield.SSNR(q_axes)
-        # print(SSNR[N//2, N//2, N//2])
-        widefield_volume = np.sum(np.abs(SSNR)) * 10 ** 5
-        print("Analytical volume is", round(SSNR_widefield.compute_analytic_SSNR_sum() * 10 ** 5))
-        params = ["0", "0", "0", "0", round(widefield_volume)]
+        ssnr_widefield = SNRCalculator(illumination_widefield, optical_system)
+        wssnr = ssnr_widefield.compute_ssnr()
+        wvolume = ssnr_widefield.compute_ssnr_volume(factor)
+        wtotal = ssnr_widefield.compute_total_ssnr()
+        wtotal_a = ssnr_widefield.compute_analytic_total_ssnr()
+        wentropy = ssnr_widefield.compute_true_ssnr_entropy(factor)
+        wmeasure, _ = ssnr_widefield.compute_ssnr_measure(factor)
+        print("Volume ", round(wvolume))
+        print("Total", round(wtotal))
+        print("Total a ", round(wtotal_a))
+        print("Entropy ", round(wentropy))
+        print("Measure ", round(wmeasure))
+        params = [0, 0, 0, 0, round(wvolume), round(wtotal), round(wtotal_a), round(wentropy), round(wmeasure)]
         print(params)
         writer.writerow(params)
 
@@ -68,12 +75,19 @@ if __name__ == "__main__":
                         k2 = k * (np.cos(angle) - 1)
                         k4 = k * (np.cos(np.arcsin(a * np.sin(angle))) - 1)
                         illumination = config.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
-                        SSNR_calc = SNRCalculator(illumination, optical_system)
-                        SSNR = SSNR_calc.SSNR(q_axes)
-                        volume = np.sum(np.abs(SSNR)) * 10 ** 5
-                        volume_a = SSNR_calc.compute_analytic_SSNR_sum() * 10 ** 5
-                        print("Analytical volume is ", round(volume_a))
-                        params = [round(angle * 57.29, 1), a, b, c, round(volume)]
+                        ssnr_calc = SNRCalculator(illumination, optical_system)
+                        ssnr = ssnr_calc.compute_ssnr()
+                        volume = ssnr_calc.compute_ssnr_volume(factor)
+                        total = ssnr_calc.compute_total_ssnr()
+                        total_a = ssnr_calc.compute_analytic_total_ssnr()
+                        entropy = ssnr_calc.compute_true_ssnr_entropy(factor)
+                        measure, _ = ssnr_calc.compute_ssnr_measure(factor)
+                        print("Volume ", round(volume))
+                        print("Total", round(total))
+                        print("Total a ", round(total_a))
+                        print("Entropy ", round(entropy))
+                        print("Measure ", round(measure))
+                        params = [round(angle * 57.29, 1), a, b, c, round(volume), round(total), round(total_a), round(entropy), round(measure)]
                         print(params)
                         writer.writerow(params)
 

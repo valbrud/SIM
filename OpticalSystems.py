@@ -156,7 +156,7 @@ class OpticalSystem:
             return otf_interpolated
 
 class Lens(OpticalSystem):
-    def __init__(self, alpha=np.pi/4, refractive_index = 1,  regularization_parameter=0.01, interpolation_method="linear"):
+    def __init__(self, alpha=np.pi/4, refractive_index=1,  regularization_parameter=0.01, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.n = refractive_index
         self.alpha = alpha
