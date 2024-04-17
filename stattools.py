@@ -7,7 +7,7 @@ def average_ring(array, axes=None):
         ax1, ax2 = axes[0], axes[1]
 
     x, y = np.meshgrid(ax1, ax2)
-    ax1, ax2 = ax1[ax1 >= 0], ax2[ax2 >= 0]
+    ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -10**-10]
     ax = ax1 if ax1[-1] < ax2[-1] else ax2
     circle_sums = []
     circle_point_numbers = []

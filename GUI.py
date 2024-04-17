@@ -1,5 +1,7 @@
 import sys
 import os
+import time
+
 import numpy as np
 import Box
 import Sources
@@ -58,11 +60,13 @@ class MainWindow(QMainWindow):
         # self.options_combo.addItem("Load Config")
         # self.options_combo.currentIndexChanged.connect(self.on_option_selected)
 
-        self.load_button = QPushButton("Load Config")
-        self.load_button.clicked.connect(self.load_config)
-
+        self.load_configuration_button = QPushButton("Load Configuration")
+        self.load_configuration_button.clicked.connect(self.load_config)
+        self.load_illumination_button = QPushButton("Load Illumination")
+        self.load_illumination_button.clicked.connect(self.load_illumination)
         self.options_layout.addWidget(self.options_label, 1)
-        self.options_layout.addWidget(self.load_button, 1)
+        self.options_layout.addWidget(self.load_configuration_button, 1)
+        self.options_layout.addWidget(self.load_illumination_button, 1)
         self.options_layout.addStretch(5)
 
         # Second Section
@@ -103,11 +107,22 @@ class MainWindow(QMainWindow):
         find_ipw_from_pw_button = QPushButton("Get spacial waves from plane waves")
         find_ipw_from_pw_button.clicked.connect(self.get_ipw_from_pw)
 
+        compute_total_intensity_button = QPushButton("Compute Total Intensity")
+        compute_total_intensity_button.clicked.connect(self.compute_total_intensity)
+
+        self.shift_number = 0
+        # self.peak_position = (0., 0.)
+        compute_next_shift_button = QPushButton("Next shift")
+        compute_next_shift_button.clicked.connect(self.compute_next_shift)
+
+
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
         self.source_buttons_layout.addWidget(add_spacial_frequency_button)
         self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
         self.source_buttons_layout.addWidget(find_ipw_from_pw_button)
+        self.source_buttons_layout.addWidget(compute_total_intensity_button)
+        self.source_buttons_layout.addWidget(compute_next_shift_button)
         self.source_buttons_layout.addStretch()
 
         # Initialization layout
@@ -176,6 +191,25 @@ class MainWindow(QMainWindow):
                 parser = ConfigParser()
                 conf = parser.read_configuration(filename)
                 self.box = Box.Box(conf.sources, conf.box_size, conf.point_number, filename + conf.info)
+                for field in self.box.fields:
+                    self.add_source(field.source)
+                self.compute_and_plot_from_intensity_sources()
+                self.plot_intensity_slices()
+
+            else:
+                # Show an error message for invalid file format
+                print("Not a valid file format")
+
+    def load_illumination(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
+        filename = os.path.basename(filename)
+        if filename:
+            if filename.endswith(".conf"):
+                self.clear_layout(self.sources_layout)
+                parser = ConfigParser()
+                conf = parser.read_configuration(filename)
+
+                self.box = Box.BoxSIM(conf.illumination, conf.box_size, conf.point_number, filename + conf.info)
                 for field in self.box.fields:
                     self.add_source(field.source)
                 self.compute_and_plot_from_intensity_sources()
@@ -390,6 +424,20 @@ class MainWindow(QMainWindow):
 
     def compute_numerically_approximated_intensities(self):
         self.box.compute_intensity_and_spacial_waves_numerically()
+
+    def compute_total_intensity(self):
+        self.box.compute_total_illumination()
+        self.plot_intensity_slices()
+
+    def compute_next_shift(self):
+        self.shift_number +=1
+        self.shift_number %= self.box.illumination.spacial_shifts.shape[0]
+        self.box.compute_intensity_at_given_shift(self.shift_number)
+        self.plot_intensity_slices()
+        self.plot_shift_arrow()
+        # self.peak_position += self.box.illumination.spacial_shifts[self.shift_number][:2]
+    def plot_shift_arrow(self):
+        self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spacial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
         for source in Illumination.find_ipw_from_pw(self.box.get_plane_waves()):

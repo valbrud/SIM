@@ -28,7 +28,7 @@ class ConfigParser:
 if __name__ == "__main__":
     parser = ConfigParser()
     conf = parser.read_configuration(parser.args.input_file)
-    box = Box.Box(conf.sources, conf.box_size, conf.point_number, parser.args.input_file)
+    box = Box.BoxSIM(conf.illumination, conf.box_size, conf.point_number, parser.args.input_file)
     if parser.args.gui:
         app = GUI.QApplication(sys.argv)
         window = GUI.MainWindow(box)
