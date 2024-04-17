@@ -38,6 +38,7 @@ class SNRCalculator:
         self._compute_otfs_at_point()
         self._compute_ssnr_widefield()
         self.ssnr = None # to avoid heavy computations where they are not needed
+
     @property
     def illumination(self):
         return self._illumination
@@ -86,11 +87,16 @@ class SNRCalculator:
         d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
         for m in self.effective_otfs.keys():
             d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
+            # print(m)
+        # print(self.effective_otfs[(0, 0, 0.0)][45:55, 50, 50])
+        # print((d_j * self.effective_otfs[(0, 0, 0.0)][50, 50, 50])[45:55, 50, 50])
         d_j *= self.illumination.Mt
         return d_j
 
     def _Vj(self, q_grid):
         v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
+        test_main = 0
+        test_additional = 0
         for m1 in self.effective_otfs.keys():
             for m2 in self.effective_otfs.keys():
                 if m1[2] != m2[2]:
@@ -102,9 +108,17 @@ class SNRCalculator:
                 otf1 = self.effective_otfs[m1]
                 otf2 = self.effective_otfs[m2]
                 otf3 = self.effective_otfs_at_point_k_diff[idx_diff]
-                v_j += otf1 * otf2.conjugate() * otf3
-                # if (k_m1 == np.array((0, 0, 0))).all() and (k_m2 == np.array((0, 0, 0))).all():
-                #     print(k_m1, k_m2, term[25,25,25])
+                # print(m2, m1)
+                term = otf1 * otf2.conjugate() * otf3
+                if m1 == m2:
+                    # print(m1)
+                    # print(otf3)
+                    test_main += term
+                else:
+                    test_additional += term
+                v_j += term
+                # print(otf1, otf2, otf3)
+        # print((test_main[45:55, 50, 50]))
         v_j *= self.illumination.Mt
         return v_j
 
@@ -121,8 +135,16 @@ class SNRCalculator:
         numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
         self.dj = dj
         self.vj = vj
+        approximation_quality = np.abs(self.dj/self.vj * self.effective_otfs[(0, 0, 0)][50, 50, 50] )
         self.ssnr = ssnr
-        return ssnr
+        g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
+        weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
+        weighted2sum = np.sum(weights * weights.conjugate()).real
+        expected = self.illumination.Mt * self.illumination.Mr * g2 * weighted2sum
+        observed = np.abs(np.sum(dj))
+        print(observed/expected)
+        print(np.amin(approximation_quality), np.abs(np.sum(approximation_quality * np.abs(self.ssnr)) / np.sum(self.ssnr)), np.amax(approximation_quality))
+        return np.abs(ssnr)
 
     def ring_average_ssnr(self):
         q_axes = 2 * np.pi * self.optical_system.otf_frequencies
@@ -137,22 +159,31 @@ class SNRCalculator:
     def compute_ssnr_volume(self, factor=10**5, volume_element=1):
         return np.sum(np.abs(self.ssnr)) * volume_element * factor
 
-    def compute_total_ssnr(self, factor=10**8, volume_element=1):
+    def compute_analytic_ssnr_volume(self, factor=10**5, volume_element=1):
+        g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
+        g0 = np.abs(np.amax(self.optical_system.otf))
+        weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
+        weighted2sum = np.sum(weights * weights.conjugate()).real
+        volume = ((self.illumination.Mt * self.illumination.Mr)**2 * weighted2sum * g2 /
+                g0 * volume_element * factor)
+        return volume
+
+    def compute_total_ssnr(self, factor=10**5, volume_element=1):
         mask = (self.dj != 0) * (self.vj != 0)
         total_signal_power = np.sum(np.abs(self.dj[mask])**2)
         total_noise_power = np.sum(np.abs(self.vj[mask]))
         return total_signal_power / total_noise_power * volume_element * factor
 
-    def compute_analytic_total_ssnr(self, factor=10**8, volume_element=1):
+    def compute_analytic_total_ssnr(self, factor=10**5, volume_element=1):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
         g4 = np.sum(self.optical_system.otf ** 2 * self.optical_system.otf.conjugate() ** 2).real
         g0 = np.abs(np.amax(self.optical_system.otf))
         weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
         weighted2sum = np.sum(weights * weights.conjugate()).real
         weighted4sum = np.sum(weights ** 2 * weights.conjugate() ** 2).real
-        volume = ((self.illumination.Mt * self.illumination.Mr)**2 * weighted4sum * g4 /
+        total = ((self.illumination.Mt * self.illumination.Mr)**2 * weighted4sum * g4 /
                   weighted2sum / g2 / g0 * volume_element * factor)
-        return volume
+        return total
 
     def _find_threshold_value(self, stock, max, min, noise_level):
         average = (max + min) / 2
@@ -173,7 +204,8 @@ class SNRCalculator:
         fourier_peaks_wavevectors = np.array([spacial_wave.wavevector for spacial_wave in self.illumination.waves.values()])
         fI = np.max(np.array([(wavevector[0]**2 + wavevector[1]**2)**0.5 for wavevector in fourier_peaks_wavevectors]))
         return fR + fI
-    def compute_ssnr_measure(self, factor=10**5):
+
+    def compute_ssnr_waterline_measure(self, factor=10**5):
         diff = np.sum(self.ssnr - self.ssnr_widefield).real
         upper_estimate = np.abs(np.amax(self.ssnr - self.ssnr_widefield))
         noise_level = 10**-10 * np.abs(np.amax(self.ssnr))
@@ -182,9 +214,18 @@ class SNRCalculator:
         measure = np.where(measure < threshold, measure, threshold)
         return np.sum(measure) * factor, threshold
 
-    def compute_true_ssnr_entropy(self, factor=10**5):
+    def compute_true_ssnr_entropy(self, factor=1):
         noise_filtered = self.ssnr[self.ssnr > 10 ** (-10) * np.amax(self.ssnr)]
         sum = np.sum(noise_filtered)
-        log_part = np.log(sum/noise_filtered)
-        S = np.sum(noise_filtered * log_part)
+        probabilities = noise_filtered/sum
+        S = -np.sum(probabilities * np.log(probabilities))
+        return S.real * factor
+
+    def compute_radial_ssnr_entropy(self, factor=1):
+        ssnr_ra = self.ring_average_ssnr()
+        ssnr_ra = ssnr_ra[~np.isnan(ssnr_ra.real) & ~np.isnan(ssnr_ra.imag)]
+        noise_filtered = ssnr_ra[ssnr_ra > 10 ** (-12) * np.amax(ssnr_ra)]
+        sum = np.sum(noise_filtered)
+        probabilities = noise_filtered/sum
+        S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor

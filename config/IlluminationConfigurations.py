@@ -8,7 +8,7 @@ class BFPConfiguration:
         self.k = 2 * np.pi / wavelength
         self.n = refraction_index
 
-    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=32):
+    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta) * self.n
@@ -43,7 +43,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal, Mt=1):
+    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -83,7 +83,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_6_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal, Mt=1):
+    def get_6_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)

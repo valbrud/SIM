@@ -4,6 +4,7 @@ from matplotlib.widgets import Slider
 import Sources
 import wrappers
 import stattools
+import config.IlluminationConfigurations as confs
 
 class FieldHolder:
     def __init__(self, source, grid, identifier):
@@ -20,7 +21,7 @@ class FieldHolder:
 
 
 class Box:
-    def __init__(self, sources, box_size, point_number, additional_info=None):
+    def __init__(self, sources=(), box_size=10, point_number=100, additional_info=None):
         self.info = additional_info
         self.point_number = point_number
         if type(box_size) == float or type(box_size) == int:
@@ -43,6 +44,7 @@ class Box:
 
         for source in sources:
             self.add_source(source)
+
 
     def compute_axes(self):
         N = self.point_number
@@ -116,6 +118,7 @@ class Box:
         return [field.source for field in self.fields]
     def get_plane_waves(self):
         return [field.source for field in self.fields if field.field_type == "ElectricField"]
+
     def get_spacial_waves(self):
         return [field.source for field in self.fields if field.field_type == "Intensity"]
     def get_approximated_intensity_sources(self):
@@ -159,3 +162,28 @@ class Box:
             slider.on_changed(update)
 
         plt.show()
+
+class BoxSIM(Box):
+    def __init__(self, illumination=confs.BFPConfiguration().get_widefield(), box_size=10, point_number=100, additional_info=None):
+        sources = illumination.waves.values()
+        super().__init__(sources, box_size, point_number, additional_info)
+        self.illumination = illumination
+
+    def compute_intensity_at_given_shift(self, number):
+        self.intensity = np.zeros(self.intensity.shape, dtype=np.complex128)
+        for field in self.fields:
+            if field.field_type == "Intensity":
+                spacial_shift = self.illumination.spacial_shifts[number]
+                phase = np.dot(spacial_shift, field.source.wavevector)
+                debug_phase = round(phase * 57.21)%360
+                self.intensity += field.field * np.exp(1j * phase)
+        self.intensity = self.intensity.real
+
+    def compute_total_illumination(self):
+        self.intensity = np.zeros(self.intensity.shape, dtype=np.complex128)
+        for field in self.fields:
+            if field.field_type == "Intensity":
+                for spacial_shift in self.illumination.spacial_shifts:
+                    phase = np.dot(spacial_shift, field.source.wavevector)
+                    self.intensity += field.field * np.exp(1j * phase)
+        self.intensity = self.intensity.real

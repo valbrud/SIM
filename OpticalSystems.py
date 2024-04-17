@@ -217,6 +217,6 @@ class Lens(OpticalSystem):
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
         psf = self.PSF(grid, apodization_filter)
         self.psf = psf / np.sum(psf[:, :, int(N / 2)])
-        self.otf = wrappers.wrapped_ifftn(self.psf)
+        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
         self._prepare_interpolator()
 
