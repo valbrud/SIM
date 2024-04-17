@@ -1,5 +1,6 @@
 import numpy as np
 from Sources import IntensityPlaneWave, PlaneWave
+from Box import Box
 
 theta = np.pi / 4
 b = 1
@@ -21,17 +22,4 @@ sources = [
     IntensityPlaneWave(1j * b/a0, 0, np.array((-k1, 0, -k2))),
     IntensityPlaneWave(1 * b/a0, 0, np.array((0, k1, -k2))),
     IntensityPlaneWave(-1 * b/a0, 0, np.array((0, -k1, -k2))),
-
-    PlaneWave(0, b/a0**0.5, 0, 0, np.array((k1, 0, k1))),
-    PlaneWave(0, b/a0**0.5, 0, 0, np.array((-k1, 0, k1))),
-    PlaneWave(0, b/a0**0.5, 0, 0, np.array((0, k1, k1))),
-    PlaneWave(0, b/a0**0.5, 0, 0, np.array((0, -k1, k1))),
-    PlaneWave(1/a0**0.5, 1j * 1/a0**0.5, 0, 0, np.array((0, 0, k))),
 ]
-
-info = ''
-# info = """
-# b = {}
-# """.format(b)
-box_size = (10, 10, 40)
-point_number = 100

@@ -6,12 +6,11 @@ import matplotlib.pyplot as plt
 import stattools
 class Illumination:
     def __init__(self, intensity_plane_waves_dict,  Mr = 1):
-        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / Mr)
+        self.angles = np.arange(0, np.pi, np.pi / Mr)
         self._spacial_shifts = [np.array((0, 0, 0)), ]
         self._Mr = Mr
         self.Mt = len(self.spacial_shifts)
         self.waves = intensity_plane_waves_dict
-
     @classmethod
     def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, Mr = 1):
         intensity_plane_waves_dict = cls.index_frequencies(intensity_plane_waves_list, base_vector_lengths)
@@ -65,7 +64,7 @@ class Illumination:
     @Mr.setter
     def Mr(self, new_Mr):
         self.Mr = new_Mr
-        self.angles = np.arange(0, 2 * np.pi, 2 * np.pi / new_Mr)
+        self.angles = np.arange(0, np.pi, np.pi / new_Mr)
 
     @property
     def spacial_shifts(self):
@@ -75,6 +74,12 @@ class Illumination:
     def spacial_shifts(self, new_spacial_shifts):
         self._spacial_shifts = new_spacial_shifts
         self.Mt = len(new_spacial_shifts)
+
+    def set_spacial_shifts_diagonally(self, number, base_vectors):
+        kx, ky = base_vectors[0], base_vectors[1]
+        shiftsx = np.arange(0, number)/number/kx
+        shiftsy = np.arange(0, number)/number/ky
+        self.spacial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
 
     def get_wavevectors(self):
         wavevectors = []
