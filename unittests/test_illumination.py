@@ -38,8 +38,10 @@ class TestIllumination(unittest.TestCase):
         ]
         five_waves_dict = Illumination.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
         assert (five_waves_dict.keys() == s_polarized_waves.keys())
-    def test_seven_waves_illumination(self):
-        print(seven_waves_illumination)
+
+    def test_expanded_lattice(self):
+        illumination = BFPConfiguration().get_6_oblique_s_waves_and_circular_normal(np.pi/4, 1)
+        illumination.compute_expanded_lattice()
 
     def test_numerical_peaks_search(self):
         theta = np.pi / 4

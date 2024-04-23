@@ -11,6 +11,8 @@ class Illumination:
         self._Mr = Mr
         self.Mt = len(self.spacial_shifts)
         self.waves = intensity_plane_waves_dict
+        self.xy_fourier_peaks = None
+        self.expanded_lattice = None
     @classmethod
     def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, Mr = 1):
         intensity_plane_waves_dict = cls.index_frequencies(intensity_plane_waves_list, base_vector_lengths)
@@ -57,6 +59,7 @@ class Illumination:
                                     else:
                                         intensity_plane_waves[wavevector_new].amplitude += amplitude1 * amplitude2.conjugate()
         return intensity_plane_waves.values()
+
     @property
     def Mr(self):
         return self._Mr
@@ -96,3 +99,11 @@ class Illumination:
         norm = self.waves[0, 0, 0].amplitude * self.Mt * self.Mr
         for spacial_wave in self.waves.values():
             spacial_wave.amplitude /= norm
+
+    def compute_expanded_lattice(self):
+        self.xy_fourier_peaks = set((mx, my) for mx, my, mz in self.waves.keys())
+        self.expanded_lattice = set()
+        for peak1 in self.xy_fourier_peaks:
+            for peak2 in self.xy_fourier_peaks:
+                self.expanded_lattice.add((peak1[0] - peak2[0], peak1[1] - peak2[1]))
+        print(len(self.expanded_lattice))
