@@ -27,7 +27,7 @@ class TestOpticalSystems(unittest.TestCase):
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         optical_system.prepare_Fourier_interpolation(wavevectors)
         otf_sum = np.zeros((len(x), len(y), len(z)), dtype=np.complex128)
-        for otf in optical_system._shifted_otfs:
+        for otf in optical_system._effective_otfs:
             otf_sum += optical_system._shifted_otfs[otf]
         print(optical_system)
         # print(otf_sum[:, :, 10])
