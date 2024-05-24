@@ -2,7 +2,7 @@ import numpy as np
 import scipy as sp
 import scipy.interpolate
 import wrappers
-import ApodizationFilters
+import Windowing
 from abc import abstractmethod
 class OpticalSystem:
     # Other scipy interpolation methods are not directly supported, because they require too much computation time.
@@ -25,9 +25,9 @@ class OpticalSystem:
         dy = psf_size[1] / N
         dz = psf_size[2] / N
 
-        x = np.arange(-psf_size[0] / 2, psf_size[0] / 2, dx)
-        y = np.arange(-psf_size[1] / 2, psf_size[1] / 2, dy)
-        z = np.arange(-psf_size[2] / 2, psf_size[2] / 2, dz)
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2 - dx, N)
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2 - dy, N)
+        z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2 - dz , N)
 
         self.psf_coordinates = np.array((x, y, z))
 
@@ -39,6 +39,7 @@ class OpticalSystem:
     def psf_coordinates(self, new_coordinates):
         self._psf_coordinates = new_coordinates
         x, y, z = new_coordinates
+        N = x.size
         dx = x[1] - x[0]
         dy = y[1] - y[0]
         dz = z[1] - z[0]
@@ -47,9 +48,9 @@ class OpticalSystem:
         dfy = 1 / (2 * np.abs(y[0]))
         dfz = 1 / (2 * np.abs(z[0]))
 
-        fx = np.arange(-1 / (2 * dx), 1 / (2 * dx) - dfx/10, dfx)
-        fy = np.arange(-1 / (2 * dy), 1 / (2 * dy) - dfx/10, dfy)
-        fz = np.arange(-1 / (2 * dz), 1 / (2 * dz) - dfx/10, dfz)
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - dfx, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - dfy, N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - dfz, N)
         self._otf_frequencies = np.array((fx, fy, fz))
 
     @property
@@ -216,7 +217,8 @@ class Lens(OpticalSystem):
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
         psf = self.PSF(grid, apodization_filter)
-        self.psf = psf / np.sum(psf[:, :, int(N / 2)])
+        self.psf = psf / np.sum(psf)
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
 
