@@ -5,7 +5,7 @@ import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
 class SSNRCalculator3dSIM:
-    def __init__(self, illumination, optical_system):
+    def __init__(self, illumination, optical_system, readout_noise_variance=0):
         self._illumination = illumination
         self._optical_system = optical_system
         self.ssnr_widefield = None
@@ -13,6 +13,7 @@ class SSNRCalculator3dSIM:
         self.vj = None
         self.dj = None
         self.maximum_resolved = 0
+        self.readout_noise_variance = readout_noise_variance
 
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
@@ -129,7 +130,7 @@ class SSNRCalculator3dSIM:
         fI = np.max(np.array([(wavevector[0] ** 2 + wavevector[1] ** 2) ** 0.5 for wavevector in fourier_peaks_wavevectors]))
         return fR + fI
 
-    def compute_ssnr_waterline_measure(self, factor=10 ):
+    def compute_ssnr_waterline_measure(self, factor=10):
         diff = np.sum(self.ssnr - self.ssnr_widefield).real
         upper_estimate = np.abs(np.amax(self.ssnr - self.ssnr_widefield))
         noise_level = 10 ** -10 * np.abs(np.amax(self.ssnr))
@@ -154,8 +155,8 @@ class SSNRCalculator3dSIM:
         S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor
 class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
-    def __init__(self, illumination, optical_system):
-        super().__init__(illumination, optical_system)
+    def __init__(self, illumination, optical_system, readout_noise_variance=0):
+        super().__init__(illumination, optical_system, readout_noise_variance)
         self.effective_otfs = {}
         self.effective_otfs_at_point_k_diff = {}
         self._compute_effective_otfs()
@@ -247,8 +248,8 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
 
 
 class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
-    def __init__(self, illumination, optical_system):
-        super().__init__(illumination, optical_system)
+    def __init__(self, illumination, optical_system, readout_noise_variance = 0):
+        super().__init__(illumination, optical_system, readout_noise_variance)
         self.effective_otfs = {}
         self.effective_otfs_at_point_k_diff = {}
         self._compute_effective_otfs()
@@ -322,7 +323,7 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
         # print(self.effective_otfs[(0, 0, 0.0)][45:55, 50, 50])
         # print((d_j * self.effective_otfs[(0, 0, 0.0)][50, 50, 50])[45:55, 50, 50])
         d_j *= self.illumination.Mt
-        return d_j
+        return np.abs(d_j)
 
     def _Vj(self, q_grid):
         v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
@@ -351,5 +352,5 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
                 # print(otf1, otf2, otf3)
         # print((test_main[45:55, 50, 50]))
         v_j *= self.illumination.Mt
-        return v_j
+        return np.abs(v_j)
 

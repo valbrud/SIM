@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Load the data from the provided CSV file
-file_path = '../simulations/lattice_setups_true3d.csv'
+file_path = '../simulations/lattice_setups.csv'
 data = pd.read_csv(file_path)
 print(data['Configuration'])
 fig1, axes1 = plt.subplots(figsize=(12, 12))
@@ -61,6 +61,8 @@ axes1.legend(fontsize=20)
 
 axes1.legend(fontsize=20, loc="upper right")
 fig1.tight_layout(rect=[0.15, 0, 1, 0.96], pad=1.5)
+fig1.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparsison_with_theory_projective')
+
 # axes2.legend(fontsize=20, loc="upper right")
 # fig2.tight_layout(rect=[0.15, 0, 1, 0.96], pad=1.5)
 # fig3.legend(loc='center left')
