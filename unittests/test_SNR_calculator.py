@@ -48,7 +48,7 @@ class Testssnr(unittest.TestCase):
         optical_system_linear = Lens()
         optical_system_linear.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                   apodization_filter=None)
-        wavevectors = illumination_polarized.get_wavevectors()
+        wavevectors = illumination_polarized.get_all_wavevectors()
 
         noise_estimator = SSNRCalculatorProjective3dSIM(illumination_polarized, optical_system_fourier)
 

@@ -12,6 +12,7 @@ class SSNRCalculator3dSIM:
         self.ssnr = None
         self.vj = None
         self.dj = None
+        self.otf_sim = None
         self.maximum_resolved = 0
         self.readout_noise_variance = readout_noise_variance
 
@@ -28,19 +29,32 @@ class SSNRCalculator3dSIM:
         return self._optical_system
 
     @optical_system.setter
-    @abstractmethod
     def optical_system(self, new_optical_system):
-        ...
-
+        self._optical_system = new_optical_system
+        self.effective_otfs = {}
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
+        self._compute_ssnr_widefield()
+        self.ssnr = None  # to avoid heavy computations where they are not needed
     @property
     def illumination(self):
         return self._illumination
-
     @illumination.setter
-    @abstractmethod
     def illumination(self, new_illumination):
-        ...
+        self._illumination = new_illumination
+        self.effective_otfs = {}
+        self.otf_sim = None
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
+        self.ssnr = None
+        # to avoid heavy computations where they are not needed
+    @abstractmethod
+    def _compute_effective_otfs(self): ...
 
+    @abstractmethod
+    def _compute_otfs_at_point(self): ...
     @abstractmethod
     def _Dj(self, q_grid): ...
 
@@ -162,26 +176,6 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
         self._compute_effective_otfs()
         self._compute_otfs_at_point()
 
-
-    @SSNRCalculator3dSIM.optical_system.setter
-    def optical_system(self, new_optical_system):
-        self._optical_system = new_optical_system
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self._compute_ssnr_widefield()
-        self.ssnr = None  # to avoid heavy computations where they are not needed
-    @SSNRCalculator3dSIM.illumination.setter
-    def illumination(self, new_illumination):
-        self._illumination = new_illumination
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self.ssnr = None
-        # to avoid heavy computations where they are not needed
-
     def _compute_effective_otfs(self):
         waves = self.illumination.waves
         plt.show()
@@ -196,6 +190,9 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
                 # plt.imshow(np.log10(1 + 10 ** 16 * np.abs(effective_otf[50, :, :].T)))
                 # print(np.abs(np.amin(effective_otf)), " ", np.abs(np.amax(effective_otf)))
                 self.effective_otfs[(*index, angle)] = shifted_otf
+        self.otf_sim = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs:
+            self.otf_sim += self.effective_otfs[m]
 
     def _compute_otfs_at_point(self):
         indices = self.effective_otfs.keys()
@@ -255,25 +252,6 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
         self._compute_effective_otfs()
         self._compute_otfs_at_point()
 
-
-    @SSNRCalculator3dSIM.optical_system.setter
-    def optical_system(self, new_optical_system):
-        self._optical_system = new_optical_system
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self._compute_ssnr_widefield()
-        self.ssnr = None  # to avoid heavy computations where they are not needed
-    @SSNRCalculator3dSIM.illumination.setter
-    def illumination(self, new_illumination):
-        self._illumination = new_illumination
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self.ssnr = None
-        # to avoid heavy computations where they are not needed
     def _rearrange_indices(self, indices):
         result_dict = {}
         for index in indices:
@@ -288,7 +266,7 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
 
     def _compute_effective_otfs(self):
         waves = self.illumination.waves
-        plt.show()
+        # plt.show()
         for angle in self.illumination.angles:
             indices = self._rearrange_indices(waves.keys())
             for xy_indices in indices.keys():
@@ -304,6 +282,9 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
                 # plt.show()
                 # print(np.abs(np.amin(effective_otf)), " ", np.abs(np.amax(effective_otf)))
                 self.effective_otfs[(*xy_indices, angle)] = effective_otf
+        self.otf_sim = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs:
+            self.otf_sim += self.effective_otfs[m]
 
     def _compute_otfs_at_point(self):
         indices = self.effective_otfs.keys()

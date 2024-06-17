@@ -297,13 +297,16 @@ class MainWindow(QMainWindow):
             self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
             self.canvas_layout.addWidget(self.slider)
             self.slider.setMinimum(0)
-            self.slider.setMaximum(self.box.point_number - 1)
-            k_init = self.box.point_number // 2
+            self.slider.setMaximum(self.box.point_number[2] - 1)
+            k_init = self.box.point_number[2] // 2
         else:
-            self.slider.setMaximum(self.box.point_number - 1)
+            self.slider.setMaximum(self.box.point_number[2] - 1)
             k_init = self.slider.value()
 
-        x, y, z = (np.arange(self.box.point_number) / self.box.point_number - 1 / 2) * self.box.box_size[:, None]
+        x = (np.arange(self.box.point_number[0]) / self.box.point_number[0] - 1 / 2) * self.box.box_size[0, None]
+        y = (np.arange(self.box.point_number[1]) / self.box.point_number[1] - 1 / 2) * self.box.box_size[1, None]
+        z = (np.arange(self.box.point_number[2]) / self.box.point_number[2] - 1 / 2) * self.box.box_size[2, None]
+
         X, Y = np.meshgrid(x, y)
         Z = self.choose_view3d(intensity, k_init)
         # self.choose_labels(ax)
@@ -347,23 +350,24 @@ class MainWindow(QMainWindow):
             self.slider = QSlider(Qt.Horizontal)  # Horizontal slider
             self.canvas_layout.addWidget(self.slider)
             self.slider.setMinimum(0)
-            self.slider.setMaximum(self.box.point_number - 1)
+            self.slider.setMaximum(self.box.point_number[2] - 1)
             k_init = self.box.point_number // 2
         else:
             k_init = self.slider.value()
 
         intensity = ((np.abs(self.box.intensity_fourier_space) *
-                     self.box.box_size[0] * self.box.box_size[1] * self.box.box_size[2] / self.box.point_number ** 3)
+                     self.box.box_size[0] * self.box.box_size[1] * self.box.box_size[2]
+                      / self.box.point_number[0] * self.box.point_number[1] * self.box.point_number[2])
                      if intensity is None else intensity)
 
-        fx = np.linspace(- self.box.point_number / self.box.box_size[0] / 2.,
-                         (self.box.point_number - 2) / self.box.box_size[0] / 2, self.box.point_number)
+        fx = np.linspace(- self.box.point_number[0] / self.box.box_size[0] / 2.,
+                         (self.box.point_number[0] - 2) / self.box.box_size[0] / 2, self.box.point_number[0])
 
-        fy = np.linspace(- self.box.point_number / self.box.box_size[1] / 2.,
-                         (self.box.point_number - 2) / self.box.box_size[1] / 2, self.box.point_number)
+        fy = np.linspace(- self.box.point_number[1]/ self.box.box_size[1] / 2.,
+                         (self.box.point_number[1] - 2) / self.box.box_size[1] / 2, self.box.point_number[1])
 
-        fz = np.linspace(- self.box.point_number / self.box.box_size[2] / 2.,
-                         (self.box.point_number - 2) / self.box.box_size[2] / 2, self.box.point_number)
+        fz = np.linspace(- self.box.point_number[2] / self.box.box_size[2] / 2.,
+                         (self.box.point_number[2] - 2) / self.box.box_size[2] / 2, self.box.point_number[2])
 
         Fx, Fy = np.meshgrid(fx, fy)
 
@@ -406,7 +410,8 @@ class MainWindow(QMainWindow):
     def plot_numerically_approximated_intensity(self):
         self.plot_intensity_slices(intensity=self.box.numerically_approximated_intensity)
     def plot_numerically_approximated_intensity_fourier_space(self):
-        intensity = np.abs(self.box.numerically_approximated_intensity_fourier_space) * self.box.box_volume / self.box.point_number**3
+        intensity = (np.abs(self.box.numerically_approximated_intensity_fourier_space)
+                     * self.box.box_volume / self.box.point_number[0] * self.box.point_number[1] * self.box.point_number[2])
         self.plot_fourier_space_slices(intensity = intensity)
 
     def compute_and_plot_from_electric_field(self):
