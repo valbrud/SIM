@@ -17,7 +17,7 @@ class WienerFilter3d:
     def _compute_regularization_filter(self, ssnr):
         return self.ssnr_calc.dj / ssnr
 
-    def compute_filtered_image(self, object, real_space=True): ...
+    def filter_model_object(self, object, real_space=True): ...
 class WienerFilter3dModel(WienerFilter3d):
     def __init__(self, ssnr_calculator, apodization_filter=1):
         super().__init__(ssnr_calculator, apodization_filter)
@@ -32,7 +32,7 @@ class WienerFilter3dModel(WienerFilter3d):
         # plt.show()
         return ssnr
 
-    def compute_filtered_image(self, model_object, real_space=True):
+    def filter_model_object(self, model_object, real_space=True):
         if real_space:
             object_ft = wrappers.wrapped_fftn(model_object)
         else:
@@ -65,6 +65,50 @@ class WienerFilter3dImage(WienerFilter3d):
 
     def compute_full_object_dependent_ssnr(self,): ...
 
+class WienerFilter3dModelSDR(WienerFilter3dModel):
+    def __init__(self, ssnr_calculator, apodization_filter=1):
+        super().__init__(ssnr_calculator, apodization_filter)
+
+    def filter_SDR_reconstruction(self, object, reconstruction):
+        shape = object.shape
+        # object = np.zeros(shape)
+        # object[26, 26, 26] = 10**9
+        object_ft = wrappers.wrapped_fftn(object)
+        # plt.imshow(np.log(1 + 10 ** 4 * np.abs(object_ft[:, :, shape[2]//2])))
+        plt.imshow(reconstruction[:, :, shape[2]//2])
+        plt.title("Rec")
+        plt.show()
+        reconstruction_ft = wrappers.wrapped_fftn(reconstruction)
+        plt.imshow(np.log(1 + 10**4 * np.abs(object_ft[:, :, shape[2]//2])))
+        plt.show()
+
+        ssnr = np.abs(self._compute_full_object_dependent_ssnr(object_ft))
+        geff = self.ssnr_calc.otf_sim
+
+        dj = np.abs(geff * geff.conjugate())
+        # dj = self.ssnr_calc.dj
+        centerx, centery, centerz = (shape[0] + 1)//2, (shape[1] + 1)//2, (shape[2] + 1)//2
+        wj = object_ft[centerx, centery, centerz].real / np.abs(object_ft) ** 2
+        uj = np.abs(self.aj * geff.conjugate() / (dj + wj))
+
+        fig, ax = plt.subplots(2, 2)
+        ax[0, 0].imshow((np.log10(1 + 10 ** 4 * ssnr[:, :, shape[2] // 2])))
+        ax[0, 0].set_title('SSNR')
+        ax[0, 1].imshow(np.log10(1 + 10 ** 4 * wj[:, :, shape[2] // 2]))
+        ax[0, 1].set_title('Wj')
+        ax[1, 0].imshow(np.log(np.abs(1 + 10**4 * dj[:, :, shape[2]//2])))
+        ax[1, 0].set_title('Dj')
+        ax[1, 1].imshow(np.log(np.abs(1 + 10**4 * uj[:, :, shape[2] // 2])))
+        ax[1, 1].set_title('Uj')
+        plt.show()
+        filtered_ft = reconstruction_ft * uj
+        plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft[:, :, shape[2]//2])))
+        plt.show()
+        filtered = wrappers.wrapped_ifftn(filtered_ft).real
+        plt.imshow(np.abs(filtered[:, :, shape[2]//2]))
+        plt.show()
+        return filtered, ssnr, wj, geff, uj
+
 
 class FlatNoiseFilter3d:
     def __init__(self, ssnr_calculator, apodization_filter=1):
@@ -75,14 +119,14 @@ class FlatNoiseFilter3d:
     def _compute_regularization_filter(self):
         return self.ssnr_calc.vj**0.5 - self.ssnr_calc.dj
 
-    def compute_filtered_image(self, object, real_space=True): ...
+    def filter_model_object(self, object, real_space=True): ...
 
 class FlatNoiseFilter3dModel(FlatNoiseFilter3d):
     def __init__(self, ssnr_calculator, apodization_filter=1):
         super().__init__(ssnr_calculator, apodization_filter)
 
 
-    def compute_filtered_image(self, model_object, real_space=True):
+    def filter_model_object(self, model_object, real_space=True):
         if real_space:
             object_ft = wrappers.wrapped_fftn(model_object)
         else:
@@ -101,8 +145,11 @@ class FlatNoiseFilter3dModel(FlatNoiseFilter3d):
         ax[1, 0].set_title('OTF SIM')
         ax[1, 1].imshow(tj[:, :, shape[2]//2])
         ax[1, 1].set_title('Tj')
-
+        plt.show()
         filtered_ft = object_ft * otf_sim
+        plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
+        plt.show()
         filtered = wrappers.wrapped_ifftn(filtered_ft).real
-
+        plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
+        plt.show()
         return filtered, wj, otf_sim, tj

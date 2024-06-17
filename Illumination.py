@@ -19,7 +19,7 @@ class Illumination:
         return cls(intensity_plane_waves_dict, Mr = Mr)
     
     @classmethod
-    def init_from_numerical_intensity_fourier_domain(cls, numerical_intensity_fourier_domain, axes, Mr = 1):
+    def init_from_numerical_intensity_fourier_domain(cls, numerical_intensity_fourier_domain, axes, Mr=1):
         fourier_peaks, amplitudes = stattools.estimate_localized_peaks(numerical_intensity_fourier_domain, axes)
 
 
@@ -68,6 +68,7 @@ class Illumination:
     def Mr(self, new_Mr):
         self.Mr = new_Mr
         self.angles = np.arange(0, np.pi, np.pi / new_Mr)
+        self.normalize_spacial_waves()
 
     @property
     def spacial_shifts(self):
@@ -77,6 +78,7 @@ class Illumination:
     def spacial_shifts(self, new_spacial_shifts):
         self._spacial_shifts = new_spacial_shifts
         self.Mt = len(new_spacial_shifts)
+        self.normalize_spacial_waves()
 
     def set_spacial_shifts_diagonally(self, number, base_vectors):
         kx, ky = base_vectors[0], base_vectors[1]
@@ -84,15 +86,40 @@ class Illumination:
         shiftsy = np.arange(0, number)/number/ky
         self.spacial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
 
-    def get_wavevectors(self):
+    def get_wavevectors(self, r):
         wavevectors = []
-        for angle in self.angles:
-            for spacial_wave in self.waves.values():
-                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                    spacial_wave.wavevector, np.array((0, 0, 1)), angle)
-                wavevectors.append(wavevector)
+        angle = self.angles[r]
+        for spacial_wave in self.waves.values():
+            wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+                spacial_wave.wavevector, np.array((0, 0, 1)), angle)
+            wavevectors.append(wavevector)
         return wavevectors
-    
+    def get_all_wavevectors(self):
+        wavevectors = []
+        for r in range(self.Mr):
+            wavevectors_r = self.get_wavevectors(r)
+            wavevectors.extend(wavevectors_r)
+        return wavevectors
+
+    def get_wavevectors_projected(self, r):
+        wavevectors2d = []
+        angle = self.angles[r]
+        indices2d = []
+        for spacial_wave in self.waves:
+            if not spacial_wave[:2] in indices2d:
+                indices2d.append(spacial_wave[:2])
+                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
+                    self.waves[spacial_wave].wavevector, np.array((0, 0, 1)), angle)
+                wavevectors2d.append(wavevector[:2])
+        return wavevectors2d
+
+    def get_all_wavevectors_projected(self):
+        wavevectors2d = []
+        for r in range(self.Mr):
+            wavevectors2d_r = self.get_wavevectors_projected(r)
+            wavevectors2d.extend(wavevectors2d_r)
+        return wavevectors2d
+
     def normalize_spacial_waves(self):
         if not (0, 0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
