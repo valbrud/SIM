@@ -4,7 +4,7 @@ import numpy as np
 # Wrappers to avoid shifting the arrays every time DFT is used
 def wrapper_ft(ft):
     def wrapper(arrays, *args, **kwargs):
-        return np.fft.fftshift(ft(np.fft.fftshift(arrays), *args, **kwargs))
+        return np.fft.fftshift(ft(np.fft.ifftshift(arrays), *args, **kwargs))
 
     return wrapper
 

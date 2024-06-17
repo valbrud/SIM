@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SNRCalculator import SSNRCalculatorProjective3dSIM
+from SSNRCalculator import SSNRCalculatorProjective3dSIM
 from OpticalSystems import Lens
 import matplotlib.pyplot as plt
 

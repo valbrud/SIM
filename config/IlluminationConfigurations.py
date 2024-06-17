@@ -8,12 +8,42 @@ class BFPConfiguration:
         self.k = 2 * np.pi / wavelength
         self.n = refraction_index
 
+    def get_5_s_waves(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
+
+
+        theta = angle_oblique
+        k1 = self.k * np.sin(theta) * self.n
+        k2 = self.k * (np.cos(theta) - 1)
+
+        base_vector_kx = k1
+        base_vector_ky = k1 # All ky indices should be zero for a plane illumination
+        base_vector_kz = k2  # We do not really care about a z index. Hopefully
+        base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
+        # p = strength_s_normal
+        p = strength_s_normal
+        b = strength_oblique
+        a0 = (2 * p ** 2 + 4 * b ** 2)
+        sources = [
+        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k1))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k1))),
+        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k1))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((0, -k1, k1))),
+        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((0, 0, self.k))),
+
+        ]
+        s_polarized_waves = Illumination.find_ipw_from_pw(sources)
+        illumination = Illumination.init_from_list(s_polarized_waves, base_vectors)
+        illumination.Mt = Mt
+        illumination.normalize_spacial_waves()
+
+        return illumination
     def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta) * self.n
         k2 = self.k * (np.cos(theta) - 1)
 
+        # p = strength_s_normal
         p = strength_s_normal
         b = strength_oblique
         a0 = (2 * p ** 2 + 4 * b ** 2)

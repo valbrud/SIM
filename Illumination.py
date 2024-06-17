@@ -1,27 +1,30 @@
 import numpy as np
-
 import Sources
-import VectorOperations
+from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
 class Illumination:
-    def __init__(self, intensity_plane_waves_dict,  Mr = 1):
+    def __init__(self, intensity_plane_waves_dict, Mr = 1):
         self.angles = np.arange(0, np.pi, np.pi / Mr)
         self._spacial_shifts = [np.array((0, 0, 0)), ]
         self._Mr = Mr
         self.Mt = len(self.spacial_shifts)
         self.waves = intensity_plane_waves_dict
+        self.wavevectors2d, self.indices2d = self.get_wavevectors_projected(0)
+        self.wavevectors3d, self.indices3d = self.get_wavevectors(0)
+        self.rearranged_indices = self._rearrange_indices()
         self.xy_fourier_peaks = None
         self.expanded_lattice = None
+        self.phase_matrix = None
+
     @classmethod
     def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, Mr = 1):
         intensity_plane_waves_dict = cls.index_frequencies(intensity_plane_waves_list, base_vector_lengths)
         return cls(intensity_plane_waves_dict, Mr = Mr)
     
     @classmethod
-    def init_from_numerical_intensity_fourier_domain(cls, numerical_intensity_fourier_domain, axes, Mr = 1):
+    def init_from_numerical_intensity_fourier_domain(cls, numerical_intensity_fourier_domain, axes, Mr=1):
         fourier_peaks, amplitudes = stattools.estimate_localized_peaks(numerical_intensity_fourier_domain, axes)
-
 
     @staticmethod
     def index_frequencies(waves_list, base_vector_lengths):
@@ -35,6 +38,19 @@ class Illumination:
             else:
                 intensity_plane_waves_dict[(m1, m2, m3)].amplitude += wave.amplitude
         return intensity_plane_waves_dict
+
+    def _rearrange_indices(self):
+        indices = self.waves.keys()
+        result_dict = {}
+        for index in indices:
+            key = index[:2]
+            value = index[2]
+            if key not in result_dict:
+                result_dict[key] = []
+            result_dict[key].append(value)
+        result_dict = {key: tuple(values) for key, values in result_dict.items()}
+        # print(result_dict)
+        return result_dict
 
     @staticmethod
     def find_ipw_from_pw(plane_waves):
@@ -68,6 +84,7 @@ class Illumination:
     def Mr(self, new_Mr):
         self.Mr = new_Mr
         self.angles = np.arange(0, np.pi, np.pi / new_Mr)
+        self.normalize_spacial_waves()
 
     @property
     def spacial_shifts(self):
@@ -77,6 +94,7 @@ class Illumination:
     def spacial_shifts(self, new_spacial_shifts):
         self._spacial_shifts = new_spacial_shifts
         self.Mt = len(new_spacial_shifts)
+        self.normalize_spacial_waves()
 
     def set_spacial_shifts_diagonally(self, number, base_vectors):
         kx, ky = base_vectors[0], base_vectors[1]
@@ -84,15 +102,42 @@ class Illumination:
         shiftsy = np.arange(0, number)/number/ky
         self.spacial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
 
-    def get_wavevectors(self):
+    def get_wavevectors(self, r):
         wavevectors = []
-        for angle in self.angles:
-            for spacial_wave in self.waves.values():
-                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                    spacial_wave.wavevector, np.array((0, 0, 1)), angle)
-                wavevectors.append(wavevector)
+        angle = self.angles[r]
+        indices = []
+        for spacial_wave in self.waves.values():
+            indices.append(spacial_wave)
+            wavevector = VectorOperations.rotate_vector3d(
+                spacial_wave.wavevector, np.array((0, 0, 1)), angle)
+            wavevectors.append(wavevector)
+        return wavevectors, indices
+    def get_all_wavevectors(self):
+        wavevectors = []
+        for r in range(self.Mr):
+            wavevectors_r, _ = self.get_wavevectors(r)
+            wavevectors.extend(wavevectors_r)
         return wavevectors
-    
+
+    def get_wavevectors_projected(self, r):
+        wavevectors2d = []
+        angle = self.angles[r]
+        indices2d = []
+        for spacial_wave in self.waves:
+            if not spacial_wave[:2] in indices2d:
+                indices2d.append(spacial_wave[:2])
+                wavevector = VectorOperations.rotate_vector3d(
+                    self.waves[spacial_wave].wavevector, np.array((0, 0, 1)), angle)
+                wavevectors2d.append(wavevector[:2])
+        return wavevectors2d, indices2d
+
+    def get_all_wavevectors_projected(self):
+        wavevectors2d = []
+        for r in range(self.Mr):
+            wavevectors2d_r, _ = self.get_wavevectors_projected(r)
+            wavevectors2d.extend(wavevectors2d_r)
+        return wavevectors2d
+
     def normalize_spacial_waves(self):
         if not (0, 0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
@@ -107,3 +152,12 @@ class Illumination:
             for peak2 in self.xy_fourier_peaks:
                 self.expanded_lattice.add((peak1[0] - peak2[0], peak1[1] - peak2[1]))
         print(len(self.expanded_lattice))
+
+    def compute_phase_matrix(self):
+        self.phase_matrix = np.zeros((self.Mr, self.Mt, len(self.get_wavevectors_projected(0)[0])))
+        for r in range(self.Mr):
+            for n in range(self.Mt):
+                wavevectors2d, _ = self.get_wavevectors_projected(r)
+                for w in range(len(wavevectors2d)):
+                    urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
+                    self.phase_matrix[r, n, w] = np.exp(-1j * np.dot(urn, wavevectors2d[w]))

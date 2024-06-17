@@ -1,6 +1,6 @@
 import numpy
 import numpy as np
-from stattools import average_ring
+from stattools import average_rings2d
 import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
@@ -12,6 +12,7 @@ class SSNRCalculator3dSIM:
         self.ssnr = None
         self.vj = None
         self.dj = None
+        self.otf_sim = None
         self.maximum_resolved = 0
         self.readout_noise_variance = readout_noise_variance
 
@@ -28,19 +29,32 @@ class SSNRCalculator3dSIM:
         return self._optical_system
 
     @optical_system.setter
-    @abstractmethod
     def optical_system(self, new_optical_system):
-        ...
-
+        self._optical_system = new_optical_system
+        self.effective_otfs = {}
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
+        self._compute_ssnr_widefield()
+        self.ssnr = None  # to avoid heavy computations where they are not needed
     @property
     def illumination(self):
         return self._illumination
-
     @illumination.setter
-    @abstractmethod
     def illumination(self, new_illumination):
-        ...
+        self._illumination = new_illumination
+        self.effective_otfs = {}
+        self.otf_sim = None
+        self.effective_otfs_at_point_k_diff = {}
+        self._compute_effective_otfs()
+        self._compute_otfs_at_point()
+        self.ssnr = None
+        # to avoid heavy computations where they are not needed
+    @abstractmethod
+    def _compute_effective_otfs(self): ...
 
+    @abstractmethod
+    def _compute_otfs_at_point(self): ...
     @abstractmethod
     def _Dj(self, q_grid): ...
 
@@ -69,6 +83,8 @@ class SSNRCalculator3dSIM:
         observed = np.abs(np.sum(dj))
         # print(observed / expected)
         # print(np.amin(approximation_quality), np.abs(np.sum(approximation_quality * np.abs(self.ssnr)) / np.sum(self.ssnr)), np.amax(approximation_quality))
+        # plt.imshow(np.log(1 + 10**4 * np.abs(ssnr[:, :, 50])))
+        # plt.show()
         return np.abs(ssnr)
 
     def ring_average_ssnr(self):
@@ -78,7 +94,7 @@ class SSNRCalculator3dSIM:
             raise ValueError("Wrong axes are provided for the ssnr")
         averaged_slices = []
         for i in range(ssnr.shape[2]):
-            averaged_slices.append(average_ring(ssnr[:, :, i], (q_axes[0], q_axes[1])))
+            averaged_slices.append(average_rings2d(ssnr[:, :, i], (q_axes[0], q_axes[1])))
         return np.array(averaged_slices).T
 
     def compute_ssnr_volume(self, factor=10, volume_element=1):
@@ -124,7 +140,7 @@ class SSNRCalculator3dSIM:
         else:
             return self._find_threshold_value(stock, max, average, noise_level)
 
-    def compute_maximum_resolved(self):
+    def compute_maximum_resolved_lateral(self):
         fR = 2 * self.optical_system.n * np.sin(self.optical_system.alpha)
         fourier_peaks_wavevectors = np.array([spacial_wave.wavevector for spacial_wave in self.illumination.waves.values()])
         fI = np.max(np.array([(wavevector[0] ** 2 + wavevector[1] ** 2) ** 0.5 for wavevector in fourier_peaks_wavevectors]))
@@ -139,14 +155,14 @@ class SSNRCalculator3dSIM:
         measure = np.where(measure < threshold, measure, threshold)
         return np.sum(measure) * factor, threshold
 
-    def compute_true_ssnr_entropy(self, factor=1):
+    def compute_true_ssnr_entropy(self, factor=100):
         noise_filtered = self.ssnr[self.ssnr > 10 ** (-10) * np.amax(self.ssnr)]
         sum = np.sum(noise_filtered)
         probabilities = noise_filtered / sum
         S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor
 
-    def compute_radial_ssnr_entropy(self, factor=1):
+    def compute_radial_ssnr_entropy(self, factor=100):
         ssnr_ra = self.ring_average_ssnr()
         ssnr_ra = ssnr_ra[~np.isnan(ssnr_ra.real) & ~np.isnan(ssnr_ra.imag)]
         noise_filtered = ssnr_ra[ssnr_ra > 10 ** (-12) * np.amax(ssnr_ra)]
@@ -154,6 +170,7 @@ class SSNRCalculator3dSIM:
         probabilities = noise_filtered / sum
         S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor
+
 class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(illumination, optical_system, readout_noise_variance)
@@ -162,40 +179,11 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
         self._compute_effective_otfs()
         self._compute_otfs_at_point()
 
-
-    @SSNRCalculator3dSIM.optical_system.setter
-    def optical_system(self, new_optical_system):
-        self._optical_system = new_optical_system
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self._compute_ssnr_widefield()
-        self.ssnr = None  # to avoid heavy computations where they are not needed
-    @SSNRCalculator3dSIM.illumination.setter
-    def illumination(self, new_illumination):
-        self._illumination = new_illumination
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self.ssnr = None
-        # to avoid heavy computations where they are not needed
-
     def _compute_effective_otfs(self):
-        waves = self.illumination.waves
-        plt.show()
-        for angle in self.illumination.angles:
-            for index in waves.keys():
-                wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                    waves[index].wavevector, np.array((0, 0, 1)), angle)
-                amplitude = waves[index].amplitude
-                # interpolated_otf = self.optical_system.interpolate_otf(wavevector)
-                # print(xy_indices, " ", z_index, " ", np.sum(interpolated_otf), " ", amplitude)
-                shifted_otf = amplitude * self.optical_system.interpolate_otf(wavevector)
-                # plt.imshow(np.log10(1 + 10 ** 16 * np.abs(effective_otf[50, :, :].T)))
-                # print(np.abs(np.amin(effective_otf)), " ", np.abs(np.amax(effective_otf)))
-                self.effective_otfs[(*index, angle)] = shifted_otf
+        self.effective_otfs = self.optical_system.compute_effective_otfs_true_3dSIM(self.illumination)
+        self.otf_sim = np.zeros(self.optical_system.otf.shape)
+        for m in self.effective_otfs:
+            self.otf_sim += np.abs(self.effective_otfs[m])
 
     def _compute_otfs_at_point(self):
         indices = self.effective_otfs.keys()
@@ -207,20 +195,11 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
         d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
         for m in self.effective_otfs.keys():
             d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
-            # plt.imshow(np.log10(1 + 10**16 * d_j[:, :, 50].real))
-            # plt.imshow(np.log10(self.effective_otfs[m] * self.effective_otfs[m].conjugate())[:, :, 50].real)
-            # plt.show()
-
-            # print(m)
-        # print(self.effective_otfs[(0, 0, 0.0)][45:55, 50, 50])
-        # print((d_j * self.effective_otfs[(0, 0, 0.0)][50, 50, 50])[45:55, 50, 50])
         d_j *= self.illumination.Mt
         return d_j
 
     def _Vj(self, q_grid):
         v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
-        test_main = 0
-        test_additional = 0
         for m1 in self.effective_otfs.keys():
             for m2 in self.effective_otfs.keys():
                 if m1[3] != m2[3]:
@@ -232,17 +211,8 @@ class SSNRCalculatorTrue3dSIM(SSNRCalculator3dSIM):
                 otf1 = self.effective_otfs[m1]
                 otf2 = self.effective_otfs[m2]
                 otf3 = self.effective_otfs_at_point_k_diff[idx_diff]
-                # print(m2, m1)
                 term = otf1 * otf2.conjugate() * otf3
-                if m1 == m2:
-                    # print(m1)
-                    # print(otf3)
-                    test_main += term
-                else:
-                    test_additional += term
                 v_j += term
-                # print(otf1, otf2, otf3)
-        # print((test_main[45:55, 50, 50]))
         v_j *= self.illumination.Mt
         return v_j
 
@@ -255,55 +225,11 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
         self._compute_effective_otfs()
         self._compute_otfs_at_point()
 
-
-    @SSNRCalculator3dSIM.optical_system.setter
-    def optical_system(self, new_optical_system):
-        self._optical_system = new_optical_system
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self._compute_ssnr_widefield()
-        self.ssnr = None  # to avoid heavy computations where they are not needed
-    @SSNRCalculator3dSIM.illumination.setter
-    def illumination(self, new_illumination):
-        self._illumination = new_illumination
-        self.effective_otfs = {}
-        self.effective_otfs_at_point_k_diff = {}
-        self._compute_effective_otfs()
-        self._compute_otfs_at_point()
-        self.ssnr = None
-        # to avoid heavy computations where they are not needed
-    def _rearrange_indices(self, indices):
-        result_dict = {}
-        for index in indices:
-            key = index[:2]
-            value = index[2]
-            if key not in result_dict:
-                result_dict[key] = []
-            result_dict[key].append(value)
-        result_dict = {key: tuple(values) for key, values in result_dict.items()}
-        # print(result_dict)
-        return result_dict
-
     def _compute_effective_otfs(self):
-        waves = self.illumination.waves
-        plt.show()
-        for angle in self.illumination.angles:
-            indices = self._rearrange_indices(waves.keys())
-            for xy_indices in indices.keys():
-                effective_otf = 0
-                for z_index in indices[xy_indices]:
-                    wavevector = VectorOperations.VectorOperations.rotate_vector3d(
-                        waves[(*xy_indices, z_index)].wavevector, np.array((0, 0, 1)), angle)
-                    amplitude = waves[(*xy_indices, z_index)].amplitude
-                    # interpolated_otf = self.optical_system.interpolate_otf(wavevector)
-                    # print(xy_indices, " ", z_index, " ", np.sum(interpolated_otf), " ", amplitude)
-                    effective_otf += amplitude * self.optical_system.interpolate_otf(wavevector)
-                # plt.imshow(np.log10(1 + 10 ** 16 * np.abs(effective_otf[50, :, :].T)))
-                # plt.show()
-                # print(np.abs(np.amin(effective_otf)), " ", np.abs(np.amax(effective_otf)))
-                self.effective_otfs[(*xy_indices, angle)] = effective_otf
+        self.effective_otfs = self.optical_system.compute_effective_otfs_projective_3dSIM(self.illumination)
+        self.otf_sim = np.zeros(self.optical_system.otf.shape)
+        for m in self.effective_otfs:
+            self.otf_sim += np.abs(self.effective_otfs[m])
 
     def _compute_otfs_at_point(self):
         indices = self.effective_otfs.keys()
@@ -315,42 +241,28 @@ class SSNRCalculatorProjective3dSIM(SSNRCalculator3dSIM):
         d_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
         for m in self.effective_otfs.keys():
             d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
-            # plt.imshow(np.log10(1 + 10**16 * d_j[:, :, 50].real))
-            # plt.imshow(np.log10(self.effective_otfs[m] * self.effective_otfs[m].conjugate())[:, :, 50].real)
-            # plt.show()
-
-            # print(m)
-        # print(self.effective_otfs[(0, 0, 0.0)][45:55, 50, 50])
-        # print((d_j * self.effective_otfs[(0, 0, 0.0)][50, 50, 50])[45:55, 50, 50])
         d_j *= self.illumination.Mt
         return np.abs(d_j)
 
     def _Vj(self, q_grid):
         v_j = np.zeros((q_grid.shape[0], q_grid.shape[1], q_grid.shape[2]), dtype=np.complex128)
-        test_main = 0
-        test_additional = 0
-        for m1 in self.effective_otfs.keys():
-            for m2 in self.effective_otfs.keys():
-                if m1[2] != m2[2]:
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
                     continue
-                xy_idx_diff = np.array(m2)[:2] - np.array(m1)[:2]
-                idx_diff = (*xy_idx_diff, m1[2])
-                if idx_diff not in self.effective_otfs_at_point_k_diff.keys():
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if m21 not in self.illumination.indices2d:
                     continue
-                otf1 = self.effective_otfs[m1]
-                otf2 = self.effective_otfs[m2]
-                otf3 = self.effective_otfs_at_point_k_diff[idx_diff]
-                # print(m2, m1)
+                idxdiff = (idx1[0], m21)
+                otf1 = self.effective_otfs[idx1]
+                otf2 = self.effective_otfs[idx2]
+                otf3 = self.effective_otfs_at_point_k_diff[idxdiff]
                 term = otf1 * otf2.conjugate() * otf3
-                if m1 == m2:
-                    # print(m1)
-                    # print(otf3)
-                    test_main += term
-                else:
-                    test_additional += term
                 v_j += term
-                # print(otf1, otf2, otf3)
-        # print((test_main[45:55, 50, 50]))
         v_j *= self.illumination.Mt
+        # plt.imshow(np.log(1 + 10**4 * np.abs(v_j[:, :, 50])))
+        # plt.show()
         return np.abs(v_j)
 

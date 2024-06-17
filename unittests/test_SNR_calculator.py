@@ -10,7 +10,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
-from SNRCalculator import SSNRCalculatorProjective3dSIM, SSNRCalculatorTrue3dSIM
+from SSNRCalculator import SSNRCalculatorProjective3dSIM, SSNRCalculatorTrue3dSIM
 from OpticalSystems import Lens
 from Sources import IntensityPlaneWave
 import tqdm
@@ -48,7 +48,7 @@ class Testssnr(unittest.TestCase):
         optical_system_linear = Lens()
         optical_system_linear.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                   apodization_filter=None)
-        wavevectors = illumination_polarized.get_wavevectors()
+        wavevectors = illumination_polarized.get_all_wavevectors()
 
         noise_estimator = SSNRCalculatorProjective3dSIM(illumination_polarized, optical_system_fourier)
 
@@ -112,10 +112,10 @@ class Testssnr(unittest.TestCase):
         plt.show()
 
     def test_ssnr(self):
-        theta = np.pi/6
-        NA = np.sin(np.pi/4)
-        max_r = 10
-        max_z = 100
+        theta = np.pi/4
+        NA = np.sin(theta)
+        max_r = 8
+        max_z = 20
         N = 100
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
@@ -146,16 +146,15 @@ class Testssnr(unittest.TestCase):
 
         illumination_list = {
             illumination_s_polarized : ("4 s-polarized oblique waves", "4s1c"),
-            # illumination_circular : ("4 circularly polarized oblique waves", "5c"),
-            # illumination_seven_waves : ("6 s-polarized oblique waves", "6s1c"),
-            # illumination_3waves : ("State of Art SIM", "state_of_art"),
-            # illumination_widefield : ("Widefield", "widefield"),
+            illumination_circular : ("4 circularly polarized oblique waves", "5c"),
+            illumination_seven_waves : ("6 s-polarized oblique waves", "6s1c"),
+            illumination_3waves : ("State of Art SIM", "state_of_art"),
+            illumination_widefield : ("Widefield", "widefield"),
             # illumination_two_triangles_rotated : ("Two triangles crossed", "2tr"),
             # illumination_two_triangles_not_rotated : ("Two triangles parallel", "2tnr"),
             # illumination_two_squares_rotated : ("Two squares crossed", "2sr"),
             # illumination_two_squares_not_rotated : ("Two squares parallel", "2snr"),
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
-            # illumination_widefield : ("widefield", "wf")
         }
 
         optical_system = Lens(alpha=NA)
@@ -170,8 +169,8 @@ class Testssnr(unittest.TestCase):
 
             ssnr = np.abs(noise_estimator.compute_ssnr())
             scaling_factor = 10**4
-            ssnr_diff = ssnr - ssnr_wf
-            ssnr_scaled = 1 + scaling_factor * ssnr_diff
+            # ssnr_diff = ssnr - ssnr_wf
+            ssnr_scaled = 1 + scaling_factor * ssnr
             ssnr_ring_averaged = noise_estimator.ring_average_ssnr()
             # ssnr_ra_scaled = 1 + scaling_factor * ssnr_ring_averaged
 
@@ -208,29 +207,29 @@ class Testssnr(unittest.TestCase):
             # fig.savefig('/home/valerii/Documents/projects/SIM/ssnr_article_1/Figures/'
             #          + illumination_list[illumination][1] + '_waves_ssnr.png')
 
-            # def update1(val):
-            #     ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
-            #     ax1.set_xlabel("fz, $\lambda^{-1}$")
-            #     ax1.set_ylabel("fx, $\lambda^{-1}$")
-            #     Z = (ssnr_scaled[:, int(val), :])
-            #     mp1.set_data(Z)
-            #     mp1.set_clim(vmin=Z.min(), vmax=Z.max())
-            #     ax1.set_aspect(1. / ax1.get_data_ratio())
-            #     plt.draw()
-            #
-            #     ax2.set_title("ssnr, fz = {:.2f}, ".format(fz[int(val)]) + "$\\frac{2NA}{\\lambda}$")
-            #     ax2.set_xlabel("fz, $\lambda^{-1}$")
-            #     ax2.set_ylabel("fx, $\lambda^{-1}$")
-            #     Z = (ssnr_scaled[:, :, int(val)])
-            #     mp2.set_data(Z)
-            #     mp2.set_clim(vmin=Z.min(), vmax=Z.max())
-            #     ax2.set_aspect(1. / ax2.get_data_ratio())
-            #     plt.draw()
-            #
-            # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-            # slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-            # slider_ssnr.on_changed(update1)
-            #
+            def update1(val):
+                ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+                ax1.set_xlabel("fz, $\lambda^{-1}$")
+                ax1.set_ylabel("fx, $\lambda^{-1}$")
+                Z = (ssnr_scaled[:, int(val), :])
+                mp1.set_data(Z)
+                mp1.set_clim(vmin=Z.min(), vmax=Z.max())
+                ax1.set_aspect(1. / ax1.get_data_ratio())
+                plt.draw()
+
+                ax2.set_title("ssnr, fz = {:.2f}, ".format(fz[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+                ax2.set_xlabel("fz, $\lambda^{-1}$")
+                ax2.set_ylabel("fx, $\lambda^{-1}$")
+                Z = (ssnr_scaled[:, :, int(val)])
+                mp2.set_data(Z)
+                mp2.set_clim(vmin=Z.min(), vmax=Z.max())
+                ax2.set_aspect(1. / ax2.get_data_ratio())
+                plt.draw()
+
+            slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+            slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+            slider_ssnr.on_changed(update1)
+
             plt.show()
 
 
@@ -385,8 +384,8 @@ class Testssnr(unittest.TestCase):
             # plt.show()
 
     def test_compare_ssnr(self):
-        theta = np.pi/5
-        alpha = 2 * np.pi/5
+        theta = np.pi/4
+        alpha = np.pi/4
         r = np.sin(theta)/np.sin(alpha)
         NA = np.sin(alpha)
         max_r = 8
@@ -417,39 +416,39 @@ class Testssnr(unittest.TestCase):
                                            apodization_filter=None)
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
-        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1/2**0.5, 1, Mt=64)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
         noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
-        noise_estimator_true = SSNRCalculatorTrue3dSIM(illumination_s_polarized, optical_system)
+        # noise_estimator_true = SSNRCalculatorTrue3dSIM(illumination_s_polarized, optical_system)
         ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
         volume_s_polarized = noise_estimator.compute_ssnr_volume()
         measure_s_polarized, threshold_s_polarized = noise_estimator.compute_ssnr_waterline_measure()
         entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
 
-        # noise_estimator.illumination = illumination_circular
-        # ssnr_circular = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_circular_ra = noise_estimator.ring_average_ssnr()
-        # volume_circular = noise_estimator.compute_ssnr_volume()
-        # measure_circular, threshold_circular = noise_estimator.compute_ssnr_waterline_measure()
-        # entropy_circular = noise_estimator.compute_true_ssnr_entropy()
-        #
-        # noise_estimator.illumination = illumination_seven_waves
-        # ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        # volume_seven_waves = noise_estimator.compute_ssnr_volume()
-        # measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure()
-        # entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator.illumination = illumination_circular
+        ssnr_circular = np.abs(noise_estimator.compute_ssnr())
+        ssnr_circular_ra = noise_estimator.ring_average_ssnr()
+        volume_circular = noise_estimator.compute_ssnr_volume()
+        measure_circular, threshold_circular = noise_estimator.compute_ssnr_waterline_measure()
+        entropy_circular = noise_estimator.compute_true_ssnr_entropy()
+
+        noise_estimator.illumination = illumination_seven_waves
+        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
+        volume_seven_waves = noise_estimator.compute_ssnr_volume()
+        measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure()
+        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
         #
         noise_estimator.illumination = illumination_3waves
-        noise_estimator_true.illumination = illumination_3waves
+        # noise_estimator_true.illumination = illumination_3waves
         ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_true = np.abs(noise_estimator_true.compute_ssnr())
         ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnr()
+        # ssnr_3waves_true = np.abs(noise_estimator_true.compute_ssnr())
+        # ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnr()
         volume_3waves = noise_estimator.compute_ssnr_volume()
         volume_a_3waves = noise_estimator.compute_analytic_ssnr_volume()
         measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure()
@@ -502,7 +501,7 @@ class Testssnr(unittest.TestCase):
         ax1.grid(which='minor', linestyle='--')
         ax1.tick_params(labelsize=20)
 
-        ax2.set_title("Slice $f_y$ = 0", fontsize=25)
+        # ax2.set_title("Slice $f_y$ = 0", fontsize=25)
         ax2.set_xlabel(r"$f_x$", fontsize=25)
         # ax2.set_yscale("log")
         # ax2.set_ylim(1, 3 * 10**2)
@@ -517,53 +516,54 @@ class Testssnr(unittest.TestCase):
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), arg][fy >= 0], label="Square SIM, $f_y=0$")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, arg][fx >= 0], label="Square SIM, $f_x=0$")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
-        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_true_ra[:, arg], label="State Of Art SIM, True 3D SIM")
-        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="State Of Art SIM, Projective 3D SIM")
+        # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_true_ra[:, arg], label="State Of Art SIM, True 3D SIM")
+        # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="State Of Art SIM, Projective 3D SIM")
         ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg], label="Widefield")
-        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg], label="Square SIM, 5 circular")
-        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg], label="Hexagonal SIM")
-        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="Conventional SIM")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg], label="Square SIM, 5 circular")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg], label="Hexagonal SIM")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="Conventional SIM")
         # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg], label="Widefield")
         # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
         # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
         # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
         # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
 
-        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), arg][fx >= 0], label="Square SIM, s-polarized")
-        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), arg][fx >= 0], label="lattice SIM, 5 waves, circularly polarized")
-        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2), arg][fx >= 0], label="7 waves")
-        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), arg][fx >= 0], label="Conventional SIM")
-        # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), arg][fx >= 0], label="Square SIM, s-polarized")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), arg][fx >= 0], label="lattice SIM, 5 waves, circularly polarized")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2), arg][fx >= 0], label="7 waves")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), arg][fx >= 0], label="Conventional SIM")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
         ax2.imshow(np.log10(np.abs(1 + multiplier * ssnr_widefield[:, int(N/2), :])))
         ax1.set_aspect(1. / ax1.get_data_ratio())
         # ax2.set_aspect(1. / ax2.get_data_ratio())
 
         def update1(val):
             ax1.clear()
-            ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
+            ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
+            # ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
             ax1.set_xlabel(r"$f_r$", fontsize=25)
             ax1.set_ylabel(r"$ssnr$", fontsize=25)
             ax1.set_yscale("log")
             ax1.set_ylim(1,  10**4)
             ax1.set_xlim(0, fx[-1]/(2 * NA))
             ax1.grid()
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="S-polarized")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="Circular")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)],    label="7 waves")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="3 waves")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="S-polarized")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="Circular")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)],    label="7 waves")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="3 waves")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
             # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
             # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
             # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
             # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
-            ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
-            ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
-            ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
             ax1.legend()
             ax1.set_aspect(1. / ax1.get_data_ratio())
             
             ax2.clear()
-            ax2.set_title("Slice $f_y$ = 0")
+            # ax2.set_title("Slice $f_y$ = 0")
             ax2.set_xlabel(r"$f_x$")
             # ax2.set_ylabel(r"ssnr")
 
@@ -575,21 +575,21 @@ class Testssnr(unittest.TestCase):
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
 
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), int(val)][fx >= 0], label="S-polarized")
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), int(val)][fx >= 0],    label="Circular"   )
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), int(val)][fx >= 0],      label="3 waves"    )
-            # ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), int(val)][fx >= 0],   label="Widefield"  )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), int(val)][fx >= 0], label="S-polarized")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), int(val)][fx >= 0],    label="Circular"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), int(val)][fx >= 0],      label="3 waves"    )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), int(val)][fx >= 0],   label="Widefield"  )
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
-        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-        # slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
-        # slider_ssnr.on_changed(update1)
+        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
+        slider_ssnr.on_changed(update1)
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_optimal_b.png'.format(two_NA_fz[arg]))
         # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
