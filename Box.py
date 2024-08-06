@@ -6,6 +6,7 @@ import wrappers
 import stattools
 import config.IlluminationConfigurations as confs
 from VectorOperations import VectorOperations
+import itertools
 class Field:
     def __init__(self, source, grid, identifier):
         self.identifier = identifier
@@ -50,25 +51,27 @@ class Box:
 
     def compute_axes(self):
         Nx, Ny, Nz = self.point_number
-        dx = self.box_size[0] / Nx
-        dy = self.box_size[1] / Ny
-        dz = self.box_size[2] / Nz
 
-        x = np.arange(-self.box_size[0]/2, self.box_size[0]/2, dx)
-        y = np.arange(-self.box_size[1]/2, self.box_size[1]/2, dy)
-        z = np.arange(-self.box_size[2]/2, self.box_size[2]/2, dz)
+        dx = self.box_size[0] / (Nx - 1)
+        dy = self.box_size[1] / (Ny - 1)
+        dz = self.box_size[2] / (Nz - 1)
 
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / self.box_size[0], Nx)
-        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / self.box_size[1], Ny)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / self.box_size[2], Nz)
-        return (x, y, z), (fx, fy, fz)
+        x = np.linspace(-self.box_size[0]/2, self.box_size[0]/2, Nx)
+        y = np.linspace(-self.box_size[1]/2, self.box_size[1]/2, Ny)
+        z = np.linspace(-self.box_size[2]/2, self.box_size[2]/2/10, Nz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), Nx)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), Ny)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), Nz)
+        return np.array((x, y, z)), np.array((fx, fy, fz))
 
     def compute_grid(self):
         indices = np.array(np.meshgrid(np.arange(self.point_number[0]), np.arange(self.point_number[1]),
                                        np.arange(self.point_number[2]))).T.reshape(-1, 3)
         indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
             self.point_number[0], self.point_number[1], self.point_number[2], 3)
-        self.grid = self.box_size[None, None, None, :] * (indices / self.point_number[None, None, None, :] - 1 / 2)
+        self.grid = self.box_size[None, None, None, :] * (indices / (self.point_number[None, None, None, :] - 1) - 1 / 2)
+        return
 
     def compute_electric_field(self):
         self.electric_field = np.zeros(self.electric_field.shape, dtype=np.complex128)
@@ -190,14 +193,14 @@ class BoxSIM(Box):
             if r == 0:
                 k0n = field.source.wavevector
                 phase = np.dot(urn, k0n)
-                intensity += field.field * np.exp(1j * phase)
+                intensity += field.field * np.exp(-1j * phase)
             else:
                 krm = VectorOperations.rotate_vector3d(field.source.wavevector,
                                                         np.array((0, 0, 1)), self.illumination.angles[r])
                 phase = np.dot(urn, krm)
                 source = Sources.IntensityPlaneWave(field.source.amplitude, field.source.phase, krm)
                 field_rotated = Field(source, self.grid, 0).field
-                intensity += field_rotated * np.exp(1j * phase)
+                intensity += field_rotated * np.exp(-1j * phase)
         self.illuminations_shifted[r, n] = intensity.real
         return self.illuminations_shifted[r, n]
 

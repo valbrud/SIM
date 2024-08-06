@@ -25,10 +25,10 @@ class BFPConfiguration:
         a0 = (2 * p ** 2 + 4 * b ** 2)
         sources = [
         Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k1))),
-        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k1))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k1))),
         Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k1))),
-        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, -k1, k1))),
-        Sources.PlaneWave(-1 / a0 ** 0.5, 1 / a0 ** 0.5, 0, 0, np.array((0, 0, self.k))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((0, -k1, k1))),
+        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((0, 0, self.k))),
 
         ]
         s_polarized_waves = Illumination.find_ipw_from_pw(sources)
