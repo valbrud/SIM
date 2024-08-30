@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 from VectorOperations import VectorOperations
-
+import sys
+sys.path.append('../')
 
 class TestRotations(unittest.TestCase):
 

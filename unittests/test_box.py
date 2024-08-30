@@ -4,6 +4,8 @@ import Sources
 from Sources import PlaneWave, PointSource
 from Box import Box
 import time
+import sys
+sys.path.append('../')
 
 
 class TestBox(unittest.TestCase):
