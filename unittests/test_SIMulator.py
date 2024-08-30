@@ -14,7 +14,7 @@ from matplotlib.widgets import Slider
 from OpticalSystems import Lens
 import ShapesGenerator
 from SIMulator import SIMulator
-from SSNRCalculator import SSNRCalculatorProjective3dSIM
+from SSNRCalculator import SSNR3dSIM2dShifts
 from SSNRBasedFiltering import WienerFilter3dModel
 from Windowing import make_mask_cosine_edge3d
 sys.path.append('../')
@@ -257,7 +257,7 @@ class TestReconstruction(unittest.TestCase):
         spacial_shifts /= (5 * np.sin(theta))
         illumination_3waves.spacial_shifts = spacial_shifts
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
         noise_estimator.compute_ssnr()
 
         simulator = SIMulator(illumination_s_polarized, optical_system, psf_size, N)

@@ -5,7 +5,6 @@ from ShapesGenerator import generate_random_spheres
 import matplotlib.pyplot as plt
 sys.path.append('../')
 configurations = BFPConfiguration()
-from mpl_toolkits.mplot3d import axes3d
 
 class TestSpheres(unittest.TestCase):
     def test_random_overlapping_spheres(self):

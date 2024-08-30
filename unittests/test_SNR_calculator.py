@@ -10,8 +10,9 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
-from SSNRCalculator import SSNRCalculatorProjective3dSIM, SSNRCalculatorTrue3dSIM
+from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts, SSNRWidefield, SSNRConfocal
 from OpticalSystems import Lens
+import stattools
 from Sources import IntensityPlaneWave
 import tqdm
 sys.path.append('../')
@@ -50,7 +51,7 @@ class Testssnr(unittest.TestCase):
                                                   apodization_filter=None)
         wavevectors = illumination_polarized.get_all_wavevectors()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_polarized, optical_system_fourier)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_polarized, optical_system_fourier)
 
         begin_shifted = time.time()
         optical_system_fourier.prepare_Fourier_interpolation(wavevectors)
@@ -116,7 +117,7 @@ class Testssnr(unittest.TestCase):
         NA = np.sin(theta)
         max_r = 8
         max_z = 20
-        N = 100
+        N = 101
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
@@ -130,17 +131,19 @@ class Testssnr(unittest.TestCase):
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
         print(fx)
 
+        fx_normalized = fx / (2 * NA)
+        fy_normalized = fy / (2 * NA)
+        fx_normalized = fz / (1 - np.cos(theta))
         # print(fw2z_illumination)
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1/2**0.5, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
-        illumination_widefield = configurations.get_widefield()
-        illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1,  Mt=32, mutually_rotated=False)
-        illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
-        illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
-        illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
-        illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
+        # illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1,  Mt=32, mutually_rotated=False)
+        # illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
+        # illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
+        # illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
+        # illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
         illumination_widefield = configurations.get_widefield()
 
 
@@ -161,11 +164,11 @@ class Testssnr(unittest.TestCase):
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
-        noise_estimator_wf = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator_wf = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         ssnr_wf = np.abs(noise_estimator_wf.compute_ssnr())
 
         for illumination in illumination_list:
-            noise_estimator = SSNRCalculatorProjective3dSIM(illumination, optical_system)
+            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
 
             ssnr = np.abs(noise_estimator.compute_ssnr())
             scaling_factor = 10**4
@@ -284,7 +287,7 @@ class Testssnr(unittest.TestCase):
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
-            noise_estimator = SSNRCalculatorProjective3dSIM(illumination, optical_system)
+            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
             ssnr = np.abs(noise_estimator.compute_ssnr())
             ssnr_scaled = np.log10(1 + 10**8 * np.abs(ssnr))
 
@@ -390,7 +393,7 @@ class Testssnr(unittest.TestCase):
         NA = np.sin(alpha)
         max_r = 8
         max_z = 20
-        N = 100
+        N = 51
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
@@ -421,8 +424,16 @@ class Testssnr(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
-        # noise_estimator_true = SSNRCalculatorTrue3dSIM(illumination_s_polarized, optical_system)
+        noise_estimator_widefield = SSNRWidefield(optical_system)
+        ssnr_widefield = noise_estimator_widefield.ssnr
+        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnr()
+
+        noise_estimator_confocal = SSNRConfocal(optical_system)
+        ssnr_confocal = noise_estimator_confocal.ssnr
+        ssnr_confocal_ra = noise_estimator_confocal.ring_average_ssnr()
+
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
+        # noise_estimator_true = SSNR3dSIM3dShifts(illumination_s_polarized, optical_system)
         ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
         volume_s_polarized = noise_estimator.compute_ssnr_volume()
@@ -454,11 +465,12 @@ class Testssnr(unittest.TestCase):
         measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure()
         entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
 
-        noise_estimator.illumination = illumination_widefield
-        ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        measure_widefield, _ = noise_estimator.compute_ssnr_waterline_measure()
+        # noise_estimator.illumination = illumination_widefield
+        # ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
+        # ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
+        # # volume_widefield = noise_estimator.compute_ssnr_volume()
+        # measure_widefield, _ = noise_estimator.compute_ssnr_waterline_measure()
+
 
         # print("Volume ssnr widefield = ", volume_widefield)
         # print("Measure ssnr widefield = ", measure_widefield)
@@ -480,7 +492,7 @@ class Testssnr(unittest.TestCase):
         # print("Entropy ssnr circular = ", entropy_circular)
 
         Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure(figsize=(15, 9), constrained_layout = True)
+        fig = plt.figure(figsize=(15, 9), constrained_layout=True)
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
@@ -518,22 +530,23 @@ class Testssnr(unittest.TestCase):
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_true_ra[:, arg], label="State Of Art SIM, True 3D SIM")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="State Of Art SIM, Projective 3D SIM")
-        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg], label="Widefield")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg], label="Square SIM, 5 circular")
+        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg],   label="Widefield")
+        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, arg], label="Square SIM, s-polarized")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, arg],    label="Confocal")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg],    label="Square SIM, circular")
         ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg], label="Hexagonal SIM")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="Conventional SIM")
-        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg], label="Widefield")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg],      label="Conventional SIM")
         # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
         # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
         # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
         # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
 
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), arg][fx >= 0], label="Square SIM, s-polarized")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), arg][fx >= 0], label="lattice SIM, 5 waves, circularly polarized")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2), arg][fx >= 0], label="7 waves")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), arg][fx >= 0], label="Conventional SIM")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
-        ax2.imshow(np.log10(np.abs(1 + multiplier * ssnr_widefield[:, int(N/2), :])))
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, arg, int(N / 2)][fx >= 0], label="Square SIM, s-polarized")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, arg,  int(N / 2)][fx >= 0],    label="Square SIM, circular")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, arg, int(N / 2)][fx >= 0], label="Hexagonal SIM")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, arg, int(N / 2)][fx >= 0],      label="Conventional SIM")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, arg, int(N / 2)][fx >= 0],   label="Widefield")
+        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, arg,  int(N / 2)][fx >= 0],      label="Confocal")
         ax1.set_aspect(1. / ax1.get_data_ratio())
         # ax2.set_aspect(1. / ax2.get_data_ratio())
 
@@ -547,11 +560,13 @@ class Testssnr(unittest.TestCase):
             ax1.set_ylim(1,  10**4)
             ax1.set_xlim(0, fx[-1]/(2 * NA))
             ax1.grid()
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="S-polarized")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="Circular")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)],    label="7 waves")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="3 waves")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="SquareL")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="SquareC")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)], label="Hexagonal")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="Conventional")
             ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
+            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, int(val)],         label="Confocal")
+
             # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
             # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
             # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
@@ -575,11 +590,12 @@ class Testssnr(unittest.TestCase):
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
             # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
 
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N / 2), int(val)][fx >= 0], label="S-polarized")
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(N / 2), int(val)][fx >= 0],    label="Circular"   )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(N / 2),  int(val)][fx >= 0],    label="7 waves"   )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(N / 2), int(val)][fx >= 0],      label="3 waves"    )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), int(val)][fx >= 0],   label="Widefield"  )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(val), int(N / 2)][fx >= 0], label="S-polarized")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(val), int(N / 2)][fx >= 0],    label="Circular"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
+            ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
@@ -630,7 +646,7 @@ class Testssnr(unittest.TestCase):
         illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_two_triangles_not_rotated, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_two_triangles_not_rotated, optical_system)
         ssnr_ttnr = np.abs(noise_estimator.compute_ssnr())
         ssnr_ttnr_ra = noise_estimator.ring_average_ssnr()
         volume_ttnr = np.sum(ssnr_ttnr)
@@ -831,7 +847,7 @@ class Testssnr(unittest.TestCase):
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
-            noise_estimator = SSNRCalculatorProjective3dSIM(illumination, optical_system)
+            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
 
             ssnr = np.abs(noise_estimator.compute_ssnr())
             scaling_factor = 10**8
@@ -933,7 +949,7 @@ class Testssnr(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
         ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
         # volume_s_polarized = noise_estimator.compute_ssnr_volume(ssnr_s_polarized, dV)
@@ -1125,7 +1141,7 @@ class Testssnr(unittest.TestCase):
         iwaves = box.get_approximated_intensity_sources()
         illumination_2z = Illumination.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
         illumination_2z.normalize_spacial_waves()
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_2z, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_2z, optical_system)
         ssnr_2z = np.abs(noise_estimator.compute_ssnr())
         ssnr_2z_ra = noise_estimator.ring_average_ssnr()
         volume_2z = noise_estimator.compute_ssnr_volume(ssnr_2z, dV)
@@ -1142,7 +1158,7 @@ class Testssnr(unittest.TestCase):
         illumination_3w = Illumination(il, Mr=5)
         illumination_3w.Mt = 1
         illumination_3w.normalize_spacial_waves()
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_3w, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_3w, optical_system)
         ssnr_3w = np.abs(noise_estimator.compute_ssnr())
         ssnr_3w_ra = noise_estimator.ring_average_ssnr()
         volume_3w = noise_estimator.compute_ssnr_volume(ssnr_3w, dV)
@@ -1276,11 +1292,11 @@ class Testssnr(unittest.TestCase):
 
         k = 2 * np.pi
         il4 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 0)
-        noise4 = SSNRCalculatorProjective3dSIM(il4, optical_system)
+        noise4 = SSNR3dSIM2dShifts(il4, optical_system)
         ssnr4 = noise4.ssnr()
 
         il5 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
-        noise5 = SSNRCalculatorProjective3dSIM(il5, optical_system)
+        noise5 = SSNR3dSIM2dShifts(il5, optical_system)
         ssnr5 = noise5.ssnr()
         ra4 = noise4.ring_average_ssnr()
         ra5 = noise5.ring_average_ssnr()
@@ -1377,3 +1393,70 @@ class Testssnr(unittest.TestCase):
         #         fz[arg]))
         plt.show()
 
+class TestApproximations(unittest.TestCase):
+    def test_ring_avergaged_SSNR(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        r = np.sin(theta) / np.sin(alpha)
+        NA = np.sin(alpha)
+        max_r = 8
+        max_z = 20
+        N = 100
+        psf_size = 2 * np.array((max_r, max_r, max_z))
+        dx = 2 * max_r / N
+        dy = 2 * max_r / N
+        dz = 2 * max_z / N
+        dV = dx * dy * dz
+        x = np.arange(-max_r, max_r, dx)
+        y = np.copy(x)
+        z = np.arange(-max_z, max_z, dz)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+
+        arg = N // 2
+        print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        two_NA_fy = fy / (2 * NA)
+        two_NA_fz = fz / (1 - np.cos(alpha))
+
+        optical_system = Lens(alpha=alpha)
+        optical_system.compute_psf_and_otf((psf_size, N),
+                                           apodization_filter=None)
+
+        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
+        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+        illumination_widefield = configurations.get_widefield()
+
+        noise_estimator_widefield   = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        # noise_estimator_confocal    = SSNRConfocal(optical_system)
+        noise_estimator_s_polarized = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
+        noise_estimator_circular    = SSNR3dSIM2dShifts(illumination_circular, optical_system)
+        noise_estimator_seven_waves = SSNR3dSIM2dShifts(illumination_seven_waves, optical_system)
+        noise_estimator_3waves      = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
+
+        noise_estimators = {"widefield" : noise_estimator_widefield,
+                            "s_polarized" : noise_estimator_s_polarized,
+                            "circular" : noise_estimator_circular,
+                            "seven waves" : noise_estimator_seven_waves,
+                            "three waves" : noise_estimator_3waves}
+
+
+        for name in noise_estimators:
+            noise_estimator = noise_estimators[name]
+            noise_estimator.compute_ssnr()
+            dj_ra = stattools.average_rings3d(noise_estimator.dj, (fx, fy, fz))
+            dj2_ra = stattools.average_rings3d(noise_estimator.dj**2, (fx, fy, fz))
+            full_fraction_approximation = 1/2 * dj2_ra/dj_ra + dj_ra
+            nom_and_denom_separated_approximation = (1/2 + 1) * dj_ra
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.set_title(name)
+            ax.plot(fx[fx >= 0], np.log(1 + 10**8 * full_fraction_approximation[:, N//2]), label="<nom/denom>")
+            ax.plot(fx[fx >= 0], np.log(1 + 10**8 * nom_and_denom_separated_approximation[:, N//2]), label="<nom>/<denom>")
+            ax.legend()
+        plt.show()

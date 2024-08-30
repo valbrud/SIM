@@ -2,9 +2,10 @@ import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import wrappers
+import sys
+sys.path.append('../')
 
 N = 100
-
 
 class TestWrappersFT(unittest.TestCase):
     def test_1d(self):

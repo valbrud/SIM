@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import stattools
 import unittest
+import sys
+sys.path.append('../')
 
 class TestRingAveraging(unittest.TestCase):
     def test_averaging_over_uniform(self):

@@ -110,6 +110,7 @@ class Box:
     def compute_intensity_fourier_space(self):
         self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) *
                                         (self.box_volume /self.point_number[0] / self.point_number[1] / self.point_number[2]))
+        self.intensity_fourier_space/= np.sum(self.intensity)
 
     def add_source(self, source):
         self.fields.append(Field(source, self.grid, self.source_identifier))

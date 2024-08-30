@@ -206,9 +206,9 @@ class FlatNoiseFilter3dModel(FlatNoiseFilter3d):
         ax[1, 1].set_title('Tj')
         plt.show()
         filtered_ft = object_ft * otf_sim * self.ssnr_calc.otf_sim
-        plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
-        plt.show()
+        # plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
+        # plt.show()
         filtered = wrappers.wrapped_ifftn(filtered_ft).real
-        plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
-        plt.show()
+        # plt.imshow(np.log(np.abs(1 + 10**4 * filtered_ft)))
+        # plt.show()
         return filtered, wj, otf_sim, tj

@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNRCalculatorProjective3dSIM
+from SSNRCalculator import SSNR3dSIM2dShifts
 from OpticalSystems import Lens
 
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
         illumination_widefield.normalize_spacial_waves()
-        ssnr_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         wssnr = ssnr_widefield.compute_ssnr()
         wvolume = ssnr_widefield.compute_ssnr_volume(factor)
         wtotal = ssnr_widefield.compute_total_ssnr()
@@ -75,7 +75,7 @@ if __name__ == "__main__":
                         k2 = k * (np.cos(angle) - 1)
                         k4 = k * (np.cos(np.arcsin(a * np.sin(angle))) - 1)
                         illumination = config.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
-                        ssnr_calc = SSNRCalculatorProjective3dSIM(illumination, optical_system)
+                        ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
                         ssnr = ssnr_calc.compute_ssnr()
                         volume = ssnr_calc.compute_ssnr_volume(factor)
                         total = ssnr_calc.compute_total_ssnr()

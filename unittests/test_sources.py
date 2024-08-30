@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
 from Sources import PlaneWave, PointSource
+import sys
+sys.path.append('../')
 
 
 class TestPlaneWave(unittest.TestCase):

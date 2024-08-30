@@ -15,7 +15,7 @@ import skimage
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
-from SSNRCalculator import SSNRCalculatorProjective3dSIM, SSNRCalculatorTrue3dSIM
+from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
 from OpticalSystems import Lens
 import ShapesGenerator
 import SIMulator
@@ -73,8 +73,8 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_3waves, optical_system)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator.compute_ssnr()
         noise_estimator_widefield.compute_ssnr()
 
@@ -198,8 +198,8 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_3waves, optical_system, readout_noise_variance=1)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system, readout_noise_variance=1)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system, readout_noise_variance=1)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system, readout_noise_variance=1)
         noise_estimator.compute_ssnr()
         noise_estimator_widefield.compute_ssnr()
 
@@ -326,8 +326,8 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator.compute_ssnr()
         noise_estimator_widefield.compute_ssnr()
 
@@ -453,11 +453,11 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_linear = SSNRCalculatorProjective3dSIM(illumination_3waves, optical_system)
-        noise_estimator_s_polarized = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
-        noise_estimator_circular = SSNRCalculatorProjective3dSIM(illumination_circular, optical_system)
-        noise_estimator_hexagonal = SSNRCalculatorProjective3dSIM(illumination_seven_waves, optical_system)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator_linear = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
+        noise_estimator_s_polarized = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
+        noise_estimator_circular = SSNR3dSIM2dShifts(illumination_circular, optical_system)
+        noise_estimator_hexagonal = SSNR3dSIM2dShifts(illumination_seven_waves, optical_system)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator_linear.compute_ssnr()
         noise_estimator_s_polarized.compute_ssnr()
         noise_estimator_circular.compute_ssnr()
@@ -584,8 +584,8 @@ class TestWiener(unittest.TestCase):
         spacial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
         spacial_shifts /= (10 * np.sin(theta))
         illumination_s_polarized.spacial_shifts = spacial_shifts
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_s_polarized, optical_system)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator.compute_ssnr()
         noise_estimator_widefield.compute_ssnr()
 
@@ -673,8 +673,8 @@ class TestWiener(unittest.TestCase):
         alpha = np.pi / 4
         r = np.sin(theta) / np.sin(alpha)
         NA = np.sin(alpha)
-        max_r = 4
-        max_z = 10
+        max_r = 3
+        max_z = 8
         N = 51
         psf_size = 2 * np.array((max_r, max_r, max_z))
         x = np.linspace(-max_r, max_r, N)
@@ -717,7 +717,7 @@ class TestWiener(unittest.TestCase):
         illumination_3waves.spacial_shifts = spacial_shifts
 
         illumination = illumination_s_polarized
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination, optical_system, readout_noise_variance=0)
+        noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system, readout_noise_variance=0)
         noise_estimator.compute_ssnr()
 
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N, readout_noise_variance=0)
@@ -812,9 +812,9 @@ class TestFlat(unittest.TestCase):
         alpha = np.pi / 4
         r = np.sin(theta) / np.sin(alpha)
         NA = np.sin(alpha)
-        max_r = 4
-        max_z = 4
-        N = 100
+        max_r = 40
+        max_z = 160
+        N = 101
         psf_size = 2 * np.array((max_r, max_r, max_z))
         x = np.linspace(-max_r, max_r, N)
         y = np.copy(x)
@@ -828,9 +828,9 @@ class TestFlat(unittest.TestCase):
 
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X ** 2 + Y ** 2 + Z ** 2) ** 0.5
-        # image[R < max_r//2] = 1000
+        image[N//2, N//2, N//2] = 10000000
 
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.5, N=100)
+        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=100)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
@@ -847,7 +847,7 @@ class TestFlat(unittest.TestCase):
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
-        image_blurred = np.random.poisson(image_blurred)
+        # image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
         # plt.show()
 
@@ -857,8 +857,8 @@ class TestFlat(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNRCalculatorProjective3dSIM(illumination_3waves, optical_system)
-        noise_estimator_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
+        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator.compute_ssnr()
         noise_estimator_widefield.compute_ssnr()
 

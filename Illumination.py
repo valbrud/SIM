@@ -9,12 +9,11 @@ class Illumination:
         self._spacial_shifts = [np.array((0, 0, 0)), ]
         self._Mr = Mr
         self.Mt = len(self.spacial_shifts)
-        self.waves = intensity_plane_waves_dict
+        self.waves = {key : intensity_plane_waves_dict[key] for key in intensity_plane_waves_dict.keys() if not np.isclose(intensity_plane_waves_dict[key].amplitude, 0)}
         self.wavevectors2d, self.indices2d = self.get_wavevectors_projected(0)
         self.wavevectors3d, self.indices3d = self.get_wavevectors(0)
         self.rearranged_indices = self._rearrange_indices()
         self.xy_fourier_peaks = None
-        self.expanded_lattice = None
         self.phase_matrix = None
 
     @classmethod
@@ -145,13 +144,23 @@ class Illumination:
         for spacial_wave in self.waves.values():
             spacial_wave.amplitude /= norm
 
-    def compute_expanded_lattice(self):
+    def compute_expanded_lattice2d(self):
         self.xy_fourier_peaks = set((mx, my) for mx, my, mz in self.waves.keys())
-        self.expanded_lattice = set()
+        expanded_lattice2d = set()
         for peak1 in self.xy_fourier_peaks:
             for peak2 in self.xy_fourier_peaks:
-                self.expanded_lattice.add((peak1[0] - peak2[0], peak1[1] - peak2[1]))
-        print(len(self.expanded_lattice))
+                expanded_lattice2d.add((peak1[0] - peak2[0], peak1[1] - peak2[1]))
+        print(len(expanded_lattice2d))
+        return expanded_lattice2d
+
+    def compute_expanded_lattice3d(self):
+        fourier_peaks = set(self.waves.keys())
+        expanded_lattice3d = set()
+        for peak1 in fourier_peaks:
+            for peak2 in fourier_peaks:
+                expanded_lattice3d.add((peak1[0] - peak2[0], peak1[1] - peak2[1], peak1[2] - peak2[2]))
+        print(len(expanded_lattice3d))
+        return expanded_lattice3d
 
     def compute_phase_matrix(self):
         self.phase_matrix = np.zeros((self.Mr, self.Mt, len(self.get_wavevectors_projected(0)[0])))

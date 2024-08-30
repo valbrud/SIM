@@ -5,6 +5,9 @@ from Sources import PlaneWave, IntensityPlaneWave
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
+import sys
+sys.path.append('../')
+
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):
         sources = [

@@ -1,14 +1,14 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNRCalculatorProjective3dSIM
+from SSNRCalculator import SSNR3dSIM2dShifts
 from OpticalSystems import Lens
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     config = BFPConfiguration()
-    max_r = 5
-    max_z = 10
+    max_r = 4
+    max_z = 8
     N = 100
     alpha_lens = 2 * np.pi / 5
     psf_size = 2 * np.array((max_r, max_r, max_z))
@@ -37,19 +37,19 @@ if __name__ == "__main__":
 
     headers = ["IncidentAngle", "Mr", "Volume", "Volume_a", "Entropy", "RadialEntropy"]
 
-    size = 8
+    size = 24
     theta = np.linspace(alpha_lens/size, alpha_lens, size)
-    rotations = np.arange(3, 4)
+    rotations = np.arange(1, 6)
 
     optical_system = Lens(alpha=alpha_lens)
     optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
 
-    with open("test.csv", 'w', newline='') as file:
+    with open("varying_mr.csv", 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
         illumination_widefield.normalize_spacial_waves()
-        ssnr_widefield = SSNRCalculatorProjective3dSIM(illumination_widefield, optical_system)
+        ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         wssnr = ssnr_widefield.compute_ssnr()
         wvolume = ssnr_widefield.compute_ssnr_volume()
         wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
@@ -62,7 +62,6 @@ if __name__ == "__main__":
         params = [0, 0, round(wvolume), round(wvolume_a),  round(wentropy, 3), round(wrentropy, 3)]
         print(params)
         writer.writerow(params)
-
         for angle in theta:
             for Mr in rotations:
                 k = 2 * np.pi
@@ -70,9 +69,9 @@ if __name__ == "__main__":
                 k2 = k * (np.cos(angle) - 1)
                 strength = 1
                 illumination = config.get_2_oblique_s_waves_and_s_normal(angle, strength, Mr=Mr)
-                ssnr_calc = SSNRCalculatorProjective3dSIM(illumination, optical_system)
+                ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
                 ssnr = ssnr_calc.compute_ssnr()
-                # plt.imshow(1 + 10**8 * np.log(ssnr[:, :, 50]))
+                # plt.imshow(1 + 10**8 * np.log (ssnr[:, :, 50]))
                 # plt.show()
                 volume = ssnr_calc.compute_ssnr_volume()
                 volume_a = ssnr_calc.compute_analytic_ssnr_volume()
