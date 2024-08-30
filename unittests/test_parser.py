@@ -1,6 +1,8 @@
 import unittest
 from importlib.util import spec_from_loader, module_from_spec
 from importlib.machinery import SourceFileLoader
+import sys
+sys.path.append('../')
 
 class TestParser(unittest.TestCase):
     def test_configurations_import(self):

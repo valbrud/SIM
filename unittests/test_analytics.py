@@ -3,6 +3,8 @@ import numpy as np
 import wrappers
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
+import sys
+sys.path.append('../')
 
 
 class TestFourierProperties(unittest.TestCase):
