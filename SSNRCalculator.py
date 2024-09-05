@@ -264,12 +264,20 @@ class SSNR3dSIM2dShifts(SSNRCalculator3dSIM):
         v_j *= self.illumination.Mt
         return np.abs(v_j)
 
-class SSNR3dSIM2dShiftsFiniteRealKernel(SSNR3dSIM2dShifts):
-    def __init__(self, illumination, optical_system, kernel, real = True):
-        super().__init__(illumination, optical_system)
+class SSNR3dSIM2dShiftsFiniteKernel(SSNR3dSIM2dShifts):
+    def __init__(self, illumination, optical_system, kernel,  readout_noise_variance=0):
+        super().__init__(illumination, optical_system,  readout_noise_variance)
+        self.kernel_ft = None
+        self.kernel = kernel
+    @property
+    def kernel(self):
+        return self._kernel
 
-        shape = np.array(kernel.shape, dtype=np.int32)
+    @kernel.setter
+    def kernel(self, kernel_new):
+        shape = np.array(kernel_new.shape, dtype=np.int32)
         otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
+
         if ((shape % 2) == 0).any():
             raise ValueError("Size of the kernel must be even!")
 
@@ -277,29 +285,32 @@ class SSNR3dSIM2dShiftsFiniteRealKernel(SSNR3dSIM2dShifts):
             raise ValueError("Size of the kernel is bigger than of the PSF!")
 
         if (shape < otf_shape).any():
-            kernel_new = np.zeros(otf_shape)
-            kernel_new[otf_shape[0]//2-shape[0]//2:otf_shape[0]//2+shape[0]//2 + 1,
-                       otf_shape[1]//2-shape[1]//2:otf_shape[1]//2+shape[1]//2 + 1,
-                       otf_shape[2]//2-shape[2]//2:otf_shape[2]//2+shape[2]//2 + 1,
-            ] = kernel
-            kernel = kernel_new
-        if real:
-            self.kernel = kernel
-            self.kernel_ft = wrappers.wrapped_ifftn(kernel)
-        else:
-            self.kernel = wrappers.wrapped_fftn(kernel)
-            self.kernel_ft = kernel
-
-    @property
-    def kernel(self):
-        return self._kernel
-
-    @kernel.setter
-    def kernel(self, kernel_new):
+            kernel_expanded = np.zeros(otf_shape)
+            kernel_expanded[otf_shape[0]//2-shape[0]//2:otf_shape[0]//2+shape[0]//2 + 1,
+                            otf_shape[1]//2-shape[1]//2:otf_shape[1]//2+shape[1]//2 + 1,
+                            otf_shape[2]//2-shape[2]//2:otf_shape[2]//2+shape[2]//2 + 1,
+            ] = kernel_new
+            kernel_new = kernel_expanded
+        self._kernel = kernel_new
+        self.kernel_ft = wrappers.wrapped_ifftn(kernel_new)
+        self.kernel_ft /= np.amax(self.kernel_ft)
         self._kernel = kernel_new
         self.effective_kernels_ft = {}
         self._compute_effective_kernels_ft()
         self.compute_ssnr()
+
+    def plot_effective_kernel_and_otf(self):
+        Nx, Ny, Nz = self.optical_system.otf.shape
+        fig, ax = plt.subplots()
+        ax.plot(self.optical_system.otf_frequencies[0], self.kernel_ft[:, Ny//2, Nz//2], label="Kernel")
+        ax.plot(self.optical_system.otf_frequencies[0],self.optical_system.otf[:, Ny//2, Nz//2], label="OTF")
+        ax.set_title("Kernel vs OTF")
+        ax.set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
+        ax.set_ylabel("OTF/K, u.e.")
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(0, 1)
+        ax.legend()
+        ax.grid()
     @SSNR3dSIM2dShifts.illumination.setter
     def illumination(self, new_illumination):
         self._illumination = new_illumination

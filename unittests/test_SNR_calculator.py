@@ -436,7 +436,7 @@ class Testssnr(unittest.TestCase):
         # noise_estimator_true = SSNR3dSIM3dShifts(illumination_s_polarized, optical_system)
         ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_s_polarized = noise_estimator.compute_ssnr_volume()
+        volume_squareSP = noise_estimator.compute_ssnr_volume()
         measure_s_polarized, threshold_s_polarized = noise_estimator.compute_ssnr_waterline_measure()
         entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
 
@@ -450,7 +450,7 @@ class Testssnr(unittest.TestCase):
         noise_estimator.illumination = illumination_seven_waves
         ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
         ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_seven_waves = noise_estimator.compute_ssnr_volume()
+        volume_hexagonal = noise_estimator.compute_ssnr_volume()
         measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure()
         entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
         #
@@ -460,7 +460,7 @@ class Testssnr(unittest.TestCase):
         ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
         # ssnr_3waves_true = np.abs(noise_estimator_true.compute_ssnr())
         # ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnr()
-        volume_3waves = noise_estimator.compute_ssnr_volume()
+        volume_conventional = noise_estimator.compute_ssnr_volume()
         volume_a_3waves = noise_estimator.compute_analytic_ssnr_volume()
         measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure()
         entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
@@ -475,15 +475,15 @@ class Testssnr(unittest.TestCase):
         # print("Volume ssnr widefield = ", volume_widefield)
         # print("Measure ssnr widefield = ", measure_widefield)
         #
-        # print("Volume ssnr s_polarized = ", volume_s_polarized)
+        # print("Volume ssnr s_polarized = ", volume_squareSP)
         # print("Measure ssnr s_polarized = ", measure_s_polarized, threshold_s_polarized)
         # print("Entropy ssnr s_polarized = ", entropy_s_polarized)
 
-        # print("Volume ssnr 3waves = ", volume_3waves)
+        # print("Volume ssnr 3waves = ", volume_conventional)
         # print("Measure ssnr 3waves = ", measure_3waves, threshold3waves)
         # print("Entropy ssnr 3waves = ", entropy_3waves)
         #
-        # print("Volume ssnr seven_waves = ", volume_seven_waves)
+        # print("Volume ssnr seven_waves = ", volume_hexagonal)
         # print("Measure ssnr seven_waves = ", measure_seven_waves, threshold7waves)
         # print("Entropy ssnr seven_waves = ", entropy_seven_waves)
         #
@@ -952,7 +952,7 @@ class Testssnr(unittest.TestCase):
         noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
         ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        # volume_s_polarized = noise_estimator.compute_ssnr_volume(ssnr_s_polarized, dV)
+        # volume_squareSP = noise_estimator.compute_ssnr_volume(ssnr_s_polarized, dV)
         # measure_s_polarized, threshold_s_polarized = noise_estimator.compute_ssnr_waterline_measure(ssnr_s_polarized)
 
         noise_estimator.illumination = illumination_circular
@@ -964,13 +964,13 @@ class Testssnr(unittest.TestCase):
         noise_estimator.illumination = illumination_seven_waves
         ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
         ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        # volume_seven_waves = noise_estimator.compute_ssnr_volume(ssnr_seven_waves, dV)
+        # volume_hexagonal = noise_estimator.compute_ssnr_volume(ssnr_seven_waves, dV)
         # measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure(ssnr_seven_waves)
 
         noise_estimator.illumination = illumination_3waves
         ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
         ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        # volume_3waves = noise_estimator.compute_ssnr_volume(ssnr_3waves, dV)
+        # volume_conventional = noise_estimator.compute_ssnr_volume(ssnr_3waves, dV)
         # measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure(ssnr_3waves)
 
         noise_estimator.illumination = illumination_widefield
@@ -981,11 +981,11 @@ class Testssnr(unittest.TestCase):
 
         # print("Volume ssnr widefield = ", volume_widefield)
         # print("Measure ssnr widefield = ", measure_widefield)
-        # print("Volume ssnr s_polarized = ", volume_s_polarized)
+        # print("Volume ssnr s_polarized = ", volume_squareSP)
         # print("Measure ssnr s_polarized = ", measure_s_polarized, threshold_s_polarized)
-        # print("Volume ssnr three_waves = ", volume_3waves)
+        # print("Volume ssnr three_waves = ", volume_conventional)
         # print("Measure ssnr 3waves = ", measure_3waves, threshold3waves)
-        # print("Volume ssnr seven_waves = ", volume_seven_waves)
+        # print("Volume ssnr seven_waves = ", volume_hexagonal)
         # print("Measure ssnr seven_waves = ", measure_seven_waves, threshold7waves)
         # print("Volume ssnr circular = ", volume_circular)
         # print("Measure ssnr circular = ", measure_circular, threshold_circular)

@@ -10,13 +10,15 @@ import SSNRCalculator
 from OpticalSystems import Lens
 sys.path.append('../')
 configurations = BFPConfiguration()
+
+
 if __name__ == "__main__":
     theta = np.pi / 4
     alpha = np.pi / 4
     dx = 1 / (8 * np.sin(alpha))
     dy = dx
     dz = 1 / (4 * (1 - np.cos(alpha)))
-    N = 51
+    N = 61
     max_r = N//2 * dx
     max_z = N//2 * dz
 
@@ -24,9 +26,6 @@ if __name__ == "__main__":
 
     NA = np.sin(alpha)
     psf_size = 2 * np.array((max_r, max_r, max_z))
-    dx = 2 * max_r / N
-    dy = 2 * max_r / N
-    dz = 2 * max_z / N
     dV = dx * dy * dz
     x = np.linspace(-max_r, max_r, N)
     y = np.copy(x)
@@ -52,7 +51,7 @@ if __name__ == "__main__":
     illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
     illumination_widefield = configurations.get_widefield()
 
-    illuminations = {"Conventional" : illumination_3waves,
+    configurations = {"Conventional" : illumination_3waves,
                      "Square" : illumination_s_polarized,
                      "Hexagonal" : illumination_seven_waves}
 
@@ -65,83 +64,83 @@ if __name__ == "__main__":
     noise_estimator.illumination = illumination_s_polarized
     ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
     ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-    volume_s_polarized = noise_estimator.compute_ssnr_volume()
+    volume_squareSP = noise_estimator.compute_ssnr_volume()
     entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
 
     noise_estimator.illumination = illumination_seven_waves
     ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
     ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-    volume_seven_waves = noise_estimator.compute_ssnr_volume()
+    volume_hexagonal = noise_estimator.compute_ssnr_volume()
     entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
 
     noise_estimator.illumination = illumination_3waves
     ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
     ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-    volume_3waves = noise_estimator.compute_ssnr_volume()
+    volume_conventional = noise_estimator.compute_ssnr_volume()
     entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
 
-    with open('SincKernels.csv', 'w', newline='') as file:
+    with open('SincKernels2D.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         headers = ["Configuration", 'Size', "Volume", "Entropy"]
         writer.writerow(headers)
-        writer.writerow(["Widefield", 1, volume_widefield, entropy_widefield])
-        writer.writerow(["Conventional", 1, volume_3waves, entropy_3waves])
-        writer.writerow(["Square", 1, volume_s_polarized, entropy_s_polarized])
-        writer.writerow(["Hexagonal", 1, volume_seven_waves, entropy_seven_waves])
+        writer.writerow(["Widefield", 0, volume_widefield, entropy_widefield])
+        writer.writerow(["Conventional", 0, volume_conventional, entropy_3waves])
+        writer.writerow(["Square", 0, volume_squareSP, entropy_s_polarized])
+        writer.writerow(["Hexagonal", 0, volume_hexagonal, entropy_seven_waves])
 
-        print("Volume ssnr widefield = ", volume_widefield)
-        print("Entropy ssnr widefield = ", entropy_widefield)
-
-
-        print("Volume ssnr s_polarized = ", volume_s_polarized)
-        print("Entropy ssnr s_polarized = ", entropy_s_polarized)
+        print("Volume ideal widefield = ", volume_widefield)
+        print("Entropy ideal widefield = ", entropy_widefield)
 
 
-        print("Volume ssnr 3waves = ", volume_3waves)
-        print("Entropy ssnr 3waves = ", entropy_3waves)
+        print("Volume ideal square = ", volume_squareSP)
+        print("Entropy ideal s_polarized = ", entropy_s_polarized)
 
 
-        print("Volume ssnr seven_waves = ", volume_seven_waves)
-        print("Entropy ssnr seven_waves = ", entropy_seven_waves)
+        print("Volume ideal conventional = ", volume_conventional)
+        print("Entropy ideal conventional = ", entropy_3waves)
 
-        for kernel_size in range(3, 31, 2):
 
-            kernel = np.zeros((kernel_size, kernel_size, 1))
-            func = np.zeros(kernel_size)
-            func[0:kernel_size//2 + 1] = np.linspace(0, 1, kernel_size//2+1)
-            func[kernel_size//2: kernel_size] = np.linspace(1, 0, kernel_size//2 + 1)
-            func2d = func[:, None] * func[None, :]
-            kernel[:, :,  0] = func
+        print("Volume ideal hexagonal = ", volume_hexagonal)
+        print("Entropy ideal hexagonal = ", entropy_seven_waves)
+        kernel = np.zeros((1,1,1))
+        kernel[0,0,0] = 1
+        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
 
-            noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteRealKernel(illumination_widefield, optical_system, kernel)
-            ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-            ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-            volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-            entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        for configuration in configurations:
+            illumination = configurations[configuration]
+            noise_estimator_finite.illumination = illumination
+            print(configuration)
 
-            noise_estimator_finite.illumination = illumination_s_polarized
-            ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-            ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-            volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-            entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+            for kernel_size in range(1, 31, 2):
+                print(f"Kernel size {configuration} = ", kernel_size)
+                kernel_r_size = kernel_size
+                kernel_z_size = 1
+                func_r = np.zeros(kernel_r_size)
+                func_r[0:kernel_r_size // 2 + 1] = np.linspace(0, 1, (kernel_r_size + 1) // 2 + 1)[1:]
+                func_r[kernel_r_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_r_size + 1) // 2 + 1)[:-1]
+                func_z = np.zeros(kernel_z_size)
+                func_z[0:kernel_z_size // 2 + 1] = np.linspace(0, 1, (kernel_z_size + 1) // 2 + 1)[1:]
+                func_z[kernel_z_size // 2: kernel_z_size] = np.linspace(1, 0, (kernel_z_size + 1) // 2 + 1)[:-1]
+                func2d = func_r[:, None] * func_r[None, :]
+                func3d = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
+                # kernel[0, 0, 0] = 1
+                # kernel[:, :,  0] = func2d
+                kernel = func3d
 
-            noise_estimator_finite.illumination = illumination_seven_waves
-            ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-            ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-            volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-            entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
 
-            noise_estimator_finite.illumination = illumination_3waves
-            ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-            ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-            volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-            entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+                noise_estimator_finite.kernel = kernel
 
-            print("Volume finite s_polarized = ", volume_finite_s_polarized)
-            print("Entropy finite s_polarized = ", entropy_finite_s_polarized)
+                ssnr_finite= noise_estimator_finite.compute_ssnr()
+                ssnr_finite_ra = noise_estimator_finite.ring_average_ssnr()
+                # if configuration == "Conventional":
+                #     plt.plot(1 + 10**4 * ssnr_finite_ra[N//4  , :], label=f"{kernel_size}")
+                #     plt.gca().set_yscale("log")
+                volume_finite = noise_estimator_finite.compute_ssnr_volume()
+                entropy_finite = noise_estimator_finite.compute_true_ssnr_entropy()
 
-            print("Volume finite 3waves = ", volume_finite_3waves)
-            print("Entropy finite 3waves = ", entropy_finite_3waves)
+                print(f"Volume finite {configuration} = ", volume_finite)
+                print(f"Entropy finite {configuration} = ", entropy_finite)
 
-            print("Volume finite seven_waves = ", volume_finite_seven_waves)
-            print("Entropy finite seven_waves = ", entropy_finite_seven_waves)
+                writer.writerow([configuration, kernel_size, volume_finite, entropy_finite])
+    plt.legend()
+    plt.show()
