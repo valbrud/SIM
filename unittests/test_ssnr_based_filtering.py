@@ -593,7 +593,7 @@ class TestWiener(unittest.TestCase):
         wiener = SSNRBasedFiltering.WienerFilter3dModelSDR(noise_estimator)
         wiener_widefield = SSNRBasedFiltering.WienerFilter3dModelSDR(noise_estimator_widefield)
         simulator = SIMulator.SIMulator(illumination_s_polarized, optical_system, psf_size, N)
-        images = simulator.simulate_sim_images(image)
+        images = simulator.generate_sim_images(image)
         image_sr = simulator.reconstruct_real_space(images)
         image_sr_ft = wrappers.wrapped_fftn(image_sr)
         plt.plot(np.log(1 + 10**4 * np.abs(image_sr_ft[:, 25, 25])), label='ft rec')
@@ -721,7 +721,7 @@ class TestWiener(unittest.TestCase):
         noise_estimator.compute_ssnr()
 
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N, readout_noise_variance=0)
-        images = simulator.simulate_sim_images(image)
+        images = simulator.generate_sim_images(image)
         image_sr_ft, image_sr = simulator.reconstruct_Fourier_space(images)
         image_widefield = simulator.generate_widefield(images)
         plt.plot(np.log(1 + 10**4 * np.abs(image_sr_ft[:, N//2, N//2])), label='ft rec')

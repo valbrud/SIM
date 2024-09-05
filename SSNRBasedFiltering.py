@@ -56,7 +56,7 @@ class WienerFilter3dModel(WienerFilter3d):
         return filtered, ssnr, wj, otf_sim, tj
 
 class WienerFilter3dReconstruction(WienerFilter3d):
-    def __init(self, ssnr_calculator, reconstruction, real_space=True):
+    def __init(self, ssnr_calculator):
         super().__init__(ssnr_calculator, apodization_filter=1)
 
     def _compute_ssnr_and_wj(self, object_ft, average="rings", numeric_noise = 10**-25):
@@ -126,6 +126,16 @@ class WienerFilter3dModelSDR(WienerFilter3dModel):
     def __init__(self, ssnr_calculator, apodization_filter=1):
         super().__init__(ssnr_calculator, apodization_filter)
 
+    def _compute_ssnr_and_wj(self, object_ft):
+        center = np.array(object_ft.shape)//2
+
+        ssnr = (self.ssnr_calc.dj**2 * np.abs(object_ft)**2 /
+                (self.ssnr_calc.vj * object_ft[*center]
+                 + object_ft.size * self.ssnr_calc.readout_noise_variance**2 * self.ssnr_calc.dj))
+        print("WHAT IT SHOULD BE ORIG", ssnr[*center])
+        # plt.imshow(np.abs(np.log10(1 + 10**4 *ssnr[:, :, centerz])))
+        # plt.show()
+        return ssnr, np.abs(self.ssnr_calc.dj/ssnr)
     def filter_SDR_reconstruction(self, object, reconstruction):
         shape = object.shape
         # object = np.zeros(shape)
@@ -169,6 +179,7 @@ class WienerFilter3dModelSDR(WienerFilter3dModel):
 ############################
 ############################
 ############################
+
 class FlatNoiseFilter3d:
     def __init__(self, ssnr_calculator, apodization_filter=1):
 

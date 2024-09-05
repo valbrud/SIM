@@ -15,6 +15,7 @@ class Illumination:
         self.rearranged_indices = self._rearrange_indices()
         self.xy_fourier_peaks = None
         self.phase_matrix = None
+        self.compute_phase_matrix()
 
     @classmethod
     def init_from_list(cls, intensity_plane_waves_list, base_vector_lengths, Mr = 1):
@@ -94,6 +95,7 @@ class Illumination:
         self._spacial_shifts = new_spacial_shifts
         self.Mt = len(new_spacial_shifts)
         self.normalize_spacial_waves()
+        self.compute_phase_matrix()
 
     def set_spacial_shifts_diagonally(self, number, base_vectors):
         kx, ky = base_vectors[0], base_vectors[1]
@@ -163,10 +165,11 @@ class Illumination:
         return expanded_lattice3d
 
     def compute_phase_matrix(self):
-        self.phase_matrix = np.zeros((self.Mr, self.Mt, len(self.get_wavevectors_projected(0)[0])))
+        self.phase_matrix = {}
         for r in range(self.Mr):
             for n in range(self.Mt):
-                wavevectors2d, _ = self.get_wavevectors_projected(r)
-                for w in range(len(wavevectors2d)):
-                    urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
-                    self.phase_matrix[r, n, w] = np.exp(-1j * np.dot(urn, wavevectors2d[w]))
+                urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
+                wavevectors2d, keys2d = self.get_wavevectors_projected(r)
+                for i in range(len(wavevectors2d)):
+                    wavevector = wavevectors2d[i]
+                    self.phase_matrix[(r, n, keys2d[i])] = np.exp(-1j * np.dot(urn, wavevector))
