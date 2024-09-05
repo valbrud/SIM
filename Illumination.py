@@ -163,10 +163,11 @@ class Illumination:
         return expanded_lattice3d
 
     def compute_phase_matrix(self):
-        self.phase_matrix = np.zeros((self.Mr, self.Mt, len(self.get_wavevectors_projected(0)[0])))
+        self.phase_matrix = np.zeros((self.Mr, self.Mt, len(self.get_wavevectors_projected(0)[0])), dtype=np.complex128)
         for r in range(self.Mr):
             for n in range(self.Mt):
+                urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
                 wavevectors2d, _ = self.get_wavevectors_projected(r)
                 for w in range(len(wavevectors2d)):
-                    urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
-                    self.phase_matrix[r, n, w] = np.exp(-1j * np.dot(urn, wavevectors2d[w]))
+                    wavevector = wavevectors2d[w]
+                    self.phase_matrix[r, n, w] = np.exp(-1j * np.dot(urn, wavevector))
