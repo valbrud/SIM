@@ -61,6 +61,7 @@ class OpticalSystem:
     @abstractmethod
     def compute_psf_and_otf(self): ...
 
+    def compute_x_grid(self):...
     def compute_q_grid(self):
         if self.otf_frequencies is None:
             raise AttributeError("Major bug, OTF frequencies are missing")
@@ -88,7 +89,9 @@ class OpticalSystem:
                     phase_shifted = np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevector)) * self.psf
                     effective_psf += amplitude * phase_shifted
                 effective_psfs[(r, xy_indices)] = effective_psf
-                effective_otfs[(r, xy_indices)] = wrappers.wrapped_fftn(effective_psf)
+                effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
+                # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
+                # plt.show()
         return effective_otfs
 
     def compute_effective_otfs_true_3dSIM(self, illumination):
