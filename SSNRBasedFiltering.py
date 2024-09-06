@@ -56,7 +56,7 @@ class WienerFilter3dModel(WienerFilter3d):
         return filtered, ssnr, wj, otf_sim, tj
 
 class WienerFilter3dReconstruction(WienerFilter3d):
-    def __init(self, ssnr_calculator, reconstruction, real_space=True):
+    def __init(self, ssnr_calculator):
         super().__init__(ssnr_calculator, apodization_filter=1)
 
     def _compute_ssnr_and_wj(self, object_ft, average="rings", numeric_noise = 10**-25):

@@ -68,7 +68,7 @@ class SIMulator(BoxSIM):
                 wavevector = waves[(*m, z_index)].wavevector
                 kp = wavevector[2]
                 amplitude = waves[(*m, z_index)].amplitude
-                phase_shifted = np.exp(1j * Z * kp ) * self.optical_system.psf
+                phase_shifted = np.exp(1j * Z * kp) * self.optical_system.psf
                 effective_psf += amplitude * phase_shifted
             self.effective_psfs[m] = effective_psf
             # plt.imshow(np.log(1 + 10**4 * np.abs(effective_otfs[(r, w)][:, :, 50])))
@@ -76,8 +76,6 @@ class SIMulator(BoxSIM):
 
     def generate_sim_images(self, object):
         np.random.seed(1234)
-        if self.illumination.phase_matrix is None:
-            self.illumination.compute_phase_matrix()
         if not self.effective_psfs:
             self._compute_effective_psfs()
         sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt,  *self.point_number), dtype=np.complex128)
@@ -89,14 +87,15 @@ class SIMulator(BoxSIM):
                 wavevector = np.array((*wavevectors2d[w], 0))
                 effective_illumination = np.exp(1j * np.einsum('ijkl,l ->ijk', self.grid, wavevector))
                 for n in range(self.illumination.Mt):
-                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[r, n, w]
+                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, m)]
                     sim_images[r, n] += scipy.signal.convolve(effective_illumination_phase_shifted * object, self.effective_psfs[m], mode='same')
-
         sim_images = np.abs(sim_images)
         for r in range(self.illumination.Mr):
             for n in range(self.illumination.Mt):
+                # print(r, n, np.sum(sim_images[r, n]))
                 # plt.imshow(sim_images[r, n][:, :, 25])
                 # plt.show()
+
                 poisson = np.random.poisson(sim_images[r, n])
                 gaussian = np.random.normal(0, scale=self.readout_noise_variance, size=object.shape)
                 sim_images[r, n] = poisson + gaussian
@@ -146,20 +145,26 @@ class SIMulator(BoxSIM):
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
             image1rotation_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
+            test_var = np.zeros(sim_images.shape[2:], dtype=np.complex128)
             for krm, m in zip(*self.illumination.get_wavevectors_projected(r)):
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
-                    # sim_images_ft[r, n] = wrappers.wrapped_fftn(sim_images[r, n])
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], krm)
-                    # plt.imshow(np.log(1 + np.abs(image_shifted_ft[:, :, 25])))
+                    # plt.imshow(np.log(1 + np.abs(wrappers.wrapped_ifftn(image_shifted_ft[:, :, 25]))))
                     # plt.show()
-                    urn = VectorOperations.rotate_vector3d(self.illumination.spacial_shifts[n], np.array((0, 0, 1)),  self.illumination.angles[r])
-                    phase = np.dot(urn[:2], krm)
-                    print(r, urn, krm, phase)
-                    sum_shifts += np.exp(-1j * phase) * image_shifted_ft
-                sum_shifts *= self.effective_otfs[(r, m)].conjugate()
+                    print(r, n, m, np.mean(image_shifted_ft))
+                    sum_shifts += self.illumination.phase_matrix[(r, n, m)] * image_shifted_ft
+                # sum_shifts = np.transpose(sum_shifts, axes=(1, 0, 2))
+                sum_shifts *= self.effective_otfs[(r, m)]
                 image1rotation_ft += sum_shifts
+            plt.imshow(np.log(1 + np.abs(image1rotation_ft[:, :, 25])))
+            plt.show()
+
+
             reconstructed_image_ft += image1rotation_ft
+            # print(r, np.amax(image1rotation_ft))
+            # plt.imshow(np.log(1 + np.abs(reconstructed_image_ft[:, :, 25])))
+            # plt.show()
         reconstructed_image = np.abs(wrappers.wrapped_ifftn(reconstructed_image_ft))
         return reconstructed_image_ft, reconstructed_image
 
@@ -171,13 +176,12 @@ class SIMulator(BoxSIM):
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], krm)
-                    urn = VectorOperations.rotate_vector3d(self.illumination.spacial_shifts[n], np.array((0, 0, 1)),  self.illumination.angles[r])
-                    phase = np.dot(urn[:2], krm)
-                    print(r, urn, krm, phase)
-                    sum_shifts += np.exp(-1j * phase) * image_shifted_ft
+                    sum_shifts += self.illumination.phase_matrix[r, n, m] * image_shifted_ft
                 sum_shifts *= shifted_kernels[(r, m)].conjugate()
                 image1rotation_ft += sum_shifts
             reconstructed_image_ft += image1rotation_ft
+            plt.imshow(np.log(1 + np.abs(reconstructed_image_ft[:, :, 25])))
+            plt.show()
         reconstructed_image = np.abs(wrappers.wrapped_ifftn(reconstructed_image_ft))
         return reconstructed_image_ft, reconstructed_image
 
