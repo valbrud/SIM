@@ -11,7 +11,7 @@ fig2, axes2 = plt.subplots(figsize=(10, 10))
 # fig4, axes4 = plt.subplots(3, 3, figsize=(12, 12))
 # fig1.suptitle("Dependence of the setup SSNR volume on the incident angle and sine ratio")
 # fig2.suptitle("Dependence of the setup SSNR entropy on the incident angle and sine ratio")
-# fig3.suptitle("Dependence of the setup SSNR measure on the incident angle and sine ratio")
+# fig3.suptitle("Dependence o   f the setup SSNR measure on the incident angle and sine ratio")
 # fig4.suptitle("Dependence of the setup total SSNR on the incident angle and sine ratio")
 
     # Filter data for the current combination

@@ -1,6 +1,6 @@
 import numpy as np
 def generate_random_spheres(psf_size, point_number, r = 0.1, N=10, I = 1000):
-    # np.random.seed(1234)
+    np.random.seed(1234)
     indices = np.array(np.meshgrid(np.arange(point_number), np.arange(point_number),
                                    np.arange(point_number))).T.reshape(-1, 3)
     indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(

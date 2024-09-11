@@ -8,6 +8,7 @@ from config.IlluminationConfigurations import *
 from matplotlib.widgets import Slider
 import SSNRCalculator
 from OpticalSystems import Lens
+import kernels
 sys.path.append('../')
 configurations = BFPConfiguration()
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     dx = 1 / (8 * np.sin(alpha))
     dy = dx
     dz = 1 / (4 * (1 - np.cos(alpha)))
-    N = 61
+    N = 51
     max_r = N//2 * dx
     max_z = N//2 * dz
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     volume_conventional = noise_estimator.compute_ssnr_volume()
     entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
 
-    with open('SincKernels2D.csv', 'w', newline='') as file:
+    with open('RadiallySymmetricKernel.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         headers = ["Configuration", 'Size', "Volume", "Entropy"]
         writer.writerow(headers)
@@ -113,20 +114,8 @@ if __name__ == "__main__":
 
             for kernel_size in range(1, 31, 2):
                 print(f"Kernel size {configuration} = ", kernel_size)
-                kernel_r_size = kernel_size
-                kernel_z_size = 1
-                func_r = np.zeros(kernel_r_size)
-                func_r[0:kernel_r_size // 2 + 1] = np.linspace(0, 1, (kernel_r_size + 1) // 2 + 1)[1:]
-                func_r[kernel_r_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_r_size + 1) // 2 + 1)[:-1]
-                func_z = np.zeros(kernel_z_size)
-                func_z[0:kernel_z_size // 2 + 1] = np.linspace(0, 1, (kernel_z_size + 1) // 2 + 1)[1:]
-                func_z[kernel_z_size // 2: kernel_z_size] = np.linspace(1, 0, (kernel_z_size + 1) // 2 + 1)[:-1]
-                func2d = func_r[:, None] * func_r[None, :]
-                func3d = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
-                # kernel[0, 0, 0] = 1
-                # kernel[:, :,  0] = func2d
-                kernel = func3d
-
+                # kernel = kernels.sinc_kernel(kernel_size, kernel_z_size=1)
+                kernel = kernels.psf_kernel2d(kernel_size, (dx, dy))
 
                 noise_estimator_finite.kernel = kernel
 
@@ -142,5 +131,3 @@ if __name__ == "__main__":
                 print(f"Entropy finite {configuration} = ", entropy_finite)
 
                 writer.writerow([configuration, kernel_size, volume_finite, entropy_finite])
-    plt.legend()
-    plt.show()

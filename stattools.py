@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
-
+import matplotlib.pyplot as plt
+import scipy
 def find_decreasing_surface_levels3d(array, axes=None, direction=None):
     if axes is None:
         ax1, ax2, ax3 = (np.arange(array.shape[0] + 1) - array.shape[0]/2, np.arange(array.shape[1] + 1) - array.shape[1] / 2,
@@ -85,9 +86,11 @@ def average_rings2d(array, axes=None):
     r = (x**2 + y**2)**0.5
     r_old = -1
     for i in range(len(ax)):
-        ring = array[(r <= ax[i]) * (r > r_old)]
+        if i == 25:
+            pass
+        ring = array[(r <= ax[i] + 10**(-10)) * (r > r_old)]
         averaged[i] = np.sum(ring)/ring.size
-        r_old = ax[i]
+        r_old = ax[i] + 10**(-10)
     return averaged
     # circle_sums = []
     # circle_point_numbers = []
@@ -198,4 +201,77 @@ def gaussian_maxima_fitting(array, axes, maxima_indices, size=5):
     return np.array(maxima_fitted), np.array(std)
 
 
+def downsample_circular_function_vectorized(dense_function, small_size):
+    """
+    Downsample a circularly symmetric function from a large grid to a smaller grid using a vectorized approach.
 
+    Parameters:
+    - dense_function: 2D NumPy array representing the function values on the large grid (e.g., 51 x 51).
+    - small_size: Tuple (m, n) representing the size of the small grid (e.g., (5, 5)).
+
+    Returns:
+    - small_grid: 2D NumPy array representing the downsampled function on the smaller grid.
+    """
+    # Get the size of the large grid
+    large_size = dense_function.shape
+
+    # Compute scaling factors
+    scale_x = large_size[0] // small_size[0]
+    scale_y = large_size[1] // small_size[1]
+
+    # Reshape the large grid into blocks of size (scale_x, scale_y)
+    reshaped = dense_function.reshape(small_size[0], scale_x, small_size[1], scale_y)
+
+    # Compute the mean of each block to downsample
+    sparse_function = reshaped.mean(axis=(1, 3))
+    # plt.figure(1)
+    # plt.imshow(dense_function)
+    # plt.figure(2)
+    # plt.imshow(sparse_function)
+    # plt.show()
+    return sparse_function
+
+def reverse_interpolation_nearest(x_axis, y_axis, points, values):
+    """
+    Interpolate values from known points to a grid, affecting only the nearest grid cells.
+
+    Parameters:
+    - x_axis: 1D array representing the x-coordinates of the grid.
+    - y_axis: 1D array representing the y-coordinates of the grid.
+    - points: Array of known points' coordinates, shape (N, 2).
+    - values: Array of known values at the points, shape (N,).
+
+    Returns:
+    - interpolated_grid: 2D array of interpolated values on the grid.
+    """
+    # Create an empty grid
+    grid_shape = (len(x_axis), len(y_axis))
+    interpolated_grid = np.zeros(grid_shape)
+
+    # Loop through each point and its corresponding value
+    for (px, py), value in zip(points, values):
+        # Find the indices of the nearest grid points around the given point
+        i = np.searchsorted(x_axis, px) - 1
+        j = np.searchsorted(y_axis, py) - 1
+
+        # Ensure indices are within valid bounds
+        if i < 0 or j < 0 or i >= len(x_axis) - 1 or j >= len(y_axis) - 1:
+            continue
+
+        # Coordinates of the four surrounding grid points
+        x1, x2 = x_axis[i], x_axis[i + 1]
+        y1, y2 = y_axis[j], y_axis[j + 1]
+
+        # Bilinear weights based on the distance to the surrounding points
+        wx1 = (x2 - px) / (x2 - x1)
+        wx2 = (px - x1) / (x2 - x1)
+        wy1 = (y2 - py) / (y2 - y1)
+        wy2 = (py - y1) / (y2 - y1)
+
+        # Distribute the value to the four surrounding grid points
+        interpolated_grid[i, j] += value * wx1 * wy1  # Top-left
+        interpolated_grid[i + 1, j] += value * wx2 * wy1  # Top-right
+        interpolated_grid[i, j + 1] += value * wx1 * wy2  # Bottom-left
+        interpolated_grid[i + 1, j + 1] += value * wx2 * wy2  # Bottom-right
+
+    return interpolated_grid
