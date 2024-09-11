@@ -51,6 +51,7 @@ class WienerFilter3dModel(WienerFilter3d):
         ax[1, 1].set_title('Tj')
         plt.show()
         filtered_ft = object_ft * otf_sim
+        # filtered_ft = object_ft * self.ssnr_calc.dj * tj
         filtered = wrappers.wrapped_ifftn(filtered_ft).real
 
         return filtered, ssnr, wj, otf_sim, tj
@@ -116,6 +117,9 @@ class WienerFilter3dReconstruction(WienerFilter3d):
         ax[1, 0].set_title('Dj')
         ax[1, 1].imshow(tj[:, :, shape[2]//2])
         ax[1, 1].set_title('Tj')
+        plt.show()
+        plt.plot(tj[:, shape[1]//2, shape[2]//2])
+        plt.gca().set_yscale('log')
         plt.show()
         filtered_ft = object_ft * tj
         filtered = wrappers.wrapped_ifftn(filtered_ft).real

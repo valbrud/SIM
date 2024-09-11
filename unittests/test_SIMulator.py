@@ -244,7 +244,7 @@ class TestReconstruction(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
         image += 100
         arg = N // 2
 
@@ -261,21 +261,21 @@ class TestReconstruction(unittest.TestCase):
         illumination_widefield = configurations.get_widefield()
         # spacial_shifts_s_polarized11 = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0))) - np.array((1., 9, 0))
         # spacial_shifts_s_polarized11 /= (11 * np.sin(theta))
-        # spacial_shifts_s_polarized10 = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
-        # spacial_shifts_s_polarized10 /= (10 * np.sin(theta))
-        # illumination_s_polarized.spacial_shifts = spacial_shifts_s_polarized10
+        spacial_shifts_s_polarized10 = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
+        spacial_shifts_s_polarized10 /= (10 * np.sin(theta))
+        illumination_s_polarized.spacial_shifts = spacial_shifts_s_polarized10
         spacial_shifts_conventional3d = np.array(((0., 0., 0), (1, 0, 0), (2, 0, 0), (3., 0, 0), (4, 0, 0)))
         spacial_shifts_conventional3d /= (5 * np.sin(theta))
         spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
         spacial_shifts_conventional2d /= (3 * np.sin(theta))
         illumination_2waves.spacial_shifts = spacial_shifts_conventional2d
         illumination_3waves.spacial_shifts = spacial_shifts_conventional3d
-        simulator = SIMulator(illumination_2waves, optical_system, psf_size, N)
+        simulator = SIMulator(illumination_s_polarized, optical_system, psf_size, N)
         images = simulator.generate_sim_images(image)
         image_sr_ft, image_sr = simulator.reconstruct_Fourier_space(images)
         image_widefield = simulator.generate_widefield(images)
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_2waves, optical_system, 0)
+        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system, 0)
         noise_estimator.compute_ssnr()
 
         wiener = WienerFilter3dModel(noise_estimator)
@@ -388,12 +388,12 @@ class TestReconstruction(unittest.TestCase):
         two_NA_fz = fz / (1 - np.cos(alpha))
 
         image = np.zeros((N, N, N))
-        image[N//2, N//2, N//2] = 10**9
+        # image[N//2, N//2, N//2] = 10**9
         # image[(3*N+1)//4, N//2+4, N//2] = 10**9
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
         image += 100
         arg = N // 2
 

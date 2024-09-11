@@ -3,37 +3,31 @@ import pandas as pd
 import numpy as np
 
 # Load the data from the provided CSV file
-file_path = '../simulations/SincKernels2D.csv'
-data = pd.read_csv(file_path)
+filepath1 = '../simulations/RadiallySymmetricKernel.csv'
+filepath2 = '../simulations/SincKernels2D.csv'
+files = [
+    filepath1,
+    filepath2
+]
 fig1, axes1 = plt.subplots(figsize=(10, 10))
 fig2, axes2 = plt.subplots(figsize=(10, 10))
-# fig3, axes3 = plt.subplots(3, 3, figsize=(12, 12))
-# fig4, axes4 = plt.subplots(3, 3, figsize=(12, 12))
-# fig1.suptitle("Dependence of the setup SSNR volume on the incident angle and sine ratio")
-# fig2.suptitle("Dependence of the setup SSNR entropy on the incident angle and sine ratio")
-# fig3.suptitle("Dependence of the setup SSNR measure on the incident angle and sine ratio")
-# fig4.suptitle("Dependence of the setup total SSNR on the incident angle and sine ratio")
+for filepath in files:
+    data = pd.read_csv(filepath)
 
-    # Filter data for the current combination
-# print(data[data['IncidentAngle'] == 0])
-# volume_widefield = int(data[data['IncidentAngle'] == 0]['Volume'].iloc[0])
-# entropy_widefield = int(data[data['IncidentAngle'] == 0]['Entropy'].iloc[0])
-# print(volume_widefield, entropy_widefield)
-    # Plotting
-sizes = np.array(data['Size'].unique().astype(int))
-configurations = data['Configuration'].unique()
-for configuration in configurations:
-    if configuration == "Widefield":
-        continue
-    plot_data = data[data['Configuration'] == configuration]
-    volume = np.array(plot_data['Volume'])
-    entropy = np.array(plot_data['Entropy'])
-    axes1.plot(sizes, volume, label = configuration)
-    color = axes1.lines[-1].get_color()
-    axes2.plot(sizes, entropy, label = configuration)
+    sizes = np.array(data['Size'].unique().astype(int))
+    configurations = data['Configuration'].unique()
+    for configuration in configurations:
+        if configuration == "Widefield":
+            continue
+        plot_data = data[data['Configuration'] == configuration]
+        volume = np.array(plot_data['Volume'])
+        entropy = np.array(plot_data['Entropy'])
+        axes1.plot(sizes, volume, label = configuration + " " + filepath[15:-4])
+        color = axes1.lines[-1].get_color()
+        axes2.plot(sizes, entropy, label = configuration + " " + filepath[15:-4])
 
-    axes1.set_title("SSNR volume ", fontsize=30)
-    axes2.set_title("SSNR entropy ", fontsize=30)
+        axes1.set_title("SSNR volume ", fontsize=30)
+        axes2.set_title("SSNR entropy ", fontsize=30)
 
 
 axes1.grid()

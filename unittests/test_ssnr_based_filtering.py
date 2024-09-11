@@ -681,7 +681,7 @@ class TestWiener(unittest.TestCase):
         y = np.copy(x)
         z = np.linspace(-max_z, max_z, N)
         X, Y, Z = np.meshgrid(x, y, z)
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=1000, I=10 ** 5)
+        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=1000, I=10 ** 6)
         # image = ShapesGenerator.generate_sphere_slices(psf_size, N, r = 0.1, N = 100, I=10**5)
         R = (X**2 + Y**2 + Z**2)**0.5
 
@@ -701,7 +701,7 @@ class TestWiener(unittest.TestCase):
                                            apodization_filter=None)
         # plt.imshow(optical_system.psf[:, :, N // 2])
         # plt.show()
-        illumination_s_polarized = configurations.get_5_s_waves(theta, 1, 1, Mt=10)
+        illumination_s_polarized = configurations.get_5_s_waves(theta, 1, 0, Mt=10)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1 / 2 ** 0.5, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
@@ -716,7 +716,7 @@ class TestWiener(unittest.TestCase):
         spacial_shifts /= (5 * np.sin(theta))
         illumination_3waves.spacial_shifts = spacial_shifts
 
-        illumination = illumination_s_polarized
+        illumination = illumination_3waves
         noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system, readout_noise_variance=0)
         noise_estimator.compute_ssnr()
 

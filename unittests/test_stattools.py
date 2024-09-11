@@ -3,8 +3,12 @@ import matplotlib.pyplot as plt
 import stattools
 import unittest
 import sys
+from OpticalSystems import Lens
+from config.IlluminationConfigurations import BFPConfiguration
+from SSNRCalculator import SSNRWidefield
 sys.path.append('../')
 
+configurations = BFPConfiguration()
 class TestRingAveraging(unittest.TestCase):
     def test_averaging_over_uniform(self):
         array = np.ones((100, 100))
@@ -23,10 +27,60 @@ class TestRingAveraging(unittest.TestCase):
         y = np.arange(0, 1000, 2)
         X, Y = np.meshgrid(x, y)
         sine_array = np.sin((X**2 + Y**2)**0.5/100)
+        plt.imshow(sine_array)
+        plt.show()
         averages = stattools.average_rings2d(sine_array.T, (x, y))
         plt.plot(averages)
         plt.plot(np.sin(y / 100))
         plt.show()
+
+    def test_SSNR_averaging(self):
+        alpha = np.pi / 4
+        theta = np.pi / 4
+        NA = np.sin(alpha)
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 51
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        NA = np.sin(alpha)
+        psf_size = 2 * np.array((max_r, max_r, max_z))
+        dV = dx * dy * dz
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        z = np.linspace(-max_z, max_z, N)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), N)
+
+        arg = N // 2
+        # print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        print(two_NA_fx)
+        two_NA_fy = fy / (2 * NA)
+        scaled_fz = fz / (1 - np.cos(alpha))
+
+        optical_system = Lens(alpha=alpha)
+        optical_system.compute_psf_and_otf((psf_size, N),
+                                           apodization_filter=None)
+
+        noise_estimator_widefield = SSNRWidefield(optical_system)
+        ssnr = noise_estimator_widefield.ssnr
+        plt.figure(1)
+        plt.imshow(np.log(1 + 10**8*ssnr[N//2, :, :]))
+        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnr()
+        plt.figure(2)
+        plt.imshow(np.log(1 + 10**8*ssnr_widefield_ra))
+        ssnr_diff = ssnr[N//2, N//2:, :] - ssnr_widefield_ra
+        plt.figure(3)
+        plt.imshow(np.log(1 + 10**8 * np.abs(ssnr_diff)))
+        plt.show()
+
+
+
 
 
 class TestRingExpansion(unittest.TestCase):
@@ -102,7 +156,7 @@ class TestSurfaceLevels(unittest.TestCase):
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X ** 2 + Y ** 2 + Z**2) ** 0.5
         f = 1 / (1 + R)
-        mask = stattools.find_decreasing_surface_levels3d(f, direction = 0)
+        mask = stattools.find_decreasing_surface_levels3d(f, direction=0)
         plt.imshow(mask[:, :, 100])
         plt.show()
 
