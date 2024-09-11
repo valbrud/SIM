@@ -37,8 +37,8 @@ for configuration in configurations:
     axes1.plot(bs, (computed_volume - volume_widefield)/volume_widefield, label=configuration, color=color)
     axes2.plot(bs, (entropy - entropy_widefield)/entropy_widefield, label=configuration)
 
-    axes1.set_title("SSNR volume gain \n for different configurations", fontsize=30)
-    axes2.set_title("SSNR entropy gain \n for different configurations", fontsize=30)
+    axes1.set_title("SSNR volume gain \n for different intensity ratios", fontsize=30)
+    axes2.set_title("SSNR entropy gain \n for different intensity ratios", fontsize=30)
     # axes3[i, j].set_title("p1 = {}, p2 = {}".format(power1, power2))
     # axes4[i, j].set_title("p1 = {}, p2 = {}".format(power1, power2))
     # axes2[i, j].set_ylim(0, 3000)

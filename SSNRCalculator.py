@@ -30,6 +30,8 @@ class SSNRHandler:
             raise ValueError("Wrong axes are provided for the ssnr")
         averaged_slices = []
         for i in range(ssnr.shape[2]):
+            if i == 50:
+                pass
             averaged_slices.append(average_rings2d(ssnr[:, :, i], (q_axes[0], q_axes[1])))
         return np.array(averaged_slices).T
 
@@ -362,6 +364,5 @@ class SSNR3dSIM2dShiftsFiniteKernel(SSNR3dSIM2dShifts):
                 v_j += term
         v_j *= self.illumination.Mt
         return np.abs(v_j)
-
 
 

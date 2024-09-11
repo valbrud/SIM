@@ -386,33 +386,34 @@ class Testssnr(unittest.TestCase):
                      'Animation_' + illumination_list[illumination][1] + '_waves_ssnr_different_angles.mp4', writer="ffmpeg")
             # plt.show()
 
-    def test_compare_ssnr(self):
-        theta = np.pi/4
-        alpha = np.pi/4
-        r = np.sin(theta)/np.sin(alpha)
+    def test_ring_averaged_ssnr(self):
+        alpha = np.pi / 4
+        theta = np.pi / 4
         NA = np.sin(alpha)
-        max_r = 8
-        max_z = 20
-        N = 51
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 101
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        NA = np.sin(alpha)
         psf_size = 2 * np.array((max_r, max_r, max_z))
-        dx = 2 * max_r / N
-        dy = 2 * max_r / N
-        dz = 2 * max_z / N
         dV = dx * dy * dz
-        x = np.arange(-max_r, max_r, dx)
+        x = np.linspace(-max_r, max_r, N)
         y = np.copy(x)
-        z = np.arange(-max_z, max_z, dz)
+        z = np.linspace(-max_z, max_z, N)
 
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
-        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), N)
 
         arg = N // 2
-        print(fz[arg])
+        # print(fz[arg])
 
         two_NA_fx = fx / (2 * NA)
+        print(two_NA_fx)
         two_NA_fy = fy / (2 * NA)
-        two_NA_fz = fz / (1 - np.cos(alpha))
+        scaled_fz = fz / (1 - np.cos(alpha))
 
         optical_system = Lens(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
@@ -493,6 +494,8 @@ class Testssnr(unittest.TestCase):
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
+        fig.suptitle("Ring averaged SSNR for different configurations", fontsize=30)
+
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
                             right=0.9,
@@ -503,23 +506,25 @@ class Testssnr(unittest.TestCase):
         ax2 = fig.add_subplot(122)
 
         # ax1.set_title("Projective 3D SIM anisotropy \n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
-        ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
+        ax1.set_title("$f_z = ${:.1f}".format(scaled_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
         ax1.set_xlabel(r"$f_r, \frac{2NA}{\lambda}$", fontsize=25)
-        ax1.set_ylabel(r"$1 + 10^4 SSNR_{ra}$", fontsize=25)
+        ax1.set_ylabel(r"$1 + 10^8 SSNR_{ra}$", fontsize=25)
         ax1.set_yscale("log")
-        # ax1.set_ylim(1, 3 * 10**2)
-        # ax1.set_xlim(0, fx[-1]/(2 * NA))
+        ax1.set_ylim(1, 10**2)
+        ax1.set_xlim(0, two_NA_fx[-1])
         ax1.grid(which = 'major')
         ax1.grid(which='minor', linestyle='--')
         ax1.tick_params(labelsize=20)
 
         # ax2.set_title("Slice $f_y$ = 0", fontsize=25)
-        ax2.set_xlabel(r"$f_x$", fontsize=25)
-        # ax2.set_yscale("log")
-        # ax2.set_ylim(1, 3 * 10**2)
-        # ax2.set_xlim(0, fx[-1]/(2 * NA))
-        # ax2.grid(which='major')
-        # ax2.grid(which='minor', linestyle='--')
+        ax2.set_title("$f_z = ${:.1f}".format(scaled_fz[arg//2]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
+        ax2.set_xlabel(r"$f_r, \frac{2NA}{\lambda}$", fontsize=25)
+        ax2.set_ylabel(r"$1 + 10^4 SSNR_{ra}$", fontsize=25)
+        ax2.set_yscale("log")
+        ax2.set_ylim(1, 10**2)
+        ax2.set_xlim(0, two_NA_fx[-1])
+        ax2.grid(which='major')
+        ax2.grid(which='minor', linestyle='--')
         ax2.tick_params('y', labelleft=False)
         ax2.tick_params(labelsize=20)
 
@@ -530,83 +535,85 @@ class Testssnr(unittest.TestCase):
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="Widefield")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_true_ra[:, arg], label="State Of Art SIM, True 3D SIM")
         # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg], label="State Of Art SIM, Projective 3D SIM")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg],      label="Conventional")
+        # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[arg, :, arg][fy >= 0],      label="test")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg],    label="SquareC")
+        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, arg], label="SquareL")
+        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg], label="Hexagonal")
         ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg],   label="Widefield")
-        ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, arg], label="Square SIM, s-polarized")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, arg],    label="Confocal")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, arg],    label="Square SIM, circular")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg], label="Hexagonal SIM")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg],      label="Conventional SIM")
+        # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, arg],    label="Confocal")
+
         # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
         # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
         # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
         # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
 
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, arg, int(N / 2)][fx >= 0], label="Square SIM, s-polarized")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, arg,  int(N / 2)][fx >= 0],    label="Square SIM, circular")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, arg, int(N / 2)][fx >= 0], label="Hexagonal SIM")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, arg, int(N / 2)][fx >= 0],      label="Conventional SIM")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, arg, int(N / 2)][fx >= 0],   label="Widefield")
-        ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, arg,  int(N / 2)][fx >= 0],      label="Confocal")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves_ra[:, arg//2],      label="Conventional")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular_ra[:, arg//2],    label="SquareC")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, arg//2], label="SquareL")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, arg//2], label="Hexagonal")
+        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg//2],   label="Widefield")
+        # ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, arg,  arg//2][fx >= 0],      label="Confocal")
         ax1.set_aspect(1. / ax1.get_data_ratio())
-        # ax2.set_aspect(1. / ax2.get_data_ratio())
+        ax2.set_aspect(1. / ax2.get_data_ratio())
 
-        def update1(val):
-            ax1.clear()
-            ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
-            # ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
-            ax1.set_xlabel(r"$f_r$", fontsize=25)
-            ax1.set_ylabel(r"$ssnr$", fontsize=25)
-            ax1.set_yscale("log")
-            ax1.set_ylim(1,  10**4)
-            ax1.set_xlim(0, fx[-1]/(2 * NA))
-            ax1.grid()
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="SquareL")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="SquareC")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)], label="Hexagonal")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="Conventional")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
-            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, int(val)],         label="Confocal")
-
-            # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
-            # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
-            # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
-            # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
-            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
-            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
-            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
-            ax1.legend()
-            ax1.set_aspect(1. / ax1.get_data_ratio())
-            
-            ax2.clear()
-            # ax2.set_title("Slice $f_y$ = 0")
-            ax2.set_xlabel(r"$f_x$")
-            # ax2.set_ylabel(r"ssnr")
-
-            ax2.set_yscale("log")
-            # ax2.set_ylim(1, 3 * 10**2)
-            ax2.set_xlim(0, fx[-1]/(2 * NA))
-            ax2.grid()
-
-            # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
-            # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
-
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(val), int(N / 2)][fx >= 0], label="S-polarized")
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(val), int(N / 2)][fx >= 0],    label="Circular"   )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
-            ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
-            ax2.legend()
-            ax2.set_aspect(1. / ax2.get_data_ratio())
-
-        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
-        slider_ssnr.on_changed(update1)
+        # def update1(val):
+        #     ax1.clear()
+        #     ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
+        #     # ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
+        #     ax1.set_xlabel(r"$f_r$", fontsize=25)
+        #     ax1.set_ylabel(r"$ssnr$", fontsize=25)
+        #     ax1.set_yscale("log")
+        #     ax1.set_ylim(1,  10**4)
+        #     ax1.set_xlim(0, fx[-1]/(2 * NA))
+        #     ax1.grid()
+        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="SquareL")
+        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="SquareC")
+        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)], label="Hexagonal")
+        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="Conventional")
+        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
+        #     # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, int(val)],         label="Confocal")
+        #
+        #     # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
+        #     # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
+        #     # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
+        #     # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
+        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
+        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
+        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
+        #     ax1.legend()
+        #     ax1.set_aspect(1. / ax1.get_data_ratio())
+        #
+        #     ax2.clear()
+        #     # ax2.set_title("Slice $f_y$ = 0")
+        #     ax2.set_xlabel(r"$f_x$")
+        #     # ax2.set_ylabel(r"ssnr")
+        #
+        #     ax2.set_yscale("log")
+        #     # ax2.set_ylim(1, 3 * 10**2)
+        #     ax2.set_xlim(0, fx[-1]/(2 * NA))
+        #     ax2.grid()
+        #
+        #     # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
+        #     # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
+        #
+        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(val), int(N / 2)][fx >= 0], label="S-polarized")
+        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(val), int(N / 2)][fx >= 0],    label="Circular"   )
+        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
+        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
+        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
+        #     ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
+        #     ax2.legend()
+        #     ax2.set_aspect(1. / ax2.get_data_ratio())
+        #
+        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        # slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
+        # slider_ssnr.on_changed(update1)
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
         # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_optimal_b.png'.format(two_NA_fz[arg]))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/ring_averaged_ssnr')
         plt.show()
 
     def test_compare_ssnr_weird_configurations(self):
@@ -796,28 +803,33 @@ class Testssnr(unittest.TestCase):
         fig.savefig('/home/valerii/Documents/projects/SIM/ssnr_article_1/Figures/fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
         # plt.show()
 
-    def test_ssnr_ring_averaged_color_maps(self):
-        NA = np.sin(np.pi/4)
-        max_r = 10
-        max_z = 40
-        N = 100
+    def test_ssnr_color_maps(self):
+        alpha = np.pi/4
+        theta = np.pi/4
+        NA = np.sin(alpha)
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 101
+        max_r = N//2 * dx
+        max_z = N//2 * dz
+        NA = np.sin(alpha)
         psf_size = 2 * np.array((max_r, max_r, max_z))
         dx = 2 * max_r / N
         dy = 2 * max_r / N
         dz = 2 * max_z / N
-        x = np.arange(-max_r, max_r, dx)
+        dV = dx * dy * dz
+        x = np.linspace(-max_r, max_r, N)
         y = np.copy(x)
-        z = np.arange(-max_z, max_z, dz)
-        print(x)
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
-        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
-        print(fx)
+        z = np.linspace(-max_z, max_z, N)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx)  , N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy)  , N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) , N)
 
         # print(fw2z_illumination)
-        theta = np.pi/4
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
-        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1/2**0.5, 1, Mt=64)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
@@ -826,20 +838,19 @@ class Testssnr(unittest.TestCase):
         illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
         illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
         illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
-        illumination_widefield = configurations.get_widefield()
 
 
         illumination_list = {
-            illumination_s_polarized : ("Square SIM, s-polarized", "4s1c"),
-            illumination_circular : ("Square SIM, circular", "5c"),
-            illumination_seven_waves : ("Hexagonal SIM", "6s1c"),
-            illumination_3waves : ("Conventional SIM", "state_of_art"),
+            illumination_s_polarized : ("Square SIM, s-polarized waves", "squareL"),
+            illumination_circular : ("Square SIM, circular", "squareC"),
+            illumination_seven_waves : ("Hexagonal SIM", "hexagonal"),
+            illumination_3waves : ("Conventional SIM", "conventional"),
             illumination_widefield : ("Widefield", "widefield"),
-            illumination_two_triangles_rotated : ("Two triangles crossed", "2tr"),
-            illumination_two_triangles_not_rotated : ("Two triangles parallel", "2tnr"),
-            illumination_two_squares_rotated : ("Two squares crossed", "2sr"),
-            illumination_two_squares_not_rotated : ("Two squares parallel", "2snr"),
-            illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
+            # illumination_two_triangles_rotated : ("Two triangles crossed", "2tr"),
+            # illumination_two_triangles_not_rotated : ("Two triangles parallel", "2tnr"),
+            # illumination_two_squares_rotated : ("Two squares crossed", "2sr"),
+            # illumination_two_squares_not_rotated : ("Two squares parallel", "2snr"),
+            # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
         optical_system = Lens(alpha=theta)
@@ -867,26 +878,28 @@ class Testssnr(unittest.TestCase):
             ax1 = fig.add_subplot(121)
             ax1.tick_params(labelsize = 20)
             # ax1.set_title(title)
-            ax1.set_xlabel("$f_x$", fontsize = 25)
-            ax1.set_ylabel("$f_z$", fontsize = 25)
-            mp1 = ax1.imshow(ssnr_scaled[int(N/2):, int(N / 2), :].T, extent=(0, fy[-1]/(2 * NA), fz[0]/(2 * NA), fz[-1]/(2 * NA)), norm=colors.LogNorm())
+            ax1.set_xlabel("$f_y, \\frac{2NA}{\lambda}$", fontsize = 25)
+            ax1.set_ylabel("$f_x, \\frac{2NA}{\lambda} $", fontsize = 25)
+            mp1 = ax1.imshow(ssnr_scaled[:, :, N//2], extent=(-2, 2, -2, 2), norm=colors.LogNorm())
             # cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
             # cb1.set_label("$1 + 10^8$ ssnr")
             ax1.set_aspect(1. / ax1.get_data_ratio())
 
             ax2 = fig.add_subplot(122, sharey=ax1)
-            ax2.set_xlabel("$f_r$", fontsize = 25)
+            ax2.set_xlabel("$f_z, \\frac{n - \sqrt{n^2 - NA^2}}{\lambda}$", fontsize = 25)
             ax2.tick_params(labelsize = 20)
             ax2.tick_params('y', labelleft=False)
             # ax2.set_ylabel("fy, $\\frac{2NA}{\\lambda}$")
-            mp2 = ax2.imshow(ssnr_ra_scaled[:, :].T, extent=(0, fy[-1]/(2 * NA), fz[0]/(2 * NA), fz[-1]/(2 * NA)), norm=colors.LogNorm())
+            mp2 = ax2.imshow(ssnr_scaled[N//2, :, :], extent=(-2, 2, -2, 2), norm=colors.LogNorm())
+            # mp2 = ax2.imshow(ssnr_ra_scaled[:, :].T, extent=(0, fy[-1]/(2 * NA), fz[0]/(2 * NA), fz[-1]/(2 * NA)), norm=colors.LogNorm())
             cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
             cb2.ax.tick_params(labelsize=20)
             cb2.set_label("$1 + 10^8$ ssnr", fontsize = 25)
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
-            fig.savefig('/home/valerii/Documents/projects/SIM/ssnr_article_1/Figures/'
-                     + illumination_list[illumination][1] + '_waves_ssnr_ra.png')
+
+            fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/'
+                     + illumination_list[illumination][1] + '_ssnr.png')
 
             # def update1(val):
             #     ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
@@ -910,7 +923,7 @@ class Testssnr(unittest.TestCase):
             # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
             # slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
             # slider_ssnr.on_changed(update1)
-            #
+
             # plt.show()
 
     def test_alternative_visualisations(self):

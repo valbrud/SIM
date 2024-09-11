@@ -89,7 +89,8 @@ class OpticalSystem:
                     phase_shifted = np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevector)) * self.psf
                     effective_psf += amplitude * phase_shifted
                 effective_psfs[(r, xy_indices)] = effective_psf
-                effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
+                effective_otfs[(r, xy_indices)] = wrappers.wrapped_fftn(effective_psf)
+                # effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
                 # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
                 # plt.show()
         return effective_otfs
