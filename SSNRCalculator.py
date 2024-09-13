@@ -23,17 +23,8 @@ class SSNRHandler:
         self._optical_system = new_optical_system
         self.ssnr = None
 
-    def ring_average_ssnr(self):
-        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
-        ssnr = np.copy(self.ssnr)
-        if q_axes[0].size != ssnr.shape[0] or q_axes[1].size != ssnr.shape[1]:
-            raise ValueError("Wrong axes are provided for the ssnr")
-        averaged_slices = []
-        for i in range(ssnr.shape[2]):
-            if i == 50:
-                pass
-            averaged_slices.append(average_rings2d(ssnr[:, :, i], (q_axes[0], q_axes[1])))
-        return np.array(averaged_slices).T
+    @abstractmethod
+    def ring_average_ssnr(self): ...
 
     def compute_ssnr_volume(self, factor=10, volume_element=1):
         return np.sum(np.abs(self.ssnr)) * volume_element * factor
@@ -74,7 +65,7 @@ class SSNRConfocal(SSNRHandler):
 
 
 
-class SSNRCalculator3dSIM(SSNRHandler):
+class SSNRCalculator(SSNRHandler):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(optical_system)
         self._illumination = illumination
@@ -185,6 +176,81 @@ class SSNRCalculator3dSIM(SSNRHandler):
         measure = np.where((np.abs(ssnr_widefield) < threshold) * (np.abs(self.ssnr) > noise_level), np.abs(self.ssnr - ssnr_widefield), 0)
         measure = np.where(measure < threshold, measure, threshold)
         return np.sum(measure) * factor, threshold
+
+class SSNR2dSIM(SSNRCalculator):
+    def __init__(self, illumination, optical_system, readout_noise_variance=0):
+        if len(optical_system.otf.shape) == 3:
+            raise AttributeError("Trying to initialize 2D SIM Calculator with 3D OTF!")
+        if not len(optical_system.otf.shape) == 2:
+            raise AttributeError("Trying to initialize 2D SIM Calculator with wrong OTF!")
+        if not len(illumination.indices3d) == len(illumination.indices2d):
+            raise AttributeError("2D SIM requireds 2D illumination!")
+        super().__init__(illumination, optical_system, readout_noise_variance=0)
+        self.effective_otfs = {}
+        self._compute_effective_otfs()
+
+    def _compute_effective_otfs(self):
+        self.effective_otfs = self.optical_system.compute_effective_otfs_2dSIM(self.illumination)
+        self.otf_sim = np.zeros(self.optical_system.otf.shape)
+        for m in self.effective_otfs:
+            self.otf_sim += np.abs(self.effective_otfs[m])
+
+    def _Dj(self):
+        d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs.keys():
+            d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
+        d_j *= self.illumination.Mt
+        return d_j
+
+    def _Vj(self):
+        size_x, size_y = self.optical_system.otf.shape
+        center = (size_x // 2, size_y // 2)
+        v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
+                    continue
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if m21 not in self.illumination.indices2d:
+                    continue
+                idx_diff = (idx1[0], m21)
+                otf1 = self.effective_otfs[idx1]
+                otf2 = self.effective_otfs[idx2]
+                otf3 = self.effective_otfs[idx_diff][*center]
+                term = otf1 * otf2.conjugate() * otf3
+                v_j += term
+        v_j *= self.illumination.Mt
+        return v_j
+
+    def ring_average_ssnr(self):
+        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
+        ssnr = np.copy(self.ssnr)
+        if q_axes[0].size != ssnr.shape[0] or q_axes[1].size != ssnr.shape[1]:
+            raise ValueError("Wrong axes are provided for the ssnr")
+        ssnr_ra = average_rings2d(ssnr, (q_axes[0], q_axes[1]))
+        return ssnr_ra
+class SSNRCalculator3dSIM(SSNRCalculator):
+    def __init__(self, illumination, optical_system, readout_noise_variance=0):
+        if len(optical_system.otf.shape) == 2:
+            raise AttributeError("Trying to initialize 3D SIM Calculator with 2D OTF!")
+        if not len(optical_system.otf.shape) == 3:
+            raise AttributeError("Trying to initialize 3D SIM Calculator with wrong OTF!")
+        super().__init__(illumination, optical_system, readout_noise_variance=0)
+
+    def ring_average_ssnr(self):
+        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
+        ssnr = np.copy(self.ssnr)
+        if q_axes[0].size != ssnr.shape[0] or q_axes[1].size != ssnr.shape[1]:
+            raise ValueError("Wrong axes are provided for the ssnr")
+        averaged_slices = []
+        for i in range(ssnr.shape[2]):
+            if i == 50:
+                pass
+            averaged_slices.append(average_rings2d(ssnr[:, :, i], (q_axes[0], q_axes[1])))
+        return np.array(averaged_slices).T
+
 class SSNR3dSIM3dShifts(SSNRCalculator3dSIM):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(illumination, optical_system, readout_noise_variance)
@@ -208,16 +274,18 @@ class SSNR3dSIM3dShifts(SSNRCalculator3dSIM):
         size_x, size_y, size_z = self.optical_system.otf.shape
         center = (size_x // 2, size_y // 2, size_z // 2)
         v_j = np.zeros(self.optical_system.otf_frequencies.shape, dtype=np.complex128)
-        for m1 in self.effective_otfs.keys():
-            for m2 in self.effective_otfs.keys():
-                if m1[3] != m2[3]:
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
                     continue
-                idx_diff = np.array(m2)[:3] - np.array(m1)[:3]
-                idx_diff = (*idx_diff, m1[3])
-                if idx_diff not in self.effective_otfs.keys():
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if m21 not in self.illumination.indices2d:
                     continue
-                otf1 = self.effective_otfs[m1]
-                otf2 = self.effective_otfs[m2]
+                idx_diff = (idx1[0], m21)
+                otf1 = self.effective_otfs[idx1]
+                otf2 = self.effective_otfs[idx2]
                 otf3 = self.effective_otfs[idx_diff][*center]
                 term = otf1 * otf2.conjugate() * otf3
                 v_j += term

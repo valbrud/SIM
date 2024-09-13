@@ -4,11 +4,12 @@ import numpy as np
 import sys
 import wrappers
 from config.IlluminationConfigurations import *
-from OpticalSystems import Lens
+from OpticalSystems import Lens, Lens2D
 from matplotlib.widgets import Slider
 sys.path.append('../')
-
-class TestOpticalSystems(unittest.TestCase):
+from config.IlluminationConfigurations import BFPConfiguration
+configurations = BFPConfiguration()
+class TestOpticalSystems3D(unittest.TestCase):
     def test_shifted_otf(self):
         max_r = 10
         max_z = 25
@@ -150,4 +151,47 @@ class TestOpticalSystems(unittest.TestCase):
         plt.plot(fx, otf[N//2, :, N//2], label='Full')
         plt.plot(fx, otf_cut[N//2, :, N//2], label='Cut')
         plt.legend()
+        plt.show()
+
+class TestOpticalSystems2D(unittest.TestCase):
+    def test_shifted_otf(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        N = 51
+        max_r = N // 2 * dx
+        x = np.linspace(-max_r, max_r, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+
+        illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
+        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spacial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spacial_shifts = spacial_shifts_conventional2d
+
+        optical_system = Lens2D()
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
+        otf_sum = np.zeros((N, N), dtype=np.complex128)
+        effective_otfs = optical_system.compute_effective_otfs_2dSIM(illumination)
+        for otf in effective_otfs:
+            otf_sum += effective_otfs[otf]
+        print(optical_system)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(np.abs(otf_sum[:, N//2]))
+
+        def update(val):
+            ax.clear()
+            ax.set_title("otf_sum, fy = {:.2f}, ".format(fy[int(val)]) + "$\\lambda^{-1}$")
+            ax.set_xlabel("fx, $\lambda^{-1}$")
+            ax.set_ylabel("fy, $\lambda^{-1}$")
+            # IM = abs(otf_sum[:, int(val), :])
+            IM = abs(optical_system.psf)
+            mp1.set_clim(vmin=IM.min(), vmax=IM.max())
+            ax.imshow(np.abs(IM), extent=(x[0], x[-1], x[0], x[-1]))
+            ax.set_aspect(1. / ax.get_data_ratio())
+
+        slider_loc = plt.axes((0.2, 0.1, 0.65, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, 2)  # slider properties
+        slider_ssnr.on_changed(update)
         plt.show()

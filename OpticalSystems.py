@@ -10,6 +10,7 @@ class OpticalSystem:
     # Other scipy interpolation methods are not directly supported, because they require too much computation time.
     # Nevertheless, just add them to the list if needed
     supported_interpolation_methods = ["linear", "Fourier"]
+
     def __init__(self, interpolation_method):
         self.psf = None
         self.otf = None
@@ -21,6 +22,126 @@ class OpticalSystem:
         self._shifted_otfs = {}
         self._wvdiff_otfs = {}
 
+    @property
+    def interpolation_method(self):
+        return self._interpolation_method
+
+    @interpolation_method.setter
+    def interpolation_method(self, new_method):
+        if new_method not in OpticalSystem.supported_interpolation_methods:
+            raise AttributeError("Interpolation method ", new_method, " is not supported")
+        self._interpolation_method = new_method
+
+    @property
+    def psf_coordinates(self):
+        return self._psf_coordinates
+
+    @psf_coordinates.setter
+    @abstractmethod
+    def psf_coordinates(self, new_coordinates): ...
+
+    @property
+    def otf_frequencies(self):
+        return self._otf_frequencies
+    @abstractmethod
+    def compute_psf_and_otf_cordinates(self, psf_size, N): ...
+
+    @abstractmethod
+    def compute_psf_and_otf(self): ...
+
+    @abstractmethod
+    def compute_q_grid(self): ...
+
+    @abstractmethod
+    def compute_x_grid(self):...
+
+    def _prepare_interpolator(self):
+        if self.otf_frequencies is None or self.otf is None:
+            raise AttributeError("OTF or axes are not computed yet. This method can not be called at this stage")
+        axes = 2 * np.pi * self.otf_frequencies
+        otf = self.otf
+        self.interpolator = scipy.interpolate.RegularGridInterpolator(axes, otf, method=self._interpolation_method,
+                                                                 bounds_error=False,
+                                                                 fill_value=0.)
+
+class OpticalSystem2D(OpticalSystem):
+
+    def __init__(self, interpolation_method):
+        super().__init__(interpolation_method)
+
+    def compute_psf_and_otf_cordinates(self, psf_size, N):
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N)
+
+        self.psf_coordinates = np.array((x, y))
+
+    @OpticalSystem.psf_coordinates.setter
+    def psf_coordinates(self, new_coordinates):
+        self._psf_coordinates = new_coordinates
+        x, y = new_coordinates
+        Nx, Ny = x.size, y.size
+        Lx, Ly = 2 * new_coordinates[:, -1]
+
+        fx = np.linspace(-Nx/(2 * Lx), Nx/(2 * Lx) , Nx)
+        fy = np.linspace(-Ny/(2 * Ly), Ny/(2 * Ly) , Ny)
+        self._otf_frequencies = np.array((fx, fy))
+
+    def compute_q_grid(self):
+        if self.otf_frequencies is None:
+            raise AttributeError("Major bug, OTF frequencies are missing")
+        q_axes = 2 * np.pi * self.otf_frequencies
+        qx, qy = np.array(q_axes[0]), np.array(q_axes[1])
+        q_vectors = np.array(np.meshgrid(qx, qy)).T.reshape(-1, 2)
+        q_sorted = q_vectors[np.lexsort((q_vectors[:, -1], q_vectors[:, 0]))]
+        q_grid = q_sorted.reshape(qx.size, qy.size, 2)
+        return q_grid
+
+    def compute_effective_otfs_2dSIM(self, illumination):
+        waves = illumination.waves
+        effective_psfs={}
+        effective_otfs={}
+        if len(illumination.indices2d) != len(illumination.indices3d):
+            raise AttributeError("2D optical system assums 2D illumination!")
+        X, Y = np.meshgrid(*self.psf_coordinates)
+        for r in range(illumination.Mr):
+            wavevectors, indices = illumination.get_wavevectors_projected(r)
+            for wavevector, index in zip(wavevectors, indices):
+                effective_psf = 0
+                amplitude = waves[(*index, 0)].amplitude
+                phase_shifted = np.exp(1j * np.einsum('ijk,i ->jk', np.array((X, Y)), wavevector)) * self.psf
+                effective_psf += amplitude * phase_shifted
+                effective_psfs[(r, index)] = effective_psf
+                effective_otfs[(r, index)] = wrappers.wrapped_fftn(effective_psf)
+                # effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
+                # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
+                # plt.show()
+        return effective_otfs
+
+    def interpolate_otf(self, k_shift):
+        if self.interpolation_method == "Fourier":
+            raise AttributeError("Due to the major code refactoring, Fourier interpolation is temporarily not available")
+
+        else:
+            qx = (2 * np.pi * self.otf_frequencies[0] - k_shift[0])
+            qy = (2 * np.pi * self.otf_frequencies[1] - k_shift[1])
+            interpolation_points = np.array(np.meshgrid(qx, qy)).T.reshape(-1, 2)
+            interpolation_points = interpolation_points[
+                np.lexsort((interpolation_points[:, 1],
+                            interpolation_points[:, 0]))]
+
+            if self.interpolator is None:
+                raise AttributeError("Interpolator does not exist. Compute OTF to prepare the interpolator")
+
+            otf_interpolated = self.interpolator(interpolation_points)
+            otf_interpolated = otf_interpolated.reshape(self.otf_frequencies[0].size, self.otf_frequencies[1].size)
+            return otf_interpolated
+
+
+class OpticalSystem3D(OpticalSystem):
+
+    def __init__(self, interpolation_method):
+        super().__init__(interpolation_method)
+
     def compute_psf_and_otf_cordinates(self, psf_size, N):
         x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
         y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N)
@@ -28,11 +149,7 @@ class OpticalSystem:
 
         self.psf_coordinates = np.array((x, y, z))
 
-    @property
-    def psf_coordinates(self):
-        return self._psf_coordinates
-
-    @psf_coordinates.setter
+    @OpticalSystem.psf_coordinates.setter
     def psf_coordinates(self, new_coordinates):
         self._psf_coordinates = new_coordinates
         x, y, z, = new_coordinates
@@ -44,24 +161,6 @@ class OpticalSystem:
         fz = np.linspace(-Nz/(2 * Lz), Nz/(2 * Lz) , Nz)
         self._otf_frequencies = np.array((fx, fy, fz))
 
-    @property
-    def otf_frequencies(self):
-        return self._otf_frequencies
-
-    @property
-    def interpolation_method(self):
-        return self._interpolation_method
-
-    @interpolation_method.setter
-    def interpolation_method(self, new_method):
-        if new_method not in OpticalSystem.supported_interpolation_methods:
-            raise AttributeError("Interpolation method ", new_method, " is not supported")
-        self._interpolation_method = new_method
-
-    @abstractmethod
-    def compute_psf_and_otf(self): ...
-
-    def compute_x_grid(self):...
     def compute_q_grid(self):
         if self.otf_frequencies is None:
             raise AttributeError("Major bug, OTF frequencies are missing")
@@ -102,24 +201,15 @@ class OpticalSystem:
         X, Y, Z = np.meshgrid(*self.psf_coordinates)
         for r in range(illumination.Mr):
             wavevectors, indices = illumination.get_wavevectors(r)
-            for w in range(len(wavevectors)):
-                amplitude = waves[indices[w]].amplitude
+            for index in indices:
+                amplitude = waves[indices].amplitude
                 phase_shifted = np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevectors[w])) * self.psf
                 effective_psf = amplitude * phase_shifted
-                effective_psfs[(r, w)] = effective_psf
-                effective_otfs[(r, w)] = wrappers.wrapped_fftn(effective_psf)
+                effective_psfs[(r, index)] = effective_psf
+                effective_otfs[(r, index)] = wrappers.wrapped_fftn(effective_psf)
 
         return effective_psfs, effective_otfs
 
-
-    def _prepare_interpolator(self):
-        if self.otf_frequencies is None or self.otf is None:
-            raise AttributeError("OTF or axes are not computed yet. This method can not be called at this stage")
-        axes = 2 * np.pi * self.otf_frequencies
-        otf = self.otf
-        self.interpolator = scipy.interpolate.RegularGridInterpolator(axes, otf, method=self._interpolation_method,
-                                                                 bounds_error=False,
-                                                                 fill_value=0.)
 
     def interpolate_otf(self, k_shift):
         if self.interpolation_method == "Fourier":
@@ -142,7 +232,43 @@ class OpticalSystem:
             return otf_interpolated
 
 
-class Lens(OpticalSystem):
+#Not working yet...
+class Lens2D(OpticalSystem2D):
+    def __init__(self, alpha=np.pi/4, refractive_index=1,  interpolation_method="linear"):
+        super().__init__(interpolation_method)
+        self.n = refractive_index
+        self.alpha = alpha
+
+    def PSF(self, c_vectors, mask = None):
+        r = (c_vectors[:, :, 0] ** 2 + c_vectors[:, :, 1] ** 2) ** 0.5
+        v = 2 * np.pi * r * self.n * np.sin(self.alpha)
+        I = (2 * scipy.special.j1(v)/v) ** 2
+        cx, cy = np.array(I.shape)//2
+        I[cx, cy] = 1
+        return I
+    def _mask_OTF(self):
+        ...
+    def compute_psf_and_otf(self, parameters=None, apodization_filter=None):
+        if not self.psf_coordinates and not parameters:
+            raise AttributeError("Compute psf first or provide psf parameters")
+        elif parameters:
+            psf_size, N = parameters
+            self.compute_psf_and_otf_cordinates(psf_size, N)
+        self._wvdiff_otfs = {}
+        self._shifted_otfs = {}
+        x, y = self.psf_coordinates
+        N = x.size
+        c_vectors = np.array(np.meshgrid(x, y)).T.reshape(-1, 2)
+        c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 1], c_vectors[:, 0]))]
+        grid = c_vectors_sorted.reshape((len(x), len(y), 2))
+        psf = self.PSF(grid, apodization_filter)
+        self.psf = psf / np.sum(psf)
+        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf /= np.amax(self.otf)
+        self._prepare_interpolator()
+
+
+class Lens(OpticalSystem3D):
     def __init__(self, alpha=np.pi/4, refractive_index=1,  regularization_parameter=0.01, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.n = refractive_index
