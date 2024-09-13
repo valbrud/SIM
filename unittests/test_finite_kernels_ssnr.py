@@ -844,7 +844,7 @@ class TestAgainstIdeal(unittest.TestCase):
         plt.show()
 
 class TestFinalFilter(unittest.TestCase):
-    def test_finite_wiener(self):
+    def test_finite_wiener3d(self):
         theta = np.pi / 4
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
@@ -918,44 +918,59 @@ class TestFinalFilter(unittest.TestCase):
         minssnr = np.amin(ssnr_finite[N//2, N//4:3 * N//4, N//2])
         maxssnr = np.amax(ssnr_finite[N//2,  N//4 : 3 * N//4, N//2])
         ratio = maxssnr/minssnr
-        points = [np.array((0, 0))]
-        values = [1 + 4/ratio]
+        points = []
+        values = []
         for r in range(illumination.Mr):
             angle = illumination.angles[r]
-            point = np.array((4 * dx * np.cos(angle), 4 * dx * np.sin(angle)))
+            point = np.array((4 * dx * np.cos(angle),  4 * dx * np.sin(angle)))
             points.append(point)
             points.append(-point)
-            values.append(-1/2 / illumination.Mr)
-            values.append(-1/2 / illumination.Mr)
+            values.append(1/2 )
+            values.append(1/2 )
         points = np.array(points)
         values = np.array(values)
 
-        # tj_approximate = np.real(tj_approximate)
-        # tj_approximate[kernel_r_size//2, kernel_r_size//2, 0] -= np.sum(tj_approximate)
-        # tj_approximate /= np.amax(tj_approximate)
-        # tj_approximate[kernel_r_size//2, kernel_r_size//2, 0] += 1.25 * minssnr
         tj_approximate = np.zeros((filter_size, filter_size, 1))
         tj_approximate[:, :, 0] = stattools.reverse_interpolation_nearest(x[N//2 - filter_size//2: N//2 + filter_size//2 + 1],
                                                               y[N//2 - filter_size//2: N//2 + filter_size//2 + 1], points, values)
-        apodization = kernels.psf_kernel2d(5, (dx, dy))
-        pad_value = (filter_size - 5)//2
+
+        apodization_size = 3
+        apodization = kernels.psf_kernel2d(apodization_size, (dx, dy))
+        apodization/= np.amax(apodization)
+        # apodization += 1/ratio
+        # plt.imshow(apodization)
+        # plt.show()
+        pad_value = (filter_size - apodization_size)//2
         apodization = np.pad(apodization, ((pad_value, pad_value), (pad_value, pad_value), (0, 0)))
-        # tj_approximate *= apodization
+        # tj_approximate = scipy.ndimage.convolve(tj_approximate, apodization, mode='constant', cval=0.0, origin=0)
+        pad_value = N//2 - filter_size//2
+
+        # tj = 1 / (noise_estimator_finite.dj + np.amax(noise_estimator_finite.dj)/10**4)
+        # tj_approximate = tj[N//2 - filter_size//2: N//2 + filter_size//2 + 1,
+        #                     N//2 - filter_size//2 : N//2 + filter_size//2 + 1,
+        #                     N//2]
+        # tj_approximate = np.pad(tj_approximate, ((pad_value, pad_value), (pad_value, pad_value)))
+
+        # tj_ft = wrappers.wrapped_fftn(tj_approximate[:, :])
+        # plt.plot(np.abs(tj_ft[:, N//2]) )
+        # plt.plot(tj_ft[:, N//2] * noise_estimator_finite.ssnr[N//2, :,  N//2])
+        # plt.show()
+
         # plt.imshow(interpolated_values)
         # plt.show()
         image = np.zeros((N, N, N))
-        # image[N//2, N//2, N//2] = 10**9
+        image[N//2, N//2, N//2] = 10**9
         # image[(3*N+1)//4, N//2+4, N//2] = 10**9
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
         # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 5)
         # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
         image += 100
         arg = N // 2
         wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
-        filtered, _, _, _, tj = wiener.filter_object(image)
+        ideal, _, _, _, tj = wiener.filter_object(image)
         # tj_real = wrappers.wrapped_fftn(tj)
         # plt.imshow(np.abs(tj_real[:, :, N//2]))
         # plt.show()
@@ -966,7 +981,8 @@ class TestFinalFilter(unittest.TestCase):
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N)
         images = simulator.generate_sim_images(image)
         image_sr = simulator.reconstruct_real2d_finite_kernel(images, kernel)
-        image_filtered = scipy.ndimage.convolve(image_sr, tj_approximate, mode='constant', cval=0.0, origin=0)
+
+        image_filtered = scipy.ndimage.convolve(image_sr, tj_approximate[:, :], mode='constant', cval=0.0, origin=0)
         # image_filtered = scipy.signal.convolve(image_sr, tj_real, mode='same')
         image_widefield = simulator.generate_widefield(images)
         # plt.imshow(image_sr[:, :, N//2])
@@ -992,20 +1008,297 @@ class TestFinalFilter(unittest.TestCase):
         ax3.set_title("Filtered", fontsize=25)
         ax3.tick_params(labelsize=20)
 
-        im1 = ax1.imshow(image_widefield[:, :, N // 2], vmin=0)
-        im2 = ax2.imshow(image_sr[:, :, N // 2], vmin=0)
-        im3 = ax3.imshow(np.abs(image_filtered[:, :, N//2]), vmin=0)
-        im4 = ax4.imshow(np.abs(filtered[:, :, N//2]), vmin=0)
+        ax1.imshow(image_widefield[:, :, N // 2], vmin=0)
+        ax2.imshow(image_sr[:, :, N // 2], vmin=0)
+        ax3.imshow(np.abs(image_filtered[:, :, N//2]), vmin=0)
+        ax4.imshow(np.abs(ideal[:, :, N//2]), vmin=0)
+
+        image_widefield /= np.amax(image_widefield)
+        image_sr /= np.amax(image_sr)
+        image_filtered /= np.amax(image_filtered)
+        ideal /= np.amax(ideal)
+
+        image_widefield_ft = wrappers.wrapped_fftn(image_widefield)
+        image_sr_ft = wrappers.wrapped_fftn(image_sr)
+        image_filtered_ft = wrappers.wrapped_fftn(image_filtered)
+        image_ideal_ft = wrappers.wrapped_fftn(ideal)
+        image_ft = wrappers.wrapped_fftn(image)
+
+        image_widefield2d_ft = np.sum(image_widefield_ft, axis=2)
+        image_sr2d_ft = np.sum(image_sr_ft, axis=2)
+        image_filtered2d_ft = np.sum(image_filtered_ft, axis=2)
+        image_ideal2d_ft = np.sum(image_ideal_ft, axis=2)
+        image2d_ft = np.sum(image_ft, axis=2)
+
+        otf_widefield = image_widefield_ft / image_ft
+        otf_sr = image_sr_ft / image_ft
+        otf_filtered = image_filtered_ft / image_ft
+        otf_ideal = image_ideal_ft / image_ft
+
+        otf_widefield2d = image_widefield2d_ft / image2d_ft
+        otf_sr2d = image_sr2d_ft / image2d_ft
+        otf_filtered2d = image_filtered2d_ft / image2d_ft
+        otf_ideal2d = image_ideal2d_ft / image2d_ft
+        def update1(val):
+            ax1.clear()
+            ax2.clear()
+            ax3.clear()
+            ax4.clear()
+
+            # im1 = ax1.imshow(image_widefield[:, :, int(val)], vmin=0)
+            # im2 = ax2.imshow(image_sr[:, :, int(val)], vmin=0)
+            # im3 = ax3.imshow(image_filtered[:, :, int(val)], vmin=0)
+            # im4 = ax4.imshow(filtered[:, :, int(val)], vmin=0)
+            ax1.plot(image_widefield[:, N//2, int(val)], label = 'widefield')
+            ax1.plot(image_sr[:, N//2, int(val)], label = 'sr')
+            ax1.plot(image_filtered[:, N//2, int(val)], label = 'filtered')
+            ax1.plot(ideal[:, N//2, int(val)], label = 'ideal')
+            ax1.set_ylim(np.min(image_filtered), np.max(ideal))
+            ax1.legend()
+
+            ax2.plot(otf_widefield[:, N//2, int(val)], label = 'otf widefield')
+            ax2.plot(otf_sr[:, N//2, int(val)], label = 'otf sr')
+            ax2.plot(otf_filtered[:, N//2, int(val)], label = 'otf fitlered')
+            ax2.plot(otf_ideal[:, N//2, int(val)], label = 'otf ideal')
+            ax2.set_ylim(0, otf_widefield[N//2, N//2, N//2])
+            ax2.legend()
+
+            ax3.plot(otf_widefield2d[:, N//2], label = 'otf widefield 2d')
+            ax3.plot(otf_sr2d[:, N//2], label = 'otf sr 2d')
+            ax3.plot(otf_filtered2d[:, N//2], label = 'otf fitlered 2d')
+            ax3.plot(otf_ideal2d[:, N//2], label = 'otf ideal 2d')
+            # ax3.set_ylim(0, otf_widefield2d[N//2, N//2])
+            ax3.legend()
+
+            # ax3.set_ylim(np.min(image_filtered), np.max(image_filtered))
+            # ax4.set_ylim(np.min(filtered), np.max(filtered))
+            ax1.set_aspect(1 / ax1.get_data_ratio())
+            ax2.set_aspect(1 / ax2.get_data_ratio())
+            ax3.set_aspect(1 / ax3.get_data_ratio())
+            # ax4.set_aspect(1 / ax4.get_data_ratio())
+
+        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+        slider_ssnr.on_changed(update1)
+        plt.show()
+
+    def test_finite_wiener2d(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 51
+        max_r = N // 2 * dx
+
+        kernel_r_size = 7
+        kernel_z_size = 1
+        filter_size = 11
+        kernel_grid = np.zeros((kernel_r_size, kernel_r_size, 2))
+        for i in range(kernel_r_size):
+            for j in range(kernel_r_size):
+                kernel_grid[i, j] = np.array((dx * (i - kernel_r_size // 2), dy * (j - kernel_r_size // 2)))
+
+        kernel = kernels.sinc_kernel(kernel_r_size, 1)
+        anti_kernel = np.zeros(kernel.shape)
+        # anti_kernel[kernel_r_size//2, kernel_r_size//2, 0] = np.sum(kernel)
+        anti_kernel = -kernel
+        # plt.plot(anti_kernel[:, kernel_r_size//2, 0])
+        # print(anti_kernel)
+
+        NA = np.sin(alpha)
+        psf_size = 2 * np.array((max_r, max_r, max_z))
+        dV = dx * dy * dz
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        z = np.linspace(-max_z, max_z, N)
+
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), N)
+
+        arg = N // 2
+        print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        two_NA_fy = fy / (2 * NA)
+        two_NA_fz = fz / (1 - np.cos(alpha))
+
+        optical_system = Lens(alpha=alpha)
+        optical_system.compute_psf_and_otf((psf_size, N),
+                                           apodization_filter=None)
+
+        illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
+        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spacial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination_2waves.spacial_shifts = spacial_shifts_conventional2d
+
+        illumination = illumination_2waves
+        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_2waves, optical_system, kernel)
+
+        ssnr_finite = np.abs(noise_estimator_finite.compute_ssnr())
+        minssnr = np.amin(ssnr_finite[N // 2, N // 4:3 * N // 4, N // 2])
+        maxssnr = np.amax(ssnr_finite[N // 2, N // 4: 3 * N // 4, N // 2])
+        ratio = maxssnr / minssnr
+        points = []
+        values = []
+        for r in range(illumination.Mr):
+            angle = illumination.angles[r]
+            point = np.array((4 * dx * np.cos(angle), 4 * dx * np.sin(angle)))
+            points.append(point)
+            points.append(-point)
+            values.append(1 / 2)
+            values.append(1 / 2)
+        points = np.array(points)
+        values = np.array(values)
+
+        tj_approximate = np.zeros((filter_size, filter_size, 1))
+        tj_approximate[:, :, 0] = stattools.reverse_interpolation_nearest(x[N // 2 - filter_size // 2: N // 2 + filter_size // 2 + 1],
+                                                                          y[N // 2 - filter_size // 2: N // 2 + filter_size // 2 + 1], points, values)
+
+        apodization_size = 3
+        apodization = kernels.psf_kernel2d(apodization_size, (dx, dy))
+        apodization /= np.amax(apodization)
+        # apodization += 1/ratio
+        # plt.imshow(apodization)
+        # plt.show()
+        pad_value = (filter_size - apodization_size) // 2
+        apodization = np.pad(apodization, ((pad_value, pad_value), (pad_value, pad_value), (0, 0)))
+        # tj_approximate = scipy.ndimage.convolve(tj_approximate, apodization, mode='constant', cval=0.0, origin=0)
+        pad_value = N // 2 - filter_size // 2
+
+        # tj = 1 / (noise_estimator_finite.dj + np.amax(noise_estimator_finite.dj)/10**4)
+        # tj_approximate = tj[N//2 - filter_size//2: N//2 + filter_size//2 + 1,
+        #                     N//2 - filter_size//2 : N//2 + filter_size//2 + 1,
+        #                     N//2]
+        # tj_approximate = np.pad(tj_approximate, ((pad_value, pad_value), (pad_value, pad_value)))
+
+        # tj_ft = wrappers.wrapped_fftn(tj_approximate[:, :])
+        # plt.plot(np.abs(tj_ft[:, N//2]) )
+        # plt.plot(tj_ft[:, N//2] * noise_estimator_finite.ssnr[N//2, :,  N//2])
+        # plt.show()
+
+        # plt.imshow(interpolated_values)
+        # plt.show()
+        image = np.zeros((N, N, N))
+        image[N // 2, N // 2, N // 2] = 10 ** 9
+        # image[(3*N+1)//4, N//2+4, N//2] = 10**9
+        # image[(N+1)//4, N//2-3, N//2] = 10**9
+        # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
+        # image += 10**6
+        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 5)
+        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
+        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        image += 100
+        arg = N // 2
+        wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
+        ideal, _, _, _, tj = wiener.filter_object(image)
+        # tj_real = wrappers.wrapped_fftn(tj)
+        # plt.imshow(np.abs(tj_real[:, :, N//2]))
+        # plt.show()
+        # tj_real /= np.amax(tj_real)
+        # filter_size = 51
+        # tj_approximate = np.zeros((filter_size, filter_size, 1))
+        # tj_approximate[:, :, 0] = tj_real[N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2]
+        simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N)
+        images = simulator.generate_sim_images(image)
+        image_sr = simulator.reconstruct_real2d_finite_kernel(images, kernel)
+
+        image_filtered = scipy.ndimage.convolve(image_sr, tj_approximate[:, :], mode='constant', cval=0.0, origin=0)
+        # image_filtered = scipy.signal.convolve(image_sr, tj_real, mode='same')
+        image_widefield = simulator.generate_widefield(images)
+        # plt.imshow(image_sr[:, :, N//2])
+        # plt.show()
+        # plt.imshow(image_widefield[:, :, N//2])
+        fig = plt.figure(figsize=(15, 9), constrained_layout=True)
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.4)
+        ax1 = fig.add_subplot(141)
+        ax2 = fig.add_subplot(142)
+        ax3 = fig.add_subplot(143)
+        ax4 = fig.add_subplot(144)
+        ax1.set_title("Widefield", fontsize=25, pad=15)
+        ax1.tick_params(labelsize=20)
+
+        ax2.set_title("SR", fontsize=25)
+        ax2.tick_params(labelsize=20)
+
+        ax3.set_title("Filtered", fontsize=25)
+        ax3.tick_params(labelsize=20)
+
+        ax1.imshow(image_widefield[:, :, N // 2], vmin=0)
+        ax2.imshow(image_sr[:, :, N // 2], vmin=0)
+        ax3.imshow(np.abs(image_filtered[:, :, N // 2]), vmin=0)
+        ax4.imshow(np.abs(ideal[:, :, N // 2]), vmin=0)
+
+        image_widefield /= np.amax(image_widefield)
+        image_sr /= np.amax(image_sr)
+        image_filtered /= np.amax(image_filtered)
+        ideal /= np.amax(ideal)
+
+        image_widefield_ft = wrappers.wrapped_fftn(image_widefield)
+        image_sr_ft = wrappers.wrapped_fftn(image_sr)
+        image_filtered_ft = wrappers.wrapped_fftn(image_filtered)
+        image_ideal_ft = wrappers.wrapped_fftn(ideal)
+        image_ft = wrappers.wrapped_fftn(image)
+
+        image_widefield2d_ft = np.sum(image_widefield_ft, axis=2)
+        image_sr2d_ft = np.sum(image_sr_ft, axis=2)
+        image_filtered2d_ft = np.sum(image_filtered_ft, axis=2)
+        image_ideal2d_ft = np.sum(image_ideal_ft, axis=2)
+        image2d_ft = np.sum(image_ft, axis=2)
+
+        otf_widefield = image_widefield_ft / image_ft
+        otf_sr = image_sr_ft / image_ft
+        otf_filtered = image_filtered_ft / image_ft
+        otf_ideal = image_ideal_ft / image_ft
+
+        otf_widefield2d = image_widefield2d_ft / image2d_ft
+        otf_sr2d = image_sr2d_ft / image2d_ft
+        otf_filtered2d = image_filtered2d_ft / image2d_ft
+        otf_ideal2d = image_ideal2d_ft / image2d_ft
 
         def update1(val):
             ax1.clear()
             ax2.clear()
             ax3.clear()
+            ax4.clear()
 
-            im1 = ax1.imshow(image_widefield[:, :, int(val)], vmin=0)
-            im2 = ax2.imshow(image_sr[:, :, int(val)], vmin=0)
-            im3 = ax3.imshow(image_filtered[:, :, int(val)], vmin=0)
-            im4 = ax4.imshow(filtered[:, :, int(val)], vmin=0)
+            # im1 = ax1.imshow(image_widefield[:, :, int(val)], vmin=0)
+            # im2 = ax2.imshow(image_sr[:, :, int(val)], vmin=0)
+            # im3 = ax3.imshow(image_filtered[:, :, int(val)], vmin=0)
+            # im4 = ax4.imshow(filtered[:, :, int(val)], vmin=0)
+            ax1.plot(image_widefield[:, N // 2, int(val)], label='widefield')
+            ax1.plot(image_sr[:, N // 2, int(val)], label='sr')
+            ax1.plot(image_filtered[:, N // 2, int(val)], label='filtered')
+            ax1.plot(ideal[:, N // 2, int(val)], label='ideal')
+            ax1.set_ylim(np.min(image_filtered), np.max(ideal))
+            ax1.legend()
+
+            ax2.plot(otf_widefield[:, N // 2, int(val)], label='otf widefield')
+            ax2.plot(otf_sr[:, N // 2, int(val)], label='otf sr')
+            ax2.plot(otf_filtered[:, N // 2, int(val)], label='otf fitlered')
+            ax2.plot(otf_ideal[:, N // 2, int(val)], label='otf ideal')
+            ax2.set_ylim(0, otf_widefield[N // 2, N // 2, N // 2])
+            ax2.legend()
+
+            ax3.plot(otf_widefield2d[:, N // 2], label='otf widefield 2d')
+            ax3.plot(otf_sr2d[:, N // 2], label='otf sr 2d')
+            ax3.plot(otf_filtered2d[:, N // 2], label='otf fitlered 2d')
+            ax3.plot(otf_ideal2d[:, N // 2], label='otf ideal 2d')
+            # ax3.set_ylim(0, otf_widefield2d[N//2, N//2])
+            ax3.legend()
+
+            # ax3.set_ylim(np.min(image_filtered), np.max(image_filtered))
+            # ax4.set_ylim(np.min(filtered), np.max(filtered))
+            ax1.set_aspect(1 / ax1.get_data_ratio())
+            ax2.set_aspect(1 / ax2.get_data_ratio())
+            ax3.set_aspect(1 / ax3.get_data_ratio())
+            # ax4.set_aspect(1 / ax4.get_data_ratio())
 
         slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
         slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
