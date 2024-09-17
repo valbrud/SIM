@@ -41,16 +41,29 @@ class WienerFilter3dModel(WienerFilter3d):
         tj = self.aj / (self.ssnr_calc.dj + wj)
 
         fig, ax = plt.subplots(2,2)
-        ax[0, 0].imshow((np.log10(1 + 10**4 * ssnr[:, :, shape[2]//2])))
-        ax[0, 0].set_title('SSNR')
-        ax[0, 1].imshow(np.log10(1 + 10**4 * wj[:, :, shape[2]//2]))
-        ax[0, 1].set_title('Wj')
-        ax[1, 0].imshow(np.log(1 + 10**4 * np.abs(self.ssnr_calc.dj[:, :, shape[2]//2])))
-        ax[1, 0].set_title('Dj')
-        ax[1, 1].imshow(tj[:, :, shape[2]//2])
-        ax[1, 1].set_title('Tj')
+        if len(shape) == 3:
+            ax[0, 0].imshow((np.log10(1 + 10**4 * ssnr[:, :, shape[2]//2])))
+            ax[0, 0].set_title('SSNR')
+            ax[0, 1].imshow(np.log10(1 + 10**4 * wj[:, :, shape[2]//2]))
+            ax[0, 1].set_title('Wj')
+            ax[1, 0].imshow(np.log(1 + 10**4 * np.abs(self.ssnr_calc.dj[:, :, shape[2]//2])))
+            ax[1, 0].set_title('Dj')
+            ax[1, 1].imshow(tj[:, :, shape[2]//2])
+            ax[1, 1].set_title('Tj')
+        else:
+            ax[0, 0].imshow((np.log10(1 + 10 ** 4 * ssnr[:, :])))
+            ax[0, 0].set_title('SSNR')
+            ax[0, 1].imshow(np.log10(1 + 10 ** 4 * wj[:, :]))
+            ax[0, 1].set_title('Wj')
+            ax[1, 0].imshow(np.log(1 + 10 ** 4 * np.abs(self.ssnr_calc.dj[:, :])))
+            ax[1, 0].set_title('Dj')
+            ax[1, 1].imshow(tj[:, :])
+            ax[1, 1].set_title('Tj')
         plt.show()
         filtered_ft = object_ft * otf_sim
+        # plt.plot(np.abs(filtered_ft[:, shape[1]//2]), label = "filtered ft")
+        # plt.legend()
+        # plt.show()
         # filtered_ft = object_ft * self.ssnr_calc.dj * tj
         filtered = wrappers.wrapped_ifftn(filtered_ft).real
 

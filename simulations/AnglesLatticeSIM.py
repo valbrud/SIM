@@ -2,7 +2,7 @@ from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
-from OpticalSystems import Lens
+from OpticalSystems import Lens3D
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     }
 
     ratios = np.linspace(0.1, 1, 19)
-    optical_system = Lens(alpha=alpha_lens)
+    optical_system = Lens3D(alpha=alpha_lens)
     optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
 
     with open("Angles.csv", 'w', newline='') as file:

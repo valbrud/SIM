@@ -38,6 +38,23 @@ class TestBox(unittest.TestCase):
         print(end - start)
         box.plot_intensity_fourier_space_slices()
 
+    def test_plane_waves_initialisation2d(self):
+        plane_wave1 = PlaneWave(0, 1, 0, 0, np.array((1, 0, 1)))
+        plane_wave2 = PlaneWave(0, 1, 0, 0, np.array((-1, 0, 1)))
+        plane_wave3 = PlaneWave(0, 1, 0, 0, np.array((0, 1, 1)))
+        plane_wave4 = PlaneWave(0, 1, 0, 0, np.array((0, -1, 1)))
+        # plane_wave5 = PlaneWave(1, 1j, 0, 0, np.array((0, 0, 2 ** 0.5)))
+        plane_waves = [ plane_wave1, plane_wave2, plane_wave3, plane_wave4]
+        start = time.time()
+        box = Box(plane_waves, (10, 10), 40)
+        box.compute_electric_field()
+        box.compute_intensity_from_electric_field()
+        box.plot_intensity_slices()
+        box.compute_intensity_fourier_space()
+        end = time.time()
+        print(end - start)
+        box.plot_intensity_fourier_space_slices()
+
     def test_iplane_waves_initialization(self):
         theta = np.pi / 4
         b = 1

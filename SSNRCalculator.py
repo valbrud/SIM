@@ -195,6 +195,13 @@ class SSNR2dSIM(SSNRCalculator):
         for m in self.effective_otfs:
             self.otf_sim += np.abs(self.effective_otfs[m])
 
+    def ring_average_ssnr(self):
+        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
+        ssnr = np.copy(self.ssnr)
+        if q_axes[0].size != ssnr.shape[0] or q_axes[1].size != ssnr.shape[1]:
+            raise ValueError("Wrong axes are provided for the ssnr")
+        ssnr_ra = average_rings2d(ssnr, (q_axes[0], q_axes[1]))
+        return ssnr_ra
     def _Dj(self):
         d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
         for m in self.effective_otfs.keys():
@@ -224,13 +231,102 @@ class SSNR2dSIM(SSNRCalculator):
         v_j *= self.illumination.Mt
         return v_j
 
-    def ring_average_ssnr(self):
-        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
-        ssnr = np.copy(self.ssnr)
-        if q_axes[0].size != ssnr.shape[0] or q_axes[1].size != ssnr.shape[1]:
-            raise ValueError("Wrong axes are provided for the ssnr")
-        ssnr_ra = average_rings2d(ssnr, (q_axes[0], q_axes[1]))
-        return ssnr_ra
+class SSNR2dSIMFiniteKernel(SSNR2dSIM):
+    def __init__(self, illumination, optical_system, kernel,  readout_noise_variance=0):
+        super().__init__(illumination, optical_system,  readout_noise_variance)
+        self.kernel_ft = None
+        self.kernel = kernel
+    @property
+    def kernel(self):
+        return self._kernel
+
+    @kernel.setter
+    def kernel(self, kernel_new):
+        shape = np.array(kernel_new.shape, dtype=np.int32)
+        otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
+
+        if ((shape % 2) == 0).any():
+            raise ValueError("Size of the kernel must be even!")
+
+        if (shape > otf_shape).any():
+            raise ValueError("Size of the kernel is bigger than of the PSF!")
+
+        if (shape < otf_shape).any():
+            kernel_expanded = np.zeros(otf_shape)
+            kernel_expanded[otf_shape[0]//2-shape[0]//2:otf_shape[0]//2+shape[0]//2 + 1,
+                            otf_shape[1]//2-shape[1]//2:otf_shape[1]//2+shape[1]//2 + 1,
+            ] = kernel_new
+            kernel_new = kernel_expanded
+        self._kernel = kernel_new
+        self.kernel_ft = wrappers.wrapped_ifftn(kernel_new)
+        self.kernel_ft /= np.amax(self.kernel_ft)
+        self._kernel = kernel_new
+        self.effective_kernels_ft = {}
+        self._compute_effective_kernels_ft()
+        self.compute_ssnr()
+
+    def plot_effective_kernel_and_otf(self):
+        Nx, Ny = self.optical_system.otf.shape
+        fig, ax = plt.subplots()
+        ax.plot(self.optical_system.otf_frequencies[0] / (2 * self.optical_system.NA), self.kernel_ft[:, Ny//2], label="Kernel")
+        ax.plot(self.optical_system.otf_frequencies[0] / (2 * self.optical_system.NA) ,self.optical_system.otf[:, Ny//2], label="OTF")
+        ax.set_title("Kernel vs OTF")
+        ax.set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
+        ax.set_ylabel("OTF/K, u.e.")
+        ax.set_xlim(-2, 2)
+        ax.set_ylim(0, 1)
+        ax.legend()
+        ax.grid()
+    @SSNR2dSIM.illumination.setter
+    def illumination(self, new_illumination):
+        self._illumination = new_illumination
+        self.effective_otfs = {}
+        self.otf_sim = None
+        self._compute_effective_otfs()
+        self._compute_effective_kernels_ft()
+        self.ssnr = None
+
+    def _compute_effective_kernels_ft(self):
+        waves = self.illumination.waves
+        X, Y = np.meshgrid(*self.optical_system.psf_coordinates)
+        for r in range(self.illumination.Mr):
+            wavevectors, indices = self.illumination.get_wavevectors_projected(r)
+            for wavevector, index in zip(wavevectors, indices):
+                amplitude = waves[(*index, 0)].amplitude
+                phase_shifted = np.exp(1j * np.einsum('ijk,i ->jk', np.array((X, Y)), wavevector)) * self.kernel
+                effective_real_kernel = amplitude * phase_shifted
+                self.effective_kernels_ft[(r, index)] = wrappers.wrapped_fftn(effective_real_kernel)
+    def _Dj(self):
+        d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs.keys():
+            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()
+        d_j *= self.illumination.Mt
+        return np.abs(d_j)
+
+
+    def _Vj(self):
+        v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        size_x, size_y = self.optical_system.otf.shape
+        center = np.array((size_x, size_y), dtype=np.int32)//2
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
+                    continue
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if m21 not in self.illumination.indices2d:
+                    continue
+                idx_diff = (idx1[0], m21)
+                otf1 = self.effective_kernels_ft[idx1]
+                otf2 = self.effective_kernels_ft[idx2]
+                otf3 = self.effective_otfs[idx_diff][*center]
+                term = otf1 * otf2.conjugate() * otf3
+                v_j += term
+        v_j *= self.illumination.Mt
+        return np.abs(v_j)
+
+
 class SSNRCalculator3dSIM(SSNRCalculator):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         if len(optical_system.otf.shape) == 2:
