@@ -13,24 +13,32 @@ class Field:
         self.field_type = source.get_source_type()
         self.source = source
         if self.field_type == "ElectricField":
-            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2]), 3), dtype=np.complex128)
+            self.field = np.zeros(grid.shape, dtype=np.complex128)
             self.field += source.get_electric_field(grid)
 
         elif self.field_type == "Intensity":
-            self.field = np.zeros((len(grid[0]), len(grid[1]), len(grid[2])), dtype=np.complex128)
+            self.field = np.zeros(grid.shape[:3], dtype=np.complex128)
             self.field = source.get_intensity(grid)
 
 
 class Box:
     def __init__(self, sources=(), box_size=10, point_number=100, additional_info=None):
         self.info = additional_info
-        if type(point_number) == int:
-            point_number = (point_number, point_number, point_number)
-        self.point_number = np.array(point_number)
+
+
         if type(box_size) == float or type(box_size) == int:
             box_size = (box_size, box_size, box_size)
+        if len(box_size) == 2:
+            box_size = (box_size[0], box_size[1], 0)
         self.box_size = np.array(box_size)
-        self.box_volume = self.box_size[0] * self.box_size[1] * self.box_size[2]
+
+        if type(point_number) == int:
+            point_number = [point_number, point_number, point_number]
+        if box_size[2] == 0:
+            point_number[2] = 1
+        self.point_number = np.array(point_number)
+
+        self.box_volume = self.box_size[0] * self.box_size[1] * self.box_size[2] if box_size[2] != 0 else self.box_size[0] * self.box_size[1]
         self.fields = []
         self.numerically_approximated_intensity_fields = []
         self.source_identifier = 0
@@ -63,7 +71,7 @@ class Box:
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), Nx)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), Ny)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), Nz)
-        return np.array((x, y, z)), np.array((fx, fy, fz))
+        return (x, y, z), (fx, fy, fz)
 
     def compute_grid(self):
         indices = np.array(np.meshgrid(np.arange(self.point_number[0]), np.arange(self.point_number[1]),
@@ -71,6 +79,8 @@ class Box:
         indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
             self.point_number[0], self.point_number[1], self.point_number[2], 3)
         self.grid = self.box_size[None, None, None, :] * (indices / (self.point_number[None, None, None, :] - 1) - 1 / 2)
+        if self.point_number[2] == 1:
+            self.grid = np.where(np.isnan(self.grid), 0, self.grid)
         return
 
     def compute_electric_field(self):
@@ -145,7 +155,7 @@ class Box:
         self.plot_slices(abs(self.intensity_fourier_space), ax, slider)
 
     def plot_slices(self, array3d, ax=None, slider=None):
-        k_init = self.point_number / 2
+        k_init = self.point_number[2] // 2
         if ax is None:
             fig, ax = plt.subplots()
         x = (np.arange(self.point_number[0]) / self.point_number[0] - 1 / 2) * self.box_size[0, None]

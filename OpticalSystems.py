@@ -238,10 +238,11 @@ class Lens2D(OpticalSystem2D):
         super().__init__(interpolation_method)
         self.n = refractive_index
         self.alpha = alpha
+        self.NA = self.n * np.sin(self.alpha)
 
     def PSF(self, c_vectors, mask = None):
         r = (c_vectors[:, :, 0] ** 2 + c_vectors[:, :, 1] ** 2) ** 0.5
-        v = 2 * np.pi * r * self.n * np.sin(self.alpha)
+        v = 2 * np.pi * r * self.NA
         I = (2 * scipy.special.j1(v)/v) ** 2
         cx, cy = np.array(I.shape)//2
         I[cx, cy] = 1
@@ -268,18 +269,20 @@ class Lens2D(OpticalSystem2D):
         self._prepare_interpolator()
 
 
-class Lens(OpticalSystem3D):
-    def __init__(self, alpha=np.pi/4, refractive_index=1,  regularization_parameter=0.01, interpolation_method="linear"):
+class Lens3D(OpticalSystem3D):
+    def __init__(self, alpha=np.pi/4, refractive_index_sample =1, refractive_index_medium = 1,  regularization_parameter=0.01, interpolation_method="linear"):
         super().__init__(interpolation_method)
-        self.n = refractive_index
+        self.ns = refractive_index_sample
+        self.nm = refractive_index_medium
         self.alpha = alpha
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
-
+        self.NA = self.nm * np.sin(self.alpha)
     def PSF(self, c_vectors, mask = None):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
-        v = 2 * np.pi * r * self.n * np.sin(self.alpha)
-        u = 8 * np.pi * z * self.n * np.sin(self.alpha / 2) ** 2
+        v = 2 * np.pi * r * self.NA
+        # u = 8 * np.pi * z * self.n * np.sin(self.alpha / 2) ** 2
+        u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns**2 - self.NA**2))
 
         def integrand(rho):
             return np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(

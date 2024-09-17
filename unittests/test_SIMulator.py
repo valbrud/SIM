@@ -6,12 +6,13 @@ import scipy.signal
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
+import kernels
 import wrappers
 from config.IlluminationConfigurations import *
 import unittest
 import time
 from matplotlib.widgets import Slider
-from OpticalSystems import Lens
+from OpticalSystems import Lens3D
 import ShapesGenerator
 from SIMulator import SIMulator
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM2dShiftsFiniteKernel
@@ -41,7 +42,7 @@ class TestSIMImages(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         plt.imshow(optical_system.psf[:, :, N//2])
@@ -143,7 +144,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         plt.imshow(image[:, :, N // 2])
@@ -248,7 +249,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         plt.imshow(image[:, :, N // 2])
@@ -349,22 +350,8 @@ class TestReconstruction(unittest.TestCase):
         max_r = N // 2 * dx
         max_z = N // 2 * dz
 
-        kernel_r_size = 5
-        kernel_z_size = 1
-        kernel = np.zeros((kernel_r_size, kernel_r_size, kernel_z_size))
-        func_r = np.zeros(kernel_r_size)
-        func_r[0:kernel_r_size // 2 + 1] = np.linspace(0, 1, (kernel_r_size + 1) // 2 + 1)[1:]
-        func_r[kernel_r_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_r_size + 1) // 2 + 1)[:-1]
-        # func_r = np.ones(kernel_r_size)
-        func_z = np.zeros(kernel_z_size)
-        func_z[0:kernel_z_size // 2 + 1] = np.linspace(0, 1, (kernel_z_size + 1) // 2 + 1)[1:]
-        func_z[kernel_z_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_z_size + 1) // 2 + 1)[:-1]
-        func2d = func_r[:, None] * func_r[None, :]
-        # func3d = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
-        # kernel[kernel_r_size//2, kernel_r_size//2, kernel_z_size//2] = 1
-        # kernel[0,:, 0] = func_r
-        kernel[:, :, 0] = func2d
-        # kernel = func3ds
+        kernel_size = 1
+        kernel = kernels.psf_kernel2d(kernel_size, (dx, dy))
 
         NA = np.sin(alpha)
         psf_size = 2 * np.array((max_r, max_r, max_z))
@@ -393,11 +380,11 @@ class TestReconstruction(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
+        image = ShapesGenerator.generate_sphere_slices(psf_size, N, r=0.5, N=1000, I=10 ** 3)
         image += 100
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         # plt.imshow(image[:, :, N // 2])
@@ -433,8 +420,8 @@ class TestReconstruction(unittest.TestCase):
                             top=0.9,
                             wspace=0.4,
                             hspace=0.4)
-        ax1 = fig.add_subplot(211)
-        ax2 = fig.add_subplot(212)
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
 
         ax1.set_title("SR", fontsize=25, pad=15)
         ax1.tick_params(labelsize=20)
@@ -521,7 +508,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         # plt.imshow(image[:, :, N // 2])

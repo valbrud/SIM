@@ -16,7 +16,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
-from OpticalSystems import Lens
+from OpticalSystems import Lens3D
 import ShapesGenerator
 import SIMulator
 from Windowing import make_mask_cosine_edge3d
@@ -59,7 +59,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -184,7 +184,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -312,7 +312,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -439,7 +439,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same') + 10**-10
@@ -572,7 +572,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -696,7 +696,7 @@ class TestWiener(unittest.TestCase):
         image *= mask
         arg = N // 2
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         # plt.imshow(optical_system.psf[:, :, N // 2])
@@ -843,7 +843,7 @@ class TestFlat(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')

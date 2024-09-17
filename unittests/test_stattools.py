@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import stattools
 import unittest
 import sys
-from OpticalSystems import Lens
+from OpticalSystems import Lens3D
 from config.IlluminationConfigurations import BFPConfiguration
 from SSNRCalculator import SSNRWidefield
 sys.path.append('../')
@@ -63,7 +63,7 @@ class TestRingAveraging(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         scaled_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens(alpha=alpha)
+        optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_filter=None)
 
