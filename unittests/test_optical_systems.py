@@ -4,64 +4,43 @@ import numpy as np
 import sys
 import wrappers
 from config.IlluminationConfigurations import *
-from OpticalSystems import Lens, Lens2D
+from OpticalSystems import Lens3D, Lens2D
 from matplotlib.widgets import Slider
 sys.path.append('../')
 from config.IlluminationConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
-    def test_shifted_otf(self):
-        max_r = 10
-        max_z = 25
-        N = 80
-        dx = 2 * max_r / N
-        dy = 2 * max_r / N
-        dz = 2 * max_z / N
-        x = np.arange(-max_r, max_r, dx)
-        y = np.copy(x)
-        z = np.arange(-max_z, max_z, dz)
-
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
+    def test_sim_otf(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 101
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        x = np.linspace(-max_r, max_r, N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_r), N)
 
-        illumination = Illumination(s_polarized_waves)
+        illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
+        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spacial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spacial_shifts = spacial_shifts_conventional2d
 
-        # wavevectors = [np.array([ 4.44288294,  0.        , -1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16, -1.84030237e+00]), np.array([ 2.72048118e-16,  4.44288294e+00, -1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00, -1.84030237e+00]), np.array([4.44288294, 0.        , 1.84030237]), np.array([-4.44288294e+00,  5.44096237e-16,  1.84030237e+00]), np.array([2.72048118e-16, 4.44288294e+00, 1.84030237e+00]), np.array([ 2.72048118e-16, -4.44288294e+00,  1.84030237e+00])]
-        wavevectors = [np.array([0.0 * np.pi,  0., 0.3 * np.pi])]
-        # print(wavevectors)
-        optical_system = Lens()
+        optical_system = Lens3D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
-        optical_system.prepare_Fourier_interpolation(wavevectors)
-        otf_sum = np.zeros((len(x), len(y), len(z)), dtype=np.complex128)
-        for otf in optical_system._effective_otfs:
-            otf_sum += optical_system._shifted_otfs[otf]
+        otf_sum = np.zeros((N, N, N), dtype=np.complex128)
+        effective_otfs = optical_system.compute_effective_otfs_projective_3dSIM(illumination)
+        for otf in effective_otfs:
+            otf_sum += effective_otfs[otf]
+        otf_sum /= np.amax(otf_sum)
         print(optical_system)
-        # print(otf_sum[:, :, 10])
         fig = plt.figure()
-        IM = otf_sum[:, int(N/2), :]
-
         ax = fig.add_subplot(111)
-        mp1 = ax.imshow(np.abs(IM))
-
-        plt.colorbar(mp1)
-        def update(val):
-            ax.clear()
-            ax.set_title("otf_sum, fy = {:.2f}, ".format(fy[int(val)]) + "$\\lambda^{-1}$")
-            ax.set_xlabel("fx, $\lambda^{-1}$")
-            ax.set_ylabel("fy, $\lambda^{-1}$")
-            # IM = abs(otf_sum[:, int(val), :])
-            IM = abs(optical_system.psf[:, int(val), :])
-            mp1.set_clim(vmin=IM.min(), vmax=IM.max())
-            ax.imshow(np.abs(IM), extent=(x[0], x[-1], z[0], z[-1]))
-            ax.set_aspect(1. / ax.get_data_ratio())
-
-
-        slider_loc = plt.axes((0.2, 0.1, 0.65, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-        slider_ssnr.on_changed(update)
+        ax.plot(fy, np.abs(otf_sum[N//2, :, N//2]))
+        ax.set_title("SIM OTF")
+        ax.set_ylim(bottom=0)
         plt.show()
-
     def test_confocal_SSNRv(self):
         max_r = 4
         max_z = 10
@@ -82,7 +61,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         NAs = np.linspace(0.1, 1, 10)
         for NA in NAs:
             alpha = np.asin(NA)
-            optical_system = Lens(alpha)
+            optical_system = Lens3D(alpha)
             optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
             # print(np.sum(optical_system.psf))
             ssnrv_widefield.append(np.sum(optical_system.psf**2))
@@ -118,7 +97,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dx), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dx), N)
-        optical_system = Lens(alpha)
+        optical_system = Lens3D(alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         psf = optical_system.psf
         # otf = optical_system.otf
@@ -153,7 +132,112 @@ class TestOpticalSystems3D(unittest.TestCase):
         plt.legend()
         plt.show()
 
+    def test_energy_distribution(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 101
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        optical_system = Lens3D(alpha=alpha)
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
+
+        illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
+        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+        illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
+        illumination_widefield = configurations.get_widefield()
+
+        configs = {
+            # "SquareL" : illumination_s_polarized,
+            # "SquareC" : illumination_circular,
+            # "Hexagonal" : illumination_seven_waves,
+            "Conventional 3D" : illumination_3waves,
+            "Conventional 2D" : illumination_2waves,
+            "Widefield" : illumination_widefield,
+        }
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.set_title("Total energy in a cube of a given size (3D)", fontsize=25)
+        ax.set_xlabel("Cube size (Pixels)", fontsize=25)
+        ax.set_ylabel("Energy part (%)", fontsize=25)
+        ax.tick_params(labelsize=20)
+        ax.grid()
+        for config in configs:
+            illumination = configs[config]
+            effective_otfs = optical_system.compute_effective_otfs_projective_3dSIM(illumination)
+            otf_sim = np.zeros(optical_system.otf.shape, dtype=np.complex128)
+            for otf in effective_otfs:
+                otf_sim += effective_otfs[otf]
+            psf_sim = np.abs(wrappers.wrapped_fftn(otf_sim))
+            psf_sim /= np.sum(psf_sim)
+            # plt.imshow(psf_sim[:, :, N//2])
+            # plt.show()
+            # plt.imshow(psf_sim[:, N//2, :])
+            # plt.show()
+            sizes = np.arange(1, N + 1, 2)
+            percentage = np.zeros(sizes.size)
+            for s in range(len(sizes)):
+                size = sizes[s]
+                energy_percentage = np.sum(psf_sim[N // 2 - size // 2: N // 2 + size // 2 + 1,
+                                           N // 2 - size // 2 : N // 2 + size // 2 + 1,
+                                           N // 2 - size // 2 : N // 2 + size // 2 + 1]) * 100
+                percentage[s] = energy_percentage
+                print(f"Configuration = {config}, size = {size}, energy = {energy_percentage} %")
+            ax.plot(sizes, percentage, label=config)
+        ax.legend(fontsize=20)
+        plt.show()
 class TestOpticalSystems2D(unittest.TestCase):
+    def test_energy_distribution(self):
+        theta = np.pi / 4
+        alpha = np.pi / 4
+        dx = 1 / (8 * np.sin(alpha))
+        N = 51
+        max_r = N // 2 * dx
+        optical_system = Lens2D(alpha=alpha)
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
+
+        illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
+        illumination_widefield = configurations.get_widefield()
+        configs = {
+            # "SquareL" : illumination_s_polarized,
+            # "SquareC" : illumination_circular,
+            # "Hexagonal" : illumination_seven_waves,
+            # "Conventional 3D" : illumination_3waves,
+            "Conventional 2D" : illumination_2waves,
+            "Widefield" : illumination_widefield,
+        }
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.set_title("Total energy in a cube of a given size (2D)", fontsize=25)
+        ax.set_xlabel("Cube size (Pixels)", fontsize=25)
+        ax.set_ylabel("Energy part (%)", fontsize=25)
+        ax.tick_params(labelsize =20)
+        ax.grid()
+        for config in configs:
+            illumination = configs[config]
+            effective_otfs = optical_system.compute_effective_otfs_2dSIM(illumination)
+            otf_sim = np.zeros(optical_system.otf.shape, dtype = np.complex128)
+            for otf in effective_otfs:
+                otf_sim += effective_otfs[otf]
+            psf_sim = np.abs(wrappers.wrapped_fftn(otf_sim))
+            psf_sim /= np.sum(psf_sim)
+            # plt.imshow(psf_sim[:, :, N//2])
+            # plt.show()
+            # plt.imshow(psf_sim[:, N//2, :])
+            # plt.show()
+            sizes = np.arange(1, N+1, 2)
+            percentage = np.zeros(sizes.size)
+            for s in range(len(sizes)):
+                size = sizes[s]
+                energy_percentage = np.sum(psf_sim[N//2 - size//2 : N//2 + size//2 + 1,
+                                           N//2 - size//2 : N//2 + size//2 + 1]) * 100
+                percentage[s] = energy_percentage
+                print(f"Configuration = {config}, size = {size}, energy = {energy_percentage} %" )
+            ax.plot(sizes, percentage, label = config)
+        ax.legend(fontsize=20)
+        plt.show()
     def test_shifted_otf(self):
         theta = np.pi / 4
         alpha = np.pi / 4
@@ -177,21 +261,12 @@ class TestOpticalSystems2D(unittest.TestCase):
             otf_sum += effective_otfs[otf]
         print(optical_system)
         fig = plt.figure()
+        otf_sum /= np.amax(otf_sum)
+        print(optical_system)
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(np.abs(otf_sum[:, N//2]))
+        ax.plot(fy, np.abs(otf_sum[ :, N // 2]))
+        ax.set_title("SIM OTF")
+        ax.set_ylim(bottom=0)
 
-        def update(val):
-            ax.clear()
-            ax.set_title("otf_sum, fy = {:.2f}, ".format(fy[int(val)]) + "$\\lambda^{-1}$")
-            ax.set_xlabel("fx, $\lambda^{-1}$")
-            ax.set_ylabel("fy, $\lambda^{-1}$")
-            # IM = abs(otf_sum[:, int(val), :])
-            IM = abs(optical_system.psf)
-            mp1.set_clim(vmin=IM.min(), vmax=IM.max())
-            ax.imshow(np.abs(IM), extent=(x[0], x[-1], x[0], x[-1]))
-            ax.set_aspect(1. / ax.get_data_ratio())
-
-        slider_loc = plt.axes((0.2, 0.1, 0.65, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, 2)  # slider properties
-        slider_ssnr.on_changed(update)
         plt.show()
