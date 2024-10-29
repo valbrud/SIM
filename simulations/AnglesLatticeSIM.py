@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     ratios = np.linspace(0.1, 1, 19)
     optical_system = Lens3D(alpha=alpha_lens)
-    optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
+    optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
 
     with open("Angles.csv", 'w', newline='') as file:
         writer = csv.writer(file)

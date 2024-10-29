@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     optical_system = Lens3D(alpha=alpha)
     optical_system.compute_psf_and_otf((psf_size, N),
-                                       apodization_filter=None)
+                                       apodization_function="Sine")
 
     illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
     illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)

@@ -57,23 +57,26 @@ class Illumination:
         intensity_plane_waves = {}
         for projection_index in (0, 1, 2):
             for plane_wave1 in plane_waves:
-                for polarization_index1 in (0, 1):
-                        amplitude1, wavevector1 = plane_wave1.field_vectors[polarization_index1][projection_index], \
-                                                    plane_wave1.wavevector
-                        if np.abs(amplitude1) < 10**-3:
-                            continue
-                        for plane_wave2 in plane_waves:
-                            for polarization_index2 in (0, 1):
-                                    amplitude2, wavevector2 = plane_wave2.field_vectors[polarization_index2][projection_index], \
-                                                                plane_wave2.wavevector
-                                    if np.abs(amplitude2) < 10 ** -3:
-                                        continue
-                                    wavevector_new = tuple(wavevector1 - wavevector2)
-                                    if not wavevector_new in intensity_plane_waves.keys():
-                                        intensity_plane_waves[wavevector_new] = (Sources.IntensityPlaneWave(amplitude1 * amplitude2.conjugate(), 0,
-                                                                                    np.array(wavevector_new)))
-                                    else:
-                                        intensity_plane_waves[wavevector_new].amplitude += amplitude1 * amplitude2.conjugate()
+                amplitude1p = plane_wave1.field_vectors[0][projection_index]
+                amplitude1s = plane_wave1.field_vectors[1][projection_index]
+                amplitude1 = amplitude1s + amplitude1p
+                if np.abs(amplitude1) < 10 ** -3:
+                    continue
+                wavevector1 = plane_wave1.wavevector
+
+                for plane_wave2 in plane_waves:
+                    amplitude2p = plane_wave2.field_vectors[0][projection_index]
+                    amplitude2s = plane_wave2.field_vectors[1][projection_index]
+                    amplitude2 = amplitude2s + amplitude2p
+                    if np.abs(amplitude2) < 10 ** -3:
+                        continue
+                    wavevector2 = plane_wave2.wavevector
+                    wavevector_new = tuple(wavevector1 - wavevector2)
+                    if not wavevector_new in intensity_plane_waves.keys():
+                        intensity_plane_waves[wavevector_new] = (Sources.IntensityPlaneWave(amplitude1 * amplitude2.conjugate(), 0,
+                                                                    np.array(wavevector_new)))
+                    else:
+                        intensity_plane_waves[wavevector_new].amplitude += amplitude1 * amplitude2.conjugate()
         return intensity_plane_waves.values()
 
     @property

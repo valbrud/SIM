@@ -61,7 +61,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -146,8 +146,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_wj_real_space(self):
@@ -186,7 +186,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -269,8 +269,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
 
@@ -314,7 +314,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -396,8 +396,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_different_illuminations(self):
@@ -441,7 +441,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same') + 10**-10
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -533,8 +533,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_SDR_Wiener(self):
@@ -574,7 +574,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         plt.imshow(image_blurred[:, :, N//2])
@@ -664,8 +664,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_FDR_reconstruction(self):
@@ -698,7 +698,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         # plt.imshow(optical_system.psf[:, :, N // 2])
         # plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 1, 0, Mt=10)
@@ -803,8 +803,8 @@ class TestWiener(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 class TestFlat(unittest.TestCase):
     def test_model_object(self):
@@ -845,7 +845,7 @@ class TestFlat(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         # image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -929,8 +929,8 @@ class TestFlat(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
 

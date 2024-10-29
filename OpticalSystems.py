@@ -185,10 +185,13 @@ class OpticalSystem3D(OpticalSystem):
                     wavevector = VectorOperations.rotate_vector3d(
                         waves[(*xy_indices, z_index)].wavevector, np.array((0, 0, 1)), angle)
                     amplitude = waves[(*xy_indices, z_index)].amplitude
-                    phase_shifted = np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevector)) * self.psf
+                    phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevector)), axes=(1, 0, 2)) * self.psf
                     effective_psf += amplitude * phase_shifted
                 effective_psfs[(r, xy_indices)] = effective_psf
                 effective_otfs[(r, xy_indices)] = wrappers.wrapped_fftn(effective_psf)
+                # plt.gca().set_title(f'{xy_indices}')
+                # plt.imshow(np.abs(np.log(1 + 10**8 * effective_otfs[(r, xy_indices)][:, :, 50])))
+                # plt.show()
                 # effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
                 # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
                 # plt.show()
@@ -246,13 +249,20 @@ class Lens2D(OpticalSystem2D):
         I = (2 * scipy.special.j1(v)/v) ** 2
         cx, cy = np.array(I.shape)//2
         I[cx, cy] = 1
+        I /= np.sum(I)
+        return I
+
+    def PSF_from_pupil_function(self,  pupil_function, mask = None):
+        E = wrappers.wrapped_fftn(pupil_function)
+        I = np.abs(E)**2
+        I /= np.sum(I)
         return I
     def _mask_OTF(self):
         ...
-    def compute_psf_and_otf(self, parameters=None, apodization_filter=None):
-        if not self.psf_coordinates and not parameters:
+    def compute_psf_and_otf(self, parameters=None, pupil_function=None, mask=None):
+        if self.psf_coordinates is None and parameters is None and pupil_function is None:
             raise AttributeError("Compute psf first or provide psf parameters")
-        elif parameters:
+        elif parameters is not None:
             psf_size, N = parameters
             self.compute_psf_and_otf_cordinates(psf_size, N)
         self._wvdiff_otfs = {}
@@ -262,12 +272,15 @@ class Lens2D(OpticalSystem2D):
         c_vectors = np.array(np.meshgrid(x, y)).T.reshape(-1, 2)
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), 2))
-        psf = self.PSF(grid, apodization_filter)
+        if pupil_function is None:
+            psf = self.PSF(grid, mask=None)
+        else:
+            psf = self.PSF_from_pupil_function(pupil_function)
         self.psf = psf / np.sum(psf)
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
-
+        return self.psf, self.otf
 
 class Lens3D(OpticalSystem3D):
     def __init__(self, alpha=np.pi/4, refractive_index_sample =1, refractive_index_medium = 1,  regularization_parameter=0.01, interpolation_method="linear"):
@@ -277,51 +290,54 @@ class Lens3D(OpticalSystem3D):
         self.alpha = alpha
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
         self.NA = self.nm * np.sin(self.alpha)
-    def PSF(self, c_vectors, mask = None):
+
+    def PSF(self, c_vectors, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * self.NA
-        # u = 8 * np.pi * z * self.n * np.sin(self.alpha / 2) ** 2
-        u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns**2 - self.NA**2))
+        if self.NA <= self.ns:
+            u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns**2 - self.NA**2))
+        else:
+            u = 4 * np.pi * z * self.ns * (1 - np.cos(self.alpha))
 
-        def integrand(rho):
-            return np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(
-                rho * v[:, :, :, None]) * 2 * np.pi * rho
+        if not high_NA:
+            def integrand(rho):
+                return pupil_function(rho) * np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(
+                    rho * v[:, :, :, None]) * 2 * np.pi * rho
 
-        rho = np.linspace(0, 1, 100)
-        integrands = integrand(rho)
-        h = sp.integrate.simpson(integrands, x=rho)
-        I = (h * h.conjugate()).real
+            rho = np.linspace(0, 1, 100)
+            integrands = integrand(rho)
+            h = sp.integrate.simpson(integrands, x=rho)
+            I = (h * h.conjugate()).real
+
+        else:
+            def integrand(theta):
+                return apodization_function(theta) * np.sin(theta) * np.exp(1j * u[:, :, :, None] *
+                                                            np.sin(theta/2)**2 / (2 * np.sin(self.alpha/2)**2)
+                                                            ) * sp.special.j0(v[:, :, :, None] * np.sin(theta) / np.sin(self.alpha))
+
+            if apodization_function == "Sine":
+                def apodization_function(theta):
+                    test = pupil_function(np.sin(theta))
+                    return pupil_function(np.sin(theta)) * (np.cos(theta))**0.5
+
+            theta = np.linspace(0, self.alpha, 100)
+            integrands = integrand(theta)
+            h = sp.integrate.simpson(integrands, x=theta)
+            I = (h * h.conjugate()).real
+
         if mask:
             shape = np.array(c_vectors.shape[:-1])
             m = mask(shape, np.amin(shape)//5)
             I *= m
+
         return I
 
     # Could not get good numbers yet
-    def regularized_analytic_OTF(self, f_vector):
-        f_r = (f_vector[0] ** 2 + f_vector[1] ** 2) ** 0.5
-        f_z = f_vector[2]
-        l = f_r / np.sin(self.alpha)
-        s = f_z / (4 * np.sin(self.alpha / 2) ** 2)
-        if l > 2:
-            return 0
-
-        def p_max(theta):
-            D = 4 - l ** 2 * (1 - np.cos(theta) ** 2)
-            return (-l * np.cos(theta) + D ** 0.5) / 2
-
-        def integrand(p, theta):
-            denum = self.e ** 2 + (abs(s) - p * l * np.cos(theta)) ** 2
-            return 8 * self.e * p / denum
-
-        otf, _ = sp.integrate.dblquad(integrand, 0, np.pi / 2, lambda x: 0, p_max)
-        return (otf)
-
     def _mask_OTF(self):
         ...
-    def compute_psf_and_otf(self, parameters=None, apodization_filter=None):
-        if not self.psf_coordinates and not parameters:
+    def compute_psf_and_otf(self, parameters=None, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None):
+        if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters:
             psf_size, N = parameters
@@ -329,13 +345,13 @@ class Lens3D(OpticalSystem3D):
         self._wvdiff_otfs = {}
         self._shifted_otfs = {}
         x, y, z = self.psf_coordinates
-        N = x.size
         c_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
-        psf = self.PSF(grid, apodization_filter)
+        psf = self.PSF(grid, high_NA, apodization_function="Sine",  pupil_function=pupil_function, mask=mask)
         self.psf = psf / np.sum(psf)
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
+        return self.psf, self.otf
 

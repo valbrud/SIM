@@ -30,8 +30,9 @@ class TestRingAveraging(unittest.TestCase):
         plt.imshow(sine_array)
         plt.show()
         averages = stattools.average_rings2d(sine_array.T, (x, y))
-        plt.plot(averages)
-        plt.plot(np.sin(y / 100))
+        plt.plot(averages, label='computed')
+        plt.legend()
+        plt.plot(np.sin(y/100), label='theoretical')
         plt.show()
 
     def test_SSNR_averaging(self):
@@ -65,7 +66,7 @@ class TestRingAveraging(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         noise_estimator_widefield = SSNRWidefield(optical_system)
         ssnr = noise_estimator_widefield.ssnr
