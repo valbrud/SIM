@@ -12,7 +12,7 @@ def sinc_kernel(kernel_r_size, kernel_z_size=1):
     kernel = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
     return kernel
 
-def psf_kernel2d(kernel_size, pixel_size, dense_kernel_size = 50):
+def psf_kernel2d(kernel_size, pixel_size, dense_kernel_size=50):
     dx, dy = pixel_size
     dense_kernel_size = dense_kernel_size // kernel_size * kernel_size
     x_max, y_max = dx * dense_kernel_size//2, dy * dense_kernel_size//2

@@ -1,7 +1,9 @@
 import numpy as np
+from scipy.interpolate import RectBivariateSpline
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import scipy
+
 def find_decreasing_surface_levels3d(array, axes=None, direction=None):
     if axes is None:
         ax1, ax2, ax3 = (np.arange(array.shape[0] + 1) - array.shape[0]/2, np.arange(array.shape[1] + 1) - array.shape[1] / 2,
@@ -73,41 +75,78 @@ def average_mask(array, mask, shape='same'):
         else:
             raise AttributeError("Unknown output shape")
     return averaged
-def average_rings2d(array, axes=None):
+
+# def average_rings2d(array, axes=None):
+#     if axes is None:
+#         ax1, ax2 = np.arange(array.shape[0]) - array.shape[0]/2, np.arange(array.shape[1]) - array.shape[1] / 2
+#     else:
+#         ax1, ax2 = axes[0], axes[1]
+#
+#     y, x = np.meshgrid(ax2, ax1)
+#     ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -1e-10]
+#     ax = ax1 if ax1[-1] < ax2[-1] else ax2
+#     averaged = np.zeros(ax.size)
+#     r = (x**2 + y**2)**0.5
+#     r_old = -1
+#     for i in range(len(ax)):
+#         if i == 25:
+#             pass
+#         ring = array[(r <= ax[i] + 10**(-10)) * (r > r_old)]
+#         averaged[i] = np.sum(ring)/ring.size
+#         r_old = ax[i] + 10**(-10)
+#     return averaged
+#     # scipy.interpolate.RegularGridInterpolator((ax1, ax2), array, method='linear',
+#     #                                           bounds_error=False,
+#     #                                           fill_value=0.)
+#     # r = ax1[ax1 >= -1e-10] if ax1[-1] < ax2[-1] else ax2[ax2 >= -1e-10]
+#     # theta = np.arange(0, 2 * np.pi, 2 * np.pi / r.size)
+
+
+def average_rings2d(array, axes=None, num_angles=360, number_of_samples=None):
+    """
+    Averages the 2D array radially using bilinear interpolation in polar coordinates.
+
+    Parameters:
+    - array: 2D numpy array to average radially.
+    - axes: Tuple of arrays representing the grid axes (ax1, ax2).
+    - num_samples: Number of radial samples (r) to take.
+    - num_angles: Number of angular samples (theta).
+
+    Returns:
+    - radii: Radial distances at which the interpolation is performed.
+    - averaged: Radially averaged values.
+    """
     if axes is None:
         ax1, ax2 = np.arange(array.shape[0]) - array.shape[0]/2, np.arange(array.shape[1]) - array.shape[1] / 2
     else:
         ax1, ax2 = axes[0], axes[1]
 
-    y, x = np.meshgrid(ax2, ax1)
+    interpolator = RectBivariateSpline(ax1, ax2, array)
     ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -1e-10]
     ax = ax1 if ax1[-1] < ax2[-1] else ax2
+    if number_of_samples:
+        ax = np.linspace(ax[0], ax[-1], number_of_samples)
+    # Create the interpolation function for the array
+
     averaged = np.zeros(ax.size)
-    r = (x**2 + y**2)**0.5
-    r_old = -1
-    for i in range(len(ax)):
-        if i == 25:
-            pass
-        ring = array[(r <= ax[i] + 10**(-10)) * (r > r_old)]
-        averaged[i] = np.sum(ring)/ring.size
-        r_old = ax[i] + 10**(-10)
+
+    for i, r in enumerate(ax):
+        # Parametric equations for points on a circle of radius r
+        theta = np.linspace(0, 2 * np.pi, num_angles, endpoint=False)
+        sample_x = r * np.cos(theta)
+        sample_y = r * np.sin(theta)
+        allowed_values = (sample_x >= ax[0]) * (sample_y >= ax[0])
+        sample_x = sample_x[allowed_values]
+        sample_y = sample_y[allowed_values]
+        # Perform bilinear interpolation at these points
+        interpolated_values = interpolator.ev(sample_x, sample_y)
+        # plt.plot(interpolated_values)
+        # plt.show()
+        # Radially average by taking the mean of interpolated values
+        averaged[i] = np.mean(interpolated_values)
+
     return averaged
-    # circle_sums = []
-    # circle_point_numbers = []
-    # unity_array = np.ones(array.shape)
-    # for i in range(len(ax), 0, -1):
-    #     r = ax[i - 1]
-    #     mask = x ** 2 + y ** 2 > r ** 2
-    #     np.putmask(array, mask, 0.)
-    #     np.putmask(unity_array, mask, 0.)
-    #     circle_sums.append(np.sum(array))
-    #     circle_point_numbers.append(np.sum(unity_array))
-    # circle_sums.append(0)
-    # circle_point_numbers.append(0)
-    # ring_sums = np.diff(circle_sums)
-    # ring_numbers = np.diff(circle_point_numbers)
-    # ring_averages = ring_sums / ring_numbers
-    # return ring_averages[::-1]
+
 
 def average_rings3d(array, axes=None):
     if axes is None:

@@ -30,8 +30,9 @@ class TestRingAveraging(unittest.TestCase):
         plt.imshow(sine_array)
         plt.show()
         averages = stattools.average_rings2d(sine_array.T, (x, y))
-        plt.plot(averages)
-        plt.plot(np.sin(y / 100))
+        plt.plot(averages, label='computed')
+        plt.legend()
+        plt.plot(np.sin(y/100), label='theoretical')
         plt.show()
 
     def test_SSNR_averaging(self):

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from globvar import path_to_figures, path_to_animations
 
 # Load the data from the provided CSV file
 file_path = '../simulations/Angles.csv'
@@ -30,8 +31,8 @@ for configuration in configurations:
     axes1.plot(ratio, (computed_volume - volume_widefield)/volume_widefield, label=configuration, color=color)
     axes2.plot(ratio, (entropy - entropy_widefield)/entropy_widefield, label=configuration)
 
-    axes1.set_title("SSNR volume gain \n for different incoming angles", fontsize=30)
-    axes2.set_title("SSNR entropy gain \n for different incoming angles", fontsize=30)
+    axes1.set_title("SSNR volume increase \n for different incoming angles", fontsize=30)
+    axes2.set_title("SSNR entropy increase \n for different incoming angles", fontsize=30)
     # axes3[i, j].set_title("p1 = {}, p2 = {}".format(power1, power2))
     # axes4[i, j].set_title("p1 = {}, p2 = {}".format(power1, power2))
     # axes2[i, j].set_ylim(0, 3000)
@@ -44,7 +45,7 @@ axes1.set_ylim(0, 1)
 axes1.set_aspect(1 / axes1.get_data_ratio())
 axes1.tick_params(labelsize=25)
 axes1.set_xlabel(r"$sin(\theta)/NA$", fontsize=30)
-axes1.set_ylabel(r"$SSNR^V_{GAIN}$", fontsize=30)
+axes1.set_ylabel(r"$SSNR^V_{INC}$", fontsize=30)
 axes1.legend(fontsize=20)
 
 axes2.grid()
@@ -53,13 +54,13 @@ axes2.set_ylim(0.0, 0.2)
 axes2.set_aspect(1 / axes2.get_data_ratio())
 axes2.tick_params(labelsize=25)
 axes2.set_xlabel(r'$sin(\theta)/NA$', fontsize=30)
-axes2.set_ylabel("$SSNR^S_{GAIN}$", fontsize=30)
+axes2.set_ylabel("$SSNR^S_{INC}$", fontsize=30)
 
 axes1.legend(fontsize=20, loc="lower right")
 fig1.tight_layout(rect=[0.15, 0, 1, 0.96], pad=1.5)
-fig1.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/V_GAIN_angles')
+fig1.savefig(f'{path_to_figures}V_GAIN_angles')
 
 axes2.legend(fontsize=20, loc="lower right")
 fig2.tight_layout(rect=[0.15, 0, 1, 0.96], pad=1.5)
-fig2.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/S_GAIN_angles')
+fig2.savefig(f'{path_to_figures}S_GAIN_angles')
 plt.show()

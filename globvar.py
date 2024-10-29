@@ -1,5 +1,7 @@
 import numpy as np
 
+path_to_figures = "/home/valerii/Documents/projects/OPTICS/SSNR_article_1/Figures/"
+path_to_animations = "/home/valerii/Documents/projects/OPTICS/SSNR_article_1/Animations/"
 
 class Pauli:
     I = np.array(((1, 0),

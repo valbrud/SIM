@@ -5,18 +5,16 @@ from VectorOperations import VectorOperations
 from fractions import Fraction
 class BFPConfiguration:
     def __init__(self, wavelength=1, refraction_index=1):
-        self.k = 2 * np.pi / wavelength
         self.n = refraction_index
+        self.k = 2 * np.pi * self.n / wavelength
 
-    def get_5_s_waves(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
-
-
+    def get_4_oblique_s_waves_and_s_normal_diagonal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
         theta = angle_oblique
-        k1 = self.k * np.sin(theta) * self.n
+        k1 = self.k * np.sin(theta)
         k2 = self.k * (np.cos(theta) - 1)
 
         base_vector_kx = k1
-        base_vector_ky = k1 # All ky indices should be zero for a plane illumination
+        base_vector_ky = k1  # All ky indices should be zero for a plane illumination
         base_vector_kz = k2  # We do not really care about a z index. Hopefully
         base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
         # p = strength_s_normal
@@ -24,11 +22,11 @@ class BFPConfiguration:
         b = strength_oblique
         a0 = (2 * p ** 2 + 4 * b ** 2)
         sources = [
-        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k1))),
-        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k1))),
-        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k1))),
-        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((0, -k1, k1))),
-        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((0, 0, self.k))),
+        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
+        Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k2))),
+        Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((0, -k1, k2))),
+        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((0, 0, 0))),
 
         ]
         s_polarized_waves = Illumination.find_ipw_from_pw(sources)
@@ -37,10 +35,10 @@ class BFPConfiguration:
         illumination.normalize_spacial_waves()
 
         return illumination
-    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
+    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, phase_shift = 0):
 
         theta = angle_oblique
-        k1 = self.k * np.sin(theta) * self.n
+        k1 = self.k * np.sin(theta)
         k2 = self.k * (np.cos(theta) - 1)
 
         # p = strength_s_normal
@@ -48,32 +46,42 @@ class BFPConfiguration:
         b = strength_oblique
         a0 = (2 * p ** 2 + 4 * b ** 2)
 
-        s_polarized_waves = {
-            (0, 0, 0)  : Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0))),
-
-            (-2, 0, 0) : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((-2 * k1, 0, 0))),
-            (2, 0, 0)  : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((2 * k1, 0, 0))),
-            (0, 2, 0)  : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, 2 * k1, 0))),
-            (0, -2, 0) : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, -2 * k1, 0))),
-
-            (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, k2))),
-            (-1, 0, 1) : Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, k2))),
-            (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, k1, k2))),
-            (0, -1, 1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, -k1, k2))),
-
-            (1, 0, -1) : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, -k2))),
-            (-1, 0, -1): Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, -k2))),
-            (0, 1, -1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, k1, -k2))),
-            (0, -1, -1): Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, -k1, -k2)))
+        square_plane_waves = {
+            Sources.PlaneWave(0, b/a0**0.5 , 0, 0, np.array((k1, 0, self.k * np.cos(theta)))),
+            Sources.PlaneWave(0, b/a0**0.5,  0, 0, np.array((-k1, 0, self.k * np.cos(theta)))),
+            Sources.PlaneWave(0, b/a0**0.5, 0, 0, np.array((0, k1, self.k * np.cos(theta)))),
+            Sources.PlaneWave(0, b/a0**0.5, 0, 0, np.array((0, -k1, self.k * np.cos(theta)))),
+            Sources.PlaneWave(p/a0**0.5 * np.exp(1j * phase_shift), 1j * p/a0**0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, self.k))),
         }
 
-        illumination = Illumination(s_polarized_waves)
+        # s_polarized_waves = {
+        #     (0, 0, 0)  : Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0))),
+        #
+        #     (-2, 0, 0) : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((-2 * k1, 0, 0))),
+        #     (2, 0, 0)  : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((2 * k1, 0, 0))),
+        #     (0, 2, 0)  : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, 2 * k1, 0))),
+        #     (0, -2, 0) : Sources.IntensityPlaneWave((-b ** 2), 0, np.array((0, -2 * k1, 0))),
+        #
+        #     (1, 0, 1)  : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, k2))),
+        #     (-1, 0, 1) : Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, k2))),
+        #     (0, 1, 1)  : Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, k1, k2))),
+        #     (0, -1, 1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, -k1, k2))),
+        #
+        #     (1, 0, -1) : Sources.IntensityPlaneWave((-1j * p * b), 0, np.array((k1, 0, -k2))),
+        #     (-1, 0, -1): Sources.IntensityPlaneWave((1j * p * b), 0, np.array((-k1, 0, -k2))),
+        #     (0, 1, -1) : Sources.IntensityPlaneWave((1 * p * b), 0, np.array((0, k1, -k2))),
+        #     (0, -1, -1): Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, -k1, -k2)))
+        # }
+
+        square_intensity_waves = Illumination.find_ipw_from_pw(square_plane_waves)
+
+        illumination = Illumination.init_from_list(square_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
         illumination.normalize_spacial_waves()
 
         return illumination
 
-    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1):
+    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift = 0):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -81,33 +89,49 @@ class BFPConfiguration:
 
         p = strength_s_normal
         b = strength_s_oblique
+
         a0 = (2 * p ** 2 + 8 * b ** 2)
-
-        circular_intensity_waves = {
-            (1, 1, 0)  : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, k1, 0))),
-            (-1, 1, 0) : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, k1, 0))),
-            (1, -1, 0) : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, -k1, 0))),
-            (-1, -1, 0): Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, -k1, 0))),
-
-            (0, 2, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, 2 * k1, 0))),
-            (0, -2, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, -2 * k1, 0))),
-            (2, 0, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((2 * k1, 0, 0))),
-            (-2, 0, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((-2 * k1, 0, 0))),
-
-            (1, 0, -1) : Sources.IntensityPlaneWave(b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, -k2))),
-            (-1, 0, 1) : Sources.IntensityPlaneWave(b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, k2))),
-            (1, 0, 1)  : Sources.IntensityPlaneWave(-b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, k2))),
-            (-1, 0, -1): Sources.IntensityPlaneWave(-b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, -k2))),
-
-            (0, 1, -1) : Sources.IntensityPlaneWave(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, -k2))),
-            (0, 1, 1)  : Sources.IntensityPlaneWave(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, k2))),
-            (0, -1, 1) : Sources.IntensityPlaneWave(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, k2))),
-            (0, -1, -1): Sources.IntensityPlaneWave(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, -k2))),
-
-            (0, 0, 0)  : Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0)))
+        circular_plane_waves = {
+            Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((k1, 0, self.k * np.cos(theta) ))),
+            Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((-k1, 0, self.k * np.cos(theta) ))),
+            Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, k1, self.k * np.cos(theta) ))),
+            Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, -k1, self.k * np.cos(theta) ))),
+            Sources.PlaneWave(p / a0 ** 0.5 * np.exp(1j * phase_shift), 1j * p/ a0 ** 0.5 * np.exp(1j * phase_shift) , 0, 0, np.array((0, 0, self.k))),
         }
 
-        illumination = Illumination(circular_intensity_waves)
+        # circular_plane_waves = {
+        #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((k1, 0, k2))),
+        #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((-k1, 0, k2))),
+        #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((0, k1, k2))),
+        #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((0, -k1, k2))),
+        #     Sources.PlaneWave(p/a0**0.5 * np.exp(1j * phase_shift), 1j * p/a0**0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, 0))),
+        # }
+        # circular_intensity_waves = {
+        #     (1, 1, 0)  : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, k1, 0))),
+        #     (-1, 1, 0) : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, k1, 0))),
+        #     (1, -1, 0) : Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, -k1, 0))),
+        #     (-1, -1, 0): Sources.IntensityPlaneWave(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, -k1, 0))),
+        #
+        #     (0, 2, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, 2 * k1, 0))),
+        #     (0, -2, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, -2 * k1, 0))),
+        #     (2, 0, 0)  : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((2 * k1, 0, 0))),
+        #     (-2, 0, 0) : Sources.IntensityPlaneWave(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((-2 * k1, 0, 0))),
+        #
+        #     (1, 0, -1) : Sources.IntensityPlaneWave(b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, -k2))),
+        #     (-1, 0, 1) : Sources.IntensityPlaneWave(b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, k2))),
+        #     (1, 0, 1)  : Sources.IntensityPlaneWave(-b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, k2))),
+        #     (-1, 0, -1): Sources.IntensityPlaneWave(-b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, -k2))),
+        #
+        #     (0, 1, -1) : Sources.IntensityPlaneWave(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, -k2))),
+        #     (0, 1, 1)  : Sources.IntensityPlaneWave(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, k2))),
+        #     (0, -1, 1) : Sources.IntensityPlaneWave(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, k2))),
+        #     (0, -1, -1): Sources.IntensityPlaneWave(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, -k2))),
+        #
+        #     (0, 0, 0)  : Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0)))
+        # }
+
+        circular_intensity_waves = Illumination.find_ipw_from_pw(circular_plane_waves)
+        illumination = Illumination.init_from_list(circular_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
         illumination.normalize_spacial_waves()
 

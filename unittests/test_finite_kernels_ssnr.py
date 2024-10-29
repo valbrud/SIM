@@ -1288,12 +1288,12 @@ class TestFinalFilter(unittest.TestCase):
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
         # image = ShapesGenerator.generate_sphere_slices((np.array((2 * max_r, 2 * max_r, 2 * max_z))), N, r=0.5, N=1000, I=20)
-        image = ShapesGenerator.generate_random_lines(N, psf_size, 0.1, 100, 100)
+        image = ShapesGenerator.generate_random_lines(N, psf_size, 0.1, 100, 1000)
         # image += ShapesGenerator.generate_sphere_slices(N, )
         # plt.imshow(image)
         # plt.show()
         # image = ShapesGenerator.generate_random_spheres((np.array((2 * max_r, 2 * max_r, 2 * max_z))), N, r=0.1, N=10000, I=100)
-        image += 10
+        image += 100
         image = image
         # plt.imshow(image)
         # plt.show()
@@ -1307,7 +1307,7 @@ class TestFinalFilter(unittest.TestCase):
         illumination_2waves.spacial_shifts = spacial_shifts_conventional2d
 
         illumination = illumination_2waves
-        kernel_size = 5
+        kernel_size = 1
         kernel = kernels.psf_kernel2d(kernel_size, (dx, dx))[:, :, 0]
         noise_estimator_finite = SSNRCalculator.SSNR2dSIMFiniteKernel(illumination_2waves, optical_system, kernel)
         plt.imshow(np.abs(noise_estimator_finite.ssnr))
@@ -1346,12 +1346,12 @@ class TestFinalFilter(unittest.TestCase):
         # tj_approximate = scipy.ndimage.convolve(tj_approximate, apodization, mode='constant', cval=0.0, origin=0)
         pad_value = N // 2 - filter_size // 2
 
-        tj = 1 / np.abs((noise_estimator_finite.kernel + np.amax(noise_estimator_finite.dj)/10**4))
+        # tj = 1 / np.abs((noise_estimator_finite.kernel + np.amax(noise_estimator_finite.dj)/10**4))
         # plt.imshow(tj)
         # plt.show()
-        tj_approximate = np.zeros((filter_size, filter_size, 1))
-        tj_approximate[:, :, 0] = tj[N//2 - filter_size//2: N//2 + filter_size//2 + 1,
-                            N//2 - filter_size//2 : N//2 + filter_size//2 + 1]
+        # tj_approximate = np.zeros((filter_size, filter_size, 1))
+        # tj_approximate[:, :, 0] = tj[N//2 - filter_size//2: N//2 + filter_size//2 + 1,
+        #                     N//2 - filter_size//2 : N//2 + filter_size//2 + 1]
         # tj_approximate = np.pad(tj_approximate, ((pad_value, pad_value), (pad_value, pad_value), (0, 0)))
         #
         # tj_ft = wrappers.wrapped_fftn(tj_approximate[:, :])
@@ -1374,15 +1374,21 @@ class TestFinalFilter(unittest.TestCase):
         # plt.show()
         wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
         ideal, _, _, _, tj = wiener.filter_object(image)
+        # plt.gca().set_xlabel("fy")
+        # plt.gca().set_ylabel("tj")
+        # plt.plot(fx, np.abs(tj[N//2, :]))
+        # plt.plot(fx, np.abs(tj[:, N//2]))
+        # plt.show()
         ideal = wrappers.wrapped_ifftn(tj * wrappers.wrapped_fftn(image_sr))
         tj_real = wrappers.wrapped_fftn(tj)
-        plt.imshow(np.abs(tj_real[:, :]))
-        plt.show()
         tj_real /= np.amax(tj_real)
-        filter_size = 13
+        filter_size = 15
         tj_approximate = tj_real[N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2-filter_size//2: N//2 + filter_size//2 + 1]
-
-
+        plt.gca().set_xlabel("y")
+        plt.gca().set_ylabel("tj real")
+        plt.plot(x, np.real(tj_real[N//2, :]))
+        # plt.plot(x, np.real(tj_real[:, N//2]))
+        plt.show()
         image_filtered = scipy.ndimage.convolve(image_sr, tj_approximate, mode='constant', cval=0.0, origin=0)
         # image_filtered = scipy.signal.convolve(image_sr, tj_real, mode='same')
         # plt.imshow(image_sr[:, :, N//2])
@@ -1414,7 +1420,7 @@ class TestFinalFilter(unittest.TestCase):
         ax1.imshow(image_widefield)
         ax2.imshow(image_sr)
         ax3.imshow(np.abs(image_filtered))
-        ax4.imshow(np.abs(image))
+        ax4.imshow(np.abs(ideal))
         # ax4.plot(np.abs(ideal[:, N//2]))
 
         image_widefield /= np.amax(image_widefield)
