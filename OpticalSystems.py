@@ -277,12 +277,15 @@ class Lens3D(OpticalSystem3D):
         self.alpha = alpha
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
         self.NA = self.nm * np.sin(self.alpha)
-    def PSF(self, c_vectors, mask = None):
+    def PSF(self, c_vectors, mask=None):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * self.NA
         # u = 8 * np.pi * z * self.n * np.sin(self.alpha / 2) ** 2
-        u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns**2 - self.NA**2))
+        if self.NA <= self.ns:
+            u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns**2 - self.NA**2))
+        else:
+            u = 4 * np.pi * z * self.ns * (1 - np.cos(self.alpha))
 
         def integrand(rho):
             return np.exp(- 1j * (u[:, :, :, None] / 2 * rho ** 2)) * sp.special.j0(

@@ -109,8 +109,8 @@ class TestSIMImages(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
 
@@ -216,8 +216,8 @@ class TestReconstruction(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_FDR(self):
@@ -335,8 +335,8 @@ class TestReconstruction(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
 
@@ -456,8 +456,8 @@ class TestReconstruction(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
 
     def test_FDR_finite_kernel(self):
@@ -592,6 +592,6 @@ class TestReconstruction(unittest.TestCase):
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
-        # fig.savefig('/home/valerii/Documents/projects/SIM/SSNR_article_1/Figures/square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
+        # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()

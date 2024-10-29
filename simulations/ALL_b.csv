@@ -1,5 +1,6 @@
 Configuration,IncidentAngle,Power,Volume,Volume_a,Entropy
 Widefield,45,0,275,275,887
+Conventional,45,0,275,275,887
 Conventional,45,0.1,285,285,906
 Conventional,45,0.2,312,313,940
 Conventional,45,0.3,346,349,970
@@ -20,6 +21,7 @@ Conventional,45,1.7,440,444,1027
 Conventional,45,1.8,438,442,1025
 Conventional,45,1.9,436,439,1024
 Conventional,45,2,434,438,1023
+SquareC,45,0,275,275,887
 SquareC,45,0.1,289,290,912
 SquareC,45,0.2,321,323,947
 SquareC,45,0.3,352,355,971
@@ -40,6 +42,7 @@ SquareC,45,1.7,332,333,959
 SquareC,45,1.8,330,331,957
 SquareC,45,1.9,328,329,955
 SquareC,45,2,326,327,953
+SquareL,45,0,275,275,887
 SquareL,45,0.1,280,280,898
 SquareL,45,0.2,293,294,918
 SquareL,45,0.3,311,312,938
@@ -60,6 +63,7 @@ SquareL,45,1.7,358,359,979
 SquareL,45,1.8,357,358,978
 SquareL,45,1.9,356,357,976
 SquareL,45,2,355,356,975
+Hexagonal,45,0,275,275,887
 Hexagonal,45,0.1,282,283,902
 Hexagonal,45,0.2,302,303,929
 Hexagonal,45,0.3,325,327,953

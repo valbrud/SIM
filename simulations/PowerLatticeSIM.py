@@ -9,7 +9,7 @@ if __name__ == "__main__":
     max_r = 10
     max_z = 20
     N = 100
-    alpha_lens = np.pi/4
+    alpha_lens = 2 * np.pi / 5
     psf_size = 2 * np.array((max_r, max_r, max_z))
     dx = 2 * max_r / N
     dy = 2 * max_r / N
@@ -37,10 +37,10 @@ if __name__ == "__main__":
     headers = ["IncidentAngle", "Power", "Volume", "Volume_a", "Entropy"]
 
     config_methods = {
-                      # 'square' : config.get_4_oblique_s_waves_and_circular_normal ,
-                      'square_cp' : config.get_4_circular_oblique_waves_and_circular_normal,
-                      # 'hexagonal' : config.get_6_oblique_s_waves_and_circular_normal,
-                      # 'conventional' : config.get_2_oblique_s_waves_and_s_normal
+        # 'conventional' : config.get_2_oblique_s_waves_and_s_normal
+        'square_cp': config.get_4_circular_oblique_waves_and_circular_normal,
+        # 'square' : config.get_4_oblique_s_waves_and_circular_normal ,
+        # 'hexagonal' : config.get_6_oblique_s_waves_and_circular_normal,
         }
 
     angles = np.linspace(alpha_lens/8, alpha_lens, 8)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         # params = [0, 0, round(wvolume), round(wvolume_a), round(wtotal), round(wtotal_a), round(wentropy), round(wmeasure)]
         # print(params)
         # writer.writerow(params)
-        theta = np.pi/4
+        theta = 0.8 * 2 * np.pi/5
         for b in powers:
             for config_method in config_methods:
                 k = 2 * np.pi
