@@ -61,7 +61,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -186,7 +186,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -314,7 +314,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -441,7 +441,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same') + 10**-10
         image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])
@@ -574,7 +574,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         image_blurred = np.random.poisson(image_blurred)
         plt.imshow(image_blurred[:, :, N//2])
@@ -698,7 +698,7 @@ class TestWiener(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         # plt.imshow(optical_system.psf[:, :, N // 2])
         # plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 1, 0, Mt=10)
@@ -845,7 +845,7 @@ class TestFlat(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
         # image_blurred = np.random.poisson(image_blurred)
         # plt.imshow(image_blurred[:, :, N//2])

@@ -18,7 +18,7 @@ from Illumination import Illumination
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
 from OpticalSystems import Lens3D, Lens2D
 import stattools
-from Sources import IntensityPlaneWave
+from Sources import IntensityPlaneWave, PlaneWave
 import tqdm
 
 from globvar import path_to_figures, path_to_animations
@@ -26,10 +26,10 @@ sys.path.append('../')
 
 configurations = BFPConfiguration(refraction_index=1.5)
 alpha = 2 * np.pi / 5
-theta = 0.8 * alpha
 nmedium = 1.5
 nobject = 1.5
 NA = nmedium * np.sin(alpha)
+theta = np.asin(0.9 * np.sin(alpha))
 fz_max_diff = nmedium * (1 - np.cos(alpha))
 dx = 1 / (8 * NA)
 dy = dx
@@ -42,7 +42,6 @@ dV = dx * dy * dz
 x = np.linspace(-max_r, max_r, N)
 y = np.copy(x)
 z = np.linspace(-max_z, max_z, N)
-
 fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
 fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
 fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), N)
@@ -59,10 +58,10 @@ multiplier = 10 ** 5
 ylim = 10 ** 2
 
 optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
-optical_system.compute_psf_and_otf((psf_size, N),
-                                   apodization_filter=None)
+optical_system.compute_psf_and_otf((psf_size, N), high_NA=True,
+                                   apodization_function="Sine")
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
-squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=1, phase_shift=0)
+squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 widefield = configurations.get_widefield()
@@ -115,7 +114,7 @@ class TestArticlePlots(unittest.TestCase):
         ax2 = fig.add_subplot(122)
 
         # ax1.set_title("Projective 3D SIM anisotropy \n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
-        ax1.set_title("$f_z = ${:.1f}".format(scaled_fz[arg]) + "$\; [\\frac{n - \sqrt{n^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
+        ax1.set_title("$f_z = ${:.1f}".format(scaled_fz[arg]) + "$\; [\\frac{n_s - \sqrt{n_s^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
         ax1.set_xlabel(r"$f_r \; [\frac{2NA}{\lambda}]$", fontsize=30)
         ax1.set_ylabel(r"$1 + 10^5 SSNR_{ra}$", fontsize=30)
         ax1.set_yscale("log")
@@ -126,7 +125,7 @@ class TestArticlePlots(unittest.TestCase):
         ax1.tick_params(labelsize=30)
 
         # ax2.set_title("Slice $f_y$ = 0", fontsize=25)
-        ax2.set_title("$f_z = ${:.1f}".format(scaled_fz[arg // 2]) + "$\; [\\frac{n - \sqrt{n^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
+        ax2.set_title("$f_z = ${:.1f}".format(scaled_fz[arg // 2]) + "$\; [\\frac{n_s - \sqrt{n_s^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
         ax2.set_xlabel(r"$f_r \; [\frac{2NA}{\lambda}]$", fontsize=30)
         ax2.set_ylabel(r"$1 + 10^5 SSNR_{ra}$", fontsize=30)
         ax2.set_yscale("log")
@@ -137,23 +136,23 @@ class TestArticlePlots(unittest.TestCase):
         ax2.tick_params('y', labelleft=False)
         ax2.tick_params(labelsize=30)
 
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_3waves_ra[:, arg], label="Conventional")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_circular_ra[:, arg], label="SquareC")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_s_polarized_ra[:, arg], label="SquareL")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_seven_waves_ra[:, arg], label="Hexagonal")
         ax1.plot(ax, 1 + multiplier / 10 * ssnr_widefield_ra[:, arg], label="Widefield")
+        ax1.plot(ax, 1 + multiplier / 10 * ssnr_3waves_ra[:, arg], label="Conventional")
+        ax1.plot(ax, 1 + multiplier / 10 * ssnr_s_polarized_ra[:, arg], label="SquareL")
+        ax1.plot(ax, 1 + multiplier / 10 * ssnr_circular_ra[:, arg], label="SquareC")
+        ax1.plot(ax, 1 + multiplier / 10 * ssnr_seven_waves_ra[:, arg], label="Hexagonal")
 
-        ax2.plot(ax, 1 + multiplier * ssnr_3waves_ra[:, arg // 2], label="Conventional")
-        ax2.plot(ax, 1 + multiplier * ssnr_circular_ra[:, arg // 2], label="SquareC")
-        ax2.plot(ax, 1 + multiplier * ssnr_s_polarized_ra[:, arg // 2], label="SquareL")
-        ax2.plot(ax, 1 + multiplier * ssnr_seven_waves_ra[:, arg // 2], label="Hexagonal")
         ax2.plot(ax, 1 + multiplier * ssnr_widefield_ra[:, arg // 2], label="Widefield")
+        ax2.plot(ax, 1 + multiplier * ssnr_3waves[:, arg // 2, arg // 2][N//2:], label="Conventional")
+        ax2.plot(ax, 1 + multiplier * ssnr_s_polarized_ra[:, arg // 2], label="SquareL")
+        ax2.plot(ax, 1 + multiplier * ssnr_circular_ra[:, arg // 2], label="SquareC")
+        ax2.plot(ax, 1 + multiplier * ssnr_seven_waves_ra[:, arg // 2], label="Hexagonal")
         ax1.set_aspect(1. / ax1.get_data_ratio())
         ax2.set_aspect(1. / ax2.get_data_ratio())
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
-        fig.savefig(f'{path_to_figures}ring_averaged_ssnr')
+        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr')
         plt.show()
 
     def test_ssnr_color_maps(self):
@@ -168,7 +167,7 @@ class TestArticlePlots(unittest.TestCase):
 
             Fx, Fy = np.meshgrid(fx, fy)
             fig = plt.figure(figsize=(12, 6), constrained_layout=True)
-            fig.suptitle(illumination_list[illumination], fontsize=30)
+            # fig.suptitle(illumination_list[illumination], fontsize=30)
             plt.subplots_adjust(left=0.1,
                                 bottom=0.1,
                                 right=0.9,
@@ -178,23 +177,23 @@ class TestArticlePlots(unittest.TestCase):
             ax1 = fig.add_subplot(121)
             ax1.tick_params(labelsize=30)
             # ax1.set_title(title)
-            ax1.set_xlabel("$f_y \; [\\frac{2NA}{\lambda}]$", fontsize=30)
-            ax1.set_ylabel("$f_x \;  [\\frac{2NA}{\lambda}]$", fontsize=30)
+            ax1.set_xlabel("$f_y \; [LCF]$", fontsize=30)
+            ax1.set_ylabel("$f_x \;  [LCF]$", fontsize=30)
             mp1 = ax1.imshow(ssnr_scaled[:, :, N // 2], extent=(-2, 2, -2, 2), norm=colors.LogNorm())
             # cb1 = plt.colorbar(mp1, fraction=0.046, pad=0.04)
             # cb1.set_label("$1 + 10^8$ ssnr")
             ax1.set_aspect(1. / ax1.get_data_ratio())
 
             ax2 = fig.add_subplot(122, sharey=ax1)
-            ax2.set_xlabel("$f_z \; [\\frac{n - \sqrt{n^2 - NA^2}}{\lambda}]$", fontsize=30)
+            ax2.set_xlabel("$f_z \; [ACF]$", fontsize=30)
             ax2.tick_params(labelsize=30)
             ax2.tick_params('y', labelleft=False)
             # ax2.set_ylabel("fy, $\\frac{2NA}{\\lambda}$")
-            mp2 = ax2.imshow(ssnr_scaled[N // 2, :, :], extent=(-2, 2, -2, 2), norm=colors.LogNorm())
+            mp2 = ax2.imshow(ssnr_scaled[:, N//2,  :], extent=(-2, 2, -2, 2), norm=colors.LogNorm())
             # mp2 = ax2.imshow(ssnr_ra_scaled[:, :].T, extent=(0, fy[-1]/(2 * NA), fz[0]/(2 * NA), fz[-1]/(2 * NA)), norm=colors.LogNorm())
             cb2 = plt.colorbar(mp2, fraction=0.046, pad=0.04)
             cb2.ax.tick_params(labelsize=30)
-            cb2.set_label("$1 + 10^8$ ssnr", fontsize=30)
+            cb2.set_label("$1 + 10^8$ SSNR", fontsize=30)
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
             fig.savefig(f'{path_to_figures}'
@@ -258,6 +257,155 @@ class TestArticlePlots(unittest.TestCase):
         scaling_factor = 10 ** 4
 
         Fx, Fy = np.meshgrid(fx, fy)
+        fig, ax = plt.subplots(figsize=(8, 6), constrained_layout=True)
+        # fig.suptitle(f"Phase of the central beam = {illumination_list[illumination]}", fontsize=30)
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.1,
+                            hspace=0)
+        # ax1 = fig.add_subplot(221)
+        # ax2 = fig.add_subplot(222)
+        # ax3 = fig.add_subplot(223)
+        # ax4 = fig.add_subplot(224)
+        # ax1.set_yscale('log')
+        # ax2.set_yscale('log')
+        # ax3.set_yscale('log')
+        # ax4.set_yscale('log')
+        # ax1.set_title('Phase shift = 0', fontsize=30)
+        # ax2.set_title('Phase shift = $\pi/4$', fontsize=30)
+        # ax3.set_title('Phase shift = $\pi/2$', fontsize=30)
+        # ax4.set_title('Phase shift = $\pi$', fontsize=30)
+        # ax1.set_xlabel('$k_x [\\frac{2NA}{\lambda}]$', fontsize = 30)
+        # ax2.set_xlabel('$k_x [\\frac{2NA}{\lambda}]$', fontsize = 30)
+        # ax1.set_ylabel('$1 + 10^4 SSNR$', fontsize=30)
+        # ax3.set_ylabel('$1 + 10^4 SSNR$', fontsize=30)
+        # ax3.set_xlabel('$k_r [\\frac{2NA}{\lambda}]$', fontsize=30)
+        # ax4.set_xlabel('$k_r [\\frac{2NA}{\lambda}]$', fontsize=30)
+        # ax1.set_xticklabels([])
+        # ax2.set_xticklabels([])
+        # ax2.set_yticklabels([])
+        # ax4.set_yticklabels([])
+        #
+        # ax1.grid()
+        # ax2.grid()
+        # ax3.grid()
+        # ax4.grid()
+        # ax1.tick_params(labelsize=30)
+        # ax2.tick_params(labelsize=30)
+        # ax3.tick_params(labelsize=30)
+        # ax4.tick_params(labelsize=30)
+        # ax1.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
+        # ax2.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
+        # ax3.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
+        # ax4.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
+        # ax1.set_ylim(1, 2 * 10 ** 2)
+        # ax2.set_ylim(1, 2 * 10 ** 2)
+        # ax3.set_ylim(1, 2 * 10 ** 2)
+        # ax4.set_ylim(1, 2 * 10 ** 2)
+        #
+        z_shift = 5
+        for ssnr, phase in zip((ssnr0, ssnrPi4, ssnrPi2, ssnrPi), ('0', 'pi4', 'pi2', 'pi')):
+            ax.clear()
+            ax.grid()
+            ax.tick_params(labelsize=30)
+            ax.set_yscale('log')
+            ax.set_xlabel('$k_r [\\frac{2NA}{\lambda}]$', fontsize=30)
+            ax.set_ylabel('$1 + 10^4 SSNR$', fontsize=30)
+            ax.plot(two_NA_fx[N //2:], 1 + scaling_factor * ssnr[:, N//2, N//2 + z_shift][N//2:], label='$k_x$')
+            ax.plot(two_NA_fx[N //2:], 1 + scaling_factor * ssnr[N//2, :, N//2 + z_shift][N//2:], label='$k_y$')
+            ax.legend(fontsize=30)
+            ax.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
+            ax.set_ylim(1, 10 ** 2)
+            plt.show()
+            fig.savefig(f'{path_to_figures}sim_anisotropy-{phase}')
+
+
+        # ax1.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnr0[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
+        # ax1.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnr0[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
+        #
+        # ax2.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi4[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
+        # ax2.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi4[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
+        #
+        # ax3.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi2[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
+        # ax3.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi2[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
+        #
+        # ax4.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
+        # ax4.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
+        #
+        # ax1.legend(fontsize=30)
+        # ax2.legend(fontsize=30)
+        # ax3.legend(fontsize=30)
+        # ax4.legend(fontsize=30)
+
+        # plt.show()
+
+    def test_hexagonal_sim_anisotropy(self):
+        # theta = alpha/2
+        theta = np.pi/4
+        p = 1
+        k = 2 * np.pi * nmedium
+        k1 = k * np.sin(theta)
+        k2 = k * (np.cos(theta) - 1)
+
+        vec_x = np.array((k * np.sin(theta), 0, k * np.cos(theta)))
+        vec_mx = np.array((-k * np.sin(theta), 0, k * np.cos(theta)))
+        ax_z = np.array((0, 0, 1))
+
+        a0 = 2 + 6 * p ** 2
+        sources = [
+
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, vec_x),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, vec_mx),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 2 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi / 3)),
+
+            PlaneWave(1 * np.exp(1j * np.pi) / a0 ** 0.5, 1j  * np.exp(1j * np.pi) / a0 ** 0.5, 0, 0, np.array((0, 0, k))),
+        ]
+        distorted1 = Illumination.find_ipw_from_pw(sources)
+
+        illumination_distorted1 = Illumination.init_from_list(distorted1, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        illumination_distorted1.Mt = 1
+        illumination_distorted1.normalize_spacial_waves()
+
+        sources = [
+
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, vec_x),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, vec_mx),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 2 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi / 3)),
+            PlaneWave(0, p / a0 ** 0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi / 3)),
+
+            PlaneWave(1 / a0 ** 0.5, 1j / a0 ** 0.5, 0, 0, np.array((0, 0, k))),
+        ]
+        distorted0 = Illumination.find_ipw_from_pw(sources)
+
+        illumination_distorted0 = Illumination.init_from_list(distorted0, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        illumination_distorted0.Mt = 1
+        illumination_distorted0.normalize_spacial_waves()
+
+        noise_estimatorD0 = SSNR3dSIM2dShifts(illumination_distorted0, optical_system)
+        noise_estimatorD1 = SSNR3dSIM2dShifts(illumination_distorted1, optical_system)
+        # noise_estimatorPi2 = SSNR3dSIM2dShifts(illuminationPi2, optical_system)
+        # noise_estimatorPi = SSNR3dSIM2dShifts(illuminationPi, optical_system)
+
+        ssnrD0 = np.abs(noise_estimatorD0.compute_ssnr())
+        ssnrD1 = np.abs(noise_estimatorD1.compute_ssnr())
+        entropy0 = noise_estimatorD0.compute_true_ssnr_entropy()
+        entropy1 = noise_estimatorD1.compute_true_ssnr_entropy()
+        print(entropy0)
+        print(entropy1)
+        # ssnrPi2 = np.abs(noise_estimatorPi2.compute_ssnr())
+        # ssnrPi = np.abs(noise_estimatorPi.compute_ssnr())
+        scaling_factor = 10 ** 5
+        ssnrD0scaled = 1 + scaling_factor * ssnrD0
+        ssnrD1scaled = 1 + scaling_factor * ssnrD1
+
+        Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(12, 10), constrained_layout=True)
         # fig.suptitle(f"Phase of the central beam = {illumination_list[illumination]}", fontsize=30)
         plt.subplots_adjust(left=0.1,
@@ -266,67 +414,17 @@ class TestArticlePlots(unittest.TestCase):
                             top=0.9,
                             wspace=0.1,
                             hspace=0)
-        ax1 = fig.add_subplot(221)
-        ax2 = fig.add_subplot(222)
-        ax3 = fig.add_subplot(223)
-        ax4 = fig.add_subplot(224)
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+
+        # ax1.imshow(ssnr0scaled[:, :, N//2], norm=colors.LogNorm())
+        # ax2.imshow(ssnrD1scaled[:, :, N//2], norm=colors.LogNorm())
         ax1.set_yscale('log')
         ax2.set_yscale('log')
-        ax3.set_yscale('log')
-        ax4.set_yscale('log')
-        ax1.set_title('Phase shift = 0', fontsize=30)
-        ax2.set_title('Phase shift = $\pi/4$', fontsize=30)
-        ax3.set_title('Phase shift = $\pi/2$', fontsize=30)
-        ax4.set_title('Phase shift = $\pi$', fontsize=30)
-        # ax1.set_xlabel('$k_x [\\frac{2NA}{\lambda}]$', fontsize = 30)
-        # ax2.set_xlabel('$k_x [\\frac{2NA}{\lambda}]$', fontsize = 30)
-        ax1.set_ylabel('$1 + 10^4 SSNR$', fontsize=30)
-        ax3.set_ylabel('$1 + 10^4 SSNR$', fontsize=30)
-        ax3.set_xlabel('$k_r [\\frac{2NA}{\lambda}]$', fontsize=30)
-        ax4.set_xlabel('$k_r [\\frac{2NA}{\lambda}]$', fontsize=30)
-        ax1.set_xticklabels([])
-        ax2.set_xticklabels([])
-        ax2.set_yticklabels([])
-        ax4.set_yticklabels([])
-
-        ax1.grid()
-        ax2.grid()
-        ax3.grid()
-        ax4.grid()
-        ax1.tick_params(labelsize=30)
-        ax2.tick_params(labelsize=30)
-        ax3.tick_params(labelsize=30)
-        ax4.tick_params(labelsize=30)
-        ax1.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
-        ax2.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
-        ax3.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
-        ax4.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
-        ax1.set_ylim(1, 2 * 10 ** 2)
-        ax2.set_ylim(1, 2 * 10 ** 2)
-        ax3.set_ylim(1, 2 * 10 ** 2)
-        ax4.set_ylim(1, 2 * 10 ** 2)
-
-        z_shift = 5
-        ax1.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnr0[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
-        ax1.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnr0[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
-
-        ax2.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi4[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
-        ax2.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi4[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
-
-        ax3.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi2[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
-        ax3.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi2[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
-
-        ax4.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnrPi[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
-        ax4.plot(two_NA_fy[N // 2:], 1 + scaling_factor * ssnrPi[N // 2, :, N // 2 + z_shift][N // 2:], label="$k_y$")
-
-        ax1.legend(fontsize=30)
-        ax2.legend(fontsize=30)
-        ax3.legend(fontsize=30)
-        ax4.legend(fontsize=30)
-
+        ax1.plot(ssnrD0scaled[N//2 + 20, :, N//2])
+        ax1.plot(ssnrD1scaled[N//2 + 20, :, N//2])
         fig.savefig(f'{path_to_figures}sim_anisotropy')
         plt.show()
-
 
     def test_sim_modalities_comparison(self):
         ...
@@ -491,7 +589,7 @@ class TestArticlePlots(unittest.TestCase):
         axes1.set_ylim(0, 1)
         axes1.set_aspect(1 / axes1.get_data_ratio())
         axes1.tick_params(labelsize=25)
-        axes1.set_xlabel(r"r", fontsize=30)
+        axes1.set_xlabel(r"$sin(\theta_{inc}) / sin(\alpha_{so})$", fontsize=30)
         axes1.set_ylabel("$SSNR^{INC}_V$", fontsize=30)
         axes1.legend(fontsize=20)
 
@@ -500,7 +598,7 @@ class TestArticlePlots(unittest.TestCase):
         axes2.set_ylim(0, 0.2)
         axes2.set_aspect(1 / axes2.get_data_ratio())
         axes2.tick_params(labelsize=25)
-        axes2.set_xlabel(r'r', fontsize=30)
+        axes2.set_xlabel(r'$sin(\theta_{inc}) / sin(\alpha_{so})$', fontsize=30)
         axes2.set_ylabel("$SSNR^{INC}_S$", fontsize=30)
 
         axes1.legend(fontsize=20, loc="lower right")
@@ -518,7 +616,7 @@ class TestComputeVolumeEntropy(unittest.TestCase):
         headers = ["Configuration", "NA_ratio", "Volume", "Volume_a", "Entropy"]
 
         squareL = lambda angle: configurations.get_4_oblique_s_waves_and_circular_normal(angle, 1, 1, Mt=1)
-        squareC = lambda angle: configurations.get_4_circular_oblique_waves_and_circular_normal(angle, 0.55, 1, Mt=1)
+        squareC = lambda angle: configurations.get_4_circular_oblique_waves_and_circular_normal(angle, 0.58, 1, Mt=1)
         hexagonal = lambda angle: configurations.get_6_oblique_s_waves_and_circular_normal(angle, 1, 1, Mt=1)
         conventional = lambda angle: configurations.get_2_oblique_s_waves_and_s_normal(angle, 1, 1, Mt=1)
 

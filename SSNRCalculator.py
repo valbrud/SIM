@@ -423,6 +423,9 @@ class SSNR3dSIM2dShifts(SSNRCalculator3dSIM):
         d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
         for m in self.effective_otfs.keys():
             d_j += self.effective_otfs[m] * self.effective_otfs[m].conjugate()
+            # plt.gca().set_title(f'{m}')
+            # plt.imshow(np.abs(self.effective_otfs[m])[:, :, 50])
+            # plt.show()
         d_j *= self.illumination.Mt
         return np.abs(d_j)
 

@@ -42,7 +42,7 @@ if __name__ == "__main__":
     rotations = np.arange(1, 6)
 
     optical_system = Lens3D(alpha=alpha_lens)
-    optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
+    optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
 
     with open("varying_mr.csv", 'w', newline='') as file:
         writer = csv.writer(file)

@@ -18,7 +18,7 @@ import tqdm
 sys.path.append('../')
 
 
-configurations = BFPConfiguration(refraction_index=1.5)
+configurations = BFPConfiguration(refraction_index=1)
 class Testssnr(unittest.TestCase):
     def test_ssnr_interpolations(self):
         max_r = 6
@@ -45,10 +45,10 @@ class Testssnr(unittest.TestCase):
         illumination_polarized = Illumination(waves)
         optical_system_fourier = Lens3D(interpolation_method="Fourier")
         optical_system_fourier.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
-                                                   apodization_filter=None)
+                                                   apodization_function="Sine")
         optical_system_linear = Lens3D()
         optical_system_linear.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
-                                                  apodization_filter=None)
+                                                  apodization_function="Sine")
         wavevectors = illumination_polarized.get_all_wavevectors()
 
         noise_estimator = SSNR3dSIM2dShifts(illumination_polarized, optical_system_fourier)
@@ -219,7 +219,7 @@ class Testssnr(unittest.TestCase):
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1/2**0.5, 1, Mt=64)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
-        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 1, Mt=1)
         # illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1,  Mt=32, mutually_rotated=False)
         # illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
         # illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
@@ -503,7 +503,7 @@ class Testssnr(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
@@ -643,58 +643,58 @@ class Testssnr(unittest.TestCase):
         ax1.set_aspect(1. / ax1.get_data_ratio())
         ax2.set_aspect(1. / ax2.get_data_ratio())
 
-        # def update1(val):
-        #     ax1.clear()
-        #     ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
-        #     # ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
-        #     ax1.set_xlabel(r"$f_r$", fontsize=25)
-        #     ax1.set_ylabel(r"$ssnr$", fontsize=25)
-        #     ax1.set_yscale("log")
-        #     ax1.set_ylim(1,  10**4)
-        #     ax1.set_xlim(0, fx[-1]/(2 * NA))
-        #     ax1.grid()
-        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="SquareL")
-        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="SquareC")
-        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)], label="Hexagonal")
-        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="Conventional")
-        #     ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
-        #     # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, int(val)],         label="Confocal")
-        #
-        #     # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
-        #     # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
-        #     # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
-        #     # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
-        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
-        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
-        #     # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
-        #     ax1.legend()
-        #     ax1.set_aspect(1. / ax1.get_data_ratio())
-        #
-        #     ax2.clear()
-        #     # ax2.set_title("Slice $f_y$ = 0")
-        #     ax2.set_xlabel(r"$f_x$")
-        #     # ax2.set_ylabel(r"ssnr")
-        #
-        #     ax2.set_yscale("log")
-        #     # ax2.set_ylim(1, 3 * 10**2)
-        #     ax2.set_xlim(0, fx[-1]/(2 * NA))
-        #     ax2.grid()
-        #
-        #     # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
-        #     # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
-        #
-        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(val), int(N / 2)][fx >= 0], label="S-polarized")
-        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(val), int(N / 2)][fx >= 0],    label="Circular"   )
-        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
-        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
-        #     ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
-        #     ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
-        #     ax2.legend()
-        #     ax2.set_aspect(1. / ax2.get_data_ratio())
-        #
-        # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-        # slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
-        # slider_ssnr.on_changed(update1)
+        def update1(val):
+            ax1.clear()
+            # ax1.set_title("Comparison of 3D SIM modalities\n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
+            # ax1.set_title("Directional anisotropies in Projective 3D SIM", fontsize = 30)
+            ax1.set_xlabel(r"$f_r$", fontsize=25)
+            ax1.set_ylabel(r"$ssnr$", fontsize=25)
+            ax1.set_yscale("log")
+            ax1.set_ylim(1,  10**4)
+            ax1.set_xlim(0, fx[-1]/(2 * NA))
+            ax1.grid()
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_s_polarized_ra[:, int(val)], label="SquareL")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_circular_ra[:, int(val)],    label="SquareC")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_seven_waves_ra[:, int(val)], label="Hexagonal")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3waves_ra[:, int(val)],      label="Conventional")
+            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)],   label="Widefield")
+            # ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal_ra[:, int(val)],         label="Confocal")
+
+            # ax1.hlines(y=(1 + multiplier * threshold3waves), xmin=0, xmax=2, linewidth=1, color='red')
+            # ax1.hlines(y=(1 + multiplier * threshold7waves), xmin=0, xmax=2, linewidth=1, color='green')
+            # ax1.hlines(y=(1 + multiplier * threshold_circular), xmin=0, xmax=2, linewidth=1, color='orange')
+            # ax1.hlines(y=(1 + multiplier * threshold_s_polarized), xmin=0, xmax=2, linewidth=1, color='blue')
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(N/2), int(val)][fy >= 0], label="Square SIM, $f_y=0$")
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[int(N/2), :, int(val)][fx >= 0], label="Square SIM, $f_x=0$")
+            # ax1.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N/2), int(val)][fx >= 0], label="Widefield")
+            ax1.legend()
+            ax1.set_aspect(1. / ax1.get_data_ratio())
+
+            ax2.clear()
+            # ax2.set_title("Slice $f_y$ = 0")
+            ax2.set_xlabel(r"$f_x$")
+            # ax2.set_ylabel(r"ssnr")
+
+            ax2.set_yscale("log")
+            # ax2.set_ylim(1, 3 * 10**2)
+            ax2.set_xlim(0, fx[-1]/(2 * NA))
+            ax2.grid()
+
+            # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_s_polarized[:, :, int(val)])[q_axes[1] >= 0], label="S-polarized")
+            # ax2.plot(fx[fx >= 0], 1 + multiplier * np.diagonal(ssnr_circular[:, :, int(val)])[q_axes[1] >= 0], label="Circular")
+
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_s_polarized[:, int(val), int(N / 2)][fx >= 0], label="S-polarized")
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_circular[:, int(val), int(N / 2)][fx >= 0],    label="Circular"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
+            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
+            ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
+            ax2.legend()
+            ax2.set_aspect(1. / ax2.get_data_ratio())
+
+        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+        slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
+        slider_ssnr.on_changed(update1)
 
         ax1.legend(fontsize=15)
         ax2.legend(fontsize=15)
@@ -730,20 +730,20 @@ class Testssnr(unittest.TestCase):
 
         optical_system = Lens3D()
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
-        illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 0,  Mt=32, mutually_rotated=False)
-        illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
-        illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
-        illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
+        # illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 0,  Mt=32, mutually_rotated=False)
+        # illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
+        # illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
+        # illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
         illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_two_triangles_not_rotated, optical_system)
-        ssnr_ttnr = np.abs(noise_estimator.compute_ssnr())
-        ssnr_ttnr_ra = noise_estimator.ring_average_ssnr()
-        volume_ttnr = np.sum(ssnr_ttnr)
-        volume_ttnr_a = noise_estimator.compute_analytic_total_ssnr()
+        noise_estimator = SSNR3dSIM2dShifts(illumination_five_waves_two_angles, optical_system)
+        # ssnr_ttnr = np.abs(noise_estimator.compute_ssnr())
+        # ssnr_ttnr_ra = noise_estimator.ring_average_ssnr()
+        # volume_ttnr = np.sum(ssnr_ttnr)
+        # volume_ttnr_a = noise_estimator.compute_analytic_total_ssnr()
 
         # noise_estimator.illumination = illumination_two_triangles_rotated
         # ssnr_ttr= np.abs(noise_estimator.compute_ssnr())
@@ -764,11 +764,11 @@ class Testssnr(unittest.TestCase):
         # volume_tsr_a = noise_estimator.compute_analytic_total_ssnr()
         #
         # noise_estimator.illumination = illumination_five_waves_two_angles
-        # ssnr_5w = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_5w_ra = noise_estimator.ring_average_ssnr()
-        # volume_5w = np.sum(np.abs(ssnr_5w))
-        # volume_5w_a = noise_estimator.compute_analytic_total_ssnr()
-        #
+        ssnr_5w = np.abs(noise_estimator.compute_ssnr())
+        ssnr_5w_ra = noise_estimator.ring_average_ssnr()
+        volume_5w = np.sum(np.abs(ssnr_5w))
+        volume_5w_a = noise_estimator.compute_analytic_total_ssnr()
+
         # noise_estimator.illumination = illumination_widefield
         # ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
         # ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
@@ -886,7 +886,7 @@ class Testssnr(unittest.TestCase):
 
         ax1.legend()
         ax2.legend()
-        fig.savefig(f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
+        # fig.savefig(f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
         # plt.show()
 
     def test_ssnr_color_maps(self):
@@ -984,8 +984,8 @@ class Testssnr(unittest.TestCase):
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
 
-            fig.savefig(f'{path_to_figures}'
-                     + illumination_list[illumination][1] + '_ssnr.png')
+            # fig.savefig(f'{path_to_figures}'
+            #          + illumination_list[illumination][1] + '_ssnr.png')
 
             # def update1(val):
             #     ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
@@ -1040,7 +1040,7 @@ class Testssnr(unittest.TestCase):
 
         optical_system = Lens3D()
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1 / 2 ** 0.5, 1, Mt=64)
@@ -1216,7 +1216,7 @@ class Testssnr(unittest.TestCase):
 
         optical_system = Lens3D(alpha = np.pi/3)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         k = 2 * np.pi
         theta = np.pi/3
@@ -1383,7 +1383,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fz = fz / (2 * NA)
         optical_system = Lens3D(alpha= 2 * np.pi / 5)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         angle = 8 * np.pi / 20
         a = 0.9
@@ -1523,7 +1523,7 @@ class TestApproximations(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
