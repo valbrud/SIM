@@ -46,7 +46,7 @@ if __name__ == "__main__":
     angles = np.linspace(alpha_lens/8, alpha_lens, 8)
     powers = np.linspace(0., 2, 21)
     optical_system = Lens3D(alpha=alpha_lens)
-    optical_system.compute_psf_and_otf((psf_size, N), apodization_filter=None)
+    optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
 
     with open("circular_b.csv", 'w', newline='') as file:
         writer = csv.writer(file)

@@ -182,6 +182,7 @@ class BFPConfiguration:
             Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b * p, 0, np.array((k1/2, -3**0.5/2 * k1, k2))),
             Sources.IntensityPlaneWave((2*3**0.5 + 2j)/4 * b * p, 0, np.array((-k1/2, 3**0.5/2 * k1, k2))),
             Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b * p, 0, np.array((-k1/2, -3**0.5/2 * k1, k2))),
+
             Sources.IntensityPlaneWave((-2*3**0.5 - 2j)/4 * b * p, 0, np.array((k1/2, 3**0.5/2 * k1, -k2))),
             Sources.IntensityPlaneWave((2*3**0.5 - 2j)/4 * b * p, 0, np.array((k1/2, -3**0.5/2 * k1, -k2))),
             Sources.IntensityPlaneWave((-2*3**0.5 + 2j)/4 * b * p, 0, np.array((-k1/2, 3**0.5/2 * k1, -k2))),
@@ -208,8 +209,8 @@ class BFPConfiguration:
         three_waves_illumination = {
             (0, 0, 0)  : Sources.IntensityPlaneWave(a0 , 0, np.array((0, 0, 0))),
 
-            (2, 0, 0)  : Sources.IntensityPlaneWave(b**2 , 0, np.array((2 * k1, 0, 0))),
-            (-2, 0, 0) : Sources.IntensityPlaneWave(b**2 , 0, np.array((-2 * k1, 0, 0))),
+            (2, 0, 0)  : Sources.IntensityPlaneWave(-b**2 , 0, np.array((2 * k1, 0, 0))),
+            (-2, 0, 0) : Sources.IntensityPlaneWave(-b**2 , 0, np.array((-2 * k1, 0, 0))),
 
             (1, 0 , 1)  : Sources.IntensityPlaneWave(b * p, 0, np.array((k1, 0, k2))),
             (-1, 0 , 1) :  Sources.IntensityPlaneWave(b * p, 0, np.array((-k1, 0, k2))),

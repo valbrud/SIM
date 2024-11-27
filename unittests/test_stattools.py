@@ -66,7 +66,7 @@ class TestRingAveraging(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         noise_estimator_widefield = SSNRWidefield(optical_system)
         ssnr = noise_estimator_widefield.ssnr

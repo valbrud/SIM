@@ -56,7 +56,7 @@ class TestAgainstIdeal(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
@@ -287,7 +287,7 @@ class TestAgainstIdeal(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
@@ -530,7 +530,7 @@ class TestAgainstIdeal(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
@@ -709,7 +709,7 @@ class TestAgainstIdeal(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
@@ -871,7 +871,7 @@ class TestAgainstIdeal(unittest.TestCase):
 
         optical_system = Lens2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
@@ -1059,7 +1059,7 @@ class TestFinalFilter(unittest.TestCase):
 
         optical_system = Lens2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
 
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
@@ -1299,7 +1299,7 @@ class TestFinalFilter(unittest.TestCase):
         # plt.show()
         optical_system = Lens2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
 
         illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
         spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))

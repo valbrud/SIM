@@ -10,6 +10,36 @@ sys.path.append('../')
 from config.IlluminationConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
+    def test_OTF(self):
+        alpha = np.pi/2
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 101
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        x = np.linspace(-max_r, max_r, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
+        optical_system = Lens3D(alpha=alpha)
+        low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
+        high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
+        print(np.sum(low_NA_psf), np.sum(high_NA_psf))
+        fig, axes = plt.subplots(2, 2)
+        axes[0, 0].plot(low_NA_psf[N//2, :, N//2], label="low_NA_model")
+        axes[0, 0].plot(high_NA_psf[N//2, :, N//2], label="high_NA_model")
+        plt.legend()
+        axes[0, 1].plot(low_NA_psf[N//2, N//2, :], label="low_NA_model")
+        axes[0, 1].plot(high_NA_psf[N//2, N//2, :], label="high_NA_model")
+        plt.legend()
+        axes[1, 0].plot(low_NA_otf[N//2, :, N//2], label="low_NA_model")
+        axes[1, 0].plot(high_NA_otf[N//2, :, N//2], label = "high_NA_model")
+        plt.legend()
+        axes[1, 1].plot(low_NA_otf[N//2, N//2, :], label = "low_NA_model")
+        axes[1, 1].plot(high_NA_otf[N//2, N//2, :], label = "high_NA_model")
+        plt.legend()
+        plt.show()
+
     def test_sim_otf(self):
         theta = np.pi / 4
         alpha = np.pi / 4
@@ -41,6 +71,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         ax.set_title("SIM OTF")
         ax.set_ylim(bottom=0)
         plt.show()
+
     def test_confocal_SSNRv(self):
         max_r = 4
         max_z = 10

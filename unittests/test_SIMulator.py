@@ -44,7 +44,7 @@ class TestSIMImages(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         plt.imshow(optical_system.psf[:, :, N//2])
         # plt.show()
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
@@ -146,7 +146,7 @@ class TestReconstruction(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         plt.imshow(image[:, :, N // 2])
         plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
@@ -251,7 +251,7 @@ class TestReconstruction(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         plt.imshow(image[:, :, N // 2])
         plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
@@ -386,7 +386,7 @@ class TestReconstruction(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         # plt.imshow(image[:, :, N // 2])
         # plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
@@ -510,7 +510,7 @@ class TestReconstruction(unittest.TestCase):
 
         optical_system = Lens3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_filter=None)
+                                           apodization_function="Sine")
         # plt.imshow(image[:, :, N // 2])
         # plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)

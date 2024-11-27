@@ -183,6 +183,7 @@ class MainWindow(QMainWindow):
             print(f"Saving config to {filename}")
 
     def load_config(self):
+        GUIWidgets.SourceWidget.identifier = 0
         filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
         filename = os.path.basename(filename)
         if filename:
@@ -196,11 +197,11 @@ class MainWindow(QMainWindow):
                 self.compute_and_plot_from_intensity_sources()
                 self.plot_intensity_slices()
 
-            else:
-                # Show an error message for invalid file format
-                print("Not a valid file format")
+        else:
+            raise FileExistsError("Not a valid file format")
 
     def load_illumination(self):
+        GUIWidgets.SourceWidget.identifier = 0
         filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
         filename = os.path.basename(filename)
         if filename:
@@ -215,9 +216,8 @@ class MainWindow(QMainWindow):
                 self.compute_and_plot_from_intensity_sources()
                 self.plot_intensity_slices()
 
-            else:
-                # Show an error message for invalid file format
-                print("Not a valid file format")
+        else:
+            raise FileExistsError("Not a valid file format")
 
     def clear_layout(self, layout):
         if layout is not None:
@@ -239,6 +239,7 @@ class MainWindow(QMainWindow):
 
     def remove_source(self, initializer):
         self.box.remove_source(initializer)
+        print('is deleted')
     def add_point_source(self):
         source = GUIWidgets.PointSourceWidget()
         self.sources_layout.addWidget(source)
