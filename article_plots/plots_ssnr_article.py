@@ -64,6 +64,17 @@ squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+
+# box = Box.Box(conventional.waves.values(), box_size=psf_size, point_number=N)
+# box.compute_intensity_from_spacial_waves()
+# fig, ax = plt.subplots()
+# ax.set_title("conventional", fontsize=30, pad=15)
+# ax.set_ylabel("y [$\lambda$]", fontsize=30)
+# ax.set_xlabel("x [$\lambda$]",  fontsize=30)
+# ax.tick_params(labelsize=30)
+# ax.imshow(box.intensity[:, :, arg].T, extent=(x[0], x[-1], y[0], y[-1]))
+# plt.show()
+
 widefield = configurations.get_widefield()
 
 illumination_list = {
@@ -78,7 +89,7 @@ illumination_list = {
 class TestArticlePlots(unittest.TestCase):
     def test_ring_averaged_ssnr(self):
         n_points = 51
-        ax = np.linspace(two_NA_fx[N//2], two_NA_fx[-1], n_points)
+        r = np.linspace(two_NA_fx[N//2], two_NA_fx[-1], n_points)
         noise_estimator_widefield = SSNR3dSIM2dShifts(widefield, optical_system)
         noise_estimator_widefield.compute_ssnr()
         ssnr_widefield = noise_estimator_widefield.ssnr
@@ -101,7 +112,7 @@ class TestArticlePlots(unittest.TestCase):
         ssnr_3waves_ra = noise_estimator.ring_average_ssnr(number_of_samples=n_points)
 
         Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure(figsize=(15, 9), constrained_layout=True)
+        fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
         # fig.suptitle("Ring averaged SSNR for different configurations", fontsize=30)
 
         plt.subplots_adjust(left=0.1,
@@ -110,50 +121,49 @@ class TestArticlePlots(unittest.TestCase):
                             top=0.9,
                             wspace=0.4,
                             hspace=0.4)
-        ax1 = fig.add_subplot(121)
-        ax2 = fig.add_subplot(122)
+        # ax1 = fig.add_subplot(121)
+        # ax2 = fig.add_subplot(122)
 
-        # ax1.set_title("Projective 3D SIM anisotropy \n $f_z = ${:.1f}".format(two_NA_fz[arg]) + "$(\\frac{n - \sqrt{n^2 - NA^2}}{\lambda})$", fontsize=25, pad=15)
-        ax1.set_title("$f_z = ${:.1f}".format(scaled_fz[arg]) + "$\; [\\frac{n_s - \sqrt{n_s^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
-        ax1.set_xlabel(r"$f_r \; [\frac{2NA}{\lambda}]$", fontsize=30)
-        ax1.set_ylabel(r"$1 + 10^5 SSNR_{ra}$", fontsize=30)
-        ax1.set_yscale("log")
-        ax1.set_ylim(1, ylim)
-        ax1.set_xlim(0, two_NA_fx[-1])
-        ax1.grid(which='major')
-        ax1.grid(which='minor', linestyle='--')
-        ax1.tick_params(labelsize=30)
+        ax.clear()
+        ax.set_xlabel(r"$f_r \; [LCF]$", fontsize=20)
+        ax.set_ylabel(r"$1 + 10^4 SSNR_{ra}$", fontsize=20)
+        ax.set_yscale("log")
+        ax.set_ylim(1, 2 * ylim)
+        ax.set_xlim(0, two_NA_fx[-1])
+        ax.grid(which='major')
+        ax.grid(which='minor', linestyle='--')
+        ax.tick_params(labelsize=20)
 
-        # ax2.set_title("Slice $f_y$ = 0", fontsize=25)
-        ax2.set_title("$f_z = ${:.1f}".format(scaled_fz[arg // 2]) + "$\; [\\frac{n_s - \sqrt{n_s^2 - NA^2}}{\lambda}]$", fontsize=30, pad=15)
-        ax2.set_xlabel(r"$f_r \; [\frac{2NA}{\lambda}]$", fontsize=30)
-        ax2.set_ylabel(r"$1 + 10^5 SSNR_{ra}$", fontsize=30)
-        ax2.set_yscale("log")
-        ax2.set_ylim(1, ylim)
-        ax2.set_xlim(0, two_NA_fx[-1])
-        ax2.grid(which='major')
-        ax2.grid(which='minor', linestyle='--')
-        ax2.tick_params('y', labelleft=False)
-        ax2.tick_params(labelsize=30)
+        ax.plot(r, 1 + multiplier / 10 * ssnr_widefield_ra[:, arg], label="Widefield")
+        ax.plot(r, 1 + multiplier / 10 * ssnr_3waves_ra[:, arg], label="Conventional")
+        ax.plot(r, 1 + multiplier / 10 * ssnr_s_polarized_ra[:, arg], label="SquareL")
+        ax.plot(r, 1 + multiplier / 10 * ssnr_circular_ra[:, arg], label="SquareC")
+        ax.plot(r, 1 + multiplier / 10 * ssnr_seven_waves_ra[:, arg], label="Hexagonal")
+        ax.set_aspect(1. / ax.get_data_ratio())
 
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_widefield_ra[:, arg], label="Widefield")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_3waves_ra[:, arg], label="Conventional")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_s_polarized_ra[:, arg], label="SquareL")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_circular_ra[:, arg], label="SquareC")
-        ax1.plot(ax, 1 + multiplier / 10 * ssnr_seven_waves_ra[:, arg], label="Hexagonal")
+        ax.legend(fontsize=18)
+        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
 
-        ax2.plot(ax, 1 + multiplier * ssnr_widefield_ra[:, arg // 2], label="Widefield")
-        ax2.plot(ax, 1 + multiplier * ssnr_3waves[:, arg // 2, arg // 2][N//2:], label="Conventional")
-        ax2.plot(ax, 1 + multiplier * ssnr_s_polarized_ra[:, arg // 2], label="SquareL")
-        ax2.plot(ax, 1 + multiplier * ssnr_circular_ra[:, arg // 2], label="SquareC")
-        ax2.plot(ax, 1 + multiplier * ssnr_seven_waves_ra[:, arg // 2], label="Hexagonal")
-        ax1.set_aspect(1. / ax1.get_data_ratio())
-        ax2.set_aspect(1. / ax2.get_data_ratio())
+        ax.clear()
+        ax.set_xlabel(r"$f_r \; [LCF]$", fontsize=20)
+        ax.set_ylabel(r"$1 + 10^5 SSNR_{ra}$", fontsize=20)
+        ax.set_yscale("log")
+        ax.set_ylim(1, 2 * ylim)
+        ax.set_xlim(0, two_NA_fx[-1])
+        ax.grid(which='major')
+        ax.grid(which='minor', linestyle='--')
+        ax.tick_params(labelsize=20)
 
-        ax1.legend(fontsize=15)
-        ax2.legend(fontsize=15)
-        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr')
-        plt.show()
+        ax.plot(r, 1 + multiplier * ssnr_widefield_ra[:, arg//2], label="Widefield")
+        ax.plot(r, 1 + multiplier * ssnr_3waves_ra[:, arg//2], label="Conventional")
+        ax.plot(r, 1 + multiplier * ssnr_s_polarized_ra[:, arg//2], label="SquareL")
+        ax.plot(r, 1 + multiplier * ssnr_circular_ra[:, arg//2], label="SquareC")
+        ax.plot(r, 1 + multiplier * ssnr_seven_waves_ra[:, arg//2], label="Hexagonal")
+        ax.set_aspect(1. / ax.get_data_ratio())
+
+        ax.legend(fontsize=18)
+        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
+            # plt.show()
 
     def test_ssnr_color_maps(self):
         for illumination in illumination_list:
@@ -432,7 +442,7 @@ class TestArticlePlots(unittest.TestCase):
     def test_illumination_animations(self):
         r_max = 2
         z_max = 1
-        N = 200
+        N = 100
         arg = N//2
         x = np.linspace(-r_max, r_max, N)
         y = np.linspace(-r_max, r_max, N)
@@ -442,7 +452,7 @@ class TestArticlePlots(unittest.TestCase):
         n_rows = int(n_illum**0.5)
         n_colums = n_rows
         fig, axes = plt.subplots(n_rows, n_colums, figsize=(12, 10), sharex=True, sharey=True)
-        fig.suptitle(f'z = {round(z[arg], 2)} [wavelength]', fontsize=30)
+        fig.suptitle(f'z = {round(z[arg], 2)} [$\lambda$]', fontsize=30)
         boxes = []
         i = 0
         for illumination in illumination_list:
@@ -453,9 +463,9 @@ class TestArticlePlots(unittest.TestCase):
             boxes[i].compute_intensity_from_spacial_waves()
             ax.set_title(illumination_list[illumination], fontsize=30, pad=15)
             if i % n_colums == 0:
-                ax.set_ylabel("y [wavelength]", fontsize=30)
+                ax.set_ylabel("y [$\lambda$]", fontsize=30)
             if i // n_colums == n_rows-1:
-                ax.set_xlabel("x [wavelength]",  fontsize=30)
+                ax.set_xlabel("x [$\lambda$]",  fontsize=30)
             ax.tick_params(labelsize=30)
             ax.imshow(boxes[i].intensity[:, :, arg].T, extent=(x[0], x[-1], y[0], y[-1]))
             i+=1
@@ -464,16 +474,16 @@ class TestArticlePlots(unittest.TestCase):
         # plt.show()
         def update(val):
             i = 0
-            fig.suptitle(f'z = {round(z[int(val)], 2)} [wavelength]', fontsize=30)
+            fig.suptitle(f'$z = {round(z[int(val)], 2)} \; [\lambda]$', fontsize=30)
             for illumination in illumination_list:
                 if illumination_list[illumination] == "Widefield":
                     continue
                 ax = axes[i // n_colums, i % n_colums]
                 ax.set_title(illumination_list[illumination], fontsize=30, pad=15)
                 if i % n_colums == 0:
-                    ax.set_ylabel("y [wavelength]", fontsize=30)
+                    ax.set_ylabel("$y \; [\lambda]$", fontsize=30)
                 if i // n_colums == n_rows - 1:
-                    ax.set_xlabel("x [wavelength]", fontsize=30)
+                    ax.set_xlabel("$x \; [\lambda]$", fontsize=30)
                 ax.tick_params(labelsize=30)
                 ax.imshow(boxes[i].intensity[:, :, int(val)].T, extent=(x[0], x[-1], y[0], y[-1]))
                 i+=1
