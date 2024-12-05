@@ -8,6 +8,35 @@ class BFPConfiguration:
         self.n = refraction_index
         self.k = 2 * np.pi * self.n / wavelength
 
+
+    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal = 1, Mr=3,  Mt=1):
+
+        theta = angle_oblique
+        k1 = self.k * np.sin(theta)
+        k2 = self.k * (np.cos(theta) - 1)
+
+        p = strength_s_normal
+        b = strength_oblique
+        a0 = p**2 + 2 * b**2
+
+        base_vector_kx = k1
+        base_vector_ky = k1  # All ky indices should be zero for a plane illumination
+        base_vector_kz = k2  # We do not really care about a z index. Hopefully
+        base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
+
+        sources = [
+            Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
+            Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
+            Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-9, 0, 1e-9))),
+
+        ]
+        s_polarized_waves = Illumination.find_ipw_from_pw(sources)
+        illumination = Illumination.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
+        illumination.Mt = Mt
+        illumination.normalize_spacial_waves()
+
+        return illumination
+
     def get_4_oblique_s_waves_and_s_normal_diagonal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -26,7 +55,7 @@ class BFPConfiguration:
         Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
         Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k2))),
         Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((0, -k1, k2))),
-        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((0, 0, 0))),
+        Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((1e-9, 0, 1e-9))),
 
         ]
         s_polarized_waves = Illumination.find_ipw_from_pw(sources)
@@ -195,34 +224,6 @@ class BFPConfiguration:
 
         return illumination
 
-
-    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal = 1, Mr=3,  Mt=1):
-
-        theta = angle_oblique
-        k1 = self.k * np.sin(theta)
-        k2 = self.k * (np.cos(theta) - 1)
-
-        p = strength_s_normal
-        b = strength_oblique
-        a0 = p**2 + 2 * b**2
-
-        three_waves_illumination = {
-            (0, 0, 0)  : Sources.IntensityPlaneWave(a0 , 0, np.array((0, 0, 0))),
-
-            (2, 0, 0)  : Sources.IntensityPlaneWave(-b**2 , 0, np.array((2 * k1, 0, 0))),
-            (-2, 0, 0) : Sources.IntensityPlaneWave(-b**2 , 0, np.array((-2 * k1, 0, 0))),
-
-            (1, 0 , 1)  : Sources.IntensityPlaneWave(b * p, 0, np.array((k1, 0, k2))),
-            (-1, 0 , 1) :  Sources.IntensityPlaneWave(b * p, 0, np.array((-k1, 0, k2))),
-            (1, 0, -1) : Sources.IntensityPlaneWave(b * p, 0, np.array((k1, 0, -k2))),
-            (-1, 0, -1): Sources.IntensityPlaneWave(b * p, 0, np.array((-k1, 0, -k2))),
-        }
-
-        illumination = Illumination(three_waves_illumination, Mr=Mr)
-        illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
-
-        return illumination
 
     def get_widefield(self):
 
