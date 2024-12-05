@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illumination Configurations</title>
+</head>
+<body>
+    <h1>Select Illumination Configuration</h1>
+    <form action="/plot" method="post">
+        <select name="config">
+            <option value="conventional">Conventional</option>
+            <option value="squareL">SquareL</option>
+            <option value="squareC">SquareC</option>
+            <option value="hexagonal">Hexagonal</option>
+        </select>
+        <button type="submit">Generate Plot</button>
+    </form>
+    <h2>Plot</h2>
+    <img id="plot" src="" alt="Plot will be displayed here">
+    <script>
+        const form = document.querySelector('form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/plot', {
+                method: 'POST',
+                body: formData
+            });
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            document.getElementById('plot').src = url;
+        });
+    </script>
+</body>
+</html>
