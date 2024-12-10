@@ -1,3 +1,24 @@
+"""
+SSNRCalculator.py
+
+This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)
+for a given system optical system and illumination.
+
+Classes:
+    SSNRHandler: Base class for handling SSNR calculations.
+    SSNRWidefield: Class for calculating SSNR in widefield microscopy.
+    SSNRConfocal: Class for calculating SSNR in confocal microscopy.
+    SSNRCalculator: Class for calculating SSNR.
+    SSNR2dSIM: Class for calculating SSNR in 2D SIM.
+    SSNR2dSIMFiniteKernel: Class for calculating SSNR in 2D SIM with a finite kernel.
+    SSNRCalculator3dSIM: Base class for calculating SSNR in 3D SIM.
+    SSNR3dSIM3dShifts: Class for calculating SSNR in 3D SIM with 3D shifts.
+    SSNR3dSIM2dShifts: Class for calculating SSNR in 3D SIM with 2D shifts.
+    SSNR3dSIM2dShiftsFiniteKernel: Class for calculating SSNR in 3D SIM with 2D shifts and a finite kernel.
+
+Mathematical details will be provided in the later documentation versions and in the corresponding papers.
+"""
+
 import numpy
 import numpy as np
 

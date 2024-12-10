@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GUIWidgets &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>GUIWidgets</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for GUIWidgets</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">GUIWidgets.py</span>
+
+<span class="sd">This module contains utility widgets for the GUI components.</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    SourceWidget: Base class for source widgets.</span>
+<span class="sd">    IntensityPlaneWaveWidget: Widget for initializing and displaying intensity plane wave sources.</span>
+<span class="sd">    PlaneWaveWidget: Widget for initializing and displaying plane wave sources.</span>
+<span class="sd">    PointSourceInitializationWidget: Widget for initializing point source settings.</span>
+<span class="sd">    PointSourceWidget: Widget for initializing and displaying point sources.</span>
+
+<span class="sd">This module and related ones is currently a demo-version of the user-interface, and will</span>
+<span class="sd">possibly be sufficiently modified or replaced in the future. For this reason, no in-depth</span>
+<span class="sd">documentation is provided.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">Sources</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">GUIInitializationWidgets</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="SourceWidget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.SourceWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">SourceWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">isDeleted</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">SourceWidget</span><span class="o">.</span><span class="n">identifier</span>
+        <span class="n">SourceWidget</span><span class="o">.</span><span class="n">identifier</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="SourceWidget.init_ui">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.SourceWidget.init_ui">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">init_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span> <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="SourceWidget.contextMenuEvent">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.SourceWidget.contextMenuEvent">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span> <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="SourceWidget.remove_widget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.SourceWidget.remove_widget">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isDeleted</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SourceWidget.change_widget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.SourceWidget.change_widget">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">change_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IntensityPlaneWaveWidget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">IntensityPlaneWaveWidget</span><span class="p">(</span><span class="n">SourceWidget</span><span class="p">):</span>
+    <span class="n">isSet</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ipw</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ipw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_ui</span><span class="p">(</span><span class="n">ipw</span><span class="p">)</span>
+        <span class="c1"># self.PlaneWave = Sources.PlaneWave(self.coordinates)</span>
+
+<div class="viewcode-block" id="IntensityPlaneWaveWidget.init_ui">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.init_ui">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ipw</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ipw</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span> <span class="o">=</span> <span class="n">IntensityPlaneWaveInitializationWidget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="o">.</span><span class="n">sendInfo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_receive_info</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">intensity_plane_wave</span> <span class="o">=</span> <span class="n">ipw</span>
+
+            <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;IntensityPlaneWave&#39;</span><span class="p">))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;A = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ipw</span><span class="o">.</span><span class="n">amplitude</span><span class="p">)))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Phase = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ipw</span><span class="o">.</span><span class="n">phase</span><span class="p">)))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Wavevector = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ipw</span><span class="o">.</span><span class="n">wavevector</span><span class="p">)))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span></div>
+
+            <span class="c1"># self.isSet.emit(True)</span>
+
+<div class="viewcode-block" id="IntensityPlaneWaveWidget.on_receive_info">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.on_receive_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_receive_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="n">A</span><span class="p">,</span> <span class="n">phase</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[:</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="n">wavevector</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="mi">2</span><span class="p">:]]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_plane_wave</span> <span class="o">=</span> <span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isSet</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;IntensityPlaneWave&#39;</span><span class="p">))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;A = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">A</span><span class="p">)))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Phase = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">phase</span><span class="p">)))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Wavevector = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IntensityPlaneWaveWidget.contextMenuEvent">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.contextMenuEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">context_menu</span> <span class="o">=</span> <span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">remove_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Remove Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">change_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Change Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">remove_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_widget</span><span class="p">)</span>
+        <span class="n">change_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_widget</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">remove_action</span><span class="p">)</span>
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">change_action</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">globalPos</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="IntensityPlaneWaveWidget.change_widget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.change_widget">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Implement the logic to change the widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Widget Changed&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PlaneWaveWidget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PlaneWaveWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">PlaneWaveWidget</span><span class="p">(</span><span class="n">SourceWidget</span><span class="p">):</span>
+    <span class="n">isSet</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">isDeleted</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pw</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_ui</span><span class="p">(</span><span class="n">pw</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PlaneWaveWidget.init_ui">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PlaneWaveWidget.init_ui">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pw</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span> <span class="o">=</span> <span class="n">PlaneWaveInitializationWidget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="o">.</span><span class="n">sendInfo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_receive_info</span><span class="p">)</span>
+
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plane_wave</span> <span class="o">=</span> <span class="n">pw</span>
+
+            <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;PlaneWave&#39;</span><span class="p">))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Ep = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pw</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;Es = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pw</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Phase p= &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pw</span><span class="o">.</span><span class="n">phases</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;Phase s = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pw</span><span class="o">.</span><span class="n">phases</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Wavevector = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pw</span><span class="o">.</span><span class="n">wavevector</span><span class="p">)))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span></div>
+
+            <span class="c1"># self.isSet.emit(True)</span>
+
+<div class="viewcode-block" id="PlaneWaveWidget.on_receive_info">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PlaneWaveWidget.on_receive_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_receive_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="n">Ep</span><span class="p">,</span> <span class="n">Es</span><span class="p">,</span> <span class="n">phasep</span><span class="p">,</span> <span class="n">phases</span> <span class="o">=</span> <span class="p">[</span><span class="nb">complex</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[:</span><span class="mi">4</span><span class="p">]]</span>
+        <span class="n">wavevector</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="mi">4</span><span class="p">:]]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">Ep</span><span class="p">,</span> <span class="n">Es</span><span class="p">,</span> <span class="n">phasep</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane_wave</span> <span class="o">=</span> <span class="n">Sources</span><span class="o">.</span><span class="n">PlaneWave</span><span class="p">(</span><span class="n">Ep</span><span class="p">,</span> <span class="n">Es</span><span class="p">,</span> <span class="n">phasep</span><span class="p">,</span> <span class="n">phases</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isSet</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;PlaneWave&#39;</span><span class="p">))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Ep = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Ep</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, Es = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Es</span><span class="p">)))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Phase p = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">phasep</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;, Phase s = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">phases</span><span class="p">)))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;Wavevector = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlaneWaveWidget.contextMenuEvent">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PlaneWaveWidget.contextMenuEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">context_menu</span> <span class="o">=</span> <span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">remove_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Remove Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">change_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Change Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">remove_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_widget</span><span class="p">)</span>
+        <span class="n">change_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_widget</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">remove_action</span><span class="p">)</span>
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">change_action</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">globalPos</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="PlaneWaveWidget.change_widget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PlaneWaveWidget.change_widget">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Implement the logic to change the widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Widget Changed&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PointSourceInitializationWidget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">PointSourceInitializationWidget</span><span class="p">(</span><span class="n">InitializationWidget</span><span class="p">):</span>
+    <span class="n">sendCoordinates</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">tuple</span><span class="p">)</span>
+    <span class="n">sendBrightness</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">non_numbers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_data</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PointSourceInitializationWidget.request_data">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.request_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">request_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Point Source&quot;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_input</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_input</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_input</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">QDoubleValidator</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">QDoubleValidator</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">QDoubleValidator</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">QDoubleValidator</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s1">&#39;1.0&#39;</span><span class="p">)</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="n">hlayout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Brightness&quot;</span><span class="p">))</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">hlayout</span><span class="p">)</span>
+
+        <span class="n">hlayout</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Coordinates&quot;</span><span class="p">))</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="p">)</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="p">)</span>
+        <span class="n">hlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">hlayout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">send_brightness</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceInitializationWidget.send_coordinates">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.send_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">send_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="o">.</span><span class="n">text</span><span class="p">()</span> <span class="ow">in</span> <span class="n">PointSourceInitializationWidget</span><span class="o">.</span><span class="n">non_numbers</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="o">.</span><span class="n">text</span><span class="p">()</span> <span class="ow">in</span> <span class="n">PointSourceInitializationWidget</span><span class="o">.</span><span class="n">non_numbers</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="o">.</span><span class="n">text</span><span class="p">()</span> <span class="ow">in</span> <span class="n">PointSourceInitializationWidget</span><span class="o">.</span><span class="n">non_numbers</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_input</span><span class="o">.</span><span class="n">text</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_input</span><span class="o">.</span><span class="n">text</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z_input</span><span class="o">.</span><span class="n">text</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sendCoordinates</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceInitializationWidget.send_brightness">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.send_brightness">[docs]</a>
+    <span class="k">def</span> <span class="nf">send_brightness</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="o">.</span><span class="n">text</span><span class="p">()</span> <span class="ow">in</span> <span class="n">PointSourceInitializationWidget</span><span class="o">.</span><span class="n">non_numbers</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sendBrightness</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightess_input</span><span class="o">.</span><span class="n">text</span><span class="p">()))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PointSourceWidget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget">[docs]</a>
+<span class="k">class</span> <span class="nc">PointSourceWidget</span><span class="p">(</span><span class="n">SourceWidget</span><span class="p">):</span>
+    <span class="n">isSet</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightnes</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_ui</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PointSourceWidget.init_ui">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.init_ui">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_ui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span> <span class="o">=</span> <span class="n">PointSourceInitializationWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="p">)</span>
+        <span class="n">ok_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Ok&quot;</span><span class="p">)</span>
+        <span class="n">ok_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_click_ok</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">ok_button</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iwlayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="o">.</span><span class="n">sendCoordinates</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_receive_coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_widget</span><span class="o">.</span><span class="n">sendBrightness</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_receive_brightness</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceWidget.on_receive_brightness">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.on_receive_brightness">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_receive_brightness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brightness</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightnes</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">brightness</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceWidget.on_receive_coordinates">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.on_receive_coordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_receive_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceWidget.on_click_ok">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.on_click_ok">[docs]</a>
+    <span class="k">def</span> <span class="nf">on_click_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialization_window</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="s1">&#39;PointSource&#39;</span><span class="p">))</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QLabel</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point_source</span> <span class="o">=</span> <span class="n">Sources</span><span class="o">.</span><span class="n">PointSource</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">brightnes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isSet</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSourceWidget.contextMenuEvent">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.contextMenuEvent">[docs]</a>
+    <span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="n">context_menu</span> <span class="o">=</span> <span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">remove_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Remove Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">change_action</span> <span class="o">=</span> <span class="n">QAction</span><span class="p">(</span><span class="s2">&quot;Change Widget&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="n">remove_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">remove_widget</span><span class="p">)</span>
+        <span class="n">change_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">change_widget</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">remove_action</span><span class="p">)</span>
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">change_action</span><span class="p">)</span>
+
+        <span class="n">context_menu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">globalPos</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="PointSourceWidget.change_widget">
+<a class="viewcode-back" href="../source/GUIWidgets.html#GUIWidgets.PointSourceWidget.change_widget">[docs]</a>
+    <span class="k">def</span> <span class="nf">change_widget</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Implement the logic to change the widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Widget Changed&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+<map id="inheritanceb8a9d9e0ae" name="inheritanceb8a9d9e0ae">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,5,260,32"/>
+<area shape="rect" id="node3" href="#Sources.PlaneWave" target="_top" title="Electric field of a plane wave" alt="" coords="308,5,395,32"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map>

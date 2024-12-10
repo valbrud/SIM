@@ -1,0 +1,10 @@
+<map id="inheritance2559bf1cee" name="inheritance2559bf1cee">
+<area shape="rect" id="node1" title="Create a collection of name/value pairs." alt="" coords="20,122,87,147"/>
+<area shape="rect" id="node4" href="#GUI.PlottingMode" target="_top" title="PlottingMode" alt="" coords="147,99,237,123"/>
+<area shape="rect" id="node10" href="#GUI.View" target="_top" title="View" alt="" coords="158,145,225,170"/>
+<area shape="rect" id="node2" href="#GUI.MainWindow" target="_top" title="MainWindow" alt="" coords="674,28,763,53"/>
+<area shape="rect" id="node3" title="QMainWindow(parent: Optional[QWidget] = None, flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags())" alt="" coords="531,28,630,53"/>
+<area shape="rect" id="node5" title="QWidget(parent: Optional[QWidget] = None, flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags())" alt="" coords="420,28,487,53"/>
+<area shape="rect" id="node6" title="QObject(parent: Optional[QObject] = None)" alt="" coords="295,5,362,30"/>
+<area shape="rect" id="node8" title="QPaintDevice()" alt="" coords="281,52,376,76"/>
+</map>

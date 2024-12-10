@@ -1,0 +1,8 @@
+<map id="inheritancea4c640867a" name="inheritancea4c640867a">
+<area shape="rect" id="node1" href="#SSNRBasedFiltering.FlatNoiseFilter3d" target="_top" title="FlatNoiseFilter3d" alt="" coords="5,107,126,133"/>
+<area shape="rect" id="node2" href="#SSNRBasedFiltering.FlatNoiseFilter3dModel" target="_top" title="FlatNoiseFilter3dModel" alt="" coords="193,107,348,133"/>
+<area shape="rect" id="node3" href="#SSNRBasedFiltering.WienerFilter3d" target="_top" title="WienerFilter3d" alt="" coords="13,31,118,57"/>
+<area shape="rect" id="node4" href="#SSNRBasedFiltering.WienerFilter3dModel" target="_top" title="WienerFilter3dModel" alt="" coords="200,5,340,32"/>
+<area shape="rect" id="node6" href="#SSNRBasedFiltering.WienerFilter3dReconstruction" target="_top" title="WienerFilter3dReconstruction" alt="" coords="174,56,367,83"/>
+<area shape="rect" id="node5" href="#SSNRBasedFiltering.WienerFilter3dModelSDR" target="_top" title="WienerFilter3dModelSDR" alt="" coords="415,5,584,32"/>
+</map>

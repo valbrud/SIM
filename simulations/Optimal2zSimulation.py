@@ -2,7 +2,7 @@ from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
 from SSNRCalculator import SSNR3dSIM2dShifts
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 
 
 if __name__ == "__main__":
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     theta = np.linspace(1 * np.pi/20, np.pi/2, 10)
     ratios = np.linspace(0.1, 1, 10)
 
-    optical_system = Lens3D(alpha=alpha_lens)
+    optical_system = System4f3D(alpha=alpha_lens)
     optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
 
     with open("simulations/5waves_new", 'w', newline='') as file:

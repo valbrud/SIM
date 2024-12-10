@@ -14,7 +14,7 @@ from config.IlluminationConfigurations import *
 import unittest
 from matplotlib.widgets import Slider
 import SSNRCalculator
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 sys.path.append('../')
 configurations = BFPConfiguration()
 import kernels
@@ -54,7 +54,7 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -285,7 +285,7 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -528,7 +528,7 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -707,7 +707,7 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -869,7 +869,7 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fx = fx / (2 * NA)
         two_NA_fy = fy / (2 * NA)
 
-        optical_system = Lens2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1057,7 +1057,7 @@ class TestFinalFilter(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1297,7 +1297,7 @@ class TestFinalFilter(unittest.TestCase):
         image = image
         # plt.imshow(image)
         # plt.show()
-        optical_system = Lens2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 

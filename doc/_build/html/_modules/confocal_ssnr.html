@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>confocal_ssnr &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>confocal_ssnr</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for confocal_ssnr</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">confocal_ssnr.py</span>
+
+<span class="sd">This script contains test computations of the SSNR in confocal microscopy, ISM and Rescan.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">OpticalSystems</span>
+<span class="kn">import</span> <span class="nn">wrappers</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">5</span>
+<span class="n">nmedium</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">nobject</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">NA</span> <span class="o">=</span> <span class="n">nmedium</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asin</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+<span class="n">fz_max_diff</span> <span class="o">=</span> <span class="n">nmedium</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+<span class="n">dx</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">NA</span><span class="p">)</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="n">dx</span>
+<span class="n">dz</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">fz_max_diff</span><span class="p">)</span>
+<span class="n">N</span> <span class="o">=</span> <span class="mi">101</span>
+<span class="n">max_r</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span>
+<span class="n">max_z</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dz</span>
+<span class="n">psf_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">max_r</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">max_z</span><span class="p">))</span>
+<span class="n">dV</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">dz</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">max_r</span><span class="p">,</span> <span class="n">max_r</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">max_z</span><span class="p">,</span> <span class="n">max_z</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">fy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dy</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dy</span><span class="p">),</span> <span class="n">N</span><span class="p">)</span>
+<span class="n">fz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dz</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dz</span><span class="p">),</span> <span class="n">N</span><span class="p">)</span>
+
+<span class="n">Fx</span><span class="p">,</span> <span class="n">Fy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TestConfocalSSNR">
+<a class="viewcode-back" href="../source/confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR">[docs]</a>
+<span class="k">class</span> <span class="nc">TestConfocalSSNR</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestConfocalSSNR.test_SSNR2D">
+<a class="viewcode-back" href="../source/confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR.test_SSNR2D">[docs]</a>
+    <span class="k">def</span> <span class="nf">test_SSNR2D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pupil_function</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Fx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">&lt;=</span> <span class="n">NA</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># plt.imshow(pupil_function, extent=(fx[0]/(2 * NA), fx[-1]/(2 * NA), fy[0]/(2 * NA), fy[-1]/(2 * NA)))</span>
+        <span class="n">optical_system</span> <span class="o">=</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">System4f2D</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">refractive_index</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">PSF_em</span><span class="p">,</span> <span class="n">OTF_em</span> <span class="o">=</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">((</span><span class="n">psf_size</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+        <span class="n">SSNR_widefield</span> <span class="o">=</span> <span class="n">OTF_em</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">OTF_confocal</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">PSF_em</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">OTF_confocal</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">OTF_confocal</span><span class="p">)</span>
+        <span class="n">SSNR_confocal</span> <span class="o">=</span> <span class="n">OTF_confocal</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+        <span class="c1"># ax.plot(fy/(2 * NA), SSNR_confocal[N//2, :], label=&#39;confocal&#39;)</span>
+        <span class="c1"># ax.plot(fy/(2 * NA), SSNR_widefield, label=&#39;widefield&#39;)</span>
+        <span class="n">nmax</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">obstacles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nmax</span><span class="p">)</span> <span class="o">/</span> <span class="n">nmax</span> <span class="o">*</span> <span class="n">NA</span>
+        <span class="k">for</span> <span class="n">obstacle</span> <span class="ow">in</span> <span class="n">obstacles</span><span class="p">:</span>
+            <span class="n">pupil_function_annular</span> <span class="o">=</span> <span class="n">pupil_function</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Fx</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">Fy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">&gt;=</span> <span class="n">obstacle</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">PSF_ex</span><span class="p">,</span> <span class="n">OTF_ex</span> <span class="o">=</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">(</span><span class="n">pupil_function</span><span class="o">=</span><span class="n">pupil_function_annular</span><span class="p">)</span>
+            <span class="c1"># plt.imshow(PSF_ex)</span>
+            <span class="c1"># ax.plot(fy / (2 * NA), OTF_ex[N//2, :], label = f&#39;r_closed = {round(obstacle/NA, 1)} R&#39;)</span>
+            <span class="c1"># plt.show()</span>
+            <span class="n">OTF_eff</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">PSF_ex</span> <span class="o">*</span> <span class="n">PSF_em</span><span class="p">)</span>
+            <span class="n">OTF_eff</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">OTF_eff</span><span class="p">)</span>
+            <span class="n">SSNR_eff</span> <span class="o">=</span> <span class="n">OTF_eff</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">SSNR_confocal</span><span class="o">/</span><span class="n">SSNR_eff</span>
+            <span class="c1"># ax.plot((fy / (2 * NA)), ratio[N//2, :], label = f&#39;r_closed = {round(obstacle/NA, 1)} R&#39;)</span>
+            <span class="c1"># ax.set_ylim(0, 1.1)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="n">xmin</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">xmax</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fy</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">NA</span><span class="p">),</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span> <span class="n">SSNR_eff</span><span class="p">[</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;r_closed = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">obstacle</span><span class="o">/</span><span class="n">NA</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s1"> R&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestConfocalSSNR.test_SSNR3D">
+<a class="viewcode-back" href="../source/confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR.test_SSNR3D">[docs]</a>
+    <span class="k">def</span> <span class="nf">test_SSNR3D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">annular_pupil_function</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">r_min</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">r_max</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">r_min</span> <span class="o">&lt;</span> <span class="n">rho</span> <span class="o">&lt;</span> <span class="n">r_max</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">double_annular_pupil_function</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">rhomax</span><span class="p">,</span> <span class="n">relwidth</span><span class="p">,</span> <span class="n">Iratio</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Iratio</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rho</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rho</span> <span class="o">&lt;=</span> <span class="n">relwidth</span> <span class="o">*</span> <span class="n">rhomax</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">+</span>  \
+                     <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rho</span> <span class="o">&gt;=</span> <span class="n">rhomax</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">relwidth</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rho</span> <span class="o">&lt;=</span> <span class="n">rhomax</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">optical_system</span> <span class="o">=</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">System4f3D</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">refractive_index_sample</span> <span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">refractive_index_medium</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">)</span>
+        <span class="n">PSF_em</span><span class="p">,</span> <span class="n">OTF_em</span> <span class="o">=</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">((</span><span class="n">psf_size</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+        <span class="c1"># plt.imshow(PSF_em[:, :, N//2])</span>
+        <span class="c1"># plt.show()</span>
+        <span class="n">SSNR_widefield</span> <span class="o">=</span> <span class="n">OTF_em</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">OTF_confocal</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">PSF_em</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">OTF_confocal</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">OTF_confocal</span><span class="p">)</span>
+        <span class="c1"># plt.imshow(OTF_confocal[:, N // 2, :].real)</span>
+        <span class="c1"># plt.show()</span>
+        <span class="n">SSNR_confocal</span> <span class="o">=</span> <span class="n">OTF_confocal</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fy</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">NA</span><span class="p">),</span> <span class="n">OTF_confocal</span><span class="p">[</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;confocal&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fy</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">NA</span><span class="p">),</span> <span class="n">OTF_confocal</span><span class="p">[</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;confocal&#39;</span><span class="p">)</span>
+        <span class="c1"># ax.plot(fy/(2 * NA), SSNR_widefield, label=&#39;widefield&#39;)</span>
+        <span class="n">Irmax</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">rhomax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">relwidth</span> <span class="o">=</span> <span class="mf">0.2</span>
+        <span class="k">for</span> <span class="n">Ir</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Irmax</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">pupil_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">rho</span><span class="p">:</span> <span class="n">double_annular_pupil_function</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">rhomax</span><span class="o">=</span><span class="n">rhomax</span><span class="p">,</span> <span class="n">relwidth</span><span class="o">=</span><span class="n">relwidth</span><span class="p">,</span> <span class="n">Iratio</span><span class="o">=</span><span class="n">Ir</span><span class="p">)</span>
+            <span class="n">PSF_ex</span><span class="p">,</span> <span class="n">OTF_ex</span> <span class="o">=</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">((</span><span class="n">psf_size</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">pupil_function</span><span class="o">=</span><span class="n">pupil_function</span><span class="p">)</span>
+            <span class="c1"># plt.imshow(PSF_ex[:, :, N//2].real)</span>
+            <span class="c1"># plt.show()</span>
+            <span class="c1"># ax.plot(fy / (2 * NA), OTF_ex[N//2, :, N//2], label = f&#39;I ratio = {Ir}&#39;)</span>
+            <span class="c1"># plt.show()</span>
+            <span class="n">OTF_eff</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">PSF_ex</span> <span class="o">*</span> <span class="n">PSF_em</span><span class="p">)</span>
+            <span class="n">OTF_eff</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">OTF_eff</span><span class="p">)</span>
+            <span class="c1"># plt.imshow(OTF_eff[:, N//2, :].real)</span>
+            <span class="c1"># plt.show()</span>
+            <span class="n">SSNR_eff</span> <span class="o">=</span> <span class="n">OTF_eff</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">SSNR_confocal</span> <span class="o">/</span> <span class="n">SSNR_eff</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fy</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">NA</span><span class="p">),</span> <span class="n">OTF_eff</span><span class="p">[</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;I ratio = </span><span class="si">{</span><span class="n">Ir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fy</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">NA</span><span class="p">),</span> <span class="n">OTF_eff</span><span class="p">[</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="n">label</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;I ratio = </span><span class="si">{</span><span class="n">Ir</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="c1"># ax.plot((fy / (2 * NA)), ratio[N//2, :], label = f&#39;I ratioj = {Ir}&#39;)</span>
+            <span class="c1"># ax.set_ylim(0, 1.1)</span>
+            <span class="c1"># ax.hlines(y=10, xmin=-2, xmax=2, color=&#39;black&#39;)</span>
+            <span class="c1"># ax.plot(fy / (2 * NA), 1 + 10 ** 3 * SSNR_eff[N // 2, :], label=f&#39;I ratio = {Ir}&#39;)</span>
+            <span class="c1"># ax.set_yscale(&#39;log&#39;)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

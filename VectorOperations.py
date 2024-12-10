@@ -1,3 +1,12 @@
+"""
+VectorOperations.py
+
+This module contains utility functions for vector operations.
+
+Classes:
+    VectorOperations: Class containing static methods for various vector operations.
+"""
+
 import numpy as np
 import globvar
 import cmath

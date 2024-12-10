@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import io
 from config.IlluminationConfigurations import BFPConfiguration
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 from Box import Box
 
 app = Flask(__name__)
@@ -24,7 +24,7 @@ max_r = N // 2 * dx
 max_z = N // 2 * dz
 psf_size = 2 * np.array((max_r, max_r, max_z))
 
-optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, apodization_function="Sine")
 
 @app.route('/')

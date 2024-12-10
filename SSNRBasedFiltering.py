@@ -1,11 +1,32 @@
-import SSNRCalculator
+"""
+SSNRBasedFiltering.py
+
+This module contains classes for filtering images based on their total SSNR.
+
+Classes:
+    SSNRBasedFiltering: Base class for filtering images based on SSNR.
+    WienerFilter3d: Class for 3D Wiener filtering based on SSNR.
+    WienerFilter3dModel: Class for 3D Wiener filtering of model objects based on SSNR.
+    WienerFilter3dReconstruction: Class for 3D Wiener filtering of reconstructions based on SSNR.
+    WienerFilter3dModelSDR: Class for 3D Wiener filtering of model objects with SDR based on SSNR.
+    FlatNoiseFilter3d: Class for 3D flat noise filtering based on SSNR.
+    FlatNoiseFilter3dModel: Class for 3D flat noise filtering of model objects based on SSNR.
+"""
+
 import numpy as np
-import skimage
-import scipy
 import matplotlib.pyplot as plt
 from abc import abstractmethod
 import wrappers
 import stattools
+from abc import abstractmethod
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import stattools
+import wrappers
+
+
 class WienerFilter3d:
     def __init__(self, ssnr_calculator, apodization_filter=1):
 

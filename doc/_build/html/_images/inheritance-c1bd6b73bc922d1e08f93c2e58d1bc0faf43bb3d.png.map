@@ -1,0 +1,5 @@
+<map id="inheritance33426058fa" name="inheritance33426058fa">
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="161,5,285,32"/>
+<area shape="rect" id="node3" href="#OpticalSystems.System4f3D" target="_top" title="System4f3D" alt="" coords="333,5,427,32"/>
+</map>

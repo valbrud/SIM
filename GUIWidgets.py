@@ -1,3 +1,20 @@
+"""
+GUIWidgets.py
+
+This module contains utility widgets for the GUI components.
+
+Classes:
+    SourceWidget: Base class for source widgets.
+    IntensityPlaneWaveWidget: Widget for initializing and displaying intensity plane wave sources.
+    PlaneWaveWidget: Widget for initializing and displaying plane wave sources.
+    PointSourceInitializationWidget: Widget for initializing point source settings.
+    PointSourceWidget: Widget for initializing and displaying point sources.
+
+This module and related ones is currently a demo-version of the user-interface, and will
+possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
+documentation is provided.
+"""
+
 import Sources
 import numpy as np
 from GUIInitializationWidgets import *

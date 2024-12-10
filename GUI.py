@@ -1,7 +1,20 @@
+"""
+GUI.py
+
+This module contains the main graphical user interface (GUI) components of the application.
+
+Classes:
+    MainWindow: The main window of the application.
+    View: Enum to switch between different planes of view for 3D plots.
+    PlottingMode: Enum to switch between different plotting modes.
+
+This module and related ones is currently a demo-version of the user-interface, and will
+possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
+documentation is provided.
+"""
+
 import sys
 import os
-import time
-
 import numpy as np
 import Box
 import Sources
@@ -13,6 +26,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QComboBox, QFileDialog, QLabel, QSlider, QScrollArea)
+
+
 from enum import Enum
 class View(Enum):
     XY = 0
@@ -29,7 +44,7 @@ class MainWindow(QMainWindow):
 
         np.set_printoptions(precision=2, suppress=True)
 
-        self.init_ui(box)
+        self.init_ui()
         if not box:
             self.box = Box.Box({}, box_size=10, point_number=40)
         else:
@@ -41,7 +56,8 @@ class MainWindow(QMainWindow):
         self.colorbar = None
         self.view = View.XY
         self.plotting_mode = PlottingMode.linear
-    def init_ui(self, box):
+
+    def init_ui(self):
         width = 1200
         height = 800
         self.setMinimumSize(width, height)
@@ -89,7 +105,6 @@ class MainWindow(QMainWindow):
         self.config_layout.addWidget(scroll_area, 2)
 
         # Third Column(Add sources)
-        self.source_buttons_layout = QVBoxLayout()
         self.config_layout.addLayout(self.source_buttons_layout, 1)
 
         add_point_source_button = QPushButton("Add a Point Source")

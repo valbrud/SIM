@@ -11,7 +11,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave
 import tqdm
@@ -43,10 +43,10 @@ class Testssnr(unittest.TestCase):
         waves = configurations.get_4_oblique_s_waves_and_circular_normal(np.pi/4, 1, 1)
 
         illumination_polarized = Illumination(waves)
-        optical_system_fourier = Lens3D(interpolation_method="Fourier")
+        optical_system_fourier = System4f3D(interpolation_method="Fourier")
         optical_system_fourier.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                    apodization_function="Sine")
-        optical_system_linear = Lens3D()
+        optical_system_linear = System4f3D()
         optical_system_linear.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                   apodization_function="Sine")
         wavevectors = illumination_polarized.get_all_wavevectors()
@@ -156,7 +156,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens2D(alpha=NA)
+        optical_system = System4f2D(alpha=NA)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r), N))
 
@@ -241,7 +241,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=NA)
+        optical_system = System4f3D(alpha=NA)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
@@ -364,7 +364,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=np.pi/4)
+        optical_system = System4f3D(alpha=np.pi/4)
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
@@ -501,7 +501,7 @@ class Testssnr(unittest.TestCase):
         multiplier = 10 ** 3
         ylim = 10**2
 
-        optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+        optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -728,7 +728,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
 
-        optical_system = Lens3D()
+        optical_system = System4f3D()
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -939,7 +939,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=theta)
+        optical_system = System4f3D(alpha=theta)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
@@ -1038,7 +1038,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         scaled_fz = fz / (1 - np.cos(theta))
 
-        optical_system = Lens3D()
+        optical_system = System4f3D()
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1214,7 +1214,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
 
-        optical_system = Lens3D(alpha = np.pi/3)
+        optical_system = System4f3D(alpha = np.pi/3)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1381,7 +1381,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fx = fx / (2 * NA)
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
-        optical_system = Lens3D(alpha= 2 * np.pi / 5)
+        optical_system = System4f3D(alpha= 2 * np.pi / 5)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1521,7 +1521,7 @@ class TestApproximations(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 

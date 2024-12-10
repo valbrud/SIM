@@ -1,5 +1,15 @@
-import numpy as np
+"""
+wrappers.py
 
+This module contains wrapper functions for Fourier transforms to make shifts automatically and
+make it possible to switch between their implementations.
+
+Functions:
+    wrapped_fftn: Wrapper for the FFTN function.
+    wrapped_ifftn: Wrapper for the IFFTN function.
+"""
+
+import numpy as np
 
 # Wrappers to avoid shifting the arrays every time DFT is used
 def wrapper_ft(ft):

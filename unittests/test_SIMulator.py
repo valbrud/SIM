@@ -12,7 +12,7 @@ from config.IlluminationConfigurations import *
 import unittest
 import time
 from matplotlib.widgets import Slider
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 import ShapesGenerator
 from SIMulator import SIMulator
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM2dShiftsFiniteKernel
@@ -42,7 +42,7 @@ class TestSIMImages(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         plt.imshow(optical_system.psf[:, :, N//2])
@@ -144,7 +144,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         plt.imshow(image[:, :, N // 2])
@@ -249,7 +249,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         plt.imshow(image[:, :, N // 2])
@@ -384,7 +384,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         # plt.imshow(image[:, :, N // 2])
@@ -508,7 +508,7 @@ class TestReconstruction(unittest.TestCase):
         image += 100
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         # plt.imshow(image[:, :, N // 2])

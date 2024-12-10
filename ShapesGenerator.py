@@ -1,3 +1,14 @@
+"""
+ShapesGenerator.py
+
+This module contains functions for generating various simulated images used in simulations.
+
+Functions:
+    generate_random_spheres: Generates an array with random spheres.
+    generate_sphere_slices: Generates an array with slices of spheres.
+    generate_random_lines: Generates an image with randomly oriented lines.
+"""
+
 import numpy as np
 from scipy.ndimage import gaussian_filter
 def generate_random_spheres(psf_size, point_number, r = 0.1, N=10, I = 1000):

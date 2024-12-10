@@ -1,3 +1,13 @@
+"""
+Box.py
+
+This module contains classes for handling simulation volume and containing fields.
+
+Classes:
+    BoxSIM: Class, representing the discrete volume, where all the fields and intensities are computed
+    Field: Class, computing and storing a field produced by the corresponding source
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider

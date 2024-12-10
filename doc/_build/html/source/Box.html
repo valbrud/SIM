@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Box module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GUI module" href="GUI.html" />
+    <link rel="prev" title="SIM" href="modules.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Box module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="modules.html">SIM</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="GUI.html">GUI module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-Box">
+<span id="box-module"></span><h1>Box module<a class="headerlink" href="#module-Box" title="Link to this heading">¶</a></h1>
+<p>Box.py</p>
+<p>This module contains classes for handling simulation volume and containing fields.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>BoxSIM: Class, representing the discrete volume, where all the fields and intensities are computed
+Field: Class, computing and storing a field produced by the corresponding source</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-07d00ca3487cb300105fdcbfeacf780be9c1367d.png" alt="Inheritance diagram of Box" usemap="#inheritance19f5e9ca04" class="inheritance graphviz" /></div>
+<map id="inheritance19f5e9ca04" name="inheritance19f5e9ca04">
+<area shape="rect" id="node1" href="#Box.Box" target="_top" title="Box" alt="" coords="5,5,77,32"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="Box.Box">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Box.</span></span><span class="sig-name descname"><span class="pre">Box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-e54919925874f2ddd549f92e849447a8cb4f6275.png" alt="Inheritance diagram of Box.Box" usemap="#inheritancea8c2774060" class="inheritance graphviz" /></div>
+<map id="inheritancea8c2774060" name="inheritancea8c2774060">
+<area shape="rect" id="node1" href="#Box.Box" target="_top" title="Box" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.add_source">
+<span class="sig-name descname"><span class="pre">add_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.add_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.add_source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_axes">
+<span class="sig-name descname"><span class="pre">compute_axes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_axes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_axes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_electric_field">
+<span class="sig-name descname"><span class="pre">compute_electric_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_electric_field" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_grid">
+<span class="sig-name descname"><span class="pre">compute_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_grid" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_intensity_and_spacial_waves_numerically">
+<span class="sig-name descname"><span class="pre">compute_intensity_and_spacial_waves_numerically</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_intensity_and_spacial_waves_numerically"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_intensity_and_spacial_waves_numerically" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_intensity_fourier_space">
+<span class="sig-name descname"><span class="pre">compute_intensity_fourier_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_intensity_fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_intensity_fourier_space" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_intensity_from_electric_field">
+<span class="sig-name descname"><span class="pre">compute_intensity_from_electric_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_intensity_from_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_intensity_from_electric_field" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.compute_intensity_from_spacial_waves">
+<span class="sig-name descname"><span class="pre">compute_intensity_from_spacial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.compute_intensity_from_spacial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.compute_intensity_from_spacial_waves" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.get_approximated_intensity_sources">
+<span class="sig-name descname"><span class="pre">get_approximated_intensity_sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.get_approximated_intensity_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.get_approximated_intensity_sources" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.get_plane_waves">
+<span class="sig-name descname"><span class="pre">get_plane_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.get_plane_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.get_plane_waves" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.get_sources">
+<span class="sig-name descname"><span class="pre">get_sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.get_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.get_sources" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.get_spacial_waves">
+<span class="sig-name descname"><span class="pre">get_spacial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.get_spacial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.get_spacial_waves" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.plot_approximate_intensity_fourier_space_slices">
+<span class="sig-name descname"><span class="pre">plot_approximate_intensity_fourier_space_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.plot_approximate_intensity_fourier_space_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.plot_approximate_intensity_fourier_space_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.plot_approximate_intensity_slices">
+<span class="sig-name descname"><span class="pre">plot_approximate_intensity_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.plot_approximate_intensity_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.plot_approximate_intensity_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.plot_intensity_fourier_space_slices">
+<span class="sig-name descname"><span class="pre">plot_intensity_fourier_space_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.plot_intensity_fourier_space_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.plot_intensity_fourier_space_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.plot_intensity_slices">
+<span class="sig-name descname"><span class="pre">plot_intensity_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.plot_intensity_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.plot_intensity_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.plot_slices">
+<span class="sig-name descname"><span class="pre">plot_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array3d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.plot_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.plot_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.Box.remove_source">
+<span class="sig-name descname"><span class="pre">remove_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Box.remove_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Box.remove_source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Box.BoxSIM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Box.</span></span><span class="sig-name descname"><span class="pre">BoxSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination=&lt;Illumination.Illumination</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_info=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#BoxSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.BoxSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Box.Box" title="Box.Box"><code class="xref py py-class docutils literal notranslate"><span class="pre">Box</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-bd8e9b6cdfafc9f02184925741feb996a5383cbb.png" alt="Inheritance diagram of Box.BoxSIM" usemap="#inheritance9e0264ed1c" class="inheritance graphviz" /></div>
+<map id="inheritance9e0264ed1c" name="inheritance9e0264ed1c">
+<area shape="rect" id="node1" href="#Box.Box" target="_top" title="Box" alt="" coords="5,5,77,32"/>
+<area shape="rect" id="node2" href="#Box.BoxSIM" target="_top" title="BoxSIM" alt="" coords="125,5,197,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Box.BoxSIM.compute_total_illumination">
+<span class="sig-name descname"><span class="pre">compute_total_illumination</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#BoxSIM.compute_total_illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.BoxSIM.compute_total_illumination" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Box.BoxSIM.get_intensity">
+<span class="sig-name descname"><span class="pre">get_intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#BoxSIM.get_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.BoxSIM.get_intensity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Box.Field">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Box.</span></span><span class="sig-name descname"><span class="pre">Field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Box.html#Field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Box.Field" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-c1f3186faf5afed91c7df331af8653ad876554d3.png" alt="Inheritance diagram of Box.Field" usemap="#inheritance24c2b2b6b0" class="inheritance graphviz" /></div>
+<map id="inheritance24c2b2b6b0" name="inheritance24c2b2b6b0">
+<area shape="rect" id="node1" href="#Box.Field" target="_top" title="Field" alt="" coords="5,5,77,32"/>
+</map></dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="modules.html">SIM</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="GUI.html">GUI module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

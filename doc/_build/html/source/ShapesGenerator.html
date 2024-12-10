@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ShapesGenerator module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Sources module" href="Sources.html" />
+    <link rel="prev" title="SSNRCalculator module" href="SSNRCalculator.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>ShapesGenerator module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="SSNRCalculator.html">SSNRCalculator module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="Sources.html">Sources module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-ShapesGenerator">
+<span id="shapesgenerator-module"></span><h1>ShapesGenerator module<a class="headerlink" href="#module-ShapesGenerator" title="Link to this heading">¶</a></h1>
+<p>ShapesGenerator.py</p>
+<p>This module contains functions for generating various simulated images used in simulations.</p>
+<dl class="simple">
+<dt>Functions:</dt><dd><p>generate_random_spheres: Generates an array with random spheres.
+generate_sphere_slices: Generates an array with slices of spheres.
+generate_random_lines: Generates an image with randomly oriented lines.</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="ShapesGenerator.generate_random_lines">
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_lines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_lines" title="Link to this definition">¶</a></dt>
+<dd><p>Generate an image with randomly oriented lines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>point_number</strong> – Number of points defining the size of the image grid (image will be point_number x point_number).</p></li>
+<li><p><strong>psf_size</strong> – Tuple of (psf_x_size, psf_y_size) defining scaling in x and y directions.</p></li>
+<li><p><strong>line_width</strong> – Width of the lines.</p></li>
+<li><p><strong>num_lines</strong> – Number of lines to generate.</p></li>
+<li><p><strong>intensity</strong> – Total intensity of each line.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generated image with lines.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ShapesGenerator.generate_random_spheres">
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_spheres</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_spheres"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_spheres" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ShapesGenerator.generate_sphere_slices">
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_sphere_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_sphere_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_sphere_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="SSNRCalculator.html">SSNRCalculator module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="Sources.html">Sources module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

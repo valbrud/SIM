@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Illumination &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Illumination</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for Illumination</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Illumination.py</span>
+
+<span class="sd">This module contains the Illumination class, which handles the simulation and analysis of illumination patterns in optical systems.</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    Illumination: Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">Sources</span>
+<span class="kn">from</span> <span class="nn">Sources</span> <span class="kn">import</span> <span class="n">IntensityPlaneWave</span>
+<span class="kn">from</span> <span class="nn">VectorOperations</span> <span class="kn">import</span> <span class="n">VectorOperations</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">stattools</span>
+<div class="viewcode-block" id="Illumination">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination">[docs]</a>
+<span class="k">class</span> <span class="nc">Illumination</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        angles (np.ndarray): Array of rotation angles.</span>
+<span class="sd">        _spacial_shifts (list): List of spatial shifts.</span>
+<span class="sd">        _Mr (int): Number of rotations.</span>
+<span class="sd">        Mt (int): Number of spatial shifts.</span>
+<span class="sd">        waves (dict): Dictionary of intensity plane waves.</span>
+<span class="sd">        wavevectors2d (list): List of 2D wavevectors.</span>
+<span class="sd">        indices2d (list): List of 2D indices.</span>
+<span class="sd">        wavevectors3d (list): List of 3D wavevectors.</span>
+<span class="sd">        indices3d (list): List of 3D indices.</span>
+<span class="sd">        rearranged_indices (dict): Dictionary of rearranged indices.</span>
+<span class="sd">        xy_fourier_peaks (set): Set of 2D Fourier peaks.</span>
+<span class="sd">        phase_matrix (dict): Dictionary of all phase the relevant phase shifts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">intensity_plane_waves_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">],</span> <span class="n">Mr</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Illumination object with given intensity plane waves and number of rotations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            intensity_plane_waves_dict (dict): Dictionary of intensity plane waves.</span>
+<span class="sd">            Mr (int): Number of rotations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">Mr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spacial_shifts</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Mr</span> <span class="o">=</span> <span class="n">Mr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Mt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waves</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="p">:</span> <span class="n">intensity_plane_waves_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">intensity_plane_waves_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">intensity_plane_waves_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">)}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavevectors2d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices2d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wavevectors_projected</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavevectors3d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices3d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wavevectors</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rearranged_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rearrange_indices</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xy_fourier_peaks</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_phase_matrix</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Illumination.init_from_list">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.init_from_list">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">init_from_list</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">intensity_plane_waves_list</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">],</span> <span class="n">base_vector_lengths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">Mr</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Class method to initialize Illumination from a list of intensity plane waves.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            intensity_plane_waves_list (list): List of intensity plane waves.</span>
+<span class="sd">            base_vector_lengths (tuple): Base vector lengths of the illumination Fourier space Bravais lattice.</span>
+<span class="sd">            Mr (int): Number of rotations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Illumination: Initialized Illumination object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intensity_plane_waves_dict</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">index_frequencies</span><span class="p">(</span><span class="n">intensity_plane_waves_list</span><span class="p">,</span> <span class="n">base_vector_lengths</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">intensity_plane_waves_dict</span><span class="p">,</span> <span class="n">Mr</span> <span class="o">=</span> <span class="n">Mr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Illumination.index_frequencies">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.index_frequencies">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">index_frequencies</span><span class="p">(</span><span class="n">waves_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">],</span> <span class="n">base_vector_lengths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Static method to automatically index intensity plane waves given corresponding base vector lengths.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            waves_list (list): List of plane waves.</span>
+<span class="sd">            base_vector_lengths (tuple): Base vector lengths.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Dictionary of indexed frequencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intensity_plane_waves_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="n">waves_list</span><span class="p">:</span>
+            <span class="n">wavevector</span> <span class="o">=</span> <span class="n">wave</span><span class="o">.</span><span class="n">wavevector</span>
+            <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">base_vector_lengths</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">base_vector_lengths</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span> \
+                <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">base_vector_lengths</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span><span class="p">)</span> <span class="ow">in</span> <span class="n">intensity_plane_waves_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">intensity_plane_waves_dict</span><span class="p">[(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span><span class="p">)]</span> <span class="o">=</span> <span class="n">wave</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">intensity_plane_waves_dict</span><span class="p">[(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span><span class="p">)]</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">+=</span> <span class="n">wave</span><span class="o">.</span><span class="n">amplitude</span>
+        <span class="k">return</span> <span class="n">intensity_plane_waves_dict</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_rearrange_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rearrange indices for the computation of effective OTFs, required in SIM.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Dictionary of rearranged indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">index</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="p">:</span>
+                <span class="n">result_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">result_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">result_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">result_dict</span>
+
+<div class="viewcode-block" id="Illumination.find_ipw_from_pw">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.find_ipw_from_pw">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">find_ipw_from_pw</span><span class="p">(</span><span class="n">plane_waves</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Static method to find intensity plane waves</span>
+<span class="sd">         (i.e. Fourier transform of the illumination pattern) from plane waves.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plane_waves (list): List of plane waves.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of intensity plane waves.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">intensity_plane_waves</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">projection_index</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">plane_wave1</span> <span class="ow">in</span> <span class="n">plane_waves</span><span class="p">:</span>
+                <span class="n">amplitude1p</span> <span class="o">=</span> <span class="n">plane_wave1</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">projection_index</span><span class="p">]</span>
+                <span class="n">amplitude1s</span> <span class="o">=</span> <span class="n">plane_wave1</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">projection_index</span><span class="p">]</span>
+                <span class="n">amplitude1</span> <span class="o">=</span> <span class="n">amplitude1s</span> <span class="o">+</span> <span class="n">amplitude1p</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amplitude1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">wavevector1</span> <span class="o">=</span> <span class="n">plane_wave1</span><span class="o">.</span><span class="n">wavevector</span>
+
+                <span class="k">for</span> <span class="n">plane_wave2</span> <span class="ow">in</span> <span class="n">plane_waves</span><span class="p">:</span>
+                    <span class="n">amplitude2p</span> <span class="o">=</span> <span class="n">plane_wave2</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">projection_index</span><span class="p">]</span>
+                    <span class="n">amplitude2s</span> <span class="o">=</span> <span class="n">plane_wave2</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">projection_index</span><span class="p">]</span>
+                    <span class="n">amplitude2</span> <span class="o">=</span> <span class="n">amplitude2s</span> <span class="o">+</span> <span class="n">amplitude2p</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amplitude2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">3</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">wavevector2</span> <span class="o">=</span> <span class="n">plane_wave2</span><span class="o">.</span><span class="n">wavevector</span>
+                    <span class="n">wavevector_new</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">wavevector1</span> <span class="o">-</span> <span class="n">wavevector2</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">wavevector_new</span> <span class="ow">in</span> <span class="n">intensity_plane_waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">intensity_plane_waves</span><span class="p">[</span><span class="n">wavevector_new</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">(</span><span class="n">amplitude1</span> <span class="o">*</span> <span class="n">amplitude2</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span>
+                                                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wavevector_new</span><span class="p">)))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">intensity_plane_waves</span><span class="p">[</span><span class="n">wavevector_new</span><span class="p">]</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">+=</span> <span class="n">amplitude1</span> <span class="o">*</span> <span class="n">amplitude2</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">intensity_plane_waves</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Mr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Mr</span>
+
+    <span class="nd">@Mr</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">Mr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_Mr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Mr</span> <span class="o">=</span> <span class="n">new_Mr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">new_Mr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_spacial_waves</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spacial_shifts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spacial_shifts</span>
+
+    <span class="nd">@spacial_shifts</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">spacial_shifts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_spacial_shifts</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spacial_shifts</span> <span class="o">=</span> <span class="n">new_spacial_shifts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Mt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_spacial_shifts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_spacial_waves</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_phase_matrix</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Illumination.set_spacial_shifts_diagonally">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.set_spacial_shifts_diagonally">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_spacial_shifts_diagonally</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">base_vectors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the spatial shifts diagonally (i.e., all the spacial shifts are assumed to be on the same lin).</span>
+<span class="sd">        This is the most common use in practice.</span>
+<span class="sd">        Appropriate shifts for a given illumination pattern can be computed in the module &#39;compute_optimal_lattices.py&#39;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            number (int): Number of shifts.</span>
+<span class="sd">            base_vectors (tuple): Base vectors for the shifts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span> <span class="o">=</span> <span class="n">base_vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base_vectors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">shiftsx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span><span class="o">/</span><span class="n">number</span><span class="o">/</span><span class="n">kx</span>
+        <span class="n">shiftsy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span><span class="o">/</span><span class="n">number</span><span class="o">/</span><span class="n">ky</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spacial_shifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">shiftsx</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">shiftsy</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number</span><span class="p">)])</span></div>
+
+
+<div class="viewcode-block" id="Illumination.get_wavevectors">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.get_wavevectors">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_wavevectors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">         Get the wavevectors and indices for a given rotation.</span>
+
+<span class="sd">         Args:</span>
+<span class="sd">             r (int): Rotation index.</span>
+
+<span class="sd">         Returns:</span>
+<span class="sd">             tuple: List of wavevectors and list of indices.</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="n">wavevectors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spacial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spacial_wave</span><span class="p">)</span>
+            <span class="n">wavevector</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span>
+                <span class="n">spacial_wave</span><span class="o">.</span><span class="n">wavevector</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">angle</span><span class="p">)</span>
+            <span class="n">wavevectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wavevectors</span><span class="p">,</span> <span class="n">indices</span></div>
+
+
+<div class="viewcode-block" id="Illumination.get_all_wavevectors">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.get_all_wavevectors">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_wavevectors</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all wavevectors for all rotations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of all wavevectors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wavevectors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
+            <span class="n">wavevectors_r</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wavevectors</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">wavevectors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">wavevectors_r</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wavevectors</span></div>
+
+
+<div class="viewcode-block" id="Illumination.get_wavevectors_projected">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.get_wavevectors_projected">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_wavevectors_projected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the projected wavevectors and indices for a given rotation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r (int): Rotation index.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: List of projected wavevectors and list of indices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wavevectors2d</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+        <span class="n">indices2d</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">spacial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">spacial_wave</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">indices2d</span><span class="p">:</span>
+                <span class="n">indices2d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spacial_wave</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">wavevector</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">[</span><span class="n">spacial_wave</span><span class="p">]</span><span class="o">.</span><span class="n">wavevector</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">angle</span><span class="p">)</span>
+                <span class="n">wavevectors2d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">wavevectors2d</span><span class="p">,</span> <span class="n">indices2d</span></div>
+
+
+<div class="viewcode-block" id="Illumination.get_all_wavevectors_projected">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.get_all_wavevectors_projected">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_all_wavevectors_projected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all projected wavevectors for all rotations.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of all projected wavevectors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">wavevectors2d</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
+            <span class="n">wavevectors2d_r</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wavevectors_projected</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">wavevectors2d</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">wavevectors2d_r</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wavevectors2d</span></div>
+
+
+<div class="viewcode-block" id="Illumination.normalize_spacial_waves">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.normalize_spacial_waves">[docs]</a>
+    <span class="k">def</span> <span class="nf">normalize_spacial_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalize the spatial waves on zero peak (i.e., a0 = 1).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            AttributeError: If zero wavevector is not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Zero wavevector is not found! No constant power in the illumination!&quot;</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Mt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Mr</span>
+        <span class="k">for</span> <span class="n">spacial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">spacial_wave</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">/=</span> <span class="n">norm</span></div>
+
+
+<div class="viewcode-block" id="Illumination.compute_expanded_lattice2d">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.compute_expanded_lattice2d">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_expanded_lattice2d</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the expanded 2D lattice of Fourier peaks</span>
+<span class="sd">         (autoconvoluiton of Fourier transform of the illumination pattern).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            set: Set of expanded 2D lattice peaks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xy_fourier_peaks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">mx</span><span class="p">,</span> <span class="n">my</span><span class="p">)</span> <span class="k">for</span> <span class="n">mx</span><span class="p">,</span> <span class="n">my</span><span class="p">,</span> <span class="n">mz</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">expanded_lattice2d</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">peak1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy_fourier_peaks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">peak2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">xy_fourier_peaks</span><span class="p">:</span>
+                <span class="n">expanded_lattice2d</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">peak1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">peak2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peak1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">peak2</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">expanded_lattice2d</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">expanded_lattice2d</span></div>
+
+
+<div class="viewcode-block" id="Illumination.compute_expanded_lattice3d">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.compute_expanded_lattice3d">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_expanded_lattice3d</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the expanded 3D lattice of Fourier peaks</span>
+<span class="sd">         (autoconvoluiton of Fourier transform of the illumination pattern).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            set: Set of expanded 3D lattice peaks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fourier_peaks</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">expanded_lattice3d</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">peak1</span> <span class="ow">in</span> <span class="n">fourier_peaks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">peak2</span> <span class="ow">in</span> <span class="n">fourier_peaks</span><span class="p">:</span>
+                <span class="n">expanded_lattice3d</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">peak1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">peak2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peak1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">peak2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">peak1</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">peak2</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">expanded_lattice3d</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">expanded_lattice3d</span></div>
+
+
+<div class="viewcode-block" id="Illumination.compute_phase_matrix">
+<a class="viewcode-back" href="../source/Illumination.html#Illumination.Illumination.compute_phase_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_phase_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the dictionary of all the relevant phase shifts</span>
+<span class="sd">         (products of spacial shifts and illumination pattern spacial frequencies).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_matrix</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
+                <span class="n">urn</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="p">[</span><span class="n">n</span><span class="p">][:</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
+                <span class="n">wavevectors2d</span><span class="p">,</span> <span class="n">keys2d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_wavevectors_projected</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wavevectors2d</span><span class="p">)):</span>
+                    <span class="n">wavevector</span> <span class="o">=</span> <span class="n">wavevectors2d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">phase_matrix</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">keys2d</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">urn</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">))</span></div>
+</div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

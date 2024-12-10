@@ -1,3 +1,14 @@
+"""
+globvar.py
+
+This module contains global variables and constants used throughout the project.
+It also contains physical constants and units for the case when calculations must be performed in SI units.
+
+Classes:
+    Pauli: Class containing Pauli matrices.
+    SI: Class containing various physical constants and units.
+"""
+
 import numpy as np
 
 path_to_figures = "/home/valerii/Documents/projects/OPTICS/SSNR_article_1/Figures/"

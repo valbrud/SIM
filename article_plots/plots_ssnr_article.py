@@ -16,7 +16,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave, PlaneWave
 import tqdm
@@ -57,7 +57,7 @@ scaled_fz = fz / fz_max_diff
 multiplier = 10 ** 5
 ylim = 10 ** 2
 
-optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True,
                                    apodization_function="Sine")
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)

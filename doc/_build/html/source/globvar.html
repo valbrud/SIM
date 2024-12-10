@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>globvar module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="input_parser module" href="input_parser.html" />
+    <link rel="prev" title="confocal_ssnr module" href="confocal_ssnr.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>globvar module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="confocal_ssnr.html">confocal_ssnr module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="input_parser.html">input_parser module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-globvar">
+<span id="globvar-module"></span><h1>globvar module<a class="headerlink" href="#module-globvar" title="Link to this heading">¶</a></h1>
+<p>globvar.py</p>
+<p>This module contains global variables and constants used throughout the project.
+It also contains physical constants and units for the case when calculations must be performed in SI units.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>Pauli: Class containing Pauli matrices.
+SI: Class containing various physical constants and units.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-427218ddf31f4390362969e9c5d070a0a5cb40bd.png" alt="Inheritance diagram of globvar" usemap="#inheritanceaa66146873" class="inheritance graphviz" /></div>
+<map id="inheritanceaa66146873" name="inheritanceaa66146873">
+<area shape="rect" id="node1" href="#globvar.Pauli" target="_top" title="Pauli" alt="" coords="5,56,77,83"/>
+<area shape="rect" id="node2" href="#globvar.SI" target="_top" title="SI" alt="" coords="5,5,77,32"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="globvar.Pauli">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">globvar.</span></span><span class="sig-name descname"><span class="pre">Pauli</span></span><a class="reference internal" href="../_modules/globvar.html#Pauli"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.Pauli" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-5e3083a29effbacd752c58101bfac75fcc1b6326.png" alt="Inheritance diagram of globvar.Pauli" usemap="#inheritance3e70511502" class="inheritance graphviz" /></div>
+<map id="inheritance3e70511502" name="inheritance3e70511502">
+<area shape="rect" id="node1" href="#globvar.Pauli" target="_top" title="Pauli" alt="" coords="5,5,77,32"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.Pauli.I">
+<span class="sig-name descname"><span class="pre">I</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([[1,</span> <span class="pre">0],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[0,</span> <span class="pre">1]])</span></em><a class="headerlink" href="#globvar.Pauli.I" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.Pauli.X">
+<span class="sig-name descname"><span class="pre">X</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([[0,</span> <span class="pre">1],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[1,</span> <span class="pre">0]])</span></em><a class="headerlink" href="#globvar.Pauli.X" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.Pauli.Y">
+<span class="sig-name descname"><span class="pre">Y</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([[</span> <span class="pre">0.+0.j,</span> <span class="pre">-0.-1.j],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0.+1.j,</span>&#160; <span class="pre">0.+0.j]])</span></em><a class="headerlink" href="#globvar.Pauli.Y" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.Pauli.Z">
+<span class="sig-name descname"><span class="pre">Z</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([[</span> <span class="pre">1,</span>&#160; <span class="pre">0],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">[</span> <span class="pre">0,</span> <span class="pre">-1]])</span></em><a class="headerlink" href="#globvar.Pauli.Z" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">globvar.</span></span><span class="sig-name descname"><span class="pre">SI</span></span><a class="reference internal" href="../_modules/globvar.html#SI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-80285c7f843c42fe1c8a067851795c2fe53763d3.png" alt="Inheritance diagram of globvar.SI" usemap="#inheritance35a08b53a7" class="inheritance graphviz" /></div>
+<map id="inheritance35a08b53a7" name="inheritance35a08b53a7">
+<area shape="rect" id="node1" href="#globvar.SI" target="_top" title="SI" alt="" coords="5,5,77,32"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Constants">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Constants</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Constants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Constants" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.Kcd">
+<span class="sig-name descname"><span class="pre">Kcd</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">683</span></em><a class="headerlink" href="#globvar.SI.Constants.Kcd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.NAvogadro">
+<span class="sig-name descname"><span class="pre">NAvogadro</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6.02214076e-23</span></em><a class="headerlink" href="#globvar.SI.Constants.NAvogadro" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.c">
+<span class="sig-name descname"><span class="pre">c</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">299792458</span></em><a class="headerlink" href="#globvar.SI.Constants.c" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.dnuCs">
+<span class="sig-name descname"><span class="pre">dnuCs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9192631770</span></em><a class="headerlink" href="#globvar.SI.Constants.dnuCs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.e">
+<span class="sig-name descname"><span class="pre">e</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.6021766340000001e-19</span></em><a class="headerlink" href="#globvar.SI.Constants.e" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.h">
+<span class="sig-name descname"><span class="pre">h</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6.62607015e-34</span></em><a class="headerlink" href="#globvar.SI.Constants.h" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Constants.k">
+<span class="sig-name descname"><span class="pre">k</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.380649e-23</span></em><a class="headerlink" href="#globvar.SI.Constants.k" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Energy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Energy</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Energy" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.GJ">
+<span class="sig-name descname"><span class="pre">GJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000</span></em><a class="headerlink" href="#globvar.SI.Energy.GJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.J">
+<span class="sig-name descname"><span class="pre">J</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#globvar.SI.Energy.J" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.MJ">
+<span class="sig-name descname"><span class="pre">MJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000</span></em><a class="headerlink" href="#globvar.SI.Energy.MJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.aJ">
+<span class="sig-name descname"><span class="pre">aJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-18</span></em><a class="headerlink" href="#globvar.SI.Energy.aJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.eV">
+<span class="sig-name descname"><span class="pre">eV</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.00012897410387530461</span></em><a class="headerlink" href="#globvar.SI.Energy.eV" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.fJ">
+<span class="sig-name descname"><span class="pre">fJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-15</span></em><a class="headerlink" href="#globvar.SI.Energy.fJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.kJ">
+<span class="sig-name descname"><span class="pre">kJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#globvar.SI.Energy.kJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.mJ">
+<span class="sig-name descname"><span class="pre">mJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#globvar.SI.Energy.mJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.mcJ">
+<span class="sig-name descname"><span class="pre">mcJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#globvar.SI.Energy.mcJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.nJ">
+<span class="sig-name descname"><span class="pre">nJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-09</span></em><a class="headerlink" href="#globvar.SI.Energy.nJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Energy.pJ">
+<span class="sig-name descname"><span class="pre">pJ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-12</span></em><a class="headerlink" href="#globvar.SI.Energy.pJ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Force">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Force</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Force"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Force" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.GN">
+<span class="sig-name descname"><span class="pre">GN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000</span></em><a class="headerlink" href="#globvar.SI.Force.GN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.MN">
+<span class="sig-name descname"><span class="pre">MN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000</span></em><a class="headerlink" href="#globvar.SI.Force.MN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.N">
+<span class="sig-name descname"><span class="pre">N</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#globvar.SI.Force.N" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.fN">
+<span class="sig-name descname"><span class="pre">fN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-15</span></em><a class="headerlink" href="#globvar.SI.Force.fN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.kN">
+<span class="sig-name descname"><span class="pre">kN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#globvar.SI.Force.kN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.mN">
+<span class="sig-name descname"><span class="pre">mN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#globvar.SI.Force.mN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.mcN">
+<span class="sig-name descname"><span class="pre">mcN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#globvar.SI.Force.mcN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.nN">
+<span class="sig-name descname"><span class="pre">nN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-09</span></em><a class="headerlink" href="#globvar.SI.Force.nN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Force.pN">
+<span class="sig-name descname"><span class="pre">pN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-12</span></em><a class="headerlink" href="#globvar.SI.Force.pN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Frequency">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Frequency</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Frequency" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.EHz">
+<span class="sig-name descname"><span class="pre">EHz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000000000000</span></em><a class="headerlink" href="#globvar.SI.Frequency.EHz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.GHz">
+<span class="sig-name descname"><span class="pre">GHz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000</span></em><a class="headerlink" href="#globvar.SI.Frequency.GHz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.Hz">
+<span class="sig-name descname"><span class="pre">Hz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#globvar.SI.Frequency.Hz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.MHz">
+<span class="sig-name descname"><span class="pre">MHz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000</span></em><a class="headerlink" href="#globvar.SI.Frequency.MHz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.PHz">
+<span class="sig-name descname"><span class="pre">PHz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000000000</span></em><a class="headerlink" href="#globvar.SI.Frequency.PHz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.THz">
+<span class="sig-name descname"><span class="pre">THz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000000000</span></em><a class="headerlink" href="#globvar.SI.Frequency.THz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Frequency.kHz">
+<span class="sig-name descname"><span class="pre">kHz</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#globvar.SI.Frequency.kHz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Length">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Length</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Length" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.fm">
+<span class="sig-name descname"><span class="pre">fm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-15</span></em><a class="headerlink" href="#globvar.SI.Length.fm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.km">
+<span class="sig-name descname"><span class="pre">km</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#globvar.SI.Length.km" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.m">
+<span class="sig-name descname"><span class="pre">m</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#globvar.SI.Length.m" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.mcm">
+<span class="sig-name descname"><span class="pre">mcm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#globvar.SI.Length.mcm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.mm">
+<span class="sig-name descname"><span class="pre">mm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#globvar.SI.Length.mm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.nm">
+<span class="sig-name descname"><span class="pre">nm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-09</span></em><a class="headerlink" href="#globvar.SI.Length.nm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Length.pm">
+<span class="sig-name descname"><span class="pre">pm</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-12</span></em><a class="headerlink" href="#globvar.SI.Length.pm" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="globvar.SI.Time">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Time</span></span><a class="reference internal" href="../_modules/globvar.html#SI.Time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#globvar.SI.Time" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.ats">
+<span class="sig-name descname"><span class="pre">ats</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-18</span></em><a class="headerlink" href="#globvar.SI.Time.ats" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.fs">
+<span class="sig-name descname"><span class="pre">fs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-15</span></em><a class="headerlink" href="#globvar.SI.Time.fs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.mcs">
+<span class="sig-name descname"><span class="pre">mcs</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></em><a class="headerlink" href="#globvar.SI.Time.mcs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.ms">
+<span class="sig-name descname"><span class="pre">ms</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#globvar.SI.Time.ms" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.ns">
+<span class="sig-name descname"><span class="pre">ns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-09</span></em><a class="headerlink" href="#globvar.SI.Time.ns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.ps">
+<span class="sig-name descname"><span class="pre">ps</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-12</span></em><a class="headerlink" href="#globvar.SI.Time.ps" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="globvar.SI.Time.s">
+<span class="sig-name descname"><span class="pre">s</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#globvar.SI.Time.s" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="confocal_ssnr.html">confocal_ssnr module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="input_parser.html">input_parser module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>
