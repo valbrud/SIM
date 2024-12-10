@@ -11,7 +11,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave
 import tqdm
@@ -43,10 +43,10 @@ class Testssnr(unittest.TestCase):
         waves = configurations.get_4_oblique_s_waves_and_circular_normal(np.pi/4, 1, 1)
 
         illumination_polarized = Illumination(waves)
-        optical_system_fourier = Lens3D(interpolation_method="Fourier")
+        optical_system_fourier = System4f3D(interpolation_method="Fourier")
         optical_system_fourier.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                    apodization_function="Sine")
-        optical_system_linear = Lens3D()
+        optical_system_linear = System4f3D()
         optical_system_linear.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                   apodization_function="Sine")
         wavevectors = illumination_polarized.get_all_wavevectors()
@@ -123,9 +123,9 @@ class Testssnr(unittest.TestCase):
         fr = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         NA = np.sin(alpha)
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
 
         fx_normalized = fr / (2 * NA)
@@ -156,7 +156,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens2D(alpha=NA)
+        optical_system = System4f2D(alpha=NA)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r), N))
 
@@ -241,7 +241,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=NA)
+        optical_system = System4f3D(alpha=NA)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
@@ -364,7 +364,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=np.pi/4)
+        optical_system = System4f3D(alpha=np.pi/4)
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
@@ -501,7 +501,7 @@ class Testssnr(unittest.TestCase):
         multiplier = 10 ** 3
         ylim = 10**2
 
-        optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+        optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -728,7 +728,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
 
-        optical_system = Lens3D()
+        optical_system = System4f3D()
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -939,7 +939,7 @@ class Testssnr(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = Lens3D(alpha=theta)
+        optical_system = System4f3D(alpha=theta)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
@@ -1038,7 +1038,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         scaled_fz = fz / (1 - np.cos(theta))
 
-        optical_system = Lens3D()
+        optical_system = System4f3D()
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1190,7 +1190,7 @@ class Testssnr(unittest.TestCase):
         # fig.savefig(f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
         plt.show()
 
-    def testssnrFromNumericalSpacialWaves(self):
+    def testssnrFromNumericalspatialWaves(self):
         max_r = 10
         max_z = 40
         N = 100
@@ -1214,7 +1214,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
 
-        optical_system = Lens3D(alpha = np.pi/3)
+        optical_system = System4f3D(alpha = np.pi/3)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1236,10 +1236,10 @@ class Testssnr(unittest.TestCase):
         ]
         size = (2 * max_r, 2 * max_r, 2 * max_z)
         box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spacial_waves_numerically()
+        box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
         illumination_2z = Illumination.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
-        illumination_2z.normalize_spacial_waves()
+        illumination_2z.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_2z, optical_system)
         ssnr_2z = np.abs(noise_estimator.compute_ssnr())
         ssnr_2z_ra = noise_estimator.ring_average_ssnr()
@@ -1251,12 +1251,12 @@ class Testssnr(unittest.TestCase):
             Sources.PlaneWave(0, 1, 0, 0, np.array((0, 10 ** -10, k))),
         ]
         box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spacial_waves_numerically()
+        box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
         il = Illumination.index_frequencies(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
         illumination_3w = Illumination(il, Mr=5)
         illumination_3w.Mt = 1
-        illumination_3w.normalize_spacial_waves()
+        illumination_3w.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_3w, optical_system)
         ssnr_3w = np.abs(noise_estimator.compute_ssnr())
         ssnr_3w_ra = noise_estimator.ring_average_ssnr()
@@ -1381,7 +1381,7 @@ class Testssnr(unittest.TestCase):
         two_NA_fx = fx / (2 * NA)
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (2 * NA)
-        optical_system = Lens3D(alpha= 2 * np.pi / 5)
+        optical_system = System4f3D(alpha= 2 * np.pi / 5)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 
@@ -1521,7 +1521,7 @@ class TestApproximations(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
 

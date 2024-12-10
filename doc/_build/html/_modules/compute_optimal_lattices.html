@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>compute_optimal_lattices &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>compute_optimal_lattices</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for compute_optimal_lattices</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Yet not finalized module for computing one-dimension spatial shifts, satisfying the orthogonality condition.</span>
+<span class="sd">Implemented for 2D and 3D lattices. The design is to be changed, thus no detailed documentation is provided.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">gcd</span>
+<span class="kn">from</span> <span class="nn">config.IlluminationConfigurations</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="generate_conditions2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.generate_conditions2d">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_conditions2d</span><span class="p">(</span><span class="n">peaks2d</span><span class="p">):</span>
+    <span class="n">funcs2d</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">peak</span> <span class="ow">in</span> <span class="n">peaks2d</span><span class="p">:</span>
+        <span class="n">Mx</span><span class="p">,</span> <span class="n">My</span> <span class="o">=</span> <span class="n">peak</span>
+        <span class="k">if</span> <span class="n">Mx</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">My</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">funcs2d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">k1</span><span class="o">=</span><span class="n">Mx</span><span class="p">,</span> <span class="n">k2</span><span class="o">=</span><span class="n">My</span><span class="p">:</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">p2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">funcs2d</span></div>
+
+
+<div class="viewcode-block" id="generate_conditions3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.generate_conditions3d">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_conditions3d</span><span class="p">(</span><span class="n">peaks3d</span><span class="p">):</span>
+    <span class="n">funcs3d</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">peak</span> <span class="ow">in</span> <span class="n">peaks3d</span><span class="p">:</span>
+        <span class="n">Mx</span><span class="p">,</span> <span class="n">My</span><span class="p">,</span> <span class="n">Mz</span> <span class="o">=</span> <span class="n">peak</span>
+        <span class="k">if</span> <span class="n">Mx</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">My</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">Mz</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">funcs3d</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">,</span> <span class="n">k1</span><span class="o">=</span><span class="n">Mx</span><span class="p">,</span> <span class="n">k2</span><span class="o">=</span><span class="n">My</span><span class="p">,</span> <span class="n">k3</span><span class="o">=</span><span class="n">Mz</span><span class="p">:</span> <span class="n">k1</span> <span class="o">*</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">k2</span> <span class="o">*</span> <span class="n">p2</span> <span class="o">+</span> <span class="n">k3</span> <span class="o">*</span> <span class="n">p3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">funcs3d</span></div>
+
+
+<div class="viewcode-block" id="generate_tables2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.generate_tables2d">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_tables2d</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">max_power</span><span class="p">):</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">),</span> <span class="n">max_power</span><span class="p">,</span> <span class="n">max_power</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">power1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_power</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">power2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_power</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)):</span>
+                <span class="n">tables</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">power1</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">power2</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">funcs</span><span class="p">[</span><span class="n">n</span><span class="p">](</span><span class="n">power1</span><span class="p">,</span> <span class="n">power2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tables</span></div>
+
+
+<div class="viewcode-block" id="generate_table2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.generate_table2d">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_table2d</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">p1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">table2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)):</span>
+        <span class="n">table2d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">funcs</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">p1</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span>
+    <span class="n">table2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">table2d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table2d</span></div>
+
+
+<div class="viewcode-block" id="generate_table3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.generate_table3d">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_table3d</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">p1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">table3d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p3</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+                <span class="n">table3d</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">p2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">p3</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">funcs</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">)</span>
+    <span class="n">table3d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">table3d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">table3d</span></div>
+
+
+<div class="viewcode-block" id="find_pairs2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.find_pairs2d">[docs]</a>
+<span class="k">def</span> <span class="nf">find_pairs2d</span><span class="p">(</span><span class="n">table2d</span><span class="p">,</span> <span class="n">modulos</span><span class="p">,</span> <span class="n">power1</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">modulo</span> <span class="ow">in</span> <span class="n">modulos</span><span class="p">:</span>
+        <span class="n">table_residues</span> <span class="o">=</span> <span class="n">table2d</span> <span class="o">%</span> <span class="n">modulo</span>
+        <span class="n">proper_bases</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table2d</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">table_residues</span><span class="p">[:,</span> <span class="n">base</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">continue</span>
+            <span class="n">proper_bases</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">proper_bases</span><span class="p">:</span>
+            <span class="n">combinations</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">power1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">))</span> <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">proper_bases</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">combinations</span></div>
+
+
+<div class="viewcode-block" id="find_pairs3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.find_pairs3d">[docs]</a>
+<span class="k">def</span> <span class="nf">find_pairs3d</span><span class="p">(</span><span class="n">table3d</span><span class="p">,</span> <span class="n">modulos</span><span class="p">,</span> <span class="n">p1</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">modulo</span> <span class="ow">in</span> <span class="n">modulos</span><span class="p">:</span>
+        <span class="n">table_residues</span> <span class="o">=</span> <span class="n">table3d</span> <span class="o">%</span> <span class="n">modulo</span>
+        <span class="n">proper_bases</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table3d</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p3</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table3d</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># print((table_residues[:, p2-1, : p3 - 1]))</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">table_residues</span><span class="p">[:,</span> <span class="n">p2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">p3</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="n">proper_bases</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">proper_bases</span><span class="p">:</span>
+            <span class="n">combinations</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">power</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">power</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">modulo</span><span class="p">))</span> <span class="k">for</span> <span class="n">power</span> <span class="ow">in</span> <span class="n">proper_bases</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">combinations</span></div>
+
+
+<div class="viewcode-block" id="combine_dict">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.combine_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">combine_dict</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">d1</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">d2</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="p">}</span></div>
+
+<div class="viewcode-block" id="find_pairs_extended">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.find_pairs_extended">[docs]</a>
+<span class="k">def</span> <span class="nf">find_pairs_extended</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">modulos</span><span class="p">):</span>
+    <span class="n">combinations</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">[</span><span class="mi">1</span><span class="p">])):</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">find_pairs2d</span><span class="p">(</span><span class="n">tables</span><span class="p">[:,</span><span class="n">i</span><span class="p">,:],</span> <span class="n">modulos</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">combinations</span> <span class="o">=</span> <span class="n">combine_dict</span><span class="p">(</span><span class="n">combinations</span><span class="p">,</span> <span class="n">part</span><span class="p">)</span>
+    <span class="c1"># for modulo in modulos:</span>
+    <span class="c1">#     table_residues = tables % modulo</span>
+    <span class="c1">#     proper_bases = []</span>
+    <span class="c1">#     for base1 in np.arange(len(table[0])) + 1:</span>
+    <span class="c1">#         for base2 in np.arange(len(table[0])) + 1:</span>
+    <span class="c1">#</span>
+    <span class="c1">#             if (table_residues[:, base1-1, base2-2] == 0).any():</span>
+    <span class="c1">#                 continue</span>
+    <span class="c1">#             proper_bases.append(np.array((base1, base2), dtype = np.int32))</span>
+    <span class="c1">#     if proper_bases:</span>
+    <span class="c1">#         combinations[modulo] = set([tuple(base % modulo) for base in proper_bases])</span>
+    <span class="k">return</span> <span class="n">combinations</span></div>
+
+
+<div class="viewcode-block" id="exponent_sum2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.exponent_sum2d">[docs]</a>
+<span class="k">def</span> <span class="nf">exponent_sum2d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">Mx</span><span class="p">,</span> <span class="n">My</span><span class="p">):</span>
+    <span class="n">exps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="n">Mx</span> <span class="o">*</span> <span class="n">exps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="n">My</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="exponent_sum3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.exponent_sum3d">[docs]</a>
+<span class="k">def</span> <span class="nf">exponent_sum3d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">Mx</span><span class="p">,</span> <span class="n">My</span><span class="p">,</span> <span class="n">Mz</span><span class="p">):</span>
+    <span class="n">exps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">matrix</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">exps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="n">Mx</span> <span class="o">*</span> <span class="n">exps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="n">My</span> <span class="o">*</span> <span class="n">exps</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">**</span> <span class="n">Mz</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="check_peaks2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.check_peaks2d">[docs]</a>
+<span class="k">def</span> <span class="nf">check_peaks2d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">peaks</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">peak</span> <span class="ow">in</span> <span class="n">peaks</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">peak</span><span class="p">,</span> <span class="n">exponent_sum2d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">peak</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peak</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="check_peaks3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.check_peaks3d">[docs]</a>
+<span class="k">def</span> <span class="nf">check_peaks3d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">peaks</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">peak</span> <span class="ow">in</span> <span class="n">peaks</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">peak</span><span class="p">,</span> <span class="n">exponent_sum3d</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">peak</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">peak</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">peak</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="get_matrix2d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.get_matrix2d">[docs]</a>
+<span class="k">def</span> <span class="nf">get_matrix2d</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">powers</span><span class="p">):</span>
+    <span class="n">ux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">powers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">base</span>
+    <span class="n">uy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">powers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">base</span>
+    <span class="n">matrix2d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">ux</span><span class="p">,</span> <span class="n">uy</span><span class="p">))</span> <span class="o">/</span> <span class="n">base</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">matrix2d</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matrix2d</span></div>
+
+
+<div class="viewcode-block" id="get_matrix3d">
+<a class="viewcode-back" href="../source/compute_optimal_lattices.html#compute_optimal_lattices.get_matrix3d">[docs]</a>
+<span class="k">def</span> <span class="nf">get_matrix3d</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">powers</span><span class="p">):</span>
+    <span class="n">ux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">powers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="n">base</span>
+    <span class="n">uy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">powers</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">base</span>
+    <span class="n">uz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">base</span><span class="p">)</span> <span class="o">*</span> <span class="n">powers</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="n">base</span>
+    <span class="n">matrix3d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">ux</span><span class="p">,</span> <span class="n">uy</span><span class="p">,</span> <span class="n">uz</span><span class="p">))</span> <span class="o">/</span> <span class="n">base</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">matrix3d</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matrix3d</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="c1"># for k in range(1, 3):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 1 + d * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 1 - d * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d - x)</span>
+    <span class="c1">#</span>
+    <span class="c1"># for k in range(1, 3):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + d * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d - d * x)</span>
+    <span class="c1">#</span>
+    <span class="c1"># for k in range(1, 5):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d * x)</span>
+
+    <span class="c1"># for k in range(-3, 5):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 1 + x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 1 - x)</span>
+    <span class="c1"># for k in range(-3, 4):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d + 2 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 2 * x)</span>
+    <span class="c1"># for k in range(-2, 4):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 1 + 3 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 1 + 3 * x)</span>
+    <span class="c1"># for k in range(-2, 3):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d + 4 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 2 * d - 4 * x)</span>
+
+    <span class="c1"># for k in range(-3, 4):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d - x)</span>
+    <span class="c1"># for k in range(-2, 3):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + 2 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d - 2 * x)</span>
+    <span class="c1"># for k in range(-1, 2):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + 3 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: d + 3 * x)</span>
+    <span class="c1"># for k in range(0, 1):</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 4 * x)</span>
+    <span class="c1">#     funcs.append(lambda x, d=k: 4 * x)</span>
+
+    <span class="n">illumination</span> <span class="o">=</span> <span class="n">BFPConfiguration</span><span class="p">()</span><span class="o">.</span><span class="n">get_4_circular_oblique_waves_and_circular_normal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># illumination = BFPConfiguration().get_2_oblique_s_waves_and_s_normal(np.pi/4, 1)</span>
+    <span class="n">expanded_lattice</span> <span class="o">=</span> <span class="n">illumination</span><span class="o">.</span><span class="n">compute_expanded_lattice3d</span><span class="p">()</span>
+    <span class="n">funcs</span> <span class="o">=</span> <span class="n">generate_conditions3d</span><span class="p">(</span><span class="n">expanded_lattice</span><span class="p">)</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">generate_table3d</span><span class="p">(</span><span class="n">funcs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+    <span class="c1"># table = tables[:, 0, :]</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">find_pairs3d</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="c1"># print(table)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
+    <span class="n">bases</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">pairs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="n">matrix3d</span> <span class="o">=</span> <span class="n">get_matrix3d</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">pairs</span><span class="p">[</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]])[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># print(matrix3d)</span>
+    <span class="c1"># print(len(peaks))</span>
+    <span class="c1"># matrix = np.array([np.arange(1, 14), (1, 8, 15, 22, 29, 36, 43, 50, 57, 64)])/10</span>
+    <span class="n">check_peaks3d</span><span class="p">(</span><span class="n">matrix3d</span><span class="p">,</span> <span class="n">expanded_lattice</span><span class="p">)</span>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

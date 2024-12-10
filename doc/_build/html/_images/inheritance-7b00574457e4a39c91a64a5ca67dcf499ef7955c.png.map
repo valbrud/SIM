@@ -1,0 +1,8 @@
+<map id="inheritance179165e880" name="inheritance179165e880">
+<area shape="rect" id="node1" href="#GUIInitializationWidgets.InitializationWidget" target="_top" title="InitializationWidget" alt="" coords="430,24,533,45"/>
+<area shape="rect" id="node3" href="#GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget" target="_top" title="IntensityPlaneWaveInitializationWidget" alt="" coords="570,4,764,25"/>
+<area shape="rect" id="node4" href="#GUIInitializationWidgets.PlaneWaveInitializationWidget" target="_top" title="PlaneWaveInitializationWidget" alt="" coords="590,44,744,65"/>
+<area shape="rect" id="node2" title="QWidget(parent: Optional[QWidget] = None, flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags())" alt="" coords="336,24,392,45"/>
+<area shape="rect" id="node5" title="QObject(parent: Optional[QObject] = None)" alt="" coords="230,4,286,25"/>
+<area shape="rect" id="node7" title="QPaintDevice()" alt="" coords="218,44,298,65"/>
+</map>

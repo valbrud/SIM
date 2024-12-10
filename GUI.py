@@ -1,7 +1,15 @@
+"""
+GUI.py
+
+This module contains the main graphical user interface (GUI) components of the application.
+
+This module and related ones is currently a demo-version of the user-interface, and will
+possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
+documentation is provided.
+"""
+
 import sys
 import os
-import time
-
 import numpy as np
 import Box
 import Sources
@@ -13,6 +21,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QComboBox, QFileDialog, QLabel, QSlider, QScrollArea)
+
+
 from enum import Enum
 class View(Enum):
     XY = 0
@@ -29,7 +39,7 @@ class MainWindow(QMainWindow):
 
         np.set_printoptions(precision=2, suppress=True)
 
-        self.init_ui(box)
+        self.init_ui()
         if not box:
             self.box = Box.Box({}, box_size=10, point_number=40)
         else:
@@ -41,7 +51,8 @@ class MainWindow(QMainWindow):
         self.colorbar = None
         self.view = View.XY
         self.plotting_mode = PlottingMode.linear
-    def init_ui(self, box):
+
+    def init_ui(self):
         width = 1200
         height = 800
         self.setMinimumSize(width, height)
@@ -89,7 +100,6 @@ class MainWindow(QMainWindow):
         self.config_layout.addWidget(scroll_area, 2)
 
         # Third Column(Add sources)
-        self.source_buttons_layout = QVBoxLayout()
         self.config_layout.addLayout(self.source_buttons_layout, 1)
 
         add_point_source_button = QPushButton("Add a Point Source")
@@ -98,13 +108,13 @@ class MainWindow(QMainWindow):
         add_plane_wave_button = QPushButton("Add a PlaneWave")
         add_plane_wave_button.clicked.connect(self.add_plane_wave)
 
-        add_spacial_frequency_button = QPushButton("Add a Spatial Frequency")
-        add_spacial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
+        add_spatial_frequency_button = QPushButton("Add a Spatial Frequency")
+        add_spatial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
 
         find_fourier_peaks_numerically_button = QPushButton("Find Fourier peaks numerically")
         find_fourier_peaks_numerically_button.clicked.connect(self.compute_numerically_approximated_intensities)
 
-        find_ipw_from_pw_button = QPushButton("Get spacial waves from plane waves")
+        find_ipw_from_pw_button = QPushButton("Get spatial waves from plane waves")
         find_ipw_from_pw_button.clicked.connect(self.get_ipw_from_pw)
 
         compute_total_intensity_button = QPushButton("Compute Total Intensity")
@@ -118,7 +128,7 @@ class MainWindow(QMainWindow):
 
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
-        self.source_buttons_layout.addWidget(add_spacial_frequency_button)
+        self.source_buttons_layout.addWidget(add_spatial_frequency_button)
         self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
         self.source_buttons_layout.addWidget(find_ipw_from_pw_button)
         self.source_buttons_layout.addWidget(compute_total_intensity_button)
@@ -421,7 +431,7 @@ class MainWindow(QMainWindow):
         self.plot_intensity_slices()
 
     def compute_and_plot_from_intensity_sources(self):
-        self.box.compute_intensity_from_spacial_waves()
+        self.box.compute_intensity_from_spatial_waves()
         self.plot_intensity_slices()
 
     def compute_and_plot_fourier_space(self):
@@ -429,7 +439,7 @@ class MainWindow(QMainWindow):
         self.plot_fourier_space_slices()
 
     def compute_numerically_approximated_intensities(self):
-        self.box.compute_intensity_and_spacial_waves_numerically()
+        self.box.compute_intensity_and_spatial_waves_numerically()
 
     def compute_total_intensity(self):
         self.box.compute_total_illumination()
@@ -437,13 +447,13 @@ class MainWindow(QMainWindow):
 
     def compute_next_shift(self):
         self.shift_number +=1
-        self.shift_number %= self.box.illumination.spacial_shifts.shape[0]
+        self.shift_number %= self.box.illumination.spatial_shifts.shape[0]
         self.box.compute_intensity_at_given_shift(self.shift_number)
         self.plot_intensity_slices()
         self.plot_shift_arrow()
-        # self.peak_position += self.box.illumination.spacial_shifts[self.shift_number][:2]
+        # self.peak_position += self.box.illumination.spatial_shifts[self.shift_number][:2]
     def plot_shift_arrow(self):
-        self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spacial_shifts[self.shift_number][:2], width=0.1, color='red')
+        self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spatial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
         for source in Illumination.find_ipw_from_pw(self.box.get_plane_waves()):

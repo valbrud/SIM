@@ -1,3 +1,12 @@
+"""
+SSNRCalculator.py
+
+This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)
+for a given system optical system and illumination.
+
+Mathematical details will be provided in the later documentation versions and in the corresponding papers.
+"""
+
 import numpy
 import numpy as np
 
@@ -187,7 +196,7 @@ class SSNRCalculator(SSNRHandler):
 
     def compute_maximum_resolved_lateral(self):
         fR = 2 * self.optical_system.n * np.sin(self.optical_system.alpha)
-        fourier_peaks_wavevectors = np.array([spacial_wave.wavevector for spacial_wave in self.illumination.waves.values()])
+        fourier_peaks_wavevectors = np.array([spatial_wave.wavevector for spatial_wave in self.illumination.waves.values()])
         fI = np.max(np.array([(wavevector[0] ** 2 + wavevector[1] ** 2) ** 0.5 for wavevector in fourier_peaks_wavevectors]))
         return fR + fI
 

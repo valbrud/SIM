@@ -16,7 +16,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave, PlaneWave
 import tqdm
@@ -57,7 +57,7 @@ scaled_fz = fz / fz_max_diff
 multiplier = 10 ** 5
 ylim = 10 ** 2
 
-optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True,
                                    apodization_function="Sine")
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
@@ -66,7 +66,7 @@ hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 
 # box = Box.Box(conventional.waves.values(), box_size=psf_size, point_number=N)
-# box.compute_intensity_from_spacial_waves()
+# box.compute_intensity_from_spatial_waves()
 # fig, ax = plt.subplots()
 # ax.set_title("conventional", fontsize=30, pad=15)
 # ax.set_ylabel("y [$\lambda$]", fontsize=30)
@@ -379,7 +379,7 @@ class TestArticlePlots(unittest.TestCase):
 
         illumination_distorted1 = Illumination.init_from_list(distorted1, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
         illumination_distorted1.Mt = 1
-        illumination_distorted1.normalize_spacial_waves()
+        illumination_distorted1.normalize_spatial_waves()
 
         sources = [
 
@@ -396,7 +396,7 @@ class TestArticlePlots(unittest.TestCase):
 
         illumination_distorted0 = Illumination.init_from_list(distorted0, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
         illumination_distorted0.Mt = 1
-        illumination_distorted0.normalize_spacial_waves()
+        illumination_distorted0.normalize_spatial_waves()
 
         noise_estimatorD0 = SSNR3dSIM2dShifts(illumination_distorted0, optical_system)
         noise_estimatorD1 = SSNR3dSIM2dShifts(illumination_distorted1, optical_system)
@@ -460,7 +460,7 @@ class TestArticlePlots(unittest.TestCase):
                 continue
             ax = axes[i//n_colums, i%n_colums]
             boxes.append(Box.BoxSIM(illumination, box_size=psf_size, point_number=N))
-            boxes[i].compute_intensity_from_spacial_waves()
+            boxes[i].compute_intensity_from_spatial_waves()
             ax.set_title(illumination_list[illumination], fontsize=30, pad=15)
             if i % n_colums == 0:
                 ax.set_ylabel("y [$\lambda$]", fontsize=30)

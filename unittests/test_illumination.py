@@ -82,7 +82,7 @@ class TestIllumination(unittest.TestCase):
         print(fourier_peaks[:10])
         print(res)
         box2 = Box(intensity_sources_discrete, (20, 20, 80), 100)
-        box2.compute_intensity_from_spacial_waves()
+        box2.compute_intensity_from_spatial_waves()
         box2.compute_intensity_fourier_space()
         # plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
         # plt.show()

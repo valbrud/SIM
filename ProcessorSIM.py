@@ -1,3 +1,14 @@
+"""
+ProcessorSIM.py
+
+When implemented, this class will be a top-level class, responsible for SIM reconstructions.
+
+Classes:
+    ProcessorSIM: Base class for SIM processors.
+    ProcessorProjective3dSIM: Class for processing projective 3D SIM data.
+    ProcessorTrue3dSIM: Class for processing true 3D SIM data.
+"""
+
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
@@ -22,26 +33,4 @@ class ProcessorSIM:
 class ProcessorProjective3dSIM(ProcessorSIM):
     def __init__(self, illumination, optical_system):
         super().__init__(illumination, optical_system)
-    @staticmethod
-    @abstractmethod
-    def compute_effective_psfs_and_otfs(illumination, optical_system):
-        waves = illumination.waves
-        # plt.show()
-        for r in range(illumination.Mr):
-            angle = illumination.angles[r]
-            indices = illumination.rearranged_indices
-            for w in range(len(illumination.wavevectors2d)):
-                effective_psf = 0
-                xy_indices = illumination.indices2d[w]
-                for z_index in indices[xy_indices]:
-                    wavevector = VectorOperations.rotate_vector3d(
-                        waves[(*xy_indices, z_index)].wavevector, np.array((0, 0, 1)), angle)
-                    wavevector = np.array((0, 0, wavevector[2]))
-                    amplitude = waves[(*xy_indices, z_index)].amplitude
-                    phase_shifted = np.exp(1j * np.einsum('ijkl,l ->ijk', self.grid, wavevector)) * optical_system.psf
-                    effective_psf += amplitude * phase_shifted
-                    # print(wavevector)
-                effective_psfs[(r, w)] = effective_psf
-                effective_otfs[(r, w)] = wrappers.wrapped_fftn(effective_psf)
-
 class ProcessorTrue3dSIM(ProcessorSIM): ...

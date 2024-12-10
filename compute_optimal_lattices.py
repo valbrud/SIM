@@ -1,3 +1,8 @@
+"""
+Yet not finalized module for computing one-dimension spatial shifts, satisfying the orthogonality condition.
+Implemented for 2D and 3D lattices. The design is to be changed, thus no detailed documentation is provided.
+"""
+
 import numpy as np
 from math import gcd
 from config.IlluminationConfigurations import *

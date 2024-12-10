@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>ProcessorSIM module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SIMulator module" href="SIMulator.html" />
+    <link rel="prev" title="OpticalSystems module" href="OpticalSystems.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>ProcessorSIM module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="OpticalSystems.html">OpticalSystems module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="SIMulator.html">SIMulator module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-ProcessorSIM">
+<span id="processorsim-module"></span><h1>ProcessorSIM module<a class="headerlink" href="#module-ProcessorSIM" title="Link to this heading">¶</a></h1>
+<p>ProcessorSIM.py</p>
+<p>When implemented, this class will be a top-level class, responsible for SIM reconstructions.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>ProcessorSIM: Base class for SIM processors.
+ProcessorProjective3dSIM: Class for processing projective 3D SIM data.
+ProcessorTrue3dSIM: Class for processing true 3D SIM data.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-eb914ac9343d23da0e952275f8559e011fdeacc5.png" alt="Inheritance diagram of ProcessorSIM" usemap="#inheritance7142d21a42" class="inheritance graphviz" /></div>
+<map id="inheritance7142d21a42" name="inheritance7142d21a42">
+<area shape="rect" id="node1" href="#ProcessorSIM.ProcessorSIM" target="_top" title="ProcessorSIM" alt="" coords="5,5,110,32"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorProjective3dSIM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ProcessorSIM.</span></span><span class="sig-name descname"><span class="pre">ProcessorProjective3dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorProjective3dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorProjective3dSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ProcessorSIM.ProcessorSIM" title="ProcessorSIM.ProcessorSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessorSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-8add28e3de890f0964ab75b4358c4532087d7d60.png" alt="Inheritance diagram of ProcessorSIM.ProcessorProjective3dSIM" usemap="#inheritance438d10eeae" class="inheritance graphviz" /></div>
+<map id="inheritance438d10eeae" name="inheritance438d10eeae">
+<area shape="rect" id="node1" href="#ProcessorSIM.ProcessorProjective3dSIM" target="_top" title="ProcessorProjective3dSIM" alt="" coords="158,5,334,32"/>
+<area shape="rect" id="node2" href="#ProcessorSIM.ProcessorSIM" target="_top" title="ProcessorSIM" alt="" coords="5,5,110,32"/>
+</map></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorSIM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ProcessorSIM.</span></span><span class="sig-name descname"><span class="pre">ProcessorSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-672b3a9ffd265b32aecdb81dfa1e1460150c53f9.png" alt="Inheritance diagram of ProcessorSIM.ProcessorSIM" usemap="#inheritance13d1e67d44" class="inheritance graphviz" /></div>
+<map id="inheritance13d1e67d44" name="inheritance13d1e67d44">
+<area shape="rect" id="node1" href="#ProcessorSIM.ProcessorSIM" target="_top" title="ProcessorSIM" alt="" coords="5,5,110,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorSIM.compute_apodization_filter_autoconvolution">
+<span class="sig-name descname"><span class="pre">compute_apodization_filter_autoconvolution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorSIM.compute_apodization_filter_autoconvolution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorSIM.compute_apodization_filter_autoconvolution" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorSIM.compute_apodization_filter_lukosz">
+<span class="sig-name descname"><span class="pre">compute_apodization_filter_lukosz</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorSIM.compute_apodization_filter_lukosz"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorSIM.compute_apodization_filter_lukosz" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorSIM.compute_effective_psfs_and_otfs">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_effective_psfs_and_otfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorSIM.compute_effective_psfs_and_otfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorSIM.compute_effective_psfs_and_otfs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorSIM.compute_sim_support">
+<span class="sig-name descname"><span class="pre">compute_sim_support</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorSIM.compute_sim_support"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorSIM.compute_sim_support" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ProcessorSIM.ProcessorTrue3dSIM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ProcessorSIM.</span></span><span class="sig-name descname"><span class="pre">ProcessorTrue3dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ProcessorSIM.html#ProcessorTrue3dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ProcessorSIM.ProcessorTrue3dSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ProcessorSIM.ProcessorSIM" title="ProcessorSIM.ProcessorSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessorSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-41ea0d92031ee0ba57854c2d6a6927fe854e88df.png" alt="Inheritance diagram of ProcessorSIM.ProcessorTrue3dSIM" usemap="#inheritance5dfb89e55f" class="inheritance graphviz" /></div>
+<map id="inheritance5dfb89e55f" name="inheritance5dfb89e55f">
+<area shape="rect" id="node1" href="#ProcessorSIM.ProcessorSIM" target="_top" title="ProcessorSIM" alt="" coords="5,5,110,32"/>
+<area shape="rect" id="node2" href="#ProcessorSIM.ProcessorTrue3dSIM" target="_top" title="ProcessorTrue3dSIM" alt="" coords="158,5,302,32"/>
+</map></dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="OpticalSystems.html">OpticalSystems module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="SIMulator.html">SIMulator module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

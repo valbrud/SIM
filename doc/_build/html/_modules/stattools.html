@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>stattools &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>stattools</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for stattools</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">stattools.py</span>
+
+<span class="sd">This module contains commonly used operations on arrays, required in the context of our work.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">RectBivariateSpline</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+
+
+<div class="viewcode-block" id="find_decreasing_surface_levels3d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.find_decreasing_surface_levels3d">[docs]</a>
+<span class="k">def</span> <span class="nf">find_decreasing_surface_levels3d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assuming function is monotonically decaying around some point, finds surface levels of this function.</span>
+<span class="sd">    No interpolation is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): 3D array to analyze.</span>
+<span class="sd">        axes (tuple, optional): Axes for the array. Defaults to None.</span>
+<span class="sd">        direction (int, optional): Direction to analyze. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Mask indicating the surface levels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">ax1</span><span class="p">[</span><span class="n">ax1</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">],</span> <span class="n">ax2</span><span class="p">[</span><span class="n">ax2</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">],</span> <span class="n">ax3</span><span class="p">[</span><span class="n">ax3</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">]</span>
+    <span class="n">ax_positive</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">max_values</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax2</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">ax3</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">ax_positive</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">max_values</span><span class="p">)],</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">max_values</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">ax_positive</span><span class="p">[</span><span class="n">direction</span><span class="p">],</span> <span class="n">direction</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">10</span>  <span class="c1"># to avoid floating point errors</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">surface_value</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">cx</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">d</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">surface_value</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">cz</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">d</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">surface_value</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;d = </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2"> is an incorrect direction for a 3d array&quot;</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[(</span><span class="n">mask</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">array</span> <span class="o">&gt;=</span> <span class="n">surface_value</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+
+<div class="viewcode-block" id="find_decreasing_surface_levels2d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.find_decreasing_surface_levels2d">[docs]</a>
+<span class="k">def</span> <span class="nf">find_decreasing_surface_levels2d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assuming function is monotonically decaying around some point, finds surface levels of this function.</span>
+<span class="sd">    No interpolation is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): 2D array to analyze.</span>
+<span class="sd">        axes (tuple, optional): Axes for the array. Defaults to None.</span>
+<span class="sd">        direction (int, optional): Direction to analyze. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Mask indicating the surface levels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">ax1</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="p">[</span><span class="n">ax1</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">],</span> <span class="n">ax2</span><span class="p">[</span><span class="n">ax2</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">]</span>
+    <span class="n">ax_positive</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">ax1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">ax2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">ax_positive</span><span class="p">[</span><span class="n">direction</span><span class="p">],</span> <span class="n">direction</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">10</span>  <span class="c1"># to avoid floating point errors</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">)):</span>
+        <span class="n">surface_value</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">cx</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">cy</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span> <span class="k">else</span> <span class="n">array</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">mask</span><span class="p">[(</span><span class="n">mask</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">array</span> <span class="o">&gt;=</span> <span class="n">surface_value</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+
+<div class="viewcode-block" id="find_decreasing_radial_surface_levels">
+<a class="viewcode-back" href="../source/stattools.html#stattools.find_decreasing_radial_surface_levels">[docs]</a>
+<span class="k">def</span> <span class="nf">find_decreasing_radial_surface_levels</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Not implemented yet&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="average_mask">
+<a class="viewcode-back" href="../source/stattools.html#stattools.average_mask">[docs]</a>
+<span class="k">def</span> <span class="nf">average_mask</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">],</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Averages an array along the surface levels of the mask.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): Array to average.</span>
+<span class="sd">        mask (np.ndarray[np.int32]): Mask indicating regions to average.</span>
+<span class="sd">        shape (str, optional): Shape of the output array. Defaults to &#39;same&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Averaged array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s1">&#39;reduced&#39;</span><span class="p">:</span>
+        <span class="n">averaged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">mask</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">averaged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">mask</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">average</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">/</span> <span class="n">elements</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s1">&#39;same&#39;</span><span class="p">:</span>
+            <span class="n">averaged</span><span class="p">[</span><span class="n">mask</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">average</span>
+        <span class="k">elif</span> <span class="n">shape</span> <span class="o">==</span> <span class="s1">&#39;reduced&#39;</span><span class="p">:</span>
+            <span class="n">averaged</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">average</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Unknown output shape&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">averaged</span></div>
+
+
+
+<span class="c1"># def average_rings2d(array, axes=None):</span>
+<span class="c1">#     if axes is None:</span>
+<span class="c1">#         ax1, ax2 = np.arange(array.shape[0]) - array.shape[0]/2, np.arange(array.shape[1]) - array.shape[1] / 2</span>
+<span class="c1">#     else:</span>
+<span class="c1">#         ax1, ax2 = axes[0], axes[1]</span>
+<span class="c1">#</span>
+<span class="c1">#     y, x = np.meshgrid(ax2, ax1)</span>
+<span class="c1">#     ax1, ax2 = ax1[ax1 &gt;= -1e-10], ax2[ax2 &gt;= -1e-10]</span>
+<span class="c1">#     ax = ax1 if ax1[-1] &lt; ax2[-1] else ax2</span>
+<span class="c1">#     averaged = np.zeros(ax.size)</span>
+<span class="c1">#     r = (x**2 + y**2)**0.5</span>
+<span class="c1">#     r_old = -1</span>
+<span class="c1">#     for i in range(len(ax)):</span>
+<span class="c1">#         if i == 25:</span>
+<span class="c1">#             pass</span>
+<span class="c1">#         ring = array[(r &lt;= ax[i] + 10**(-10)) * (r &gt; r_old)]</span>
+<span class="c1">#         averaged[i] = np.sum(ring)/ring.size</span>
+<span class="c1">#         r_old = ax[i] + 10**(-10)</span>
+<span class="c1">#     return averaged</span>
+<span class="c1">#     # scipy.interpolate.RegularGridInterpolator((ax1, ax2), array, method=&#39;linear&#39;,</span>
+<span class="c1">#     #                                           bounds_error=False,</span>
+<span class="c1">#     #                                           fill_value=0.)</span>
+<span class="c1">#     # r = ax1[ax1 &gt;= -1e-10] if ax1[-1] &lt; ax2[-1] else ax2[ax2 &gt;= -1e-10]</span>
+<span class="c1">#     # theta = np.arange(0, 2 * np.pi, 2 * np.pi / r.size)</span>
+
+
+<div class="viewcode-block" id="average_rings2d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.average_rings2d">[docs]</a>
+<span class="k">def</span> <span class="nf">average_rings2d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">num_angles</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Averages the 2D array radially using bilinear interpolation in polar coordinates.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        array: 2D numpy array to average radially.</span>
+<span class="sd">        axes: Tuple of arrays representing the grid axes (ax1, ax2).</span>
+<span class="sd">        num_samples: Number of radial samples (r) to take.</span>
+<span class="sd">        num_angles: Number of angular samples (theta).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        radii: Radial distances at which the interpolation is performed.</span>
+<span class="sd">        averaged: Radially averaged values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">interpolator</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">array</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="p">[</span><span class="n">ax1</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">],</span> <span class="n">ax2</span><span class="p">[</span><span class="n">ax2</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">]</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">ax1</span> <span class="k">if</span> <span class="n">ax1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">ax2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="n">ax2</span>
+    <span class="k">if</span> <span class="n">number_of_samples</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ax</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">number_of_samples</span><span class="p">)</span>
+    <span class="c1"># Create the interpolation function for the array</span>
+
+    <span class="n">averaged</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+        <span class="c1"># Parametric equations for points on a circle of radius r</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">num_angles</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">sample_x</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">sample_y</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">allowed_values</span> <span class="o">=</span> <span class="p">(</span><span class="n">sample_x</span> <span class="o">&gt;=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">sample_y</span> <span class="o">&gt;=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">sample_x</span> <span class="o">=</span> <span class="n">sample_x</span><span class="p">[</span><span class="n">allowed_values</span><span class="p">]</span>
+        <span class="n">sample_y</span> <span class="o">=</span> <span class="n">sample_y</span><span class="p">[</span><span class="n">allowed_values</span><span class="p">]</span>
+        <span class="c1"># Perform bilinear interpolation at these points</span>
+        <span class="n">interpolated_values</span> <span class="o">=</span> <span class="n">interpolator</span><span class="o">.</span><span class="n">ev</span><span class="p">(</span><span class="n">sample_x</span><span class="p">,</span> <span class="n">sample_y</span><span class="p">)</span>
+        <span class="c1"># plt.plot(interpolated_values)</span>
+        <span class="c1"># plt.show()</span>
+        <span class="c1"># Radially average by taking the mean of interpolated values</span>
+        <span class="n">averaged</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">interpolated_values</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">averaged</span></div>
+
+
+
+<div class="viewcode-block" id="average_rings3d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.average_rings3d">[docs]</a>
+<span class="k">def</span> <span class="nf">average_rings3d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Averages the 3D array radially by averaging each 2D slice.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): 3D array to average.</span>
+<span class="sd">        axes (tuple, optional): Axes for the array. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Radially averaged values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">ring_averages</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">iz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+        <span class="n">ring_averages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">average_rings2d</span><span class="p">(</span><span class="n">array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">iz</span><span class="p">],</span> <span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="n">ring_averages</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ring_averages</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">ring_averages</span></div>
+
+
+
+<div class="viewcode-block" id="expand_ring_averages2d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.expand_ring_averages2d">[docs]</a>
+<span class="k">def</span> <span class="nf">expand_ring_averages2d</span><span class="p">(</span><span class="n">averaged</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Expands the radially averaged 2D array back to its original shape.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        averaged (np.ndarray): Radially averaged values.</span>
+<span class="sd">        axes (tuple, optional): Axes for the array. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Expanded array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+    <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax1</span><span class="p">[</span><span class="n">ax1</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">],</span> <span class="n">ax2</span><span class="p">[</span><span class="n">ax2</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1e-10</span><span class="p">]</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">ax1</span> <span class="k">if</span> <span class="n">ax1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">ax2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="n">ax2</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">expanded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">r_old</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">)):</span>
+        <span class="n">expanded</span><span class="p">[(</span><span class="n">r</span> <span class="o">&lt;=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="n">r_old</span><span class="p">)]</span> <span class="o">=</span> <span class="n">averaged</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">r_old</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">10</span>
+    <span class="k">return</span> <span class="n">expanded</span></div>
+
+
+
+<div class="viewcode-block" id="expand_ring_averages3d">
+<a class="viewcode-back" href="../source/stattools.html#stattools.expand_ring_averages3d">[docs]</a>
+<span class="k">def</span> <span class="nf">expand_ring_averages3d</span><span class="p">(</span><span class="n">averaged</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Expands the radially averaged 3D array back to its original shape.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        averaged (np.ndarray): Radially averaged values.</span>
+<span class="sd">        axes (tuple, optional): Axes for the array. Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: Expanded array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="n">averaged</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">expanded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">iz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+        <span class="n">expanded</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">iz</span><span class="p">]</span> <span class="o">=</span> <span class="n">expand_ring_averages2d</span><span class="p">(</span><span class="n">averaged</span><span class="p">[:,</span> <span class="n">iz</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">expanded</span></div>
+
+
+
+<div class="viewcode-block" id="estimate_localized_peaks">
+<a class="viewcode-back" href="../source/stattools.html#stattools.estimate_localized_peaks">[docs]</a>
+<span class="k">def</span> <span class="nf">estimate_localized_peaks</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Estimates localized peaks in a 3D array.</span>
+<span class="sd">    Current implementation is inefficient and will be replaced.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): 3D array to analyze.</span>
+<span class="sd">        axes (tuple): Axes for the array.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: Localized peaks and their amplitudes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Estimation is only available for 3d arrays now&quot;</span><span class="p">)</span>
+    <span class="n">array_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">array_abs</span><span class="p">)</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array_abs</span> <span class="o">&gt;</span> <span class="n">max_value</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">array_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array_abs</span> <span class="o">&gt;</span> <span class="n">max_value</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">array_abs</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">maxima_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span>
+                                       <span class="p">(</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span>
+                                       <span class="p">(</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">array_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])))</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">maxima_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">maxima_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">maxima_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">maxima_indices</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="n">fourier_peaks</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">gaussian_maxima_fitting</span><span class="p">(</span><span class="n">array_abs</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">maxima_indices</span><span class="p">)</span>
+    <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">maxima_indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">distances2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">fourier_peaks</span><span class="p">),</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fourier_peaks</span><span class="p">)):</span>
+        <span class="n">xdist2</span> <span class="o">=</span> <span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fourier_peaks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">ydist2</span> <span class="o">=</span> <span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">fourier_peaks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">zdist2</span> <span class="o">=</span> <span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">fourier_peaks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">Xdist2</span><span class="p">,</span> <span class="n">Ydist2</span><span class="p">,</span> <span class="n">Zdist2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">ydist2</span><span class="p">,</span> <span class="n">xdist2</span><span class="p">,</span> <span class="n">zdist2</span><span class="p">)</span>
+        <span class="n">Rdist2</span> <span class="o">=</span> <span class="n">Xdist2</span> <span class="o">+</span> <span class="n">Ydist2</span> <span class="o">+</span> <span class="n">Zdist2</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">Rdist2</span><span class="p">)</span>
+        <span class="n">distances2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Rdist2</span>
+    <span class="n">minimal_distance_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">distances2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">nearest_neighbor_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fourier_peaks</span><span class="p">)):</span>
+        <span class="n">nearest_neighbor_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">distances2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">minimal_distance_array</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">nearest_neighbor_array</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fourier_peaks</span><span class="p">)):</span>
+        <span class="n">amplitudes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">nearest_neighbor_array</span> <span class="o">==</span> <span class="n">i</span><span class="p">])</span>
+    <span class="n">normalization</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">))</span>
+    <span class="n">amplitudes</span> <span class="o">/=</span> <span class="n">normalization</span>
+    <span class="k">return</span> <span class="n">fourier_peaks</span><span class="p">,</span> <span class="n">amplitudes</span></div>
+
+
+
+<div class="viewcode-block" id="gaussian_maxima_fitting">
+<a class="viewcode-back" href="../source/stattools.html#stattools.gaussian_maxima_fitting">[docs]</a>
+<span class="k">def</span> <span class="nf">gaussian_maxima_fitting</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="p">,</span> <span class="n">maxima_indices</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fits Gaussian functions to the maxima in a 3D array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (np.ndarray): 3D array to analyze.</span>
+<span class="sd">        axes (tuple): Axes for the array.</span>
+<span class="sd">        maxima_indices (list): Indices of the maxima.</span>
+<span class="sd">        size (int, optional): Size of the fitting window. Defaults to 5.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: Fitted maxima and their standard deviations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">maxima_fitted</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">maxima_indices</span><span class="p">:</span>
+        <span class="n">fitted_values</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                   <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                   <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span><span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">fitted_values</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span> <span class="o">*</span> <span class="n">fitted_values</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="n">y0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Y</span> <span class="o">*</span> <span class="n">fitted_values</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="n">z0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Z</span> <span class="o">*</span> <span class="n">fitted_values</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">fitted_values</span> <span class="o">*</span> <span class="p">((</span><span class="n">X</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">Z</span> <span class="o">-</span> <span class="n">z0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">maxima_fitted</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">))</span>
+        <span class="n">std</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">maxima_fitted</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">std</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="downsample_circular_function_vectorized">
+<a class="viewcode-back" href="../source/stattools.html#stattools.downsample_circular_function_vectorized">[docs]</a>
+<span class="k">def</span> <span class="nf">downsample_circular_function_vectorized</span><span class="p">(</span><span class="n">dense_function</span><span class="p">,</span> <span class="n">small_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Downsample a circularly symmetric function from a large grid to a smaller grid using a vectorized approach.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        dense_function: 2D NumPy array representing the function values on the large grid (e.g., 51 x 51).</span>
+<span class="sd">        small_size: Tuple (m, n) representing the size of the small grid (e.g., (5, 5)).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        small_grid: 2D NumPy array representing the downsampled function on the smaller grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the size of the large grid</span>
+    <span class="n">large_size</span> <span class="o">=</span> <span class="n">dense_function</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Compute scaling factors</span>
+    <span class="n">scale_x</span> <span class="o">=</span> <span class="n">large_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">small_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">scale_y</span> <span class="o">=</span> <span class="n">large_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">small_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Reshape the large grid into blocks of size (scale_x, scale_y)</span>
+    <span class="n">reshaped</span> <span class="o">=</span> <span class="n">dense_function</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">small_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">scale_x</span><span class="p">,</span> <span class="n">small_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale_y</span><span class="p">)</span>
+
+    <span class="c1"># Compute the mean of each block to downsample</span>
+    <span class="n">sparse_function</span> <span class="o">=</span> <span class="n">reshaped</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="c1"># plt.figure(1)</span>
+    <span class="c1"># plt.imshow(dense_function)</span>
+    <span class="c1"># plt.figure(2)</span>
+    <span class="c1"># plt.imshow(sparse_function)</span>
+    <span class="c1"># plt.show()</span>
+    <span class="k">return</span> <span class="n">sparse_function</span></div>
+
+
+
+<div class="viewcode-block" id="reverse_interpolation_nearest">
+<a class="viewcode-back" href="../source/stattools.html#stattools.reverse_interpolation_nearest">[docs]</a>
+<span class="k">def</span> <span class="nf">reverse_interpolation_nearest</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">y_axis</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Interpolate values from known points to a grid, affecting only the nearest grid cells.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        x_axis: 1D array representing the x-coordinates of the grid.</span>
+<span class="sd">        y_axis: 1D array representing the y-coordinates of the grid.</span>
+<span class="sd">        points: Array of known points&#39; coordinates, shape (N, 2).</span>
+<span class="sd">        values: Array of known values at the points, shape (N,).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        interpolated_grid: 2D array of interpolated values on the grid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create an empty grid</span>
+    <span class="n">grid_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_axis</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_axis</span><span class="p">))</span>
+    <span class="n">interpolated_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">grid_shape</span><span class="p">)</span>
+
+    <span class="c1"># Loop through each point and its corresponding value</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">),</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="c1"># Find the indices of the nearest grid points around the given point</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">px</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">py</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># Ensure indices are within valid bounds</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_axis</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_axis</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Coordinates of the four surrounding grid points</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">x_axis</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">x_axis</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">y_axis</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">y_axis</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Bilinear weights based on the distance to the surrounding points</span>
+        <span class="n">wx1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">px</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+        <span class="n">wx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">px</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+        <span class="n">wy1</span> <span class="o">=</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">py</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span>
+        <span class="n">wy2</span> <span class="o">=</span> <span class="p">(</span><span class="n">py</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span>
+
+        <span class="c1"># Distribute the value to the four surrounding grid points</span>
+        <span class="n">interpolated_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">wx1</span> <span class="o">*</span> <span class="n">wy1</span>  <span class="c1"># Top-left</span>
+        <span class="n">interpolated_grid</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">wx2</span> <span class="o">*</span> <span class="n">wy1</span>  <span class="c1"># Top-right</span>
+        <span class="n">interpolated_grid</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">wx1</span> <span class="o">*</span> <span class="n">wy2</span>  <span class="c1"># Bottom-left</span>
+        <span class="n">interpolated_grid</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">wx2</span> <span class="o">*</span> <span class="n">wy2</span>  <span class="c1"># Bottom-right</span>
+
+    <span class="k">return</span> <span class="n">interpolated_grid</span></div>
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

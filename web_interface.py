@@ -1,9 +1,11 @@
+"""Zeroth iteration on AI generated web interface."""
+
 from flask import Flask, render_template, request, send_file
 import matplotlib.pyplot as plt
 import numpy as np
 import io
 from config.IlluminationConfigurations import BFPConfiguration
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 from Box import Box
 
 app = Flask(__name__)
@@ -24,7 +26,7 @@ max_r = N // 2 * dx
 max_z = N // 2 * dz
 psf_size = 2 * np.array((max_r, max_r, max_z))
 
-optical_system = Lens3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
+optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, apodization_function="Sine")
 
 @app.route('/')
@@ -46,7 +48,7 @@ def plot():
         return "Invalid configuration", 400
 
     box = Box(illumination.waves.values(), box_size=psf_size, point_number=N)
-    box.compute_intensity_from_spacial_waves()
+    box.compute_intensity_from_spatial_waves()
 
     fig, ax = plt.subplots()
     ax.imshow(box.intensity[:, :, N // 2].T, extent=(-max_r, max_r, -max_r, max_r))

@@ -1,3 +1,9 @@
+"""
+confocal_ssnr.py
+
+This script contains test computations of the SSNR in confocal microscopy, ISM and Rescan.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import OpticalSystems
@@ -30,7 +36,7 @@ class TestConfocalSSNR(unittest.TestCase):
     def test_SSNR2D(self):
         pupil_function = np.where(np.abs(Fx**2 + Fy**2)**0.5 <= NA, 1, 0)
         # plt.imshow(pupil_function, extent=(fx[0]/(2 * NA), fx[-1]/(2 * NA), fy[0]/(2 * NA), fy[-1]/(2 * NA)))
-        optical_system = OpticalSystems.Lens2D(alpha=alpha, refractive_index=1.5)
+        optical_system = OpticalSystems.System4f2D(alpha=alpha, refractive_index=1.5)
         PSF_em, OTF_em = optical_system.compute_psf_and_otf((psf_size, N))
         SSNR_widefield = OTF_em ** 2
         OTF_confocal = wrappers.wrapped_fftn(PSF_em ** 2)
@@ -67,7 +73,7 @@ class TestConfocalSSNR(unittest.TestCase):
             return Iratio * (np.where(rho >= 0, 1, 0) * np.where(rho <= relwidth * rhomax, 1, 0)) +  \
                      np.where(rho >= rhomax * (1 - relwidth), 1, 0) * np.where(rho <= rhomax, 1, 0)
 
-        optical_system = OpticalSystems.Lens3D(alpha=alpha, refractive_index_sample =1.5, refractive_index_medium = 1.5)
+        optical_system = OpticalSystems.System4f3D(alpha=alpha, refractive_index_sample =1.5, refractive_index_medium = 1.5)
         PSF_em, OTF_em = optical_system.compute_psf_and_otf((psf_size, N))
         # plt.imshow(PSF_em[:, :, N//2])
         # plt.show()

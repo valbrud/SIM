@@ -16,7 +16,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 import ShapesGenerator
 import SIMulator
 from Windowing import make_mask_cosine_edge3d
@@ -59,7 +59,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -184,7 +184,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -312,7 +312,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -439,7 +439,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same') + 10**-10
@@ -572,7 +572,7 @@ class TestWiener(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')
@@ -581,9 +581,9 @@ class TestWiener(unittest.TestCase):
         plt.show()
         illumination_s_polarized = configurations.get_5_s_waves(theta, 1, 1, Mt=10)
         illumination_widefield = configurations.get_widefield()
-        spacial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
-        spacial_shifts /= (10 * np.sin(theta))
-        illumination_s_polarized.spacial_shifts = spacial_shifts
+        spatial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
+        spatial_shifts /= (10 * np.sin(theta))
+        illumination_s_polarized.spatial_shifts = spatial_shifts
         noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
         noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         noise_estimator.compute_ssnr()
@@ -696,7 +696,7 @@ class TestWiener(unittest.TestCase):
         image *= mask
         arg = N // 2
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         # plt.imshow(optical_system.psf[:, :, N // 2])
@@ -706,15 +706,15 @@ class TestWiener(unittest.TestCase):
         illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
-        # spacial_shifts = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0))) - np.array((1., 9, 0))
-        # spacial_shifts /= (11 * np.sin(theta))
-        spacial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
-        spacial_shifts /= (10 * np.sin(theta))
-        illumination_s_polarized.spacial_shifts = spacial_shifts
+        # spatial_shifts = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0))) - np.array((1., 9, 0))
+        # spatial_shifts /= (11 * np.sin(theta))
+        spatial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
+        spatial_shifts /= (10 * np.sin(theta))
+        illumination_s_polarized.spatial_shifts = spatial_shifts
 
-        spacial_shifts = np.array(((0., 0., 0), (1, 0, 0), (2, 0, 0), (3., 0, 0), (4, 0, 0)))
-        spacial_shifts /= (5 * np.sin(theta))
-        illumination_3waves.spacial_shifts = spacial_shifts
+        spatial_shifts = np.array(((0., 0., 0), (1, 0, 0), (2, 0, 0), (3., 0, 0), (4, 0, 0)))
+        spatial_shifts /= (5 * np.sin(theta))
+        illumination_3waves.spatial_shifts = spatial_shifts
 
         illumination = illumination_3waves
         noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system, readout_noise_variance=0)
@@ -843,7 +843,7 @@ class TestFlat(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
         two_NA_fz = fz / (1 - np.cos(alpha))
 
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((psf_size, N),
                                            apodization_function="Sine")
         image_blurred = scipy.signal.convolve(image, optical_system.psf, mode='same')

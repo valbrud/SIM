@@ -1,16 +1,23 @@
-import random
+"""
+SIMulator.py
 
-import numpy as np
-import Illumination as illum
-import wrappers
-from OpticalSystems import Lens3D
-import scipy
-import Sources
+This module contains the SIMulator class for simulating raw
+structured illumination microscopy (SIM) images and/or reconstructing
+the super resolution images from the raw SIM images.
+
+This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.
+"""
+
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+
+import Sources
+import wrappers
 from Box import BoxSIM, Field
-from mpl_toolkits.mplot3d import axes3d
 from VectorOperations import VectorOperations
-import multiprocessing
+
+
 class SIMulator(BoxSIM):
     def __init__(self, illumination, optical_system, box_size=10, point_number=100, readout_noise_variance=0, additional_info=None):
         super().__init__(illumination, box_size, point_number, additional_info)
@@ -20,7 +27,6 @@ class SIMulator(BoxSIM):
         self.effective_otfs = {}
         self.effective_illumination = np.zeros((self.illumination.Mr, self.illumination.Mt, len(self.illumination.waves), *self.optical_system.psf.shape))
         self.readout_noise_variance = readout_noise_variance
-
 
     def _compute_effective_psfs_and_otfs(self):
         self.effective_psfs, self.effective_otfs = self.optical_system.compute_effectve_psfs_and_otfs(self.illumination)
@@ -48,7 +54,7 @@ class SIMulator(BoxSIM):
 
             for n in range(self.illumination.Mt):
                 SDR_coefficient = np.zeros(self.point_number, dtype=np.complex128)
-                urn = VectorOperations.rotate_vector3d(self.illumination.spacial_shifts[n], np.array((0, 0, 1)), self.illumination.angles[r])
+                urn = VectorOperations.rotate_vector3d(self.illumination.spatial_shifts[n], np.array((0, 0, 1)), self.illumination.angles[r])
                 for field in normalized_illumination:
                     krm = field.source.wavevector
                     phase = np.dot(urn, krm)
@@ -78,10 +84,10 @@ class SIMulator(BoxSIM):
         np.random.seed(1234)
         if not self.effective_psfs:
             self._compute_effective_psfs()
-        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt,  *self.point_number), dtype=np.complex128)
+        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.point_number), dtype=np.complex128)
         for r in range(self.illumination.Mr):
             wavevectors2d, _ = self.illumination.get_wavevectors_projected(r)
-            for w in range(len(wavevectors2d)): #to parallelize
+            for w in range(len(wavevectors2d)):  #to parallelize
                 m = self.illumination.indices2d[w]
                 wavevector = np.array((*wavevectors2d[w], 0))
                 effective_illumination = np.exp(1j * np.einsum('ijkl,l ->ijk', self.grid, wavevector))
@@ -103,10 +109,10 @@ class SIMulator(BoxSIM):
 
     def generate_sim_images2d(self, object):
         np.random.seed(1234)
-        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt,  *self.point_number[:2]), dtype=np.complex128)
+        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.point_number[:2]), dtype=np.complex128)
         for r in range(self.illumination.Mr):
             wavevectors, keys = self.illumination.get_wavevectors_projected(r)
-            for wavevector, m in zip(wavevectors, keys): #to parallelize
+            for wavevector, m in zip(wavevectors, keys):  #to parallelize
                 effective_illumination = np.exp(1j * np.einsum('ijk,k ->ij', self.grid[:, :, 0, :2], wavevector))
                 for n in range(self.illumination.Mt):
                     effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, m)]
@@ -119,6 +125,7 @@ class SIMulator(BoxSIM):
                 sim_images[r, n] = poisson + gaussian
 
         return sim_images
+
     def generate_widefield(self, sim_images):
         widefield_image = np.zeros(sim_images.shape[2:])
         for rotation in sim_images:
@@ -135,6 +142,7 @@ class SIMulator(BoxSIM):
             for n in range(sim_images.shape[1]):
                 reconstructed_image += self.SDR_coefficients[r, n] * sim_images[r, n]
         return reconstructed_image
+
     def reconstruct_real2d_finite_kernel(self, sim_images, kernel, mode='same'):
         low_passed_images = np.zeros(sim_images.shape)
         if not self.SDR_coefficients:
@@ -150,7 +158,8 @@ class SIMulator(BoxSIM):
                 # plt.show()
                 reconstructed_image += self.SDR_coefficients[r, n][:, :, 0] * low_passed_images[r, n]
         return reconstructed_image
-    def _compute_shifted_image_ft(self, image,  kmr):
+
+    def _compute_shifted_image_ft(self, image, kmr):
         kmr = np.array((*kmr, 0))
         phase_shifted = np.exp(1j * np.einsum('ijkl,l ->ijk', self.grid, kmr)) * image
         shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
@@ -177,7 +186,6 @@ class SIMulator(BoxSIM):
             plt.imshow(np.log(1 + np.abs(image1rotation_ft[:, :, 25])))
             plt.show()
 
-
             reconstructed_image_ft += image1rotation_ft
             # print(r, np.amax(image1rotation_ft))
             # plt.imshow(np.log(1 + np.abs(reconstructed_image_ft[:, :, 25])))
@@ -201,5 +209,3 @@ class SIMulator(BoxSIM):
             plt.show()
         reconstructed_image = np.abs(wrappers.wrapped_ifftn(reconstructed_image_ft))
         return reconstructed_image_ft, reconstructed_image
-
-

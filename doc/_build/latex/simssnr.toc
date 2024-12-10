@@ -1,0 +1,28 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {1}Welcome to SIM Documentation}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}SIM}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Box module}{1}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}GUI module}{6}{subsection.1.1.2}%
+\contentsline {subsection}{\numberline {1.1.3}GUIInitializationWidgets module}{9}{subsection.1.1.3}%
+\contentsline {subsection}{\numberline {1.1.4}GUIWidgets module}{10}{subsection.1.1.4}%
+\contentsline {subsection}{\numberline {1.1.5}Illumination module}{15}{subsection.1.1.5}%
+\contentsline {subsection}{\numberline {1.1.6}OpticalSystems module}{19}{subsection.1.1.6}%
+\contentsline {subsection}{\numberline {1.1.7}ProcessorSIM module}{24}{subsection.1.1.7}%
+\contentsline {subsection}{\numberline {1.1.8}SIMulator module}{26}{subsection.1.1.8}%
+\contentsline {subsection}{\numberline {1.1.9}SSNRBasedFiltering module}{26}{subsection.1.1.9}%
+\contentsline {subsection}{\numberline {1.1.10}SSNRCalculator module}{28}{subsection.1.1.10}%
+\contentsline {subsection}{\numberline {1.1.11}ShapesGenerator module}{32}{subsection.1.1.11}%
+\contentsline {subsection}{\numberline {1.1.12}Sources module}{33}{subsection.1.1.12}%
+\contentsline {subsection}{\numberline {1.1.13}VectorOperations module}{36}{subsection.1.1.13}%
+\contentsline {subsection}{\numberline {1.1.14}Windowing module}{37}{subsection.1.1.14}%
+\contentsline {subsection}{\numberline {1.1.15}compute\_optimal\_lattices module}{37}{subsection.1.1.15}%
+\contentsline {subsection}{\numberline {1.1.16}confocal\_ssnr module}{38}{subsection.1.1.16}%
+\contentsline {subsection}{\numberline {1.1.17}globvar module}{39}{subsection.1.1.17}%
+\contentsline {subsection}{\numberline {1.1.18}input\_parser module}{41}{subsection.1.1.18}%
+\contentsline {subsection}{\numberline {1.1.19}kernels module}{42}{subsection.1.1.19}%
+\contentsline {subsection}{\numberline {1.1.20}stattools module}{43}{subsection.1.1.20}%
+\contentsline {subsection}{\numberline {1.1.21}web\_interface module}{46}{subsection.1.1.21}%
+\contentsline {subsection}{\numberline {1.1.22}wrappers module}{46}{subsection.1.1.22}%
+\contentsline {chapter}{\numberline {2}API Reference}{47}{chapter.2}%
+\contentsline {chapter}{Python Module Index}{49}{section*.380}%
+\contentsline {chapter}{Index}{51}{section*.381}%

@@ -4,7 +4,7 @@ import numpy as np
 import sys
 import wrappers
 from config.IlluminationConfigurations import *
-from OpticalSystems import Lens3D, Lens2D
+from OpticalSystems import System4f3D, System4f2D
 from matplotlib.widgets import Slider
 sys.path.append('../')
 from config.IlluminationConfigurations import BFPConfiguration
@@ -21,7 +21,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         x = np.linspace(-max_r, max_r, N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
         high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
         print(np.sum(low_NA_psf), np.sum(high_NA_psf))
@@ -53,11 +53,11 @@ class TestOpticalSystems3D(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
 
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
-        optical_system = Lens3D()
+        optical_system = System4f3D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         otf_sum = np.zeros((N, N, N), dtype=np.complex128)
         effective_otfs = optical_system.compute_effective_otfs_projective_3dSIM(illumination)
@@ -92,7 +92,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         NAs = np.linspace(0.1, 1, 10)
         for NA in NAs:
             alpha = np.asin(NA)
-            optical_system = Lens3D(alpha)
+            optical_system = System4f3D(alpha)
             optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
             # print(np.sum(optical_system.psf))
             ssnrv_widefield.append(np.sum(optical_system.psf**2))
@@ -128,7 +128,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dx), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dx), N)
-        optical_system = Lens3D(alpha)
+        optical_system = System4f3D(alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         psf = optical_system.psf
         # otf = optical_system.otf
@@ -172,7 +172,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         N = 101
         max_r = N // 2 * dx
         max_z = N // 2 * dz
-        optical_system = Lens3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
 
         illumination_s_polarized = configurations.get_5_s_waves(theta, 0.5, 1, Mt=10)
@@ -227,7 +227,7 @@ class TestOpticalSystems2D(unittest.TestCase):
         dx = 1 / (8 * np.sin(alpha))
         N = 51
         max_r = N // 2 * dx
-        optical_system = Lens2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
 
         illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
@@ -280,11 +280,11 @@ class TestOpticalSystems2D(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
 
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
-        optical_system = Lens2D()
+        optical_system = System4f2D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
         otf_sum = np.zeros((N, N), dtype=np.complex128)
         effective_otfs = optical_system.compute_effective_otfs_2dSIM(illumination)

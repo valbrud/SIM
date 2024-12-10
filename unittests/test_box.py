@@ -77,7 +77,7 @@ class TestBox(unittest.TestCase):
                  Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))
                 ]
         box = Box(waves, 10, 40)
-        box.compute_intensity_from_spacial_waves()
+        box.compute_intensity_from_spatial_waves()
         box.plot_intensity_slices()
 
     def test_adding_sources(self):

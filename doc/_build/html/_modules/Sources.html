@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sources &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Sources</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <h1>Source code for Sources</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Sources.py</span>
+
+<span class="sd">This module contains classes for different types of sources used in simulations.</span>
+<span class="sd">The sources can provide either electric fields or intensity fields.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cmath</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+
+
+<div class="viewcode-block" id="Source">
+<a class="viewcode-back" href="../source/Sources.html#Sources.Source">[docs]</a>
+<span class="k">class</span> <span class="nc">Source</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for sources of electric or intensity fields</span>
+<span class="sd">    in our simulations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Source.get_source_type">
+<a class="viewcode-back" href="../source/Sources.html#Sources.Source.get_source_type">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a type of the source in a human-readable form.</span>
+<span class="sd">            str: The type of the source.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ElectricFieldSource">
+<a class="viewcode-back" href="../source/Sources.html#Sources.ElectricFieldSource">[docs]</a>
+<span class="k">class</span> <span class="nc">ElectricFieldSource</span><span class="p">(</span><span class="n">Source</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for sources that provide an electric field.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ElectricFieldSource.get_source_type">
+<a class="viewcode-back" href="../source/Sources.html#Sources.ElectricFieldSource.get_source_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;ElectricField&quot;</span></div>
+
+
+<div class="viewcode-block" id="ElectricFieldSource.get_electric_field">
+<a class="viewcode-back" href="../source/Sources.html#Sources.ElectricFieldSource.get_electric_field">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_electric_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the electric field at the given coordinates.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coordinates (numpy.ndarray[np.float64]): The coordinates at which to get the electric field.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray[np.complex128]: The electric field at the given coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IntensitySource">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensitySource">[docs]</a>
+<span class="k">class</span> <span class="nc">IntensitySource</span><span class="p">(</span><span class="n">Source</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for sources that provide intensity.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="IntensitySource.get_source_type">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensitySource.get_source_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_source_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Intensity&quot;</span></div>
+
+
+<div class="viewcode-block" id="IntensitySource.get_intensity">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensitySource.get_intensity">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the intensity at the given coordinates.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coordinates (numpy.ndarray[np.float64]): The coordinates at which to get the intensity.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray[np.float64]: The intensity at the given coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PlaneWave">
+<a class="viewcode-back" href="../source/Sources.html#Sources.PlaneWave">[docs]</a>
+<span class="k">class</span> <span class="nc">PlaneWave</span><span class="p">(</span><span class="n">ElectricFieldSource</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Electric field of a plane wave&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">electric_field_p</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">electric_field_s</span><span class="p">:</span> <span class="nb">complex</span><span class="p">,</span> <span class="n">phase1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">phase2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs a PlaneWave object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            electric_field_p (float): The p-polarized electric field component.</span>
+<span class="sd">            electric_field_s (float): The s-polarized electric field component.</span>
+<span class="sd">            phase1 (float): The phase of the p-polarized component.</span>
+<span class="sd">            phase2 (float): The phase of the s-polarized component.</span>
+<span class="sd">            wavevector (numpy.ndarray): The wavevector of the plane wave.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">wavevector</span><span class="p">))</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">cmath</span><span class="o">.</span><span class="n">phase</span><span class="p">(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">wavevector</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">Ep</span> <span class="o">=</span> <span class="n">electric_field_p</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)))</span>
+        <span class="n">Es</span> <span class="o">=</span> <span class="n">electric_field_s</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ep</span><span class="p">,</span> <span class="n">Es</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="p">[</span><span class="n">phase1</span><span class="p">,</span> <span class="n">phase2</span><span class="p">]</span>
+
+<div class="viewcode-block" id="PlaneWave.get_electric_field">
+<a class="viewcode-back" href="../source/Sources.html#Sources.PlaneWave.get_electric_field">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_electric_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">electric_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="n">electric_field</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_vectors</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+                <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span><span class="p">)</span>
+                      <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phases</span><span class="p">[</span><span class="n">p</span><span class="p">]))[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">electric_field</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PointSource">
+<a class="viewcode-back" href="../source/Sources.html#Sources.PointSource">[docs]</a>
+<span class="k">class</span> <span class="nc">PointSource</span><span class="p">(</span><span class="n">ElectricFieldSource</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Electric field of a point source&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">brightness</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructs a PointSource object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coordinates (numpy.ndarray): The coordinates of the point source.</span>
+<span class="sd">            brightness (float): The brightness of the point source.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness</span> <span class="o">=</span> <span class="n">brightness</span>
+
+<div class="viewcode-block" id="PointSource.get_electric_field">
+<a class="viewcode-back" href="../source/Sources.html#Sources.PointSource.get_electric_field">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_electric_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+        <span class="n">rvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coordinates</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">)</span>
+        <span class="n">rnorms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl, ijkl-&gt;ijk&#39;</span><span class="p">,</span> <span class="n">rvectors</span><span class="p">,</span> <span class="n">rvectors</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">upper_limit</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="n">electric_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">electric_field</span><span class="p">[</span><span class="n">rnorms</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">upper_limit</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness</span><span class="p">)</span>
+        <span class="n">electric_field</span><span class="p">[</span><span class="n">rnorms</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">brightness</span> <span class="o">/</span> <span class="p">(</span><span class="n">rnorms</span><span class="p">[</span><span class="n">rnorms</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">rvectors</span><span class="p">[</span><span class="n">rnorms</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">electric_field_norms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl, ijkl-&gt;ijk&#39;</span><span class="p">,</span> <span class="n">electric_field</span><span class="p">,</span> <span class="n">electric_field</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span><span class="o">.</span><span class="n">real</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">electric_field</span><span class="p">[</span><span class="n">electric_field_norms</span> <span class="o">&gt;</span> <span class="n">upper_limit</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper_limit</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">electric_field</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="IntensityPlaneWave">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityPlaneWave">[docs]</a>
+<span class="k">class</span> <span class="nc">IntensityPlaneWave</span><span class="p">(</span><span class="n">IntensitySource</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Intensity plane wave is a component of the Fourier</span>
+<span class="sd">    transform of the energy density distribution in a given volume</span>
+<span class="sd">    (e.g., standing waves)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">phase</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">wavevector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs an IntensityPlaneWave object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            amplitude (float): The amplitude of the plane wave.</span>
+<span class="sd">            phase (float): The phase of the plane wave.</span>
+<span class="sd">            wavevector (numpy.ndarray): The wavevector of the plane wave.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wavevector</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">=</span> <span class="n">amplitude</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase</span> <span class="o">=</span> <span class="n">phase</span>
+
+<div class="viewcode-block" id="IntensityPlaneWave.get_intensity">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityPlaneWave.get_intensity">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+        <span class="n">intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span><span class="p">)</span>
+                                                 <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">intensity</span></div>
+</div>
+
+
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

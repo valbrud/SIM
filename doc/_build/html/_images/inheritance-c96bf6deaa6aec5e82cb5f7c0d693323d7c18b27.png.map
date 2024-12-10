@@ -1,0 +1,8 @@
+<map id="inheritance8ac2d984a8" name="inheritance8ac2d984a8">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,56,260,83"/>
+<area shape="rect" id="node5" href="#Sources.PlaneWave" target="_top" title="Electric field of a plane wave" alt="" coords="333,5,420,32"/>
+<area shape="rect" id="node6" href="#Sources.PointSource" target="_top" title="Electric field of a point source" alt="" coords="330,56,422,83"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,81,77,108"/>
+<area shape="rect" id="node4" href="#Sources.IntensitySource" target="_top" title="Abstract base class for sources that provide intensity." alt="" coords="136,107,249,133"/>
+<area shape="rect" id="node3" href="#Sources.IntensityPlaneWave" target="_top" title="Intensity plane wave is a component of the Fourier" alt="" coords="308,107,445,133"/>
+</map>

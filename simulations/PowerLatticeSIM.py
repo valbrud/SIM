@@ -2,7 +2,7 @@ from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 
 if __name__ == "__main__":
     config = BFPConfiguration()
@@ -45,14 +45,14 @@ if __name__ == "__main__":
 
     angles = np.linspace(alpha_lens/8, alpha_lens, 8)
     powers = np.linspace(0., 2, 21)
-    optical_system = Lens3D(alpha=alpha_lens)
+    optical_system = System4f3D(alpha=alpha_lens)
     optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
 
     with open("circular_b.csv", 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(headers)
         # illumination_widefield = config.get_widefield()
-        # illumination_widefield.normalize_spacial_waves()
+        # illumination_widefield.normalize_spatial_waves()
         # ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         # wssnr = ssnr_widefield.compute_ssnr()
         # wvolume = ssnr_widefield.compute_ssnr_volume()
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     #     writer = csv.writer(file)
     #     writer.writerow(headers)
     #     illumination_widefield = config.get_widefield()
-    #     illumination_widefield.normalize_spacial_waves()
+    #     illumination_widefield.normalize_spatial_waves()
     #     ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
     #     wssnr = ssnr_widefield.compute_ssnr()
     #     wvolume = ssnr_widefield.compute_ssnr_volume()

@@ -33,7 +33,7 @@ class BFPConfiguration:
         s_polarized_waves = Illumination.find_ipw_from_pw(sources)
         illumination = Illumination.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -61,7 +61,7 @@ class BFPConfiguration:
         s_polarized_waves = Illumination.find_ipw_from_pw(sources)
         illumination = Illumination.init_from_list(s_polarized_waves, base_vectors)
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
     def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, phase_shift = 0):
@@ -106,7 +106,7 @@ class BFPConfiguration:
 
         illumination = Illumination.init_from_list(square_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -162,7 +162,7 @@ class BFPConfiguration:
         circular_intensity_waves = Illumination.find_ipw_from_pw(circular_plane_waves)
         illumination = Illumination.init_from_list(circular_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -220,7 +220,7 @@ class BFPConfiguration:
 
         illumination = Illumination.init_from_list(seven_waves_list, (k1/2, 3**0.5/2 * k1, k2))
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -265,7 +265,7 @@ class BFPConfiguration:
         five_waves_2z_illumination = Illumination.find_ipw_from_pw(five_waves_2z_illumination)
         illumination = Illumination.init_from_list(five_waves_2z_illumination, base_vectors, Mr)
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -302,7 +302,7 @@ class BFPConfiguration:
         two_triangles_illumination = Illumination.find_ipw_from_pw(ttillum)
         illumination = Illumination.init_from_list(two_triangles_illumination, base_vectors)
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination
 
@@ -343,6 +343,6 @@ class BFPConfiguration:
         two_triangles_illumination = Illumination.find_ipw_from_pw(ttillum)
         illumination = Illumination.init_from_list(two_triangles_illumination, base_vectors)
         illumination.Mt = Mt
-        illumination.normalize_spacial_waves()
+        illumination.normalize_spatial_waves()
 
         return illumination

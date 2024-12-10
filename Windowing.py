@@ -1,10 +1,21 @@
+"""
+This module provides functions to modify the image near the edges for different purposes.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-def make_mask_cosine_edge(shape, edge):
+def make_mask_cosine_edge2d(shape: tuple[int, int], edge: int) -> np.ndarray:
     """
-    Weight mask that vanishes with the cosine distance to the edge.
+    2D Weight mask that vanishes with the cosine distance to the edge.
+
+    Args:
+        shape (tuple[int, int]): Shape of the mask.
+        edge (int): Width of the edge.
+
+    Returns:
+        np.ndarray: The mask.
     """
     # no valid edge -> no masking
     if edge <= 0:
@@ -31,14 +42,22 @@ def make_mask_cosine_edge(shape, edge):
     return np.sin(0.5 * np.pi * dist)
 
 # plt.figure().clear()
-# plt.imshow(make_mask_cosine_edge((100, 200), 25))
+# plt.imshow(make_mask_cosine_edge2d((100, 200), 25))
 # plt.xlabel("x (pixel)")
 # plt.ylabel("y (pixel)")
 # plt.colorbar(label="pixel weight")
 # plt.tight_layout()
-def make_mask_cosine_edge3d(shape, edge):
+
+def make_mask_cosine_edge3d(shape: tuple[int, int, int], edge: int) -> np.ndarray:
     """
     3D Weight mask that vanishes with the cosine distance to the edges.
+
+    Args:
+        shape (tuple[int, int, int]): Shape of the mask.
+        edge (int): Width of the edge.
+
+    Returns:
+        np.ndarray: The mask.
     """
     if edge <= 0:
         return np.ones(shape)

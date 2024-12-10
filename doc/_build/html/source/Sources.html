@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Sources module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="VectorOperations module" href="VectorOperations.html" />
+    <link rel="prev" title="ShapesGenerator module" href="ShapesGenerator.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Sources module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="ShapesGenerator.html">ShapesGenerator module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="VectorOperations.html">VectorOperations module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-Sources">
+<span id="sources-module"></span><h1>Sources module<a class="headerlink" href="#module-Sources" title="Link to this heading">¶</a></h1>
+<p>Sources.py</p>
+<p>This module contains classes for different types of sources used in simulations.
+The sources can provide either electric fields or intensity fields.</p>
+<div class="graphviz"><img src="../_images/inheritance-c96bf6deaa6aec5e82cb5f7c0d693323d7c18b27.png" alt="Inheritance diagram of Sources" usemap="#inheritance8ac2d984a8" class="inheritance graphviz" /></div>
+<map id="inheritance8ac2d984a8" name="inheritance8ac2d984a8">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,56,260,83"/>
+<area shape="rect" id="node5" href="#Sources.PlaneWave" target="_top" title="Electric field of a plane wave" alt="" coords="333,5,420,32"/>
+<area shape="rect" id="node6" href="#Sources.PointSource" target="_top" title="Electric field of a point source" alt="" coords="330,56,422,83"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,81,77,108"/>
+<area shape="rect" id="node4" href="#Sources.IntensitySource" target="_top" title="Abstract base class for sources that provide intensity." alt="" coords="136,107,249,133"/>
+<area shape="rect" id="node3" href="#Sources.IntensityPlaneWave" target="_top" title="Intensity plane wave is a component of the Fourier" alt="" coords="308,107,445,133"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="Sources.ElectricFieldSource">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">ElectricFieldSource</span></span><a class="reference internal" href="../_modules/Sources.html#ElectricFieldSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.ElectricFieldSource" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Sources.Source" title="Sources.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">Source</span></code></a></p>
+<p>Abstract base class for sources that provide an electric field.</p>
+<div class="graphviz"><img src="../_images/inheritance-291c0a4c57421a6bdaa3b83d69a800ad2feefe31.png" alt="Inheritance diagram of Sources.ElectricFieldSource" usemap="#inheritancef79061bdbd" class="inheritance graphviz" /></div>
+<map id="inheritancef79061bdbd" name="inheritancef79061bdbd">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,5,260,32"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.ElectricFieldSource.get_electric_field">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_electric_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">complex128</span></span></span><a class="reference internal" href="../_modules/Sources.html#ElectricFieldSource.get_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.ElectricFieldSource.get_electric_field" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the electric field at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>numpy.ndarray</em><em>[</em><em>np.float64</em><em>]</em>) – The coordinates at which to get the electric field.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The electric field at the given coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray[np.complex128]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Sources.ElectricFieldSource.get_source_type">
+<span class="sig-name descname"><span class="pre">get_source_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/Sources.html#ElectricFieldSource.get_source_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.ElectricFieldSource.get_source_type" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns a type of the source in a human-readable form.</dt><dd><p>str: The type of the source.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Sources.IntensityPlaneWave">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">IntensityPlaneWave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavevector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.,</span> <span class="pre">0.])</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#IntensityPlaneWave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.IntensityPlaneWave" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Sources.IntensitySource" title="Sources.IntensitySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntensitySource</span></code></a></p>
+<p>Intensity plane wave is a component of the Fourier
+transform of the energy density distribution in a given volume
+(e.g., standing waves)</p>
+<div class="graphviz"><img src="../_images/inheritance-0ce9acc6be37777071a35d6a8c03b114a62a6699.png" alt="Inheritance diagram of Sources.IntensityPlaneWave" usemap="#inheritance4dc468bfbc" class="inheritance graphviz" /></div>
+<map id="inheritance4dc468bfbc" name="inheritance4dc468bfbc">
+<area shape="rect" id="node1" href="#Sources.IntensityPlaneWave" target="_top" title="Intensity plane wave is a component of the Fourier" alt="" coords="286,5,423,32"/>
+<area shape="rect" id="node2" href="#Sources.IntensitySource" target="_top" title="Abstract base class for sources that provide intensity." alt="" coords="125,5,238,32"/>
+<area shape="rect" id="node3" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.IntensityPlaneWave.get_intensity">
+<span class="sig-name descname"><span class="pre">get_intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#IntensityPlaneWave.get_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.IntensityPlaneWave.get_intensity" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the intensity at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>numpy.ndarray</em><em>[</em><em>np.float64</em><em>]</em>) – The coordinates at which to get the intensity.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The intensity at the given coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray[np.float64]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Sources.IntensitySource">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">IntensitySource</span></span><a class="reference internal" href="../_modules/Sources.html#IntensitySource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.IntensitySource" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Sources.Source" title="Sources.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">Source</span></code></a></p>
+<p>Abstract base class for sources that provide intensity.</p>
+<div class="graphviz"><img src="../_images/inheritance-8f65a998670640365c7b93eda10f820c2c70cacb.png" alt="Inheritance diagram of Sources.IntensitySource" usemap="#inheritance6e4f0c5c3c" class="inheritance graphviz" /></div>
+<map id="inheritance6e4f0c5c3c" name="inheritance6e4f0c5c3c">
+<area shape="rect" id="node1" href="#Sources.IntensitySource" target="_top" title="Abstract base class for sources that provide intensity." alt="" coords="125,5,238,32"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.IntensitySource.get_intensity">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_intensity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int64</span></span></span><a class="reference internal" href="../_modules/Sources.html#IntensitySource.get_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.IntensitySource.get_intensity" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the intensity at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>numpy.ndarray</em><em>[</em><em>np.float64</em><em>]</em>) – The coordinates at which to get the intensity.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The intensity at the given coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray[np.float64]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Sources.IntensitySource.get_source_type">
+<span class="sig-name descname"><span class="pre">get_source_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/Sources.html#IntensitySource.get_source_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.IntensitySource.get_source_type" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns a type of the source in a human-readable form.</dt><dd><p>str: The type of the source.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Sources.PlaneWave">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">PlaneWave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">electric_field_p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">electric_field_s</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">complex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavevector</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#PlaneWave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.PlaneWave" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Sources.ElectricFieldSource" title="Sources.ElectricFieldSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElectricFieldSource</span></code></a></p>
+<p>Electric field of a plane wave</p>
+<div class="graphviz"><img src="../_images/inheritance-49b5e4d141605faa16a69144e93eecaf75dd4c81.png" alt="Inheritance diagram of Sources.PlaneWave" usemap="#inheritanceb8a9d9e0ae" class="inheritance graphviz" /></div>
+<map id="inheritanceb8a9d9e0ae" name="inheritanceb8a9d9e0ae">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,5,260,32"/>
+<area shape="rect" id="node3" href="#Sources.PlaneWave" target="_top" title="Electric field of a plane wave" alt="" coords="308,5,395,32"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.PlaneWave.get_electric_field">
+<span class="sig-name descname"><span class="pre">get_electric_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#PlaneWave.get_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.PlaneWave.get_electric_field" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the electric field at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>numpy.ndarray</em><em>[</em><em>np.float64</em><em>]</em>) – The coordinates at which to get the electric field.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The electric field at the given coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray[np.complex128]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Sources.PointSource">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">PointSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">brightness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#PointSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.PointSource" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Sources.ElectricFieldSource" title="Sources.ElectricFieldSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElectricFieldSource</span></code></a></p>
+<p>Electric field of a point source</p>
+<div class="graphviz"><img src="../_images/inheritance-da9166586dcffda1978e948d42d11830e73dfa30.png" alt="Inheritance diagram of Sources.PointSource" usemap="#inheritanceca9af9fe47" class="inheritance graphviz" /></div>
+<map id="inheritanceca9af9fe47" name="inheritanceca9af9fe47">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,5,260,32"/>
+<area shape="rect" id="node3" href="#Sources.PointSource" target="_top" title="Electric field of a point source" alt="" coords="308,5,400,32"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.PointSource.get_electric_field">
+<span class="sig-name descname"><span class="pre">get_electric_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Sources.html#PointSource.get_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.PointSource.get_electric_field" title="Link to this definition">¶</a></dt>
+<dd><p>Gets the electric field at the given coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>numpy.ndarray</em><em>[</em><em>np.float64</em><em>]</em>) – The coordinates at which to get the electric field.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The electric field at the given coordinates.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray[np.complex128]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Sources.Source">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">Source</span></span><a class="reference internal" href="../_modules/Sources.html#Source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.Source" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Abstract base class for sources of electric or intensity fields
+in our simulations.</p>
+<div class="graphviz"><img src="../_images/inheritance-259b03a35c5b964f9dfe819e44d3a5855668ee02.png" alt="Inheritance diagram of Sources.Source" usemap="#inheritancef4027656e3" class="inheritance graphviz" /></div>
+<map id="inheritancef4027656e3" name="inheritancef4027656e3">
+<area shape="rect" id="node1" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,5,77,32"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Sources.Source.get_source_type">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_source_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/Sources.html#Source.get_source_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.Source.get_source_type" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Returns a type of the source in a human-readable form.</dt><dd><p>str: The type of the source.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="ShapesGenerator.html">ShapesGenerator module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="VectorOperations.html">VectorOperations module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

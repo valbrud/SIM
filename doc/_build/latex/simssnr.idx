@@ -1,0 +1,421 @@
+\indexentry{module@\spxentry{module}!Box@\spxentry{Box}|hyperpage}{1}
+\indexentry{Box@\spxentry{Box}!module@\spxentry{module}|hyperpage}{1}
+\indexentry{Box (class in Box)@\spxentry{Box}\spxextra{class in Box}|hyperpage}{1}
+\indexentry{info (Box.Box attribute)@\spxentry{info}\spxextra{Box.Box attribute}|hyperpage}{1}
+\indexentry{box\_size (Box.Box attribute)@\spxentry{box\_size}\spxextra{Box.Box attribute}|hyperpage}{1}
+\indexentry{point\_number (Box.Box attribute)@\spxentry{point\_number}\spxextra{Box.Box attribute}|hyperpage}{1}
+\indexentry{box\_volume (Box.Box attribute)@\spxentry{box\_volume}\spxextra{Box.Box attribute}|hyperpage}{1}
+\indexentry{fields (Box.Box attribute)@\spxentry{fields}\spxextra{Box.Box attribute}|hyperpage}{1}
+\indexentry{numerically\_approximated\_intensity\_fields (Box.Box attribute)@\spxentry{numerically\_approximated\_intensity\_fields}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{source\_identifier (Box.Box attribute)@\spxentry{source\_identifier}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{axes (Box.Box attribute)@\spxentry{axes}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{frequency\_axes (Box.Box attribute)@\spxentry{frequency\_axes}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{grid (Box.Box attribute)@\spxentry{grid}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{electric\_field (Box.Box attribute)@\spxentry{electric\_field}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{intensity (Box.Box attribute)@\spxentry{intensity}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{numerically\_approximated\_intensity (Box.Box attribute)@\spxentry{numerically\_approximated\_intensity}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{intensity\_fourier\_space (Box.Box attribute)@\spxentry{intensity\_fourier\_space}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{numerically\_approximated\_intensity\_fourier\_space (Box.Box attribute)@\spxentry{numerically\_approximated\_intensity\_fourier\_space}\spxextra{Box.Box attribute}|hyperpage}{2}
+\indexentry{analytic\_frequencies (Box.Box attribute)@\spxentry{analytic\_frequencies}\spxextra{Box.Box attribute}|hyperpage}{3}
+\indexentry{add\_source() (Box.Box method)@\spxentry{add\_source()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_axes() (Box.Box method)@\spxentry{compute\_axes()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_electric\_field() (Box.Box method)@\spxentry{compute\_electric\_field()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_grid() (Box.Box method)@\spxentry{compute\_grid()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_intensity\_and\_spatial\_waves\_numerically() (Box.Box method)@\spxentry{compute\_intensity\_and\_spatial\_waves\_numerically()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_intensity\_fourier\_space() (Box.Box method)@\spxentry{compute\_intensity\_fourier\_space()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_intensity\_from\_electric\_field() (Box.Box method)@\spxentry{compute\_intensity\_from\_electric\_field()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{compute\_intensity\_from\_spatial\_waves() (Box.Box method)@\spxentry{compute\_intensity\_from\_spatial\_waves()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{get\_approximated\_intensity\_sources() (Box.Box method)@\spxentry{get\_approximated\_intensity\_sources()}\spxextra{Box.Box method}|hyperpage}{3}
+\indexentry{get\_plane\_waves() (Box.Box method)@\spxentry{get\_plane\_waves()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{get\_sources() (Box.Box method)@\spxentry{get\_sources()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{get\_spatial\_waves() (Box.Box method)@\spxentry{get\_spatial\_waves()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{plot\_approximate\_intensity\_fourier\_space\_slices() (Box.Box method)@\spxentry{plot\_approximate\_intensity\_fourier\_space\_slices()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{plot\_approximate\_intensity\_slices() (Box.Box method)@\spxentry{plot\_approximate\_intensity\_slices()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{plot\_intensity\_fourier\_space\_slices() (Box.Box method)@\spxentry{plot\_intensity\_fourier\_space\_slices()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{plot\_intensity\_slices() (Box.Box method)@\spxentry{plot\_intensity\_slices()}\spxextra{Box.Box method}|hyperpage}{4}
+\indexentry{plot\_slices() (Box.Box method)@\spxentry{plot\_slices()}\spxextra{Box.Box method}|hyperpage}{5}
+\indexentry{remove\_source() (Box.Box method)@\spxentry{remove\_source()}\spxextra{Box.Box method}|hyperpage}{5}
+\indexentry{BoxSIM (class in Box)@\spxentry{BoxSIM}\spxextra{class in Box}|hyperpage}{5}
+\indexentry{illumination (Box.BoxSIM attribute)@\spxentry{illumination}\spxextra{Box.BoxSIM attribute}|hyperpage}{5}
+\indexentry{illuminations\_shifted (Box.BoxSIM attribute)@\spxentry{illuminations\_shifted}\spxextra{Box.BoxSIM attribute}|hyperpage}{5}
+\indexentry{compute\_total\_illumination() (Box.BoxSIM method)@\spxentry{compute\_total\_illumination()}\spxextra{Box.BoxSIM method}|hyperpage}{5}
+\indexentry{get\_intensity() (Box.BoxSIM method)@\spxentry{get\_intensity()}\spxextra{Box.BoxSIM method}|hyperpage}{5}
+\indexentry{Field (class in Box)@\spxentry{Field}\spxextra{class in Box}|hyperpage}{5}
+\indexentry{identifier (Box.Field attribute)@\spxentry{identifier}\spxextra{Box.Field attribute}|hyperpage}{6}
+\indexentry{field\_type (Box.Field attribute)@\spxentry{field\_type}\spxextra{Box.Field attribute}|hyperpage}{6}
+\indexentry{source (Box.Field attribute)@\spxentry{source}\spxextra{Box.Field attribute}|hyperpage}{6}
+\indexentry{field (Box.Field attribute)@\spxentry{field}\spxextra{Box.Field attribute}|hyperpage}{6}
+\indexentry{module@\spxentry{module}!GUI@\spxentry{GUI}|hyperpage}{6}
+\indexentry{GUI@\spxentry{GUI}!module@\spxentry{module}|hyperpage}{6}
+\indexentry{MainWindow (class in GUI)@\spxentry{MainWindow}\spxextra{class in GUI}|hyperpage}{7}
+\indexentry{add\_intensity\_plane\_wave() (GUI.MainWindow method)@\spxentry{add\_intensity\_plane\_wave()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{add\_plane\_wave() (GUI.MainWindow method)@\spxentry{add\_plane\_wave()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{add\_point\_source() (GUI.MainWindow method)@\spxentry{add\_point\_source()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{add\_source() (GUI.MainWindow method)@\spxentry{add\_source()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{add\_to\_box() (GUI.MainWindow method)@\spxentry{add\_to\_box()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{change\_plotting\_mode() (GUI.MainWindow method)@\spxentry{change\_plotting\_mode()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{change\_view3d() (GUI.MainWindow method)@\spxentry{change\_view3d()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{choose\_plotting\_mode() (GUI.MainWindow method)@\spxentry{choose\_plotting\_mode()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{choose\_view3d() (GUI.MainWindow method)@\spxentry{choose\_view3d()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{clear\_layout() (GUI.MainWindow method)@\spxentry{clear\_layout()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_and\_plot\_fourier\_space() (GUI.MainWindow method)@\spxentry{compute\_and\_plot\_fourier\_space()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_and\_plot\_from\_electric\_field() (GUI.MainWindow method)@\spxentry{compute\_and\_plot\_from\_electric\_field()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_and\_plot\_from\_intensity\_sources() (GUI.MainWindow method)@\spxentry{compute\_and\_plot\_from\_intensity\_sources()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_next\_shift() (GUI.MainWindow method)@\spxentry{compute\_next\_shift()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_numerically\_approximated\_intensities() (GUI.MainWindow method)@\spxentry{compute\_numerically\_approximated\_intensities()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{compute\_total\_intensity() (GUI.MainWindow method)@\spxentry{compute\_total\_intensity()}\spxextra{GUI.MainWindow method}|hyperpage}{7}
+\indexentry{get\_ipw\_from\_pw() (GUI.MainWindow method)@\spxentry{get\_ipw\_from\_pw()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{init\_ui() (GUI.MainWindow method)@\spxentry{init\_ui()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{load\_config() (GUI.MainWindow method)@\spxentry{load\_config()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{load\_illumination() (GUI.MainWindow method)@\spxentry{load\_illumination()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{on\_option\_selected() (GUI.MainWindow method)@\spxentry{on\_option\_selected()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{plot\_fourier\_space\_slices() (GUI.MainWindow method)@\spxentry{plot\_fourier\_space\_slices()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{plot\_intensity\_slices() (GUI.MainWindow method)@\spxentry{plot\_intensity\_slices()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{plot\_numerically\_approximated\_intensity() (GUI.MainWindow method)@\spxentry{plot\_numerically\_approximated\_intensity()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{plot\_numerically\_approximated\_intensity\_fourier\_space() (GUI.MainWindow method)@\spxentry{plot\_numerically\_approximated\_intensity\_fourier\_space()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{plot\_shift\_arrow() (GUI.MainWindow method)@\spxentry{plot\_shift\_arrow()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{remove\_source() (GUI.MainWindow method)@\spxentry{remove\_source()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{save\_config() (GUI.MainWindow method)@\spxentry{save\_config()}\spxextra{GUI.MainWindow method}|hyperpage}{8}
+\indexentry{PlottingMode (class in GUI)@\spxentry{PlottingMode}\spxextra{class in GUI}|hyperpage}{8}
+\indexentry{linear (GUI.PlottingMode attribute)@\spxentry{linear}\spxextra{GUI.PlottingMode attribute}|hyperpage}{8}
+\indexentry{logarithmic (GUI.PlottingMode attribute)@\spxentry{logarithmic}\spxextra{GUI.PlottingMode attribute}|hyperpage}{8}
+\indexentry{mixed (GUI.PlottingMode attribute)@\spxentry{mixed}\spxextra{GUI.PlottingMode attribute}|hyperpage}{8}
+\indexentry{View (class in GUI)@\spxentry{View}\spxextra{class in GUI}|hyperpage}{8}
+\indexentry{XY (GUI.View attribute)@\spxentry{XY}\spxextra{GUI.View attribute}|hyperpage}{8}
+\indexentry{XZ (GUI.View attribute)@\spxentry{XZ}\spxextra{GUI.View attribute}|hyperpage}{9}
+\indexentry{YZ (GUI.View attribute)@\spxentry{YZ}\spxextra{GUI.View attribute}|hyperpage}{9}
+\indexentry{module@\spxentry{module}!GUIInitializationWidgets@\spxentry{GUIInitializationWidgets}|hyperpage}{9}
+\indexentry{GUIInitializationWidgets@\spxentry{GUIInitializationWidgets}!module@\spxentry{module}|hyperpage}{9}
+\indexentry{InitializationWidget (class in GUIInitializationWidgets)@\spxentry{InitializationWidget}\spxextra{class in GUIInitializationWidgets}|hyperpage}{9}
+\indexentry{on\_click\_ok() (GUIInitializationWidgets.InitializationWidget method)@\spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.InitializationWidget method}|hyperpage}{9}
+\indexentry{request\_data() (GUIInitializationWidgets.InitializationWidget method)@\spxentry{request\_data()}\spxextra{GUIInitializationWidgets.InitializationWidget method}|hyperpage}{9}
+\indexentry{IntensityPlaneWaveInitializationWidget (class in GUIInitializationWidgets)@\spxentry{IntensityPlaneWaveInitializationWidget}\spxextra{class in GUIInitializationWidgets}|hyperpage}{9}
+\indexentry{on\_click\_ok() (GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method)@\spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method}|hyperpage}{9}
+\indexentry{request\_data() (GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method)@\spxentry{request\_data()}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method}|hyperpage}{10}
+\indexentry{sendInfo (GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget attribute)@\spxentry{sendInfo}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget attribute}|hyperpage}{10}
+\indexentry{PlaneWaveInitializationWidget (class in GUIInitializationWidgets)@\spxentry{PlaneWaveInitializationWidget}\spxextra{class in GUIInitializationWidgets}|hyperpage}{10}
+\indexentry{on\_click\_ok() (GUIInitializationWidgets.PlaneWaveInitializationWidget method)@\spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget method}|hyperpage}{10}
+\indexentry{request\_data() (GUIInitializationWidgets.PlaneWaveInitializationWidget method)@\spxentry{request\_data()}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget method}|hyperpage}{10}
+\indexentry{sendInfo (GUIInitializationWidgets.PlaneWaveInitializationWidget attribute)@\spxentry{sendInfo}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget attribute}|hyperpage}{10}
+\indexentry{module@\spxentry{module}!GUIWidgets@\spxentry{GUIWidgets}|hyperpage}{10}
+\indexentry{GUIWidgets@\spxentry{GUIWidgets}!module@\spxentry{module}|hyperpage}{10}
+\indexentry{IntensityPlaneWaveWidget (class in GUIWidgets)@\spxentry{IntensityPlaneWaveWidget}\spxextra{class in GUIWidgets}|hyperpage}{11}
+\indexentry{change\_widget() (GUIWidgets.IntensityPlaneWaveWidget method)@\spxentry{change\_widget()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}|hyperpage}{11}
+\indexentry{contextMenuEvent() (GUIWidgets.IntensityPlaneWaveWidget method)@\spxentry{contextMenuEvent()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}|hyperpage}{11}
+\indexentry{init\_ui() (GUIWidgets.IntensityPlaneWaveWidget method)@\spxentry{init\_ui()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}|hyperpage}{11}
+\indexentry{isSet (GUIWidgets.IntensityPlaneWaveWidget attribute)@\spxentry{isSet}\spxextra{GUIWidgets.IntensityPlaneWaveWidget attribute}|hyperpage}{11}
+\indexentry{on\_receive\_info() (GUIWidgets.IntensityPlaneWaveWidget method)@\spxentry{on\_receive\_info()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}|hyperpage}{11}
+\indexentry{PlaneWaveWidget (class in GUIWidgets)@\spxentry{PlaneWaveWidget}\spxextra{class in GUIWidgets}|hyperpage}{11}
+\indexentry{change\_widget() (GUIWidgets.PlaneWaveWidget method)@\spxentry{change\_widget()}\spxextra{GUIWidgets.PlaneWaveWidget method}|hyperpage}{12}
+\indexentry{contextMenuEvent() (GUIWidgets.PlaneWaveWidget method)@\spxentry{contextMenuEvent()}\spxextra{GUIWidgets.PlaneWaveWidget method}|hyperpage}{12}
+\indexentry{init\_ui() (GUIWidgets.PlaneWaveWidget method)@\spxentry{init\_ui()}\spxextra{GUIWidgets.PlaneWaveWidget method}|hyperpage}{12}
+\indexentry{isDeleted (GUIWidgets.PlaneWaveWidget attribute)@\spxentry{isDeleted}\spxextra{GUIWidgets.PlaneWaveWidget attribute}|hyperpage}{12}
+\indexentry{isSet (GUIWidgets.PlaneWaveWidget attribute)@\spxentry{isSet}\spxextra{GUIWidgets.PlaneWaveWidget attribute}|hyperpage}{12}
+\indexentry{on\_receive\_info() (GUIWidgets.PlaneWaveWidget method)@\spxentry{on\_receive\_info()}\spxextra{GUIWidgets.PlaneWaveWidget method}|hyperpage}{12}
+\indexentry{PointSourceInitializationWidget (class in GUIWidgets)@\spxentry{PointSourceInitializationWidget}\spxextra{class in GUIWidgets}|hyperpage}{12}
+\indexentry{non\_numbers (GUIWidgets.PointSourceInitializationWidget attribute)@\spxentry{non\_numbers}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}|hyperpage}{13}
+\indexentry{request\_data() (GUIWidgets.PointSourceInitializationWidget method)@\spxentry{request\_data()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}|hyperpage}{13}
+\indexentry{sendBrightness (GUIWidgets.PointSourceInitializationWidget attribute)@\spxentry{sendBrightness}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}|hyperpage}{13}
+\indexentry{sendCoordinates (GUIWidgets.PointSourceInitializationWidget attribute)@\spxentry{sendCoordinates}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}|hyperpage}{13}
+\indexentry{send\_brightness() (GUIWidgets.PointSourceInitializationWidget method)@\spxentry{send\_brightness()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}|hyperpage}{13}
+\indexentry{send\_coordinates() (GUIWidgets.PointSourceInitializationWidget method)@\spxentry{send\_coordinates()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}|hyperpage}{13}
+\indexentry{PointSourceWidget (class in GUIWidgets)@\spxentry{PointSourceWidget}\spxextra{class in GUIWidgets}|hyperpage}{13}
+\indexentry{change\_widget() (GUIWidgets.PointSourceWidget method)@\spxentry{change\_widget()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{contextMenuEvent() (GUIWidgets.PointSourceWidget method)@\spxentry{contextMenuEvent()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{init\_ui() (GUIWidgets.PointSourceWidget method)@\spxentry{init\_ui()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{isSet (GUIWidgets.PointSourceWidget attribute)@\spxentry{isSet}\spxextra{GUIWidgets.PointSourceWidget attribute}|hyperpage}{14}
+\indexentry{on\_click\_ok() (GUIWidgets.PointSourceWidget method)@\spxentry{on\_click\_ok()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{on\_receive\_brightness() (GUIWidgets.PointSourceWidget method)@\spxentry{on\_receive\_brightness()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{on\_receive\_coordinates() (GUIWidgets.PointSourceWidget method)@\spxentry{on\_receive\_coordinates()}\spxextra{GUIWidgets.PointSourceWidget method}|hyperpage}{14}
+\indexentry{SourceWidget (class in GUIWidgets)@\spxentry{SourceWidget}\spxextra{class in GUIWidgets}|hyperpage}{14}
+\indexentry{change\_widget() (GUIWidgets.SourceWidget method)@\spxentry{change\_widget()}\spxextra{GUIWidgets.SourceWidget method}|hyperpage}{14}
+\indexentry{contextMenuEvent() (GUIWidgets.SourceWidget method)@\spxentry{contextMenuEvent()}\spxextra{GUIWidgets.SourceWidget method}|hyperpage}{14}
+\indexentry{identifier (GUIWidgets.SourceWidget attribute)@\spxentry{identifier}\spxextra{GUIWidgets.SourceWidget attribute}|hyperpage}{14}
+\indexentry{init\_ui() (GUIWidgets.SourceWidget method)@\spxentry{init\_ui()}\spxextra{GUIWidgets.SourceWidget method}|hyperpage}{14}
+\indexentry{isDeleted (GUIWidgets.SourceWidget attribute)@\spxentry{isDeleted}\spxextra{GUIWidgets.SourceWidget attribute}|hyperpage}{15}
+\indexentry{remove\_widget() (GUIWidgets.SourceWidget method)@\spxentry{remove\_widget()}\spxextra{GUIWidgets.SourceWidget method}|hyperpage}{15}
+\indexentry{module@\spxentry{module}!Illumination@\spxentry{Illumination}|hyperpage}{15}
+\indexentry{Illumination@\spxentry{Illumination}!module@\spxentry{module}|hyperpage}{15}
+\indexentry{Illumination (class in Illumination)@\spxentry{Illumination}\spxextra{class in Illumination}|hyperpage}{15}
+\indexentry{angles (Illumination.Illumination attribute)@\spxentry{angles}\spxextra{Illumination.Illumination attribute}|hyperpage}{15}
+\indexentry{\_spatial\_shifts (Illumination.Illumination attribute)@\spxentry{\_spatial\_shifts}\spxextra{Illumination.Illumination attribute}|hyperpage}{15}
+\indexentry{\_Mr (Illumination.Illumination attribute)@\spxentry{\_Mr}\spxextra{Illumination.Illumination attribute}|hyperpage}{15}
+\indexentry{Mt (Illumination.Illumination attribute)@\spxentry{Mt}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{waves (Illumination.Illumination attribute)@\spxentry{waves}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{wavevectors2d (Illumination.Illumination attribute)@\spxentry{wavevectors2d}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{indices2d (Illumination.Illumination attribute)@\spxentry{indices2d}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{wavevectors3d (Illumination.Illumination attribute)@\spxentry{wavevectors3d}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{indices3d (Illumination.Illumination attribute)@\spxentry{indices3d}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{rearranged\_indices (Illumination.Illumination attribute)@\spxentry{rearranged\_indices}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{xy\_fourier\_peaks (Illumination.Illumination attribute)@\spxentry{xy\_fourier\_peaks}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{phase\_matrix (Illumination.Illumination attribute)@\spxentry{phase\_matrix}\spxextra{Illumination.Illumination attribute}|hyperpage}{16}
+\indexentry{Mr (Illumination.Illumination property)@\spxentry{Mr}\spxextra{Illumination.Illumination property}|hyperpage}{17}
+\indexentry{compute\_expanded\_lattice2d() (Illumination.Illumination method)@\spxentry{compute\_expanded\_lattice2d()}\spxextra{Illumination.Illumination method}|hyperpage}{17}
+\indexentry{compute\_expanded\_lattice3d() (Illumination.Illumination method)@\spxentry{compute\_expanded\_lattice3d()}\spxextra{Illumination.Illumination method}|hyperpage}{17}
+\indexentry{compute\_phase\_matrix() (Illumination.Illumination method)@\spxentry{compute\_phase\_matrix()}\spxextra{Illumination.Illumination method}|hyperpage}{17}
+\indexentry{find\_ipw\_from\_pw() (Illumination.Illumination static method)@\spxentry{find\_ipw\_from\_pw()}\spxextra{Illumination.Illumination static method}|hyperpage}{17}
+\indexentry{get\_all\_wavevectors() (Illumination.Illumination method)@\spxentry{get\_all\_wavevectors()}\spxextra{Illumination.Illumination method}|hyperpage}{17}
+\indexentry{get\_all\_wavevectors\_projected() (Illumination.Illumination method)@\spxentry{get\_all\_wavevectors\_projected()}\spxextra{Illumination.Illumination method}|hyperpage}{18}
+\indexentry{get\_wavevectors() (Illumination.Illumination method)@\spxentry{get\_wavevectors()}\spxextra{Illumination.Illumination method}|hyperpage}{18}
+\indexentry{get\_wavevectors\_projected() (Illumination.Illumination method)@\spxentry{get\_wavevectors\_projected()}\spxextra{Illumination.Illumination method}|hyperpage}{18}
+\indexentry{index\_frequencies() (Illumination.Illumination static method)@\spxentry{index\_frequencies()}\spxextra{Illumination.Illumination static method}|hyperpage}{18}
+\indexentry{init\_from\_list() (Illumination.Illumination class method)@\spxentry{init\_from\_list()}\spxextra{Illumination.Illumination class method}|hyperpage}{18}
+\indexentry{normalize\_spatial\_waves() (Illumination.Illumination method)@\spxentry{normalize\_spatial\_waves()}\spxextra{Illumination.Illumination method}|hyperpage}{19}
+\indexentry{set\_spatial\_shifts\_diagonally() (Illumination.Illumination method)@\spxentry{set\_spatial\_shifts\_diagonally()}\spxextra{Illumination.Illumination method}|hyperpage}{19}
+\indexentry{spatial\_shifts (Illumination.Illumination property)@\spxentry{spatial\_shifts}\spxextra{Illumination.Illumination property}|hyperpage}{19}
+\indexentry{module@\spxentry{module}!OpticalSystems@\spxentry{OpticalSystems}|hyperpage}{19}
+\indexentry{OpticalSystems@\spxentry{OpticalSystems}!module@\spxentry{module}|hyperpage}{19}
+\indexentry{OpticalSystem (class in OpticalSystems)@\spxentry{OpticalSystem}\spxextra{class in OpticalSystems}|hyperpage}{19}
+\indexentry{supported\_interpolation\_methods (OpticalSystems.OpticalSystem attribute)@\spxentry{supported\_interpolation\_methods}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{19}
+\indexentry{psf (OpticalSystems.OpticalSystem attribute)@\spxentry{psf}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{19}
+\indexentry{otf (OpticalSystems.OpticalSystem attribute)@\spxentry{otf}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{20}
+\indexentry{interpolator (OpticalSystems.OpticalSystem attribute)@\spxentry{interpolator}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{20}
+\indexentry{\_otf\_frequencies (OpticalSystems.OpticalSystem attribute)@\spxentry{\_otf\_frequencies}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{20}
+\indexentry{\_psf\_coordinates (OpticalSystems.OpticalSystem attribute)@\spxentry{\_psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{20}
+\indexentry{\_interpolation\_method (OpticalSystems.OpticalSystem attribute)@\spxentry{\_interpolation\_method}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{20}
+\indexentry{compute\_psf\_and\_otf() (OpticalSystems.OpticalSystem method)@\spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem method}|hyperpage}{20}
+\indexentry{compute\_psf\_and\_otf\_cordinates() (OpticalSystems.OpticalSystem method)@\spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem method}|hyperpage}{20}
+\indexentry{compute\_q\_grid() (OpticalSystems.OpticalSystem method)@\spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem method}|hyperpage}{20}
+\indexentry{compute\_x\_grid() (OpticalSystems.OpticalSystem method)@\spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem method}|hyperpage}{21}
+\indexentry{interpolate\_otf() (OpticalSystems.OpticalSystem method)@\spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem method}|hyperpage}{21}
+\indexentry{interpolation\_method (OpticalSystems.OpticalSystem property)@\spxentry{interpolation\_method}\spxextra{OpticalSystems.OpticalSystem property}|hyperpage}{21}
+\indexentry{otf\_frequencies (OpticalSystems.OpticalSystem property)@\spxentry{otf\_frequencies}\spxextra{OpticalSystems.OpticalSystem property}|hyperpage}{21}
+\indexentry{psf\_coordinates (OpticalSystems.OpticalSystem property)@\spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem property}|hyperpage}{21}
+\indexentry{supported\_interpolation\_methods (OpticalSystems.OpticalSystem attribute)@\spxentry{supported\_interpolation\_methods}\spxextra{OpticalSystems.OpticalSystem attribute}|hyperpage}{21}
+\indexentry{OpticalSystem2D (class in OpticalSystems)@\spxentry{OpticalSystem2D}\spxextra{class in OpticalSystems}|hyperpage}{21}
+\indexentry{compute\_effective\_otfs\_2dSIM() (OpticalSystems.OpticalSystem2D method)@\spxentry{compute\_effective\_otfs\_2dSIM()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{21}
+\indexentry{compute\_psf\_and\_otf() (OpticalSystems.OpticalSystem2D method)@\spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{22}
+\indexentry{compute\_psf\_and\_otf\_cordinates() (OpticalSystems.OpticalSystem2D method)@\spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{22}
+\indexentry{compute\_q\_grid() (OpticalSystems.OpticalSystem2D method)@\spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{22}
+\indexentry{compute\_x\_grid() (OpticalSystems.OpticalSystem2D method)@\spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{22}
+\indexentry{interpolate\_otf() (OpticalSystems.OpticalSystem2D method)@\spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem2D method}|hyperpage}{22}
+\indexentry{psf\_coordinates (OpticalSystems.OpticalSystem2D property)@\spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem2D property}|hyperpage}{22}
+\indexentry{OpticalSystem3D (class in OpticalSystems)@\spxentry{OpticalSystem3D}\spxextra{class in OpticalSystems}|hyperpage}{22}
+\indexentry{compute\_effective\_otfs\_projective\_3dSIM() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_effective\_otfs\_projective\_3dSIM()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{22}
+\indexentry{compute\_effective\_otfs\_true\_3dSIM() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_effective\_otfs\_true\_3dSIM()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{compute\_psf\_and\_otf() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{compute\_psf\_and\_otf\_cordinates() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{compute\_q\_grid() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{compute\_x\_grid() (OpticalSystems.OpticalSystem3D method)@\spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{interpolate\_otf() (OpticalSystems.OpticalSystem3D method)@\spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem3D method}|hyperpage}{23}
+\indexentry{psf\_coordinates (OpticalSystems.OpticalSystem3D property)@\spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem3D property}|hyperpage}{24}
+\indexentry{System4f2D (class in OpticalSystems)@\spxentry{System4f2D}\spxextra{class in OpticalSystems}|hyperpage}{24}
+\indexentry{compute\_psf\_and\_otf() (OpticalSystems.System4f2D method)@\spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.System4f2D method}|hyperpage}{24}
+\indexentry{System4f3D (class in OpticalSystems)@\spxentry{System4f3D}\spxextra{class in OpticalSystems}|hyperpage}{24}
+\indexentry{compute\_psf\_and\_otf() (OpticalSystems.System4f3D method)@\spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.System4f3D method}|hyperpage}{24}
+\indexentry{module@\spxentry{module}!ProcessorSIM@\spxentry{ProcessorSIM}|hyperpage}{24}
+\indexentry{ProcessorSIM@\spxentry{ProcessorSIM}!module@\spxentry{module}|hyperpage}{24}
+\indexentry{ProcessorProjective3dSIM (class in ProcessorSIM)@\spxentry{ProcessorProjective3dSIM}\spxextra{class in ProcessorSIM}|hyperpage}{25}
+\indexentry{ProcessorSIM (class in ProcessorSIM)@\spxentry{ProcessorSIM}\spxextra{class in ProcessorSIM}|hyperpage}{25}
+\indexentry{compute\_apodization\_filter\_autoconvolution() (ProcessorSIM.ProcessorSIM method)@\spxentry{compute\_apodization\_filter\_autoconvolution()}\spxextra{ProcessorSIM.ProcessorSIM method}|hyperpage}{25}
+\indexentry{compute\_apodization\_filter\_lukosz() (ProcessorSIM.ProcessorSIM method)@\spxentry{compute\_apodization\_filter\_lukosz()}\spxextra{ProcessorSIM.ProcessorSIM method}|hyperpage}{25}
+\indexentry{compute\_effective\_psfs\_and\_otfs() (ProcessorSIM.ProcessorSIM static method)@\spxentry{compute\_effective\_psfs\_and\_otfs()}\spxextra{ProcessorSIM.ProcessorSIM static method}|hyperpage}{25}
+\indexentry{compute\_sim\_support() (ProcessorSIM.ProcessorSIM method)@\spxentry{compute\_sim\_support()}\spxextra{ProcessorSIM.ProcessorSIM method}|hyperpage}{25}
+\indexentry{ProcessorTrue3dSIM (class in ProcessorSIM)@\spxentry{ProcessorTrue3dSIM}\spxextra{class in ProcessorSIM}|hyperpage}{25}
+\indexentry{module@\spxentry{module}!SIMulator@\spxentry{SIMulator}|hyperpage}{26}
+\indexentry{SIMulator@\spxentry{SIMulator}!module@\spxentry{module}|hyperpage}{26}
+\indexentry{SIMulator (class in SIMulator)@\spxentry{SIMulator}\spxextra{class in SIMulator}|hyperpage}{26}
+\indexentry{generate\_sim\_images() (SIMulator.SIMulator method)@\spxentry{generate\_sim\_images()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{generate\_sim\_images2d() (SIMulator.SIMulator method)@\spxentry{generate\_sim\_images2d()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{generate\_widefield() (SIMulator.SIMulator method)@\spxentry{generate\_widefield()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{reconstruct\_Fourier2d\_finite\_kernel() (SIMulator.SIMulator method)@\spxentry{reconstruct\_Fourier2d\_finite\_kernel()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{reconstruct\_Fourier\_space() (SIMulator.SIMulator method)@\spxentry{reconstruct\_Fourier\_space()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{reconstruct\_real2d\_finite\_kernel() (SIMulator.SIMulator method)@\spxentry{reconstruct\_real2d\_finite\_kernel()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{reconstruct\_real\_space() (SIMulator.SIMulator method)@\spxentry{reconstruct\_real\_space()}\spxextra{SIMulator.SIMulator method}|hyperpage}{26}
+\indexentry{module@\spxentry{module}!SSNRBasedFiltering@\spxentry{SSNRBasedFiltering}|hyperpage}{26}
+\indexentry{SSNRBasedFiltering@\spxentry{SSNRBasedFiltering}!module@\spxentry{module}|hyperpage}{26}
+\indexentry{FlatNoiseFilter3d (class in SSNRBasedFiltering)@\spxentry{FlatNoiseFilter3d}\spxextra{class in SSNRBasedFiltering}|hyperpage}{27}
+\indexentry{filter\_object() (SSNRBasedFiltering.FlatNoiseFilter3d method)@\spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.FlatNoiseFilter3d method}|hyperpage}{27}
+\indexentry{FlatNoiseFilter3dModel (class in SSNRBasedFiltering)@\spxentry{FlatNoiseFilter3dModel}\spxextra{class in SSNRBasedFiltering}|hyperpage}{27}
+\indexentry{filter\_object() (SSNRBasedFiltering.FlatNoiseFilter3dModel method)@\spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.FlatNoiseFilter3dModel method}|hyperpage}{27}
+\indexentry{WienerFilter3d (class in SSNRBasedFiltering)@\spxentry{WienerFilter3d}\spxextra{class in SSNRBasedFiltering}|hyperpage}{27}
+\indexentry{filter\_object() (SSNRBasedFiltering.WienerFilter3d method)@\spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3d method}|hyperpage}{27}
+\indexentry{WienerFilter3dModel (class in SSNRBasedFiltering)@\spxentry{WienerFilter3dModel}\spxextra{class in SSNRBasedFiltering}|hyperpage}{28}
+\indexentry{filter\_object() (SSNRBasedFiltering.WienerFilter3dModel method)@\spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3dModel method}|hyperpage}{28}
+\indexentry{WienerFilter3dModelSDR (class in SSNRBasedFiltering)@\spxentry{WienerFilter3dModelSDR}\spxextra{class in SSNRBasedFiltering}|hyperpage}{28}
+\indexentry{filter\_SDR\_reconstruction() (SSNRBasedFiltering.WienerFilter3dModelSDR method)@\spxentry{filter\_SDR\_reconstruction()}\spxextra{SSNRBasedFiltering.WienerFilter3dModelSDR method}|hyperpage}{28}
+\indexentry{WienerFilter3dReconstruction (class in SSNRBasedFiltering)@\spxentry{WienerFilter3dReconstruction}\spxextra{class in SSNRBasedFiltering}|hyperpage}{28}
+\indexentry{filter\_object() (SSNRBasedFiltering.WienerFilter3dReconstruction method)@\spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3dReconstruction method}|hyperpage}{28}
+\indexentry{module@\spxentry{module}!SSNRCalculator@\spxentry{SSNRCalculator}|hyperpage}{28}
+\indexentry{SSNRCalculator@\spxentry{SSNRCalculator}!module@\spxentry{module}|hyperpage}{28}
+\indexentry{SSNR2dSIM (class in SSNRCalculator)@\spxentry{SSNR2dSIM}\spxextra{class in SSNRCalculator}|hyperpage}{29}
+\indexentry{ring\_average\_ssnr() (SSNRCalculator.SSNR2dSIM method)@\spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNR2dSIM method}|hyperpage}{29}
+\indexentry{SSNR2dSIMFiniteKernel (class in SSNRCalculator)@\spxentry{SSNR2dSIMFiniteKernel}\spxextra{class in SSNRCalculator}|hyperpage}{29}
+\indexentry{illumination (SSNRCalculator.SSNR2dSIMFiniteKernel property)@\spxentry{illumination}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel property}|hyperpage}{29}
+\indexentry{kernel (SSNRCalculator.SSNR2dSIMFiniteKernel property)@\spxentry{kernel}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel property}|hyperpage}{29}
+\indexentry{plot\_effective\_kernel\_and\_otf() (SSNRCalculator.SSNR2dSIMFiniteKernel method)@\spxentry{plot\_effective\_kernel\_and\_otf()}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel method}|hyperpage}{29}
+\indexentry{SSNR3dSIM2dShifts (class in SSNRCalculator)@\spxentry{SSNR3dSIM2dShifts}\spxextra{class in SSNRCalculator}|hyperpage}{29}
+\indexentry{SSNR3dSIM2dShiftsFiniteKernel (class in SSNRCalculator)@\spxentry{SSNR3dSIM2dShiftsFiniteKernel}\spxextra{class in SSNRCalculator}|hyperpage}{29}
+\indexentry{illumination (SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property)@\spxentry{illumination}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property}|hyperpage}{30}
+\indexentry{kernel (SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property)@\spxentry{kernel}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property}|hyperpage}{30}
+\indexentry{plot\_effective\_kernel\_and\_otf() (SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel method)@\spxentry{plot\_effective\_kernel\_and\_otf()}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel method}|hyperpage}{30}
+\indexentry{SSNR3dSIM3dShifts (class in SSNRCalculator)@\spxentry{SSNR3dSIM3dShifts}\spxextra{class in SSNRCalculator}|hyperpage}{30}
+\indexentry{SSNRCalculator (class in SSNRCalculator)@\spxentry{SSNRCalculator}\spxextra{class in SSNRCalculator}|hyperpage}{30}
+\indexentry{compute\_analytic\_ssnr\_volume() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_analytic\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{compute\_analytic\_total\_ssnr() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_analytic\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{compute\_maximum\_resolved\_lateral() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_maximum\_resolved\_lateral()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{compute\_ssnr() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{compute\_ssnr\_waterline\_measure() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_ssnr\_waterline\_measure()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{compute\_total\_ssnr() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
+\indexentry{illumination (SSNRCalculator.SSNRCalculator property)@\spxentry{illumination}\spxextra{SSNRCalculator.SSNRCalculator property}|hyperpage}{30}
+\indexentry{optical\_system (SSNRCalculator.SSNRCalculator property)@\spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRCalculator property}|hyperpage}{30}
+\indexentry{SSNRCalculator3dSIM (class in SSNRCalculator)@\spxentry{SSNRCalculator3dSIM}\spxextra{class in SSNRCalculator}|hyperpage}{30}
+\indexentry{SSNRConfocal (class in SSNRCalculator)@\spxentry{SSNRConfocal}\spxextra{class in SSNRCalculator}|hyperpage}{31}
+\indexentry{compute\_ssnr() (SSNRCalculator.SSNRConfocal method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRConfocal method}|hyperpage}{31}
+\indexentry{SSNRHandler (class in SSNRCalculator)@\spxentry{SSNRHandler}\spxextra{class in SSNRCalculator}|hyperpage}{31}
+\indexentry{compute\_radial\_ssnr\_entropy() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{compute\_ssnr() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{compute\_ssnr\_volume() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{compute\_true\_ssnr\_entropy() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{optical\_system (SSNRCalculator.SSNRHandler property)@\spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRHandler property}|hyperpage}{31}
+\indexentry{ring\_average\_ssnr() (SSNRCalculator.SSNRHandler method)@\spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{SSNRWidefield (class in SSNRCalculator)@\spxentry{SSNRWidefield}\spxextra{class in SSNRCalculator}|hyperpage}{31}
+\indexentry{compute\_ssnr() (SSNRCalculator.SSNRWidefield method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRWidefield method}|hyperpage}{32}
+\indexentry{module@\spxentry{module}!ShapesGenerator@\spxentry{ShapesGenerator}|hyperpage}{32}
+\indexentry{ShapesGenerator@\spxentry{ShapesGenerator}!module@\spxentry{module}|hyperpage}{32}
+\indexentry{generate\_random\_lines() (in module ShapesGenerator)@\spxentry{generate\_random\_lines()}\spxextra{in module ShapesGenerator}|hyperpage}{32}
+\indexentry{generate\_random\_spheres() (in module ShapesGenerator)@\spxentry{generate\_random\_spheres()}\spxextra{in module ShapesGenerator}|hyperpage}{32}
+\indexentry{generate\_sphere\_slices() (in module ShapesGenerator)@\spxentry{generate\_sphere\_slices()}\spxextra{in module ShapesGenerator}|hyperpage}{32}
+\indexentry{module@\spxentry{module}!Sources@\spxentry{Sources}|hyperpage}{33}
+\indexentry{Sources@\spxentry{Sources}!module@\spxentry{module}|hyperpage}{33}
+\indexentry{ElectricFieldSource (class in Sources)@\spxentry{ElectricFieldSource}\spxextra{class in Sources}|hyperpage}{33}
+\indexentry{get\_electric\_field() (Sources.ElectricFieldSource method)@\spxentry{get\_electric\_field()}\spxextra{Sources.ElectricFieldSource method}|hyperpage}{33}
+\indexentry{get\_source\_type() (Sources.ElectricFieldSource method)@\spxentry{get\_source\_type()}\spxextra{Sources.ElectricFieldSource method}|hyperpage}{34}
+\indexentry{IntensityPlaneWave (class in Sources)@\spxentry{IntensityPlaneWave}\spxextra{class in Sources}|hyperpage}{34}
+\indexentry{get\_intensity() (Sources.IntensityPlaneWave method)@\spxentry{get\_intensity()}\spxextra{Sources.IntensityPlaneWave method}|hyperpage}{34}
+\indexentry{IntensitySource (class in Sources)@\spxentry{IntensitySource}\spxextra{class in Sources}|hyperpage}{34}
+\indexentry{get\_intensity() (Sources.IntensitySource method)@\spxentry{get\_intensity()}\spxextra{Sources.IntensitySource method}|hyperpage}{34}
+\indexentry{get\_source\_type() (Sources.IntensitySource method)@\spxentry{get\_source\_type()}\spxextra{Sources.IntensitySource method}|hyperpage}{35}
+\indexentry{PlaneWave (class in Sources)@\spxentry{PlaneWave}\spxextra{class in Sources}|hyperpage}{35}
+\indexentry{get\_electric\_field() (Sources.PlaneWave method)@\spxentry{get\_electric\_field()}\spxextra{Sources.PlaneWave method}|hyperpage}{35}
+\indexentry{PointSource (class in Sources)@\spxentry{PointSource}\spxextra{class in Sources}|hyperpage}{35}
+\indexentry{get\_electric\_field() (Sources.PointSource method)@\spxentry{get\_electric\_field()}\spxextra{Sources.PointSource method}|hyperpage}{35}
+\indexentry{Source (class in Sources)@\spxentry{Source}\spxextra{class in Sources}|hyperpage}{36}
+\indexentry{get\_source\_type() (Sources.Source method)@\spxentry{get\_source\_type()}\spxextra{Sources.Source method}|hyperpage}{36}
+\indexentry{module@\spxentry{module}!VectorOperations@\spxentry{VectorOperations}|hyperpage}{36}
+\indexentry{VectorOperations@\spxentry{VectorOperations}!module@\spxentry{module}|hyperpage}{36}
+\indexentry{VectorOperations (class in VectorOperations)@\spxentry{VectorOperations}\spxextra{class in VectorOperations}|hyperpage}{36}
+\indexentry{rotate\_vector2d() (VectorOperations.VectorOperations static method)@\spxentry{rotate\_vector2d()}\spxextra{VectorOperations.VectorOperations static method}|hyperpage}{37}
+\indexentry{rotate\_vector3d() (VectorOperations.VectorOperations static method)@\spxentry{rotate\_vector3d()}\spxextra{VectorOperations.VectorOperations static method}|hyperpage}{37}
+\indexentry{rotation\_matrix() (VectorOperations.VectorOperations static method)@\spxentry{rotation\_matrix()}\spxextra{VectorOperations.VectorOperations static method}|hyperpage}{37}
+\indexentry{module@\spxentry{module}!Windowing@\spxentry{Windowing}|hyperpage}{37}
+\indexentry{Windowing@\spxentry{Windowing}!module@\spxentry{module}|hyperpage}{37}
+\indexentry{make\_mask\_cosine\_edge2d() (in module Windowing)@\spxentry{make\_mask\_cosine\_edge2d()}\spxextra{in module Windowing}|hyperpage}{37}
+\indexentry{make\_mask\_cosine\_edge3d() (in module Windowing)@\spxentry{make\_mask\_cosine\_edge3d()}\spxextra{in module Windowing}|hyperpage}{37}
+\indexentry{module@\spxentry{module}!compute\_optimal\_lattices@\spxentry{compute\_optimal\_lattices}|hyperpage}{37}
+\indexentry{compute\_optimal\_lattices@\spxentry{compute\_optimal\_lattices}!module@\spxentry{module}|hyperpage}{37}
+\indexentry{check\_peaks2d() (in module compute\_optimal\_lattices)@\spxentry{check\_peaks2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{37}
+\indexentry{check\_peaks3d() (in module compute\_optimal\_lattices)@\spxentry{check\_peaks3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{37}
+\indexentry{combine\_dict() (in module compute\_optimal\_lattices)@\spxentry{combine\_dict()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{37}
+\indexentry{exponent\_sum2d() (in module compute\_optimal\_lattices)@\spxentry{exponent\_sum2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{37}
+\indexentry{exponent\_sum3d() (in module compute\_optimal\_lattices)@\spxentry{exponent\_sum3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{find\_pairs2d() (in module compute\_optimal\_lattices)@\spxentry{find\_pairs2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{find\_pairs3d() (in module compute\_optimal\_lattices)@\spxentry{find\_pairs3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{find\_pairs\_extended() (in module compute\_optimal\_lattices)@\spxentry{find\_pairs\_extended()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{generate\_conditions2d() (in module compute\_optimal\_lattices)@\spxentry{generate\_conditions2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{generate\_conditions3d() (in module compute\_optimal\_lattices)@\spxentry{generate\_conditions3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{generate\_table2d() (in module compute\_optimal\_lattices)@\spxentry{generate\_table2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{generate\_table3d() (in module compute\_optimal\_lattices)@\spxentry{generate\_table3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{generate\_tables2d() (in module compute\_optimal\_lattices)@\spxentry{generate\_tables2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{get\_matrix2d() (in module compute\_optimal\_lattices)@\spxentry{get\_matrix2d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{get\_matrix3d() (in module compute\_optimal\_lattices)@\spxentry{get\_matrix3d()}\spxextra{in module compute\_optimal\_lattices}|hyperpage}{38}
+\indexentry{module@\spxentry{module}!confocal\_ssnr@\spxentry{confocal\_ssnr}|hyperpage}{38}
+\indexentry{confocal\_ssnr@\spxentry{confocal\_ssnr}!module@\spxentry{module}|hyperpage}{38}
+\indexentry{TestConfocalSSNR (class in confocal\_ssnr)@\spxentry{TestConfocalSSNR}\spxextra{class in confocal\_ssnr}|hyperpage}{38}
+\indexentry{test\_SSNR2D() (confocal\_ssnr.TestConfocalSSNR method)@\spxentry{test\_SSNR2D()}\spxextra{confocal\_ssnr.TestConfocalSSNR method}|hyperpage}{38}
+\indexentry{test\_SSNR3D() (confocal\_ssnr.TestConfocalSSNR method)@\spxentry{test\_SSNR3D()}\spxextra{confocal\_ssnr.TestConfocalSSNR method}|hyperpage}{38}
+\indexentry{module@\spxentry{module}!globvar@\spxentry{globvar}|hyperpage}{39}
+\indexentry{globvar@\spxentry{globvar}!module@\spxentry{module}|hyperpage}{39}
+\indexentry{Pauli (class in globvar)@\spxentry{Pauli}\spxextra{class in globvar}|hyperpage}{39}
+\indexentry{I (globvar.Pauli attribute)@\spxentry{I}\spxextra{globvar.Pauli attribute}|hyperpage}{39}
+\indexentry{X (globvar.Pauli attribute)@\spxentry{X}\spxextra{globvar.Pauli attribute}|hyperpage}{39}
+\indexentry{Y (globvar.Pauli attribute)@\spxentry{Y}\spxextra{globvar.Pauli attribute}|hyperpage}{39}
+\indexentry{Z (globvar.Pauli attribute)@\spxentry{Z}\spxextra{globvar.Pauli attribute}|hyperpage}{39}
+\indexentry{SI (class in globvar)@\spxentry{SI}\spxextra{class in globvar}|hyperpage}{39}
+\indexentry{SI.Constants (class in globvar)@\spxentry{SI.Constants}\spxextra{class in globvar}|hyperpage}{39}
+\indexentry{Kcd (globvar.SI.Constants attribute)@\spxentry{Kcd}\spxextra{globvar.SI.Constants attribute}|hyperpage}{39}
+\indexentry{NAvogadro (globvar.SI.Constants attribute)@\spxentry{NAvogadro}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{c (globvar.SI.Constants attribute)@\spxentry{c}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{dnuCs (globvar.SI.Constants attribute)@\spxentry{dnuCs}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{e (globvar.SI.Constants attribute)@\spxentry{e}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{h (globvar.SI.Constants attribute)@\spxentry{h}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{k (globvar.SI.Constants attribute)@\spxentry{k}\spxextra{globvar.SI.Constants attribute}|hyperpage}{40}
+\indexentry{SI.Energy (class in globvar)@\spxentry{SI.Energy}\spxextra{class in globvar}|hyperpage}{40}
+\indexentry{GJ (globvar.SI.Energy attribute)@\spxentry{GJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{J (globvar.SI.Energy attribute)@\spxentry{J}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{MJ (globvar.SI.Energy attribute)@\spxentry{MJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{aJ (globvar.SI.Energy attribute)@\spxentry{aJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{eV (globvar.SI.Energy attribute)@\spxentry{eV}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{fJ (globvar.SI.Energy attribute)@\spxentry{fJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{kJ (globvar.SI.Energy attribute)@\spxentry{kJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{mJ (globvar.SI.Energy attribute)@\spxentry{mJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{mcJ (globvar.SI.Energy attribute)@\spxentry{mcJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{nJ (globvar.SI.Energy attribute)@\spxentry{nJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{pJ (globvar.SI.Energy attribute)@\spxentry{pJ}\spxextra{globvar.SI.Energy attribute}|hyperpage}{40}
+\indexentry{SI.Force (class in globvar)@\spxentry{SI.Force}\spxextra{class in globvar}|hyperpage}{40}
+\indexentry{GN (globvar.SI.Force attribute)@\spxentry{GN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{MN (globvar.SI.Force attribute)@\spxentry{MN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{N (globvar.SI.Force attribute)@\spxentry{N}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{fN (globvar.SI.Force attribute)@\spxentry{fN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{kN (globvar.SI.Force attribute)@\spxentry{kN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{mN (globvar.SI.Force attribute)@\spxentry{mN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{mcN (globvar.SI.Force attribute)@\spxentry{mcN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{nN (globvar.SI.Force attribute)@\spxentry{nN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{pN (globvar.SI.Force attribute)@\spxentry{pN}\spxextra{globvar.SI.Force attribute}|hyperpage}{40}
+\indexentry{SI.Frequency (class in globvar)@\spxentry{SI.Frequency}\spxextra{class in globvar}|hyperpage}{40}
+\indexentry{EHz (globvar.SI.Frequency attribute)@\spxentry{EHz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{GHz (globvar.SI.Frequency attribute)@\spxentry{GHz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{Hz (globvar.SI.Frequency attribute)@\spxentry{Hz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{MHz (globvar.SI.Frequency attribute)@\spxentry{MHz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{PHz (globvar.SI.Frequency attribute)@\spxentry{PHz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{THz (globvar.SI.Frequency attribute)@\spxentry{THz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{kHz (globvar.SI.Frequency attribute)@\spxentry{kHz}\spxextra{globvar.SI.Frequency attribute}|hyperpage}{41}
+\indexentry{SI.Length (class in globvar)@\spxentry{SI.Length}\spxextra{class in globvar}|hyperpage}{41}
+\indexentry{fm (globvar.SI.Length attribute)@\spxentry{fm}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{km (globvar.SI.Length attribute)@\spxentry{km}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{m (globvar.SI.Length attribute)@\spxentry{m}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{mcm (globvar.SI.Length attribute)@\spxentry{mcm}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{mm (globvar.SI.Length attribute)@\spxentry{mm}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{nm (globvar.SI.Length attribute)@\spxentry{nm}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{pm (globvar.SI.Length attribute)@\spxentry{pm}\spxextra{globvar.SI.Length attribute}|hyperpage}{41}
+\indexentry{SI.Time (class in globvar)@\spxentry{SI.Time}\spxextra{class in globvar}|hyperpage}{41}
+\indexentry{ats (globvar.SI.Time attribute)@\spxentry{ats}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{fs (globvar.SI.Time attribute)@\spxentry{fs}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{mcs (globvar.SI.Time attribute)@\spxentry{mcs}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{ms (globvar.SI.Time attribute)@\spxentry{ms}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{ns (globvar.SI.Time attribute)@\spxentry{ns}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{ps (globvar.SI.Time attribute)@\spxentry{ps}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{s (globvar.SI.Time attribute)@\spxentry{s}\spxextra{globvar.SI.Time attribute}|hyperpage}{41}
+\indexentry{module@\spxentry{module}!input\_parser@\spxentry{input\_parser}|hyperpage}{41}
+\indexentry{input\_parser@\spxentry{input\_parser}!module@\spxentry{module}|hyperpage}{41}
+\indexentry{ConfigParser (class in input\_parser)@\spxentry{ConfigParser}\spxextra{class in input\_parser}|hyperpage}{42}
+\indexentry{read\_configuration() (input\_parser.ConfigParser static method)@\spxentry{read\_configuration()}\spxextra{input\_parser.ConfigParser static method}|hyperpage}{42}
+\indexentry{module@\spxentry{module}!kernels@\spxentry{kernels}|hyperpage}{42}
+\indexentry{kernels@\spxentry{kernels}!module@\spxentry{module}|hyperpage}{42}
+\indexentry{psf\_kernel2d() (in module kernels)@\spxentry{psf\_kernel2d()}\spxextra{in module kernels}|hyperpage}{42}
+\indexentry{sinc\_kernel() (in module kernels)@\spxentry{sinc\_kernel()}\spxextra{in module kernels}|hyperpage}{42}
+\indexentry{module@\spxentry{module}!stattools@\spxentry{stattools}|hyperpage}{43}
+\indexentry{stattools@\spxentry{stattools}!module@\spxentry{module}|hyperpage}{43}
+\indexentry{average\_mask() (in module stattools)@\spxentry{average\_mask()}\spxextra{in module stattools}|hyperpage}{43}
+\indexentry{average\_rings2d() (in module stattools)@\spxentry{average\_rings2d()}\spxextra{in module stattools}|hyperpage}{43}
+\indexentry{average\_rings3d() (in module stattools)@\spxentry{average\_rings3d()}\spxextra{in module stattools}|hyperpage}{43}
+\indexentry{downsample\_circular\_function\_vectorized() (in module stattools)@\spxentry{downsample\_circular\_function\_vectorized()}\spxextra{in module stattools}|hyperpage}{43}
+\indexentry{estimate\_localized\_peaks() (in module stattools)@\spxentry{estimate\_localized\_peaks()}\spxextra{in module stattools}|hyperpage}{44}
+\indexentry{expand\_ring\_averages2d() (in module stattools)@\spxentry{expand\_ring\_averages2d()}\spxextra{in module stattools}|hyperpage}{44}
+\indexentry{expand\_ring\_averages3d() (in module stattools)@\spxentry{expand\_ring\_averages3d()}\spxextra{in module stattools}|hyperpage}{44}
+\indexentry{find\_decreasing\_radial\_surface\_levels() (in module stattools)@\spxentry{find\_decreasing\_radial\_surface\_levels()}\spxextra{in module stattools}|hyperpage}{44}
+\indexentry{find\_decreasing\_surface\_levels2d() (in module stattools)@\spxentry{find\_decreasing\_surface\_levels2d()}\spxextra{in module stattools}|hyperpage}{45}
+\indexentry{find\_decreasing\_surface\_levels3d() (in module stattools)@\spxentry{find\_decreasing\_surface\_levels3d()}\spxextra{in module stattools}|hyperpage}{45}
+\indexentry{gaussian\_maxima\_fitting() (in module stattools)@\spxentry{gaussian\_maxima\_fitting()}\spxextra{in module stattools}|hyperpage}{45}
+\indexentry{reverse\_interpolation\_nearest() (in module stattools)@\spxentry{reverse\_interpolation\_nearest()}\spxextra{in module stattools}|hyperpage}{45}
+\indexentry{module@\spxentry{module}!web\_interface@\spxentry{web\_interface}|hyperpage}{46}
+\indexentry{web\_interface@\spxentry{web\_interface}!module@\spxentry{module}|hyperpage}{46}
+\indexentry{index() (in module web\_interface)@\spxentry{index()}\spxextra{in module web\_interface}|hyperpage}{46}
+\indexentry{plot() (in module web\_interface)@\spxentry{plot()}\spxextra{in module web\_interface}|hyperpage}{46}
+\indexentry{module@\spxentry{module}!wrappers@\spxentry{wrappers}|hyperpage}{46}
+\indexentry{wrappers@\spxentry{wrappers}!module@\spxentry{module}|hyperpage}{46}
+\indexentry{wrapped\_fft() (in module wrappers)@\spxentry{wrapped\_fft()}\spxextra{in module wrappers}|hyperpage}{46}
+\indexentry{wrapped\_fftn() (in module wrappers)@\spxentry{wrapped\_fftn()}\spxextra{in module wrappers}|hyperpage}{46}
+\indexentry{wrapped\_ifft() (in module wrappers)@\spxentry{wrapped\_ifft()}\spxextra{in module wrappers}|hyperpage}{46}
+\indexentry{wrapped\_ifftn() (in module wrappers)@\spxentry{wrapped\_ifftn()}\spxextra{in module wrappers}|hyperpage}{46}
+\indexentry{wrapper\_ft() (in module wrappers)@\spxentry{wrapper\_ft()}\spxextra{in module wrappers}|hyperpage}{46}

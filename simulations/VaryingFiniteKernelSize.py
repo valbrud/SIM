@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import axes3d
 from config.IlluminationConfigurations import *
 from matplotlib.widgets import Slider
 import SSNRCalculator
-from OpticalSystems import Lens3D
+from OpticalSystems import System4f3D
 import kernels
 sys.path.append('../')
 configurations = BFPConfiguration()
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     two_NA_fy = fy / (2 * NA)
     two_NA_fz = fz / (1 - np.cos(alpha))
 
-    optical_system = Lens3D(alpha=alpha)
+    optical_system = System4f3D(alpha=alpha)
     optical_system.compute_psf_and_otf((psf_size, N),
                                        apodization_function="Sine")
 

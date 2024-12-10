@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>GUI module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GUIInitializationWidgets module" href="GUIInitializationWidgets.html" />
+    <link rel="prev" title="Box module" href="Box.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>GUI module</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="Box.html">Box module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="GUIInitializationWidgets.html">GUIInitializationWidgets module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="module-GUI">
+<span id="gui-module"></span><h1>GUI module<a class="headerlink" href="#module-GUI" title="Link to this heading">¶</a></h1>
+<p>GUI.py</p>
+<p>This module contains the main graphical user interface (GUI) components of the application.</p>
+<p>This module and related ones is currently a demo-version of the user-interface, and will
+possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
+documentation is provided.</p>
+<div class="graphviz"><img src="../_images/inheritance-f9919062df33612b927974b1d2ee6e1f000f3ed7.png" alt="Inheritance diagram of GUI" usemap="#inheritance2559bf1cee" class="inheritance graphviz" /></div>
+<map id="inheritance2559bf1cee" name="inheritance2559bf1cee">
+<area shape="rect" id="node4" href="#GUI.PlottingMode" target="_top" title="PlottingMode" alt="" coords="147,99,237,123"/>
+<area shape="rect" id="node10" href="#GUI.View" target="_top" title="View" alt="" coords="158,145,225,170"/>
+<area shape="rect" id="node2" href="#GUI.MainWindow" target="_top" title="MainWindow" alt="" coords="674,28,763,53"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="GUI.MainWindow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">MainWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-d524df73c7cf44a56b0a78ebc1836fc38213347f.png" alt="Inheritance diagram of GUI.MainWindow" usemap="#inheritance82e87f22de" class="inheritance graphviz" /></div>
+<map id="inheritance82e87f22de" name="inheritance82e87f22de">
+<area shape="rect" id="node1" href="#GUI.MainWindow" target="_top" title="MainWindow" alt="" coords="671,29,763,55"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.add_intensity_plane_wave">
+<span class="sig-name descname"><span class="pre">add_intensity_plane_wave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_intensity_plane_wave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_intensity_plane_wave" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.add_plane_wave">
+<span class="sig-name descname"><span class="pre">add_plane_wave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_plane_wave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_plane_wave" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.add_point_source">
+<span class="sig-name descname"><span class="pre">add_point_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_point_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_point_source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.add_source">
+<span class="sig-name descname"><span class="pre">add_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.add_to_box">
+<span class="sig-name descname"><span class="pre">add_to_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initialized</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_to_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_to_box" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.change_plotting_mode">
+<span class="sig-name descname"><span class="pre">change_plotting_mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.change_plotting_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.change_plotting_mode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.change_view3d">
+<span class="sig-name descname"><span class="pre">change_view3d</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.change_view3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.change_view3d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.choose_plotting_mode">
+<span class="sig-name descname"><span class="pre">choose_plotting_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.choose_plotting_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.choose_plotting_mode" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.choose_view3d">
+<span class="sig-name descname"><span class="pre">choose_view3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.choose_view3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.choose_view3d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.clear_layout">
+<span class="sig-name descname"><span class="pre">clear_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.clear_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.clear_layout" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_fourier_space">
+<span class="sig-name descname"><span class="pre">compute_and_plot_fourier_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_fourier_space" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_from_electric_field">
+<span class="sig-name descname"><span class="pre">compute_and_plot_from_electric_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_from_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_from_electric_field" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_from_intensity_sources">
+<span class="sig-name descname"><span class="pre">compute_and_plot_from_intensity_sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_from_intensity_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_from_intensity_sources" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_next_shift">
+<span class="sig-name descname"><span class="pre">compute_next_shift</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_next_shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_next_shift" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_numerically_approximated_intensities">
+<span class="sig-name descname"><span class="pre">compute_numerically_approximated_intensities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_numerically_approximated_intensities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_numerically_approximated_intensities" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.compute_total_intensity">
+<span class="sig-name descname"><span class="pre">compute_total_intensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_total_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_total_intensity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.get_ipw_from_pw">
+<span class="sig-name descname"><span class="pre">get_ipw_from_pw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.get_ipw_from_pw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.get_ipw_from_pw" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.init_ui">
+<span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.init_ui" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.load_config">
+<span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.load_config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.load_illumination">
+<span class="sig-name descname"><span class="pre">load_illumination</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.load_illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.load_illumination" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.on_option_selected">
+<span class="sig-name descname"><span class="pre">on_option_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.on_option_selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.on_option_selected" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.plot_fourier_space_slices">
+<span class="sig-name descname"><span class="pre">plot_fourier_space_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_fourier_space_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_fourier_space_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.plot_intensity_slices">
+<span class="sig-name descname"><span class="pre">plot_intensity_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_intensity_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_intensity_slices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.plot_numerically_approximated_intensity">
+<span class="sig-name descname"><span class="pre">plot_numerically_approximated_intensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_numerically_approximated_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_numerically_approximated_intensity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.plot_numerically_approximated_intensity_fourier_space">
+<span class="sig-name descname"><span class="pre">plot_numerically_approximated_intensity_fourier_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_numerically_approximated_intensity_fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_numerically_approximated_intensity_fourier_space" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.plot_shift_arrow">
+<span class="sig-name descname"><span class="pre">plot_shift_arrow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_shift_arrow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_shift_arrow" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.remove_source">
+<span class="sig-name descname"><span class="pre">remove_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initializer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.remove_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.remove_source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.MainWindow.save_config">
+<span class="sig-name descname"><span class="pre">save_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.save_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.save_config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.PlottingMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">PlottingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#PlottingMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.PlottingMode" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-25a8d2c5fc0850a0f513885ef05a373334b02989.png" alt="Inheritance diagram of GUI.PlottingMode" usemap="#inheritance4064ec9238" class="inheritance graphviz" /></div>
+<map id="inheritance4064ec9238" name="inheritance4064ec9238">
+<area shape="rect" id="node2" href="#GUI.PlottingMode" target="_top" title="PlottingMode" alt="" coords="125,5,223,32"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.PlottingMode.linear">
+<span class="sig-name descname"><span class="pre">linear</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#GUI.PlottingMode.linear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.PlottingMode.logarithmic">
+<span class="sig-name descname"><span class="pre">logarithmic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#GUI.PlottingMode.logarithmic" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.PlottingMode.mixed">
+<span class="sig-name descname"><span class="pre">mixed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#GUI.PlottingMode.mixed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.View">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">View</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#View"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.View" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-ab667b23c828e899696862417c4ba186a063b1b4.png" alt="Inheritance diagram of GUI.View" usemap="#inheritance68b24daac7" class="inheritance graphviz" /></div>
+<map id="inheritance68b24daac7" name="inheritance68b24daac7">
+<area shape="rect" id="node2" href="#GUI.View" target="_top" title="View" alt="" coords="125,5,197,32"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.View.XY">
+<span class="sig-name descname"><span class="pre">XY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#GUI.View.XY" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.View.XZ">
+<span class="sig-name descname"><span class="pre">XZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#GUI.View.XZ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.View.YZ">
+<span class="sig-name descname"><span class="pre">YZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#GUI.View.YZ" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="Box.html">Box module</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="GUIInitializationWidgets.html">GUIInitializationWidgets module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

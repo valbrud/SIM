@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>SIM &#8212; SIMSSNR 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=8d563738"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Box module" href="Box.html" />
+    <link rel="prev" title="SIMSSNR documentation" href="../index.html" /> 
+  </head><body>
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>SIM</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        «&#160;&#160;<a href="../index.html">SIMSSNR documentation</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="Box.html">Box module</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content" role="main">
+        
+        
+  <section id="sim">
+<h1>SIM<a class="headerlink" href="#sim" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Box.html">Box module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Box.html#Box.Box"><code class="docutils literal notranslate"><span class="pre">Box</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.info"><code class="docutils literal notranslate"><span class="pre">Box.info</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.box_size"><code class="docutils literal notranslate"><span class="pre">Box.box_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.point_number"><code class="docutils literal notranslate"><span class="pre">Box.point_number</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.box_volume"><code class="docutils literal notranslate"><span class="pre">Box.box_volume</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.fields"><code class="docutils literal notranslate"><span class="pre">Box.fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.numerically_approximated_intensity_fields"><code class="docutils literal notranslate"><span class="pre">Box.numerically_approximated_intensity_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.source_identifier"><code class="docutils literal notranslate"><span class="pre">Box.source_identifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.axes"><code class="docutils literal notranslate"><span class="pre">Box.axes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.frequency_axes"><code class="docutils literal notranslate"><span class="pre">Box.frequency_axes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.grid"><code class="docutils literal notranslate"><span class="pre">Box.grid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.electric_field"><code class="docutils literal notranslate"><span class="pre">Box.electric_field</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.intensity"><code class="docutils literal notranslate"><span class="pre">Box.intensity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.numerically_approximated_intensity"><code class="docutils literal notranslate"><span class="pre">Box.numerically_approximated_intensity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.intensity_fourier_space"><code class="docutils literal notranslate"><span class="pre">Box.intensity_fourier_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.numerically_approximated_intensity_fourier_space"><code class="docutils literal notranslate"><span class="pre">Box.numerically_approximated_intensity_fourier_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.analytic_frequencies"><code class="docutils literal notranslate"><span class="pre">Box.analytic_frequencies</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.add_source"><code class="docutils literal notranslate"><span class="pre">Box.add_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_axes"><code class="docutils literal notranslate"><span class="pre">Box.compute_axes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_electric_field"><code class="docutils literal notranslate"><span class="pre">Box.compute_electric_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_grid"><code class="docutils literal notranslate"><span class="pre">Box.compute_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_intensity_and_spatial_waves_numerically"><code class="docutils literal notranslate"><span class="pre">Box.compute_intensity_and_spatial_waves_numerically()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_intensity_fourier_space"><code class="docutils literal notranslate"><span class="pre">Box.compute_intensity_fourier_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_intensity_from_electric_field"><code class="docutils literal notranslate"><span class="pre">Box.compute_intensity_from_electric_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.compute_intensity_from_spatial_waves"><code class="docutils literal notranslate"><span class="pre">Box.compute_intensity_from_spatial_waves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.get_approximated_intensity_sources"><code class="docutils literal notranslate"><span class="pre">Box.get_approximated_intensity_sources()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.get_plane_waves"><code class="docutils literal notranslate"><span class="pre">Box.get_plane_waves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.get_sources"><code class="docutils literal notranslate"><span class="pre">Box.get_sources()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.get_spatial_waves"><code class="docutils literal notranslate"><span class="pre">Box.get_spatial_waves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.plot_approximate_intensity_fourier_space_slices"><code class="docutils literal notranslate"><span class="pre">Box.plot_approximate_intensity_fourier_space_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.plot_approximate_intensity_slices"><code class="docutils literal notranslate"><span class="pre">Box.plot_approximate_intensity_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.plot_intensity_fourier_space_slices"><code class="docutils literal notranslate"><span class="pre">Box.plot_intensity_fourier_space_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.plot_intensity_slices"><code class="docutils literal notranslate"><span class="pre">Box.plot_intensity_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.plot_slices"><code class="docutils literal notranslate"><span class="pre">Box.plot_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Box.remove_source"><code class="docutils literal notranslate"><span class="pre">Box.remove_source()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Box.html#Box.BoxSIM"><code class="docutils literal notranslate"><span class="pre">BoxSIM</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.BoxSIM.illumination"><code class="docutils literal notranslate"><span class="pre">BoxSIM.illumination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.BoxSIM.illuminations_shifted"><code class="docutils literal notranslate"><span class="pre">BoxSIM.illuminations_shifted</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.BoxSIM.compute_total_illumination"><code class="docutils literal notranslate"><span class="pre">BoxSIM.compute_total_illumination()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.BoxSIM.get_intensity"><code class="docutils literal notranslate"><span class="pre">BoxSIM.get_intensity()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Box.html#Box.Field"><code class="docutils literal notranslate"><span class="pre">Field</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Field.identifier"><code class="docutils literal notranslate"><span class="pre">Field.identifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Field.field_type"><code class="docutils literal notranslate"><span class="pre">Field.field_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Field.source"><code class="docutils literal notranslate"><span class="pre">Field.source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Box.html#Box.Field.field"><code class="docutils literal notranslate"><span class="pre">Field.field</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="GUI.html">GUI module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="GUI.html#GUI.MainWindow"><code class="docutils literal notranslate"><span class="pre">MainWindow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.add_intensity_plane_wave"><code class="docutils literal notranslate"><span class="pre">MainWindow.add_intensity_plane_wave()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.add_plane_wave"><code class="docutils literal notranslate"><span class="pre">MainWindow.add_plane_wave()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.add_point_source"><code class="docutils literal notranslate"><span class="pre">MainWindow.add_point_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.add_source"><code class="docutils literal notranslate"><span class="pre">MainWindow.add_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.add_to_box"><code class="docutils literal notranslate"><span class="pre">MainWindow.add_to_box()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.change_plotting_mode"><code class="docutils literal notranslate"><span class="pre">MainWindow.change_plotting_mode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.change_view3d"><code class="docutils literal notranslate"><span class="pre">MainWindow.change_view3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.choose_plotting_mode"><code class="docutils literal notranslate"><span class="pre">MainWindow.choose_plotting_mode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.choose_view3d"><code class="docutils literal notranslate"><span class="pre">MainWindow.choose_view3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.clear_layout"><code class="docutils literal notranslate"><span class="pre">MainWindow.clear_layout()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_and_plot_fourier_space"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_and_plot_fourier_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_and_plot_from_electric_field"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_and_plot_from_electric_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_and_plot_from_intensity_sources"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_and_plot_from_intensity_sources()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_next_shift"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_next_shift()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_numerically_approximated_intensities"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_numerically_approximated_intensities()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.compute_total_intensity"><code class="docutils literal notranslate"><span class="pre">MainWindow.compute_total_intensity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.get_ipw_from_pw"><code class="docutils literal notranslate"><span class="pre">MainWindow.get_ipw_from_pw()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.init_ui"><code class="docutils literal notranslate"><span class="pre">MainWindow.init_ui()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.load_config"><code class="docutils literal notranslate"><span class="pre">MainWindow.load_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.load_illumination"><code class="docutils literal notranslate"><span class="pre">MainWindow.load_illumination()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.on_option_selected"><code class="docutils literal notranslate"><span class="pre">MainWindow.on_option_selected()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.plot_fourier_space_slices"><code class="docutils literal notranslate"><span class="pre">MainWindow.plot_fourier_space_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.plot_intensity_slices"><code class="docutils literal notranslate"><span class="pre">MainWindow.plot_intensity_slices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.plot_numerically_approximated_intensity"><code class="docutils literal notranslate"><span class="pre">MainWindow.plot_numerically_approximated_intensity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.plot_numerically_approximated_intensity_fourier_space"><code class="docutils literal notranslate"><span class="pre">MainWindow.plot_numerically_approximated_intensity_fourier_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.plot_shift_arrow"><code class="docutils literal notranslate"><span class="pre">MainWindow.plot_shift_arrow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.remove_source"><code class="docutils literal notranslate"><span class="pre">MainWindow.remove_source()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.MainWindow.save_config"><code class="docutils literal notranslate"><span class="pre">MainWindow.save_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUI.html#GUI.PlottingMode"><code class="docutils literal notranslate"><span class="pre">PlottingMode</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.PlottingMode.linear"><code class="docutils literal notranslate"><span class="pre">PlottingMode.linear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.PlottingMode.logarithmic"><code class="docutils literal notranslate"><span class="pre">PlottingMode.logarithmic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.PlottingMode.mixed"><code class="docutils literal notranslate"><span class="pre">PlottingMode.mixed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUI.html#GUI.View"><code class="docutils literal notranslate"><span class="pre">View</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.View.XY"><code class="docutils literal notranslate"><span class="pre">View.XY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.View.XZ"><code class="docutils literal notranslate"><span class="pre">View.XZ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUI.html#GUI.View.YZ"><code class="docutils literal notranslate"><span class="pre">View.YZ</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="GUIInitializationWidgets.html">GUIInitializationWidgets module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.InitializationWidget"><code class="docutils literal notranslate"><span class="pre">InitializationWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.InitializationWidget.on_click_ok"><code class="docutils literal notranslate"><span class="pre">InitializationWidget.on_click_ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.InitializationWidget.request_data"><code class="docutils literal notranslate"><span class="pre">InitializationWidget.request_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveInitializationWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget.on_click_ok"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveInitializationWidget.on_click_ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget.request_data"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveInitializationWidget.request_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget.sendInfo"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveInitializationWidget.sendInfo</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.PlaneWaveInitializationWidget"><code class="docutils literal notranslate"><span class="pre">PlaneWaveInitializationWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.PlaneWaveInitializationWidget.on_click_ok"><code class="docutils literal notranslate"><span class="pre">PlaneWaveInitializationWidget.on_click_ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.PlaneWaveInitializationWidget.request_data"><code class="docutils literal notranslate"><span class="pre">PlaneWaveInitializationWidget.request_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIInitializationWidgets.html#GUIInitializationWidgets.PlaneWaveInitializationWidget.sendInfo"><code class="docutils literal notranslate"><span class="pre">PlaneWaveInitializationWidget.sendInfo</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="GUIWidgets.html">GUIWidgets module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.change_widget"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget.change_widget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.contextMenuEvent"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget.contextMenuEvent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.init_ui"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget.init_ui()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.isSet"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget.isSet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.IntensityPlaneWaveWidget.on_receive_info"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWaveWidget.on_receive_info()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.change_widget"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.change_widget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.contextMenuEvent"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.contextMenuEvent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.init_ui"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.init_ui()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.isDeleted"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.isDeleted</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.isSet"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.isSet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PlaneWaveWidget.on_receive_info"><code class="docutils literal notranslate"><span class="pre">PlaneWaveWidget.on_receive_info()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.non_numbers"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.non_numbers</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.request_data"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.request_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.sendBrightness"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.sendBrightness</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.sendCoordinates"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.sendCoordinates</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.send_brightness"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.send_brightness()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceInitializationWidget.send_coordinates"><code class="docutils literal notranslate"><span class="pre">PointSourceInitializationWidget.send_coordinates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.change_widget"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.change_widget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.contextMenuEvent"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.contextMenuEvent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.init_ui"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.init_ui()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.isSet"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.isSet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.on_click_ok"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.on_click_ok()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.on_receive_brightness"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.on_receive_brightness()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.PointSourceWidget.on_receive_coordinates"><code class="docutils literal notranslate"><span class="pre">PointSourceWidget.on_receive_coordinates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget"><code class="docutils literal notranslate"><span class="pre">SourceWidget</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.change_widget"><code class="docutils literal notranslate"><span class="pre">SourceWidget.change_widget()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.contextMenuEvent"><code class="docutils literal notranslate"><span class="pre">SourceWidget.contextMenuEvent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.identifier"><code class="docutils literal notranslate"><span class="pre">SourceWidget.identifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.init_ui"><code class="docutils literal notranslate"><span class="pre">SourceWidget.init_ui()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.isDeleted"><code class="docutils literal notranslate"><span class="pre">SourceWidget.isDeleted</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="GUIWidgets.html#GUIWidgets.SourceWidget.remove_widget"><code class="docutils literal notranslate"><span class="pre">SourceWidget.remove_widget()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Illumination.html">Illumination module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Illumination.html#Illumination.Illumination"><code class="docutils literal notranslate"><span class="pre">Illumination</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.angles"><code class="docutils literal notranslate"><span class="pre">Illumination.angles</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination._spatial_shifts"><code class="docutils literal notranslate"><span class="pre">Illumination._spatial_shifts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination._Mr"><code class="docutils literal notranslate"><span class="pre">Illumination._Mr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.Mt"><code class="docutils literal notranslate"><span class="pre">Illumination.Mt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.waves"><code class="docutils literal notranslate"><span class="pre">Illumination.waves</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.wavevectors2d"><code class="docutils literal notranslate"><span class="pre">Illumination.wavevectors2d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.indices2d"><code class="docutils literal notranslate"><span class="pre">Illumination.indices2d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.wavevectors3d"><code class="docutils literal notranslate"><span class="pre">Illumination.wavevectors3d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.indices3d"><code class="docutils literal notranslate"><span class="pre">Illumination.indices3d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.rearranged_indices"><code class="docutils literal notranslate"><span class="pre">Illumination.rearranged_indices</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.xy_fourier_peaks"><code class="docutils literal notranslate"><span class="pre">Illumination.xy_fourier_peaks</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.phase_matrix"><code class="docutils literal notranslate"><span class="pre">Illumination.phase_matrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.Mr"><code class="docutils literal notranslate"><span class="pre">Illumination.Mr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.compute_expanded_lattice2d"><code class="docutils literal notranslate"><span class="pre">Illumination.compute_expanded_lattice2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.compute_expanded_lattice3d"><code class="docutils literal notranslate"><span class="pre">Illumination.compute_expanded_lattice3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.compute_phase_matrix"><code class="docutils literal notranslate"><span class="pre">Illumination.compute_phase_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.find_ipw_from_pw"><code class="docutils literal notranslate"><span class="pre">Illumination.find_ipw_from_pw()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.get_all_wavevectors"><code class="docutils literal notranslate"><span class="pre">Illumination.get_all_wavevectors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.get_all_wavevectors_projected"><code class="docutils literal notranslate"><span class="pre">Illumination.get_all_wavevectors_projected()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.get_wavevectors"><code class="docutils literal notranslate"><span class="pre">Illumination.get_wavevectors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.get_wavevectors_projected"><code class="docutils literal notranslate"><span class="pre">Illumination.get_wavevectors_projected()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.index_frequencies"><code class="docutils literal notranslate"><span class="pre">Illumination.index_frequencies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.init_from_list"><code class="docutils literal notranslate"><span class="pre">Illumination.init_from_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.normalize_spatial_waves"><code class="docutils literal notranslate"><span class="pre">Illumination.normalize_spatial_waves()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.set_spatial_shifts_diagonally"><code class="docutils literal notranslate"><span class="pre">Illumination.set_spatial_shifts_diagonally()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Illumination.html#Illumination.Illumination.spatial_shifts"><code class="docutils literal notranslate"><span class="pre">Illumination.spatial_shifts</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="OpticalSystems.html">OpticalSystems module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem"><code class="docutils literal notranslate"><span class="pre">OpticalSystem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.supported_interpolation_methods"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.supported_interpolation_methods</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.psf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.psf</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.otf</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.interpolator"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.interpolator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem._otf_frequencies"><code class="docutils literal notranslate"><span class="pre">OpticalSystem._otf_frequencies</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem._psf_coordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem._psf_coordinates</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem._interpolation_method"><code class="docutils literal notranslate"><span class="pre">OpticalSystem._interpolation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.compute_psf_and_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.compute_psf_and_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.compute_psf_and_otf_cordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.compute_psf_and_otf_cordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.compute_q_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.compute_q_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.compute_x_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.compute_x_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.interpolate_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.interpolate_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.interpolation_method"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.interpolation_method</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.otf_frequencies"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.otf_frequencies</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem.psf_coordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.psf_coordinates</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#id0"><code class="docutils literal notranslate"><span class="pre">OpticalSystem.supported_interpolation_methods</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_effective_otfs_2dSIM"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.compute_effective_otfs_2dSIM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_psf_and_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.compute_psf_and_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_psf_and_otf_cordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.compute_psf_and_otf_cordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_q_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.compute_q_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_x_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.compute_x_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.interpolate_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.interpolate_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem2D.psf_coordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D.psf_coordinates</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_effective_otfs_projective_3dSIM"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_effective_otfs_projective_3dSIM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_effective_otfs_true_3dSIM"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_effective_otfs_true_3dSIM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_psf_and_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_psf_and_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_psf_and_otf_cordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_psf_and_otf_cordinates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_q_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_q_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_x_grid"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.compute_x_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.interpolate_otf"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.interpolate_otf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem3D.psf_coordinates"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D.psf_coordinates</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.System4f2D"><code class="docutils literal notranslate"><span class="pre">System4f2D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.System4f2D.compute_psf_and_otf"><code class="docutils literal notranslate"><span class="pre">System4f2D.compute_psf_and_otf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.System4f3D"><code class="docutils literal notranslate"><span class="pre">System4f3D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="OpticalSystems.html#OpticalSystems.System4f3D.compute_psf_and_otf"><code class="docutils literal notranslate"><span class="pre">System4f3D.compute_psf_and_otf()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ProcessorSIM.html">ProcessorSIM module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorProjective3dSIM"><code class="docutils literal notranslate"><span class="pre">ProcessorProjective3dSIM</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorSIM"><code class="docutils literal notranslate"><span class="pre">ProcessorSIM</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorSIM.compute_apodization_filter_autoconvolution"><code class="docutils literal notranslate"><span class="pre">ProcessorSIM.compute_apodization_filter_autoconvolution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorSIM.compute_apodization_filter_lukosz"><code class="docutils literal notranslate"><span class="pre">ProcessorSIM.compute_apodization_filter_lukosz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorSIM.compute_effective_psfs_and_otfs"><code class="docutils literal notranslate"><span class="pre">ProcessorSIM.compute_effective_psfs_and_otfs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorSIM.compute_sim_support"><code class="docutils literal notranslate"><span class="pre">ProcessorSIM.compute_sim_support()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ProcessorSIM.html#ProcessorSIM.ProcessorTrue3dSIM"><code class="docutils literal notranslate"><span class="pre">ProcessorTrue3dSIM</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SIMulator.html">SIMulator module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator"><code class="docutils literal notranslate"><span class="pre">SIMulator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.generate_sim_images"><code class="docutils literal notranslate"><span class="pre">SIMulator.generate_sim_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.generate_sim_images2d"><code class="docutils literal notranslate"><span class="pre">SIMulator.generate_sim_images2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.generate_widefield"><code class="docutils literal notranslate"><span class="pre">SIMulator.generate_widefield()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.reconstruct_Fourier2d_finite_kernel"><code class="docutils literal notranslate"><span class="pre">SIMulator.reconstruct_Fourier2d_finite_kernel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.reconstruct_Fourier_space"><code class="docutils literal notranslate"><span class="pre">SIMulator.reconstruct_Fourier_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.reconstruct_real2d_finite_kernel"><code class="docutils literal notranslate"><span class="pre">SIMulator.reconstruct_real2d_finite_kernel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SIMulator.html#SIMulator.SIMulator.reconstruct_real_space"><code class="docutils literal notranslate"><span class="pre">SIMulator.reconstruct_real_space()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SSNRBasedFiltering.html">SSNRBasedFiltering module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.FlatNoiseFilter3d"><code class="docutils literal notranslate"><span class="pre">FlatNoiseFilter3d</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.FlatNoiseFilter3d.filter_object"><code class="docutils literal notranslate"><span class="pre">FlatNoiseFilter3d.filter_object()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.FlatNoiseFilter3dModel"><code class="docutils literal notranslate"><span class="pre">FlatNoiseFilter3dModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.FlatNoiseFilter3dModel.filter_object"><code class="docutils literal notranslate"><span class="pre">FlatNoiseFilter3dModel.filter_object()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3d"><code class="docutils literal notranslate"><span class="pre">WienerFilter3d</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3d.filter_object"><code class="docutils literal notranslate"><span class="pre">WienerFilter3d.filter_object()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dModel"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dModel.filter_object"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dModel.filter_object()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dModelSDR"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dModelSDR</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dModelSDR.filter_SDR_reconstruction"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dModelSDR.filter_SDR_reconstruction()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dReconstruction"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dReconstruction</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRBasedFiltering.html#SSNRBasedFiltering.WienerFilter3dReconstruction.filter_object"><code class="docutils literal notranslate"><span class="pre">WienerFilter3dReconstruction.filter_object()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SSNRCalculator.html">SSNRCalculator module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIM"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIM</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIM.ring_average_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIM.ring_average_ssnr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIMFiniteKernel"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIMFiniteKernel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIMFiniteKernel.illumination"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIMFiniteKernel.illumination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIMFiniteKernel.kernel"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIMFiniteKernel.kernel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR2dSIMFiniteKernel.plot_effective_kernel_and_otf"><code class="docutils literal notranslate"><span class="pre">SSNR2dSIMFiniteKernel.plot_effective_kernel_and_otf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShifts"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM2dShifts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM2dShiftsFiniteKernel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.illumination"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM2dShiftsFiniteKernel.illumination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.kernel"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM2dShiftsFiniteKernel.kernel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.plot_effective_kernel_and_otf"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM2dShiftsFiniteKernel.plot_effective_kernel_and_otf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNR3dSIM3dShifts"><code class="docutils literal notranslate"><span class="pre">SSNR3dSIM3dShifts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_analytic_ssnr_volume"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_analytic_ssnr_volume()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_analytic_total_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_analytic_total_ssnr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_maximum_resolved_lateral"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_maximum_resolved_lateral()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_ssnr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_ssnr_waterline_measure"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_ssnr_waterline_measure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_total_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.compute_total_ssnr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.illumination"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.illumination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator.optical_system"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator.optical_system</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRCalculator3dSIM"><code class="docutils literal notranslate"><span class="pre">SSNRCalculator3dSIM</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRConfocal"><code class="docutils literal notranslate"><span class="pre">SSNRConfocal</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRConfocal.compute_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRConfocal.compute_ssnr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler"><code class="docutils literal notranslate"><span class="pre">SSNRHandler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_radial_ssnr_entropy"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.compute_radial_ssnr_entropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.compute_ssnr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_ssnr_volume"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.compute_ssnr_volume()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_true_ssnr_entropy"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.compute_true_ssnr_entropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.optical_system"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.optical_system</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRHandler.ring_average_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRHandler.ring_average_ssnr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRWidefield"><code class="docutils literal notranslate"><span class="pre">SSNRWidefield</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SSNRCalculator.html#SSNRCalculator.SSNRWidefield.compute_ssnr"><code class="docutils literal notranslate"><span class="pre">SSNRWidefield.compute_ssnr()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ShapesGenerator.html">ShapesGenerator module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ShapesGenerator.html#ShapesGenerator.generate_random_lines"><code class="docutils literal notranslate"><span class="pre">generate_random_lines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ShapesGenerator.html#ShapesGenerator.generate_random_spheres"><code class="docutils literal notranslate"><span class="pre">generate_random_spheres()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ShapesGenerator.html#ShapesGenerator.generate_sphere_slices"><code class="docutils literal notranslate"><span class="pre">generate_sphere_slices()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Sources.html">Sources module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.ElectricFieldSource"><code class="docutils literal notranslate"><span class="pre">ElectricFieldSource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.ElectricFieldSource.get_electric_field"><code class="docutils literal notranslate"><span class="pre">ElectricFieldSource.get_electric_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.ElectricFieldSource.get_source_type"><code class="docutils literal notranslate"><span class="pre">ElectricFieldSource.get_source_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWave</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave.get_intensity"><code class="docutils literal notranslate"><span class="pre">IntensityPlaneWave.get_intensity()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.IntensitySource"><code class="docutils literal notranslate"><span class="pre">IntensitySource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.IntensitySource.get_intensity"><code class="docutils literal notranslate"><span class="pre">IntensitySource.get_intensity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.IntensitySource.get_source_type"><code class="docutils literal notranslate"><span class="pre">IntensitySource.get_source_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.PlaneWave"><code class="docutils literal notranslate"><span class="pre">PlaneWave</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.PlaneWave.get_electric_field"><code class="docutils literal notranslate"><span class="pre">PlaneWave.get_electric_field()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.PointSource"><code class="docutils literal notranslate"><span class="pre">PointSource</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.PointSource.get_electric_field"><code class="docutils literal notranslate"><span class="pre">PointSource.get_electric_field()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Sources.html#Sources.Source"><code class="docutils literal notranslate"><span class="pre">Source</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Sources.html#Sources.Source.get_source_type"><code class="docutils literal notranslate"><span class="pre">Source.get_source_type()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="VectorOperations.html">VectorOperations module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="VectorOperations.html#VectorOperations.VectorOperations"><code class="docutils literal notranslate"><span class="pre">VectorOperations</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="VectorOperations.html#VectorOperations.VectorOperations.rotate_vector2d"><code class="docutils literal notranslate"><span class="pre">VectorOperations.rotate_vector2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="VectorOperations.html#VectorOperations.VectorOperations.rotate_vector3d"><code class="docutils literal notranslate"><span class="pre">VectorOperations.rotate_vector3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="VectorOperations.html#VectorOperations.VectorOperations.rotation_matrix"><code class="docutils literal notranslate"><span class="pre">VectorOperations.rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Windowing.html">Windowing module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Windowing.html#Windowing.make_mask_cosine_edge2d"><code class="docutils literal notranslate"><span class="pre">make_mask_cosine_edge2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="Windowing.html#Windowing.make_mask_cosine_edge3d"><code class="docutils literal notranslate"><span class="pre">make_mask_cosine_edge3d()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compute_optimal_lattices.html">compute_optimal_lattices module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.check_peaks2d"><code class="docutils literal notranslate"><span class="pre">check_peaks2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.check_peaks3d"><code class="docutils literal notranslate"><span class="pre">check_peaks3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.combine_dict"><code class="docutils literal notranslate"><span class="pre">combine_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.exponent_sum2d"><code class="docutils literal notranslate"><span class="pre">exponent_sum2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.exponent_sum3d"><code class="docutils literal notranslate"><span class="pre">exponent_sum3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.find_pairs2d"><code class="docutils literal notranslate"><span class="pre">find_pairs2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.find_pairs3d"><code class="docutils literal notranslate"><span class="pre">find_pairs3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.find_pairs_extended"><code class="docutils literal notranslate"><span class="pre">find_pairs_extended()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.generate_conditions2d"><code class="docutils literal notranslate"><span class="pre">generate_conditions2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.generate_conditions3d"><code class="docutils literal notranslate"><span class="pre">generate_conditions3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.generate_table2d"><code class="docutils literal notranslate"><span class="pre">generate_table2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.generate_table3d"><code class="docutils literal notranslate"><span class="pre">generate_table3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.generate_tables2d"><code class="docutils literal notranslate"><span class="pre">generate_tables2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.get_matrix2d"><code class="docutils literal notranslate"><span class="pre">get_matrix2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="compute_optimal_lattices.html#compute_optimal_lattices.get_matrix3d"><code class="docutils literal notranslate"><span class="pre">get_matrix3d()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="confocal_ssnr.html">confocal_ssnr module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR"><code class="docutils literal notranslate"><span class="pre">TestConfocalSSNR</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR.test_SSNR2D"><code class="docutils literal notranslate"><span class="pre">TestConfocalSSNR.test_SSNR2D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="confocal_ssnr.html#confocal_ssnr.TestConfocalSSNR.test_SSNR3D"><code class="docutils literal notranslate"><span class="pre">TestConfocalSSNR.test_SSNR3D()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="globvar.html">globvar module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="globvar.html#globvar.Pauli"><code class="docutils literal notranslate"><span class="pre">Pauli</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.Pauli.I"><code class="docutils literal notranslate"><span class="pre">Pauli.I</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.Pauli.X"><code class="docutils literal notranslate"><span class="pre">Pauli.X</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.Pauli.Y"><code class="docutils literal notranslate"><span class="pre">Pauli.Y</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.Pauli.Z"><code class="docutils literal notranslate"><span class="pre">Pauli.Z</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="globvar.html#globvar.SI"><code class="docutils literal notranslate"><span class="pre">SI</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Constants"><code class="docutils literal notranslate"><span class="pre">SI.Constants</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.Kcd"><code class="docutils literal notranslate"><span class="pre">SI.Constants.Kcd</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.NAvogadro"><code class="docutils literal notranslate"><span class="pre">SI.Constants.NAvogadro</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.c"><code class="docutils literal notranslate"><span class="pre">SI.Constants.c</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.dnuCs"><code class="docutils literal notranslate"><span class="pre">SI.Constants.dnuCs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.e"><code class="docutils literal notranslate"><span class="pre">SI.Constants.e</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.h"><code class="docutils literal notranslate"><span class="pre">SI.Constants.h</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Constants.k"><code class="docutils literal notranslate"><span class="pre">SI.Constants.k</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Energy"><code class="docutils literal notranslate"><span class="pre">SI.Energy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.GJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.GJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.J"><code class="docutils literal notranslate"><span class="pre">SI.Energy.J</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.MJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.MJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.aJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.aJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.eV"><code class="docutils literal notranslate"><span class="pre">SI.Energy.eV</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.fJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.fJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.kJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.kJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.mJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.mJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.mcJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.mcJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.nJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.nJ</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Energy.pJ"><code class="docutils literal notranslate"><span class="pre">SI.Energy.pJ</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Force"><code class="docutils literal notranslate"><span class="pre">SI.Force</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.GN"><code class="docutils literal notranslate"><span class="pre">SI.Force.GN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.MN"><code class="docutils literal notranslate"><span class="pre">SI.Force.MN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.N"><code class="docutils literal notranslate"><span class="pre">SI.Force.N</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.fN"><code class="docutils literal notranslate"><span class="pre">SI.Force.fN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.kN"><code class="docutils literal notranslate"><span class="pre">SI.Force.kN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.mN"><code class="docutils literal notranslate"><span class="pre">SI.Force.mN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.mcN"><code class="docutils literal notranslate"><span class="pre">SI.Force.mcN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.nN"><code class="docutils literal notranslate"><span class="pre">SI.Force.nN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Force.pN"><code class="docutils literal notranslate"><span class="pre">SI.Force.pN</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Frequency"><code class="docutils literal notranslate"><span class="pre">SI.Frequency</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.EHz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.EHz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.GHz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.GHz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.Hz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.Hz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.MHz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.MHz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.PHz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.PHz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.THz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.THz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Frequency.kHz"><code class="docutils literal notranslate"><span class="pre">SI.Frequency.kHz</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Length"><code class="docutils literal notranslate"><span class="pre">SI.Length</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.fm"><code class="docutils literal notranslate"><span class="pre">SI.Length.fm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.km"><code class="docutils literal notranslate"><span class="pre">SI.Length.km</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.m"><code class="docutils literal notranslate"><span class="pre">SI.Length.m</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.mcm"><code class="docutils literal notranslate"><span class="pre">SI.Length.mcm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.mm"><code class="docutils literal notranslate"><span class="pre">SI.Length.mm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.nm"><code class="docutils literal notranslate"><span class="pre">SI.Length.nm</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Length.pm"><code class="docutils literal notranslate"><span class="pre">SI.Length.pm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="globvar.html#globvar.SI.Time"><code class="docutils literal notranslate"><span class="pre">SI.Time</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.ats"><code class="docutils literal notranslate"><span class="pre">SI.Time.ats</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.fs"><code class="docutils literal notranslate"><span class="pre">SI.Time.fs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.mcs"><code class="docutils literal notranslate"><span class="pre">SI.Time.mcs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.ms"><code class="docutils literal notranslate"><span class="pre">SI.Time.ms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.ns"><code class="docutils literal notranslate"><span class="pre">SI.Time.ns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.ps"><code class="docutils literal notranslate"><span class="pre">SI.Time.ps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="globvar.html#globvar.SI.Time.s"><code class="docutils literal notranslate"><span class="pre">SI.Time.s</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="input_parser.html">input_parser module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="input_parser.html#input_parser.ConfigParser"><code class="docutils literal notranslate"><span class="pre">ConfigParser</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="input_parser.html#input_parser.ConfigParser.read_configuration"><code class="docutils literal notranslate"><span class="pre">ConfigParser.read_configuration()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="kernels.html">kernels module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="kernels.html#kernels.psf_kernel2d"><code class="docutils literal notranslate"><span class="pre">psf_kernel2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernels.html#kernels.sinc_kernel"><code class="docutils literal notranslate"><span class="pre">sinc_kernel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stattools.html">stattools module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.average_mask"><code class="docutils literal notranslate"><span class="pre">average_mask()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.average_rings2d"><code class="docutils literal notranslate"><span class="pre">average_rings2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.average_rings3d"><code class="docutils literal notranslate"><span class="pre">average_rings3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.downsample_circular_function_vectorized"><code class="docutils literal notranslate"><span class="pre">downsample_circular_function_vectorized()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.estimate_localized_peaks"><code class="docutils literal notranslate"><span class="pre">estimate_localized_peaks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.expand_ring_averages2d"><code class="docutils literal notranslate"><span class="pre">expand_ring_averages2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.expand_ring_averages3d"><code class="docutils literal notranslate"><span class="pre">expand_ring_averages3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.find_decreasing_radial_surface_levels"><code class="docutils literal notranslate"><span class="pre">find_decreasing_radial_surface_levels()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.find_decreasing_surface_levels2d"><code class="docutils literal notranslate"><span class="pre">find_decreasing_surface_levels2d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.find_decreasing_surface_levels3d"><code class="docutils literal notranslate"><span class="pre">find_decreasing_surface_levels3d()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.gaussian_maxima_fitting"><code class="docutils literal notranslate"><span class="pre">gaussian_maxima_fitting()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="stattools.html#stattools.reverse_interpolation_nearest"><code class="docutils literal notranslate"><span class="pre">reverse_interpolation_nearest()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="web_interface.html">web_interface module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="web_interface.html#web_interface.index"><code class="docutils literal notranslate"><span class="pre">index()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="web_interface.html#web_interface.plot"><code class="docutils literal notranslate"><span class="pre">plot()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="wrappers.html">wrappers module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html#wrappers.wrapped_fft"><code class="docutils literal notranslate"><span class="pre">wrapped_fft()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html#wrappers.wrapped_fftn"><code class="docutils literal notranslate"><span class="pre">wrapped_fftn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html#wrappers.wrapped_ifft"><code class="docutils literal notranslate"><span class="pre">wrapped_ifft()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html#wrappers.wrapped_ifftn"><code class="docutils literal notranslate"><span class="pre">wrapped_ifftn()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="wrappers.html#wrappers.wrapper_ft"><code class="docutils literal notranslate"><span class="pre">wrapper_ft()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        «&#160;&#160;<a href="../index.html">SIMSSNR documentation</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="Box.html">Box module</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

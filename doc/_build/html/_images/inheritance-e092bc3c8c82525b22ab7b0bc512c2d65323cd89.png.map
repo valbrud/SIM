@@ -1,0 +1,6 @@
+<map id="inheritance02882c5fa4" name="inheritance02882c5fa4">
+<area shape="rect" id="node1" title="QObject(parent: Optional[QObject] = None)" alt="" coords="294,5,366,32"/>
+<area shape="rect" id="node5" title="QWidget(parent: Optional[QWidget] = None, flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags())" alt="" coords="429,31,501,57"/>
+<area shape="rect" id="node3" title="QPaintDevice()" alt="" coords="279,56,381,83"/>
+<area shape="rect" id="node6" href="#GUIWidgets.SourceWidget" target="_top" title="SourceWidget" alt="" coords="549,31,653,57"/>
+</map>
