@@ -100,6 +100,7 @@ class MainWindow(QMainWindow):
         self.config_layout.addWidget(scroll_area, 2)
 
         # Third Column(Add sources)
+        self.source_buttons_layout = QVBoxLayout()
         self.config_layout.addLayout(self.source_buttons_layout, 1)
 
         add_point_source_button = QPushButton("Add a Point Source")
