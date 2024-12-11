@@ -22,5 +22,11 @@ API Reference
    :caption: Modules:
 
    ./source/Sources
+   ./source/Box
+   ./source/SIMulator
+   ./source/Illumination
+   ./source/OpticalSystems
    ./source/SSNRCalculator
+   ./source/SSNRBasedFiltering
    ./source/ShapesGenerator
+   ./source/VectorOperations

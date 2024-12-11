@@ -1,0 +1,637 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter {\sphinxsymbolsname}
+  \item \spxentry{\_Mr}\spxextra{Illumination.Illumination attribute}, \hyperpage{15}
+  \item \spxentry{\_interpolation\_method}\spxextra{OpticalSystems.OpticalSystem attribute}, 
+		\hyperpage{20}
+  \item \spxentry{\_otf\_frequencies}\spxextra{OpticalSystems.OpticalSystem attribute}, 
+		\hyperpage{20}
+  \item \spxentry{\_psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem attribute}, 
+		\hyperpage{20}
+  \item \spxentry{\_spatial\_shifts}\spxextra{Illumination.Illumination attribute}, \hyperpage{15}
+
+  \indexspace
+  \bigletter A
+  \item \spxentry{add\_intensity\_plane\_wave()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{add\_plane\_wave()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{add\_point\_source()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{add\_source()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{add\_source()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{add\_to\_box()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{aJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{analytic\_frequencies}\spxextra{Box.Box attribute}, \hyperpage{3}
+  \item \spxentry{angles}\spxextra{Illumination.Illumination attribute}, \hyperpage{15}
+  \item \spxentry{ats}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{average\_mask()}\spxextra{in module stattools}, \hyperpage{43}
+  \item \spxentry{average\_rings2d()}\spxextra{in module stattools}, \hyperpage{43}
+  \item \spxentry{average\_rings3d()}\spxextra{in module stattools}, \hyperpage{43}
+  \item \spxentry{axes}\spxextra{Box.Box attribute}, \hyperpage{2}
+
+  \indexspace
+  \bigletter B
+  \item \spxentry{Box}
+    \subitem \spxentry{module}, \hyperpage{1}
+  \item \spxentry{Box}\spxextra{class in Box}, \hyperpage{1}
+  \item \spxentry{box\_size}\spxextra{Box.Box attribute}, \hyperpage{1}
+  \item \spxentry{box\_volume}\spxextra{Box.Box attribute}, \hyperpage{1}
+  \item \spxentry{BoxSIM}\spxextra{class in Box}, \hyperpage{5}
+
+  \indexspace
+  \bigletter C
+  \item \spxentry{c}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{change\_plotting\_mode()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{change\_view3d()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{change\_widget()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}, 
+		\hyperpage{11}
+  \item \spxentry{change\_widget()}\spxextra{GUIWidgets.PlaneWaveWidget method}, \hyperpage{12}
+  \item \spxentry{change\_widget()}\spxextra{GUIWidgets.PointSourceWidget method}, \hyperpage{14}
+  \item \spxentry{change\_widget()}\spxextra{GUIWidgets.SourceWidget method}, \hyperpage{14}
+  \item \spxentry{check\_peaks2d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{37}
+  \item \spxentry{check\_peaks3d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{37}
+  \item \spxentry{choose\_plotting\_mode()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{choose\_view3d()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{clear\_layout()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{combine\_dict()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{37}
+  \item \spxentry{compute\_analytic\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
+		\hyperpage{30}
+  \item \spxentry{compute\_analytic\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
+		\hyperpage{30}
+  \item \spxentry{compute\_and\_plot\_fourier\_space()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{7}
+  \item \spxentry{compute\_and\_plot\_from\_electric\_field()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{7}
+  \item \spxentry{compute\_and\_plot\_from\_intensity\_sources()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{7}
+  \item \spxentry{compute\_apodization\_filter\_autoconvolution()}\spxextra{ProcessorSIM.ProcessorSIM method}, 
+		\hyperpage{25}
+  \item \spxentry{compute\_apodization\_filter\_lukosz()}\spxextra{ProcessorSIM.ProcessorSIM method}, 
+		\hyperpage{25}
+  \item \spxentry{compute\_axes()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{compute\_effective\_otfs\_2dSIM()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{21}
+  \item \spxentry{compute\_effective\_otfs\_projective\_3dSIM()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{22}
+  \item \spxentry{compute\_effective\_otfs\_true\_3dSIM()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{compute\_effective\_psfs\_and\_otfs()}\spxextra{ProcessorSIM.ProcessorSIM static method}, 
+		\hyperpage{25}
+  \item \spxentry{compute\_electric\_field()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{compute\_expanded\_lattice2d()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{17}
+  \item \spxentry{compute\_expanded\_lattice3d()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{17}
+  \item \spxentry{compute\_grid()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{compute\_intensity\_and\_spatial\_waves\_numerically()}\spxextra{Box.Box method}, 
+		\hyperpage{3}
+  \item \spxentry{compute\_intensity\_fourier\_space()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{compute\_intensity\_from\_electric\_field()}\spxextra{Box.Box method}, 
+		\hyperpage{3}
+  \item \spxentry{compute\_intensity\_from\_spatial\_waves()}\spxextra{Box.Box method}, 
+		\hyperpage{3}
+  \item \spxentry{compute\_maximum\_resolved\_lateral()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
+		\hyperpage{30}
+  \item \spxentry{compute\_next\_shift()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{compute\_numerically\_approximated\_intensities()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{7}
+  \item \spxentry{compute\_optimal\_lattices}
+    \subitem \spxentry{module}, \hyperpage{37}
+  \item \spxentry{compute\_phase\_matrix()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{17}
+  \item \spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem method}, 
+		\hyperpage{20}
+  \item \spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{22}
+  \item \spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.System4f2D method}, 
+		\hyperpage{24}
+  \item \spxentry{compute\_psf\_and\_otf()}\spxextra{OpticalSystems.System4f3D method}, 
+		\hyperpage{24}
+  \item \spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem method}, 
+		\hyperpage{20}
+  \item \spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{22}
+  \item \spxentry{compute\_psf\_and\_otf\_cordinates()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem method}, \hyperpage{20}
+  \item \spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{22}
+  \item \spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+		\hyperpage{31}
+  \item \spxentry{compute\_sim\_support()}\spxextra{ProcessorSIM.ProcessorSIM method}, 
+		\hyperpage{25}
+  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}, \hyperpage{30}
+  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRConfocal method}, \hyperpage{31}
+  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}, \hyperpage{31}
+  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRWidefield method}, \hyperpage{32}
+  \item \spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+		\hyperpage{31}
+  \item \spxentry{compute\_ssnr\_waterline\_measure()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
+		\hyperpage{30}
+  \item \spxentry{compute\_total\_illumination()}\spxextra{Box.BoxSIM method}, \hyperpage{5}
+  \item \spxentry{compute\_total\_intensity()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
+  \item \spxentry{compute\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
+		\hyperpage{30}
+  \item \spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+		\hyperpage{31}
+  \item \spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem method}, \hyperpage{21}
+  \item \spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{22}
+  \item \spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{ConfigParser}\spxextra{class in input\_parser}, \hyperpage{42}
+  \item \spxentry{confocal\_ssnr}
+    \subitem \spxentry{module}, \hyperpage{38}
+  \item \spxentry{contextMenuEvent()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}, 
+		\hyperpage{11}
+  \item \spxentry{contextMenuEvent()}\spxextra{GUIWidgets.PlaneWaveWidget method}, \hyperpage{12}
+  \item \spxentry{contextMenuEvent()}\spxextra{GUIWidgets.PointSourceWidget method}, \hyperpage{14}
+  \item \spxentry{contextMenuEvent()}\spxextra{GUIWidgets.SourceWidget method}, \hyperpage{14}
+
+  \indexspace
+  \bigletter D
+  \item \spxentry{dnuCs}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{downsample\_circular\_function\_vectorized()}\spxextra{in module stattools}, 
+		\hyperpage{43}
+
+  \indexspace
+  \bigletter E
+  \item \spxentry{e}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{EHz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+  \item \spxentry{electric\_field}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{ElectricFieldSource}\spxextra{class in Sources}, \hyperpage{33}
+  \item \spxentry{estimate\_localized\_peaks()}\spxextra{in module stattools}, \hyperpage{44}
+  \item \spxentry{eV}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{expand\_ring\_averages2d()}\spxextra{in module stattools}, \hyperpage{44}
+  \item \spxentry{expand\_ring\_averages3d()}\spxextra{in module stattools}, \hyperpage{44}
+  \item \spxentry{exponent\_sum2d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{37}
+  \item \spxentry{exponent\_sum3d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{38}
+
+  \indexspace
+  \bigletter F
+  \item \spxentry{field}\spxextra{Box.Field attribute}, \hyperpage{6}
+  \item \spxentry{Field}\spxextra{class in Box}, \hyperpage{5}
+  \item \spxentry{field\_type}\spxextra{Box.Field attribute}, \hyperpage{6}
+  \item \spxentry{fields}\spxextra{Box.Box attribute}, \hyperpage{1}
+  \item \spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.FlatNoiseFilter3d method}, 
+		\hyperpage{27}
+  \item \spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.FlatNoiseFilter3dModel method}, 
+		\hyperpage{27}
+  \item \spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3d method}, 
+		\hyperpage{27}
+  \item \spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3dModel method}, 
+		\hyperpage{28}
+  \item \spxentry{filter\_object()}\spxextra{SSNRBasedFiltering.WienerFilter3dReconstruction method}, 
+		\hyperpage{28}
+  \item \spxentry{filter\_SDR\_reconstruction()}\spxextra{SSNRBasedFiltering.WienerFilter3dModelSDR method}, 
+		\hyperpage{28}
+  \item \spxentry{find\_decreasing\_radial\_surface\_levels()}\spxextra{in module stattools}, 
+		\hyperpage{44}
+  \item \spxentry{find\_decreasing\_surface\_levels2d()}\spxextra{in module stattools}, 
+		\hyperpage{45}
+  \item \spxentry{find\_decreasing\_surface\_levels3d()}\spxextra{in module stattools}, 
+		\hyperpage{45}
+  \item \spxentry{find\_ipw\_from\_pw()}\spxextra{Illumination.Illumination static method}, 
+		\hyperpage{17}
+  \item \spxentry{find\_pairs2d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{38}
+  \item \spxentry{find\_pairs3d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{38}
+  \item \spxentry{find\_pairs\_extended()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{fJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{FlatNoiseFilter3d}\spxextra{class in SSNRBasedFiltering}, \hyperpage{27}
+  \item \spxentry{FlatNoiseFilter3dModel}\spxextra{class in SSNRBasedFiltering}, \hyperpage{27}
+  \item \spxentry{fm}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{fN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{frequency\_axes}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{fs}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+
+  \indexspace
+  \bigletter G
+  \item \spxentry{gaussian\_maxima\_fitting()}\spxextra{in module stattools}, \hyperpage{45}
+  \item \spxentry{generate\_conditions2d()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{generate\_conditions3d()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{generate\_random\_lines()}\spxextra{in module ShapesGenerator}, \hyperpage{32}
+  \item \spxentry{generate\_random\_spheres()}\spxextra{in module ShapesGenerator}, \hyperpage{32}
+  \item \spxentry{generate\_sim\_images()}\spxextra{SIMulator.SIMulator method}, \hyperpage{26}
+  \item \spxentry{generate\_sim\_images2d()}\spxextra{SIMulator.SIMulator method}, \hyperpage{26}
+  \item \spxentry{generate\_sphere\_slices()}\spxextra{in module ShapesGenerator}, \hyperpage{32}
+  \item \spxentry{generate\_table2d()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{generate\_table3d()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{generate\_tables2d()}\spxextra{in module compute\_optimal\_lattices}, 
+		\hyperpage{38}
+  \item \spxentry{generate\_widefield()}\spxextra{SIMulator.SIMulator method}, \hyperpage{26}
+  \item \spxentry{get\_all\_wavevectors()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{17}
+  \item \spxentry{get\_all\_wavevectors\_projected()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{18}
+  \item \spxentry{get\_approximated\_intensity\_sources()}\spxextra{Box.Box method}, \hyperpage{3}
+  \item \spxentry{get\_electric\_field()}\spxextra{Sources.ElectricFieldSource method}, 
+		\hyperpage{33}
+  \item \spxentry{get\_electric\_field()}\spxextra{Sources.PlaneWave method}, \hyperpage{35}
+  \item \spxentry{get\_electric\_field()}\spxextra{Sources.PointSource method}, \hyperpage{35}
+  \item \spxentry{get\_intensity()}\spxextra{Box.BoxSIM method}, \hyperpage{5}
+  \item \spxentry{get\_intensity()}\spxextra{Sources.IntensityPlaneWave method}, \hyperpage{34}
+  \item \spxentry{get\_intensity()}\spxextra{Sources.IntensitySource method}, \hyperpage{34}
+  \item \spxentry{get\_ipw\_from\_pw()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{get\_matrix2d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{38}
+  \item \spxentry{get\_matrix3d()}\spxextra{in module compute\_optimal\_lattices}, \hyperpage{38}
+  \item \spxentry{get\_plane\_waves()}\spxextra{Box.Box method}, \hyperpage{4}
+  \item \spxentry{get\_source\_type()}\spxextra{Sources.ElectricFieldSource method}, \hyperpage{34}
+  \item \spxentry{get\_source\_type()}\spxextra{Sources.IntensitySource method}, \hyperpage{35}
+  \item \spxentry{get\_source\_type()}\spxextra{Sources.Source method}, \hyperpage{36}
+  \item \spxentry{get\_sources()}\spxextra{Box.Box method}, \hyperpage{4}
+  \item \spxentry{get\_spatial\_waves()}\spxextra{Box.Box method}, \hyperpage{4}
+  \item \spxentry{get\_wavevectors()}\spxextra{Illumination.Illumination method}, \hyperpage{18}
+  \item \spxentry{get\_wavevectors\_projected()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{18}
+  \item \spxentry{GHz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+  \item \spxentry{GJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{globvar}
+    \subitem \spxentry{module}, \hyperpage{39}
+  \item \spxentry{GN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{grid}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{GUI}
+    \subitem \spxentry{module}, \hyperpage{6}
+  \item \spxentry{GUIInitializationWidgets}
+    \subitem \spxentry{module}, \hyperpage{9}
+  \item \spxentry{GUIWidgets}
+    \subitem \spxentry{module}, \hyperpage{10}
+
+  \indexspace
+  \bigletter H
+  \item \spxentry{h}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{Hz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+
+  \indexspace
+  \bigletter I
+  \item \spxentry{I}\spxextra{globvar.Pauli attribute}, \hyperpage{39}
+  \item \spxentry{identifier}\spxextra{Box.Field attribute}, \hyperpage{6}
+  \item \spxentry{identifier}\spxextra{GUIWidgets.SourceWidget attribute}, \hyperpage{14}
+  \item \spxentry{Illumination}
+    \subitem \spxentry{module}, \hyperpage{15}
+  \item \spxentry{illumination}\spxextra{Box.BoxSIM attribute}, \hyperpage{5}
+  \item \spxentry{Illumination}\spxextra{class in Illumination}, \hyperpage{15}
+  \item \spxentry{illumination}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel property}, 
+		\hyperpage{29}
+  \item \spxentry{illumination}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property}, 
+		\hyperpage{30}
+  \item \spxentry{illumination}\spxextra{SSNRCalculator.SSNRCalculator property}, \hyperpage{30}
+  \item \spxentry{illuminations\_shifted}\spxextra{Box.BoxSIM attribute}, \hyperpage{5}
+  \item \spxentry{index()}\spxextra{in module web\_interface}, \hyperpage{46}
+  \item \spxentry{index\_frequencies()}\spxextra{Illumination.Illumination static method}, 
+		\hyperpage{18}
+  \item \spxentry{indices2d}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{indices3d}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{info}\spxextra{Box.Box attribute}, \hyperpage{1}
+  \item \spxentry{init\_from\_list()}\spxextra{Illumination.Illumination class method}, 
+		\hyperpage{18}
+  \item \spxentry{init\_ui()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{init\_ui()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}, \hyperpage{11}
+  \item \spxentry{init\_ui()}\spxextra{GUIWidgets.PlaneWaveWidget method}, \hyperpage{12}
+  \item \spxentry{init\_ui()}\spxextra{GUIWidgets.PointSourceWidget method}, \hyperpage{14}
+  \item \spxentry{init\_ui()}\spxextra{GUIWidgets.SourceWidget method}, \hyperpage{14}
+  \item \spxentry{InitializationWidget}\spxextra{class in GUIInitializationWidgets}, \hyperpage{9}
+  \item \spxentry{input\_parser}
+    \subitem \spxentry{module}, \hyperpage{41}
+  \item \spxentry{intensity}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{intensity\_fourier\_space}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{IntensityPlaneWave}\spxextra{class in Sources}, \hyperpage{34}
+  \item \spxentry{IntensityPlaneWaveInitializationWidget}\spxextra{class in GUIInitializationWidgets}, 
+		\hyperpage{9}
+  \item \spxentry{IntensityPlaneWaveWidget}\spxextra{class in GUIWidgets}, \hyperpage{11}
+  \item \spxentry{IntensitySource}\spxextra{class in Sources}, \hyperpage{34}
+  \item \spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem method}, \hyperpage{21}
+  \item \spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
+		\hyperpage{22}
+  \item \spxentry{interpolate\_otf()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
+		\hyperpage{23}
+  \item \spxentry{interpolation\_method}\spxextra{OpticalSystems.OpticalSystem property}, 
+		\hyperpage{21}
+  \item \spxentry{interpolator}\spxextra{OpticalSystems.OpticalSystem attribute}, \hyperpage{20}
+  \item \spxentry{isDeleted}\spxextra{GUIWidgets.PlaneWaveWidget attribute}, \hyperpage{12}
+  \item \spxentry{isDeleted}\spxextra{GUIWidgets.SourceWidget attribute}, \hyperpage{15}
+  \item \spxentry{isSet}\spxextra{GUIWidgets.IntensityPlaneWaveWidget attribute}, \hyperpage{11}
+  \item \spxentry{isSet}\spxextra{GUIWidgets.PlaneWaveWidget attribute}, \hyperpage{12}
+  \item \spxentry{isSet}\spxextra{GUIWidgets.PointSourceWidget attribute}, \hyperpage{14}
+
+  \indexspace
+  \bigletter J
+  \item \spxentry{J}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+
+  \indexspace
+  \bigletter K
+  \item \spxentry{k}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{Kcd}\spxextra{globvar.SI.Constants attribute}, \hyperpage{39}
+  \item \spxentry{kernel}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel property}, \hyperpage{29}
+  \item \spxentry{kernel}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel property}, 
+		\hyperpage{30}
+  \item \spxentry{kernels}
+    \subitem \spxentry{module}, \hyperpage{42}
+  \item \spxentry{kHz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+  \item \spxentry{kJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{km}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{kN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+
+  \indexspace
+  \bigletter L
+  \item \spxentry{linear}\spxextra{GUI.PlottingMode attribute}, \hyperpage{8}
+  \item \spxentry{load\_config()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{load\_illumination()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{logarithmic}\spxextra{GUI.PlottingMode attribute}, \hyperpage{8}
+
+  \indexspace
+  \bigletter M
+  \item \spxentry{m}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{MainWindow}\spxextra{class in GUI}, \hyperpage{7}
+  \item \spxentry{make\_mask\_cosine\_edge2d()}\spxextra{in module Windowing}, \hyperpage{37}
+  \item \spxentry{make\_mask\_cosine\_edge3d()}\spxextra{in module Windowing}, \hyperpage{37}
+  \item \spxentry{mcJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{mcm}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{mcN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{mcs}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{MHz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+  \item \spxentry{mixed}\spxextra{GUI.PlottingMode attribute}, \hyperpage{8}
+  \item \spxentry{MJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{mJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{mm}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{MN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{mN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{module}
+    \subitem \spxentry{Box}, \hyperpage{1}
+    \subitem \spxentry{compute\_optimal\_lattices}, \hyperpage{37}
+    \subitem \spxentry{confocal\_ssnr}, \hyperpage{38}
+    \subitem \spxentry{globvar}, \hyperpage{39}
+    \subitem \spxentry{GUI}, \hyperpage{6}
+    \subitem \spxentry{GUIInitializationWidgets}, \hyperpage{9}
+    \subitem \spxentry{GUIWidgets}, \hyperpage{10}
+    \subitem \spxentry{Illumination}, \hyperpage{15}
+    \subitem \spxentry{input\_parser}, \hyperpage{41}
+    \subitem \spxentry{kernels}, \hyperpage{42}
+    \subitem \spxentry{OpticalSystems}, \hyperpage{19}
+    \subitem \spxentry{ProcessorSIM}, \hyperpage{24}
+    \subitem \spxentry{ShapesGenerator}, \hyperpage{32}
+    \subitem \spxentry{SIMulator}, \hyperpage{26}
+    \subitem \spxentry{Sources}, \hyperpage{33}
+    \subitem \spxentry{SSNRBasedFiltering}, \hyperpage{26}
+    \subitem \spxentry{SSNRCalculator}, \hyperpage{28}
+    \subitem \spxentry{stattools}, \hyperpage{43}
+    \subitem \spxentry{VectorOperations}, \hyperpage{36}
+    \subitem \spxentry{web\_interface}, \hyperpage{46}
+    \subitem \spxentry{Windowing}, \hyperpage{37}
+    \subitem \spxentry{wrappers}, \hyperpage{46}
+  \item \spxentry{Mr}\spxextra{Illumination.Illumination property}, \hyperpage{17}
+  \item \spxentry{ms}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{Mt}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+
+  \indexspace
+  \bigletter N
+  \item \spxentry{N}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{NAvogadro}\spxextra{globvar.SI.Constants attribute}, \hyperpage{40}
+  \item \spxentry{nJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{nm}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{nN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{non\_numbers}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}, 
+		\hyperpage{13}
+  \item \spxentry{normalize\_spatial\_waves()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{19}
+  \item \spxentry{ns}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{numerically\_approximated\_intensity}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{numerically\_approximated\_intensity\_fields}\spxextra{Box.Box attribute}, 
+		\hyperpage{2}
+  \item \spxentry{numerically\_approximated\_intensity\_fourier\_space}\spxextra{Box.Box attribute}, 
+		\hyperpage{2}
+
+  \indexspace
+  \bigletter O
+  \item \spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.InitializationWidget method}, 
+		\hyperpage{9}
+  \item \spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method}, 
+		\hyperpage{9}
+  \item \spxentry{on\_click\_ok()}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget method}, 
+		\hyperpage{10}
+  \item \spxentry{on\_click\_ok()}\spxextra{GUIWidgets.PointSourceWidget method}, \hyperpage{14}
+  \item \spxentry{on\_option\_selected()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{on\_receive\_brightness()}\spxextra{GUIWidgets.PointSourceWidget method}, 
+		\hyperpage{14}
+  \item \spxentry{on\_receive\_coordinates()}\spxextra{GUIWidgets.PointSourceWidget method}, 
+		\hyperpage{14}
+  \item \spxentry{on\_receive\_info()}\spxextra{GUIWidgets.IntensityPlaneWaveWidget method}, 
+		\hyperpage{11}
+  \item \spxentry{on\_receive\_info()}\spxextra{GUIWidgets.PlaneWaveWidget method}, \hyperpage{12}
+  \item \spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRCalculator property}, \hyperpage{30}
+  \item \spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRHandler property}, \hyperpage{31}
+  \item \spxentry{OpticalSystem}\spxextra{class in OpticalSystems}, \hyperpage{19}
+  \item \spxentry{OpticalSystem2D}\spxextra{class in OpticalSystems}, \hyperpage{21}
+  \item \spxentry{OpticalSystem3D}\spxextra{class in OpticalSystems}, \hyperpage{22}
+  \item \spxentry{OpticalSystems}
+    \subitem \spxentry{module}, \hyperpage{19}
+  \item \spxentry{otf}\spxextra{OpticalSystems.OpticalSystem attribute}, \hyperpage{20}
+  \item \spxentry{otf\_frequencies}\spxextra{OpticalSystems.OpticalSystem property}, \hyperpage{21}
+
+  \indexspace
+  \bigletter P
+  \item \spxentry{Pauli}\spxextra{class in globvar}, \hyperpage{39}
+  \item \spxentry{phase\_matrix}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{PHz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+  \item \spxentry{pJ}\spxextra{globvar.SI.Energy attribute}, \hyperpage{40}
+  \item \spxentry{PlaneWave}\spxextra{class in Sources}, \hyperpage{35}
+  \item \spxentry{PlaneWaveInitializationWidget}\spxextra{class in GUIInitializationWidgets}, 
+		\hyperpage{10}
+  \item \spxentry{PlaneWaveWidget}\spxextra{class in GUIWidgets}, \hyperpage{11}
+  \item \spxentry{plot()}\spxextra{in module web\_interface}, \hyperpage{46}
+  \item \spxentry{plot\_approximate\_intensity\_fourier\_space\_slices()}\spxextra{Box.Box method}, 
+		\hyperpage{4}
+  \item \spxentry{plot\_approximate\_intensity\_slices()}\spxextra{Box.Box method}, \hyperpage{4}
+  \item \spxentry{plot\_effective\_kernel\_and\_otf()}\spxextra{SSNRCalculator.SSNR2dSIMFiniteKernel method}, 
+		\hyperpage{29}
+  \item \spxentry{plot\_effective\_kernel\_and\_otf()}\spxextra{SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel method}, 
+		\hyperpage{30}
+  \item \spxentry{plot\_fourier\_space\_slices()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{plot\_intensity\_fourier\_space\_slices()}\spxextra{Box.Box method}, 
+		\hyperpage{4}
+  \item \spxentry{plot\_intensity\_slices()}\spxextra{Box.Box method}, \hyperpage{4}
+  \item \spxentry{plot\_intensity\_slices()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{plot\_numerically\_approximated\_intensity()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{8}
+  \item \spxentry{plot\_numerically\_approximated\_intensity\_fourier\_space()}\spxextra{GUI.MainWindow method}, 
+		\hyperpage{8}
+  \item \spxentry{plot\_shift\_arrow()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{plot\_slices()}\spxextra{Box.Box method}, \hyperpage{5}
+  \item \spxentry{PlottingMode}\spxextra{class in GUI}, \hyperpage{8}
+  \item \spxentry{pm}\spxextra{globvar.SI.Length attribute}, \hyperpage{41}
+  \item \spxentry{pN}\spxextra{globvar.SI.Force attribute}, \hyperpage{40}
+  \item \spxentry{point\_number}\spxextra{Box.Box attribute}, \hyperpage{1}
+  \item \spxentry{PointSource}\spxextra{class in Sources}, \hyperpage{35}
+  \item \spxentry{PointSourceInitializationWidget}\spxextra{class in GUIWidgets}, \hyperpage{12}
+  \item \spxentry{PointSourceWidget}\spxextra{class in GUIWidgets}, \hyperpage{13}
+  \item \spxentry{ProcessorProjective3dSIM}\spxextra{class in ProcessorSIM}, \hyperpage{25}
+  \item \spxentry{ProcessorSIM}
+    \subitem \spxentry{module}, \hyperpage{24}
+  \item \spxentry{ProcessorSIM}\spxextra{class in ProcessorSIM}, \hyperpage{25}
+  \item \spxentry{ProcessorTrue3dSIM}\spxextra{class in ProcessorSIM}, \hyperpage{25}
+  \item \spxentry{ps}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{psf}\spxextra{OpticalSystems.OpticalSystem attribute}, \hyperpage{19}
+  \item \spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem property}, \hyperpage{21}
+  \item \spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem2D property}, 
+		\hyperpage{22}
+  \item \spxentry{psf\_coordinates}\spxextra{OpticalSystems.OpticalSystem3D property}, 
+		\hyperpage{24}
+  \item \spxentry{psf\_kernel2d()}\spxextra{in module kernels}, \hyperpage{42}
+
+  \indexspace
+  \bigletter R
+  \item \spxentry{read\_configuration()}\spxextra{input\_parser.ConfigParser static method}, 
+		\hyperpage{42}
+  \item \spxentry{rearranged\_indices}\spxextra{Illumination.Illumination attribute}, 
+		\hyperpage{16}
+  \item \spxentry{reconstruct\_Fourier2d\_finite\_kernel()}\spxextra{SIMulator.SIMulator method}, 
+		\hyperpage{26}
+  \item \spxentry{reconstruct\_Fourier\_space()}\spxextra{SIMulator.SIMulator method}, 
+		\hyperpage{26}
+  \item \spxentry{reconstruct\_real2d\_finite\_kernel()}\spxextra{SIMulator.SIMulator method}, 
+		\hyperpage{26}
+  \item \spxentry{reconstruct\_real\_space()}\spxextra{SIMulator.SIMulator method}, \hyperpage{26}
+  \item \spxentry{remove\_source()}\spxextra{Box.Box method}, \hyperpage{5}
+  \item \spxentry{remove\_source()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{remove\_widget()}\spxextra{GUIWidgets.SourceWidget method}, \hyperpage{15}
+  \item \spxentry{request\_data()}\spxextra{GUIInitializationWidgets.InitializationWidget method}, 
+		\hyperpage{9}
+  \item \spxentry{request\_data()}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget method}, 
+		\hyperpage{10}
+  \item \spxentry{request\_data()}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget method}, 
+		\hyperpage{10}
+  \item \spxentry{request\_data()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}, 
+		\hyperpage{13}
+  \item \spxentry{reverse\_interpolation\_nearest()}\spxextra{in module stattools}, \hyperpage{45}
+  \item \spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNR2dSIM method}, \hyperpage{29}
+  \item \spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+		\hyperpage{31}
+  \item \spxentry{rotate\_vector2d()}\spxextra{VectorOperations.VectorOperations static method}, 
+		\hyperpage{37}
+  \item \spxentry{rotate\_vector3d()}\spxextra{VectorOperations.VectorOperations static method}, 
+		\hyperpage{37}
+  \item \spxentry{rotation\_matrix()}\spxextra{VectorOperations.VectorOperations static method}, 
+		\hyperpage{37}
+
+  \indexspace
+  \bigletter S
+  \item \spxentry{s}\spxextra{globvar.SI.Time attribute}, \hyperpage{41}
+  \item \spxentry{save\_config()}\spxextra{GUI.MainWindow method}, \hyperpage{8}
+  \item \spxentry{send\_brightness()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}, 
+		\hyperpage{13}
+  \item \spxentry{send\_coordinates()}\spxextra{GUIWidgets.PointSourceInitializationWidget method}, 
+		\hyperpage{13}
+  \item \spxentry{sendBrightness}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}, 
+		\hyperpage{13}
+  \item \spxentry{sendCoordinates}\spxextra{GUIWidgets.PointSourceInitializationWidget attribute}, 
+		\hyperpage{13}
+  \item \spxentry{sendInfo}\spxextra{GUIInitializationWidgets.IntensityPlaneWaveInitializationWidget attribute}, 
+		\hyperpage{10}
+  \item \spxentry{sendInfo}\spxextra{GUIInitializationWidgets.PlaneWaveInitializationWidget attribute}, 
+		\hyperpage{10}
+  \item \spxentry{set\_spatial\_shifts\_diagonally()}\spxextra{Illumination.Illumination method}, 
+		\hyperpage{19}
+  \item \spxentry{ShapesGenerator}
+    \subitem \spxentry{module}, \hyperpage{32}
+  \item \spxentry{SI}\spxextra{class in globvar}, \hyperpage{39}
+  \item \spxentry{SI.Constants}\spxextra{class in globvar}, \hyperpage{39}
+  \item \spxentry{SI.Energy}\spxextra{class in globvar}, \hyperpage{40}
+  \item \spxentry{SI.Force}\spxextra{class in globvar}, \hyperpage{40}
+  \item \spxentry{SI.Frequency}\spxextra{class in globvar}, \hyperpage{40}
+  \item \spxentry{SI.Length}\spxextra{class in globvar}, \hyperpage{41}
+  \item \spxentry{SI.Time}\spxextra{class in globvar}, \hyperpage{41}
+  \item \spxentry{SIMulator}
+    \subitem \spxentry{module}, \hyperpage{26}
+  \item \spxentry{SIMulator}\spxextra{class in SIMulator}, \hyperpage{26}
+  \item \spxentry{sinc\_kernel()}\spxextra{in module kernels}, \hyperpage{42}
+  \item \spxentry{source}\spxextra{Box.Field attribute}, \hyperpage{6}
+  \item \spxentry{Source}\spxextra{class in Sources}, \hyperpage{36}
+  \item \spxentry{source\_identifier}\spxextra{Box.Box attribute}, \hyperpage{2}
+  \item \spxentry{Sources}
+    \subitem \spxentry{module}, \hyperpage{33}
+  \item \spxentry{SourceWidget}\spxextra{class in GUIWidgets}, \hyperpage{14}
+  \item \spxentry{spatial\_shifts}\spxextra{Illumination.Illumination property}, \hyperpage{19}
+  \item \spxentry{SSNR2dSIM}\spxextra{class in SSNRCalculator}, \hyperpage{29}
+  \item \spxentry{SSNR2dSIMFiniteKernel}\spxextra{class in SSNRCalculator}, \hyperpage{29}
+  \item \spxentry{SSNR3dSIM2dShifts}\spxextra{class in SSNRCalculator}, \hyperpage{29}
+  \item \spxentry{SSNR3dSIM2dShiftsFiniteKernel}\spxextra{class in SSNRCalculator}, \hyperpage{29}
+  \item \spxentry{SSNR3dSIM3dShifts}\spxextra{class in SSNRCalculator}, \hyperpage{30}
+  \item \spxentry{SSNRBasedFiltering}
+    \subitem \spxentry{module}, \hyperpage{26}
+  \item \spxentry{SSNRCalculator}
+    \subitem \spxentry{module}, \hyperpage{28}
+  \item \spxentry{SSNRCalculator}\spxextra{class in SSNRCalculator}, \hyperpage{30}
+  \item \spxentry{SSNRCalculator3dSIM}\spxextra{class in SSNRCalculator}, \hyperpage{30}
+  \item \spxentry{SSNRConfocal}\spxextra{class in SSNRCalculator}, \hyperpage{31}
+  \item \spxentry{SSNRHandler}\spxextra{class in SSNRCalculator}, \hyperpage{31}
+  \item \spxentry{SSNRWidefield}\spxextra{class in SSNRCalculator}, \hyperpage{31}
+  \item \spxentry{stattools}
+    \subitem \spxentry{module}, \hyperpage{43}
+  \item \spxentry{supported\_interpolation\_methods}\spxextra{OpticalSystems.OpticalSystem attribute}, 
+		\hyperpage{19}, \hyperpage{21}
+  \item \spxentry{System4f2D}\spxextra{class in OpticalSystems}, \hyperpage{24}
+  \item \spxentry{System4f3D}\spxextra{class in OpticalSystems}, \hyperpage{24}
+
+  \indexspace
+  \bigletter T
+  \item \spxentry{test\_SSNR2D()}\spxextra{confocal\_ssnr.TestConfocalSSNR method}, \hyperpage{38}
+  \item \spxentry{test\_SSNR3D()}\spxextra{confocal\_ssnr.TestConfocalSSNR method}, \hyperpage{38}
+  \item \spxentry{TestConfocalSSNR}\spxextra{class in confocal\_ssnr}, \hyperpage{38}
+  \item \spxentry{THz}\spxextra{globvar.SI.Frequency attribute}, \hyperpage{41}
+
+  \indexspace
+  \bigletter V
+  \item \spxentry{VectorOperations}
+    \subitem \spxentry{module}, \hyperpage{36}
+  \item \spxentry{VectorOperations}\spxextra{class in VectorOperations}, \hyperpage{36}
+  \item \spxentry{View}\spxextra{class in GUI}, \hyperpage{8}
+
+  \indexspace
+  \bigletter W
+  \item \spxentry{waves}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{wavevectors2d}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{wavevectors3d}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{web\_interface}
+    \subitem \spxentry{module}, \hyperpage{46}
+  \item \spxentry{WienerFilter3d}\spxextra{class in SSNRBasedFiltering}, \hyperpage{27}
+  \item \spxentry{WienerFilter3dModel}\spxextra{class in SSNRBasedFiltering}, \hyperpage{28}
+  \item \spxentry{WienerFilter3dModelSDR}\spxextra{class in SSNRBasedFiltering}, \hyperpage{28}
+  \item \spxentry{WienerFilter3dReconstruction}\spxextra{class in SSNRBasedFiltering}, 
+		\hyperpage{28}
+  \item \spxentry{Windowing}
+    \subitem \spxentry{module}, \hyperpage{37}
+  \item \spxentry{wrapped\_fft()}\spxextra{in module wrappers}, \hyperpage{46}
+  \item \spxentry{wrapped\_fftn()}\spxextra{in module wrappers}, \hyperpage{46}
+  \item \spxentry{wrapped\_ifft()}\spxextra{in module wrappers}, \hyperpage{46}
+  \item \spxentry{wrapped\_ifftn()}\spxextra{in module wrappers}, \hyperpage{46}
+  \item \spxentry{wrapper\_ft()}\spxextra{in module wrappers}, \hyperpage{46}
+  \item \spxentry{wrappers}
+    \subitem \spxentry{module}, \hyperpage{46}
+
+  \indexspace
+  \bigletter X
+  \item \spxentry{X}\spxextra{globvar.Pauli attribute}, \hyperpage{39}
+  \item \spxentry{XY}\spxextra{GUI.View attribute}, \hyperpage{8}
+  \item \spxentry{xy\_fourier\_peaks}\spxextra{Illumination.Illumination attribute}, \hyperpage{16}
+  \item \spxentry{XZ}\spxextra{GUI.View attribute}, \hyperpage{9}
+
+  \indexspace
+  \bigletter Y
+  \item \spxentry{Y}\spxextra{globvar.Pauli attribute}, \hyperpage{39}
+  \item \spxentry{YZ}\spxextra{GUI.View attribute}, \hyperpage{9}
+
+  \indexspace
+  \bigletter Z
+  \item \spxentry{Z}\spxextra{globvar.Pauli attribute}, \hyperpage{39}
+
+\end{sphinxtheindex}

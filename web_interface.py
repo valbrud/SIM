@@ -1,3 +1,5 @@
+"""Zeroth iteration on AI generated web interface."""
+
 from flask import Flask, render_template, request, send_file
 import matplotlib.pyplot as plt
 import numpy as np
