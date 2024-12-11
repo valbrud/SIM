@@ -14,6 +14,7 @@
   - Implement the estimation of the illumination parameters from data
   - Fix existent errors and inconsistencies 
 - Optimize code performance 
+  - Change slow numpy.fft to pyfftw or scipy.fft
   - Profile the code
   - Implement bottlenecks in c++
   - Move image related operations on CUDA

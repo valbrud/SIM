@@ -12,9 +12,15 @@ pip install -r requirements.txt
 docker build -t sim .
 ```
 
+At the current stage, the project is fully written in Python, thus no complications are expected 
+so far the required libraries are downloaded. 
+
 # To reproduce the results from the article
 ## 1. Change figure and animation paths to whatever you need in the file `globvar.py`
-## 2. Go to the directory `article_plots` and run the corresponding tests in the file `test_article_plots.py`
+## 2. Go to the directory `article_plots` and run the corresponding tests in the file `test_article_plots.py` in your IDE or with
+```bash
+python -m unittest article_plots.plot_ssnr_article.TestArticlePlots.test_ring_averaged_ssnr 
+```
 
 # To access the documentation open the file `docs/index.html` in your browser
  The Documentation is generated with the help of the Sphinx package. You may need to install additional dependencies to work with it.   
