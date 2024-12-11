@@ -48,7 +48,7 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
-        illumination_widefield.normalize_spacial_waves()
+        illumination_widefield.normalize_spatial_waves()
         ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
         wssnr = ssnr_widefield.compute_ssnr()
         wvolume = ssnr_widefield.compute_ssnr_volume()

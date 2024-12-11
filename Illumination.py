@@ -19,7 +19,7 @@ class Illumination:
 
     Attributes:
         angles (np.ndarray): Array of rotation angles.
-        _spacial_shifts (list): List of spatial shifts.
+        _spatial_shifts (list): List of spatial shifts.
         _Mr (int): Number of rotations.
         Mt (int): Number of spatial shifts.
         waves (dict): Dictionary of intensity plane waves.
@@ -40,9 +40,9 @@ class Illumination:
             Mr (int): Number of rotations.
         """
         self.angles = np.arange(0, np.pi, np.pi / Mr)
-        self._spacial_shifts = [np.array((0, 0, 0)), ]
+        self._spatial_shifts = [np.array((0, 0, 0)), ]
         self._Mr = Mr
-        self.Mt = len(self.spacial_shifts)
+        self.Mt = len(self.spatial_shifts)
         self.waves = {key : intensity_plane_waves_dict[key] for key in intensity_plane_waves_dict.keys() if not np.isclose(intensity_plane_waves_dict[key].amplitude, 0)}
         self.wavevectors2d, self.indices2d = self.get_wavevectors_projected(0)
         self.wavevectors3d, self.indices3d = self.get_wavevectors(0)
@@ -154,22 +154,22 @@ class Illumination:
     def Mr(self, new_Mr):
         self.Mr = new_Mr
         self.angles = np.arange(0, np.pi, np.pi / new_Mr)
-        self.normalize_spacial_waves()
+        self.normalize_spatial_waves()
 
     @property
-    def spacial_shifts(self):
-        return self._spacial_shifts
+    def spatial_shifts(self):
+        return self._spatial_shifts
 
-    @spacial_shifts.setter
-    def spacial_shifts(self, new_spacial_shifts):
-        self._spacial_shifts = new_spacial_shifts
-        self.Mt = len(new_spacial_shifts)
-        self.normalize_spacial_waves()
+    @spatial_shifts.setter
+    def spatial_shifts(self, new_spatial_shifts):
+        self._spatial_shifts = new_spatial_shifts
+        self.Mt = len(new_spatial_shifts)
+        self.normalize_spatial_waves()
         self.compute_phase_matrix()
 
-    def set_spacial_shifts_diagonally(self, number: int, base_vectors: tuple[float, float, float]):
+    def set_spatial_shifts_diagonally(self, number: int, base_vectors: tuple[float, float, float]):
         """
-        Set the spatial shifts diagonally (i.e., all the spacial shifts are assumed to be on the same lin).
+        Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same lin).
         This is the most common use in practice.
         Appropriate shifts for a given illumination pattern can be computed in the module 'compute_optimal_lattices.py'
 
@@ -180,7 +180,7 @@ class Illumination:
         kx, ky = base_vectors[0], base_vectors[1]
         shiftsx = np.arange(0, number)/number/kx
         shiftsy = np.arange(0, number)/number/ky
-        self.spacial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
+        self.spatial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
 
     def get_wavevectors(self, r: int) -> tuple[list[np.ndarray], list[tuple[int]]]:
         """
@@ -195,10 +195,10 @@ class Illumination:
         wavevectors = []
         angle = self.angles[r]
         indices = []
-        for spacial_wave in self.waves.values():
-            indices.append(spacial_wave)
+        for spatial_wave in self.waves.values():
+            indices.append(spatial_wave)
             wavevector = VectorOperations.rotate_vector3d(
-                spacial_wave.wavevector, np.array((0, 0, 1)), angle)
+                spatial_wave.wavevector, np.array((0, 0, 1)), angle)
             wavevectors.append(wavevector)
         return wavevectors, indices
 
@@ -228,11 +228,11 @@ class Illumination:
         wavevectors2d = []
         angle = self.angles[r]
         indices2d = []
-        for spacial_wave in self.waves:
-            if not spacial_wave[:2] in indices2d:
-                indices2d.append(spacial_wave[:2])
+        for spatial_wave in self.waves:
+            if not spatial_wave[:2] in indices2d:
+                indices2d.append(spatial_wave[:2])
                 wavevector = VectorOperations.rotate_vector3d(
-                    self.waves[spacial_wave].wavevector, np.array((0, 0, 1)), angle)
+                    self.waves[spatial_wave].wavevector, np.array((0, 0, 1)), angle)
                 wavevectors2d.append(wavevector[:2])
         return wavevectors2d, indices2d
 
@@ -249,7 +249,7 @@ class Illumination:
             wavevectors2d.extend(wavevectors2d_r)
         return wavevectors2d
 
-    def normalize_spacial_waves(self):
+    def normalize_spatial_waves(self):
         """
         Normalize the spatial waves on zero peak (i.e., a0 = 1).
 
@@ -259,8 +259,8 @@ class Illumination:
         if not (0, 0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
         norm = self.waves[0, 0, 0].amplitude * self.Mt * self.Mr
-        for spacial_wave in self.waves.values():
-            spacial_wave.amplitude /= norm
+        for spatial_wave in self.waves.values():
+            spatial_wave.amplitude /= norm
 
     def compute_expanded_lattice2d(self) -> set[tuple[int, int]]:
         """
@@ -297,12 +297,12 @@ class Illumination:
     def compute_phase_matrix(self):
         """
         Compute the dictionary of all the relevant phase shifts
-         (products of spacial shifts and illumination pattern spacial frequencies).
+         (products of spatial shifts and illumination pattern spatial frequencies).
         """
         self.phase_matrix = {}
         for r in range(self.Mr):
             for n in range(self.Mt):
-                urn = VectorOperations.rotate_vector2d(self.spacial_shifts[n][:2], self.angles[r])
+                urn = VectorOperations.rotate_vector2d(self.spatial_shifts[n][:2], self.angles[r])
                 wavevectors2d, keys2d = self.get_wavevectors_projected(r)
                 for i in range(len(wavevectors2d)):
                     wavevector = wavevectors2d[i]

@@ -22,7 +22,9 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.graphviz',
-    'sphinx.ext.inheritance_diagram'
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.mathjax',  # For HTML output
+    'sphinx.ext.imgmath'
 ]
 
 autodoc_default_options = {

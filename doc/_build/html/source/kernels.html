@@ -37,15 +37,47 @@
         
   <section id="module-kernels">
 <span id="kernels-module"></span><h1>kernels module<a class="headerlink" href="#module-kernels" title="Link to this heading">¶</a></h1>
+<p>kernels.py</p>
+<p>This module contains functions for generating finite size real space kernels for the SSNR calculations.</p>
+<dl class="simple">
+<dt>Functions</dt><dd><p>sinc_kernel: Generate a 2D/3D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.
+psf_kernel2d: Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).</p>
+</dd>
+</dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="kernels.psf_kernel2d">
-<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">psf_kernel2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dense_kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kernels.html#psf_kernel2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.psf_kernel2d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">psf_kernel2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dense_kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#psf_kernel2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.psf_kernel2d" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size</strong> – The size of the kernel.</p></li>
+<li><p><strong>pixel_size</strong> – The pixel size in the real space.</p></li>
+<li><p><strong>dense_kernel_size</strong> – The size of the dense kernel. Default is 50. This parameter is used for better interpolation of the PSF values on a small grid.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D kernel.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="kernels.sinc_kernel">
-<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_r_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_z_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_r_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_z_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 2D/3D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_r_size</strong> – The size of the kernel in the radial direction.</p></li>
+<li><p><strong>kernel_z_size</strong> – The size of the kernel in the axial direction. Default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D/3D triangular kernel.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 

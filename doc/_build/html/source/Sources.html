@@ -40,16 +40,15 @@
 <p>Sources.py</p>
 <p>This module contains classes for different types of sources used in simulations.
 The sources can provide either electric fields or intensity fields.</p>
-<dl class="simple">
-<dt>Classes:</dt><dd><p>Source: Abstract base class for sources of electric or intensity fields in our simulations.
-ElectricFieldSource: Abstract base class for sources that provide an electric field.
-IntensitySource: Abstract base class for sources that provide intensity.
-PlaneWave: Electric field of a plane wave.
-PointSource: Electric field of a point source.
-IntensityPlaneWave: Intensity plane wave is a component of the Fourier transform of the energy density distribution in a given volume (e.g., standing waves).</p>
-</dd>
-</dl>
-<dl class="py class">
+<div class="graphviz"><img src="../_images/inheritance-c96bf6deaa6aec5e82cb5f7c0d693323d7c18b27.png" alt="Inheritance diagram of Sources" usemap="#inheritance8ac2d984a8" class="inheritance graphviz" /></div>
+<map id="inheritance8ac2d984a8" name="inheritance8ac2d984a8">
+<area shape="rect" id="node1" href="#Sources.ElectricFieldSource" target="_top" title="Abstract base class for sources that provide an electric field." alt="" coords="125,56,260,83"/>
+<area shape="rect" id="node5" href="#Sources.PlaneWave" target="_top" title="Electric field of a plane wave" alt="" coords="333,5,420,32"/>
+<area shape="rect" id="node6" href="#Sources.PointSource" target="_top" title="Electric field of a point source" alt="" coords="330,56,422,83"/>
+<area shape="rect" id="node2" href="#Sources.Source" target="_top" title="Abstract base class for sources of electric or intensity fields" alt="" coords="5,81,77,108"/>
+<area shape="rect" id="node4" href="#Sources.IntensitySource" target="_top" title="Abstract base class for sources that provide intensity." alt="" coords="136,107,249,133"/>
+<area shape="rect" id="node3" href="#Sources.IntensityPlaneWave" target="_top" title="Intensity plane wave is a component of the Fourier" alt="" coords="308,107,445,133"/>
+</map><dl class="py class">
 <dt class="sig sig-object py" id="Sources.ElectricFieldSource">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Sources.</span></span><span class="sig-name descname"><span class="pre">ElectricFieldSource</span></span><a class="reference internal" href="../_modules/Sources.html#ElectricFieldSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Sources.ElectricFieldSource" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#Sources.Source" title="Sources.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">Source</span></code></a></p>

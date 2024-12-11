@@ -1,3 +1,7 @@
+"""
+This module contains a class for parsing command line arguments for the initialization of GUI
+"""
+
 import argparse
 from importlib.util import spec_from_loader, module_from_spec
 from importlib.machinery import SourceFileLoader

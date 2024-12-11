@@ -1,7 +1,7 @@
 """
 ProcessorSIM.py
 
-When implemented, this this class will be a top-level class, responsible for SIM reconstructions.
+When implemented, this class will be a top-level class, responsible for SIM reconstructions.
 
 Classes:
     ProcessorSIM: Base class for SIM processors.

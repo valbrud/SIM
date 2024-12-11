@@ -46,7 +46,7 @@ def plot():
         return "Invalid configuration", 400
 
     box = Box(illumination.waves.values(), box_size=psf_size, point_number=N)
-    box.compute_intensity_from_spacial_waves()
+    box.compute_intensity_from_spatial_waves()
 
     fig, ax = plt.subplots()
     ax.imshow(box.intensity[:, :, N // 2].T, extent=(-max_r, max_r, -max_r, max_r))

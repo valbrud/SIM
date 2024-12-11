@@ -123,9 +123,9 @@ class Testssnr(unittest.TestCase):
         fr = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         NA = np.sin(alpha)
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
 
         fx_normalized = fr / (2 * NA)
@@ -1190,7 +1190,7 @@ class Testssnr(unittest.TestCase):
         # fig.savefig(f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
         plt.show()
 
-    def testssnrFromNumericalSpacialWaves(self):
+    def testssnrFromNumericalspatialWaves(self):
         max_r = 10
         max_z = 40
         N = 100
@@ -1236,10 +1236,10 @@ class Testssnr(unittest.TestCase):
         ]
         size = (2 * max_r, 2 * max_r, 2 * max_z)
         box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spacial_waves_numerically()
+        box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
         illumination_2z = Illumination.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
-        illumination_2z.normalize_spacial_waves()
+        illumination_2z.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_2z, optical_system)
         ssnr_2z = np.abs(noise_estimator.compute_ssnr())
         ssnr_2z_ra = noise_estimator.ring_average_ssnr()
@@ -1251,12 +1251,12 @@ class Testssnr(unittest.TestCase):
             Sources.PlaneWave(0, 1, 0, 0, np.array((0, 10 ** -10, k))),
         ]
         box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spacial_waves_numerically()
+        box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
         il = Illumination.index_frequencies(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
         illumination_3w = Illumination(il, Mr=5)
         illumination_3w.Mt = 1
-        illumination_3w.normalize_spacial_waves()
+        illumination_3w.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_3w, optical_system)
         ssnr_3w = np.abs(noise_estimator.compute_ssnr())
         ssnr_3w_ra = noise_estimator.ring_average_ssnr()

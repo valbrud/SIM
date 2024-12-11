@@ -3,17 +3,9 @@ OpticalSystems.py
 
 This module contains classes for simulating and analyzing optical systems.
 
-Classes:
-    OpticalSystem: Base class for optical systems, providing common functionality.
-    OpticalSystem2D: Base class for 2D imaging.
-    OpticalSystem3D: Base class for 3D imaging.
-    System4f2D: Class generating the 2D PSF for 4f systems.
-    System4f3D: Class generating the 3D PSF for 4f systems.
-
 Note: More reasonable interface for accessing and calculating of the PSF and OTF is expected in the future.
 For this reason the detailed documentation on the computations is not provided yet.
 """
-from typing import Tuple, Any
 
 import numpy as np
 import scipy as sp

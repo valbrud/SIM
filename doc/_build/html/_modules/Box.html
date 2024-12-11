@@ -33,10 +33,6 @@
 <span class="sd">Box.py</span>
 
 <span class="sd">This module contains classes for handling simulation volume and containing fields.</span>
-
-<span class="sd">Classes:</span>
-<span class="sd">    BoxSIM: Class, representing the discrete volume, where all the fields and intensities are computed</span>
-<span class="sd">    Field: Class, computing and storing a field produced by the corresponding source</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -46,12 +42,31 @@
 <span class="kn">import</span> <span class="nn">wrappers</span>
 <span class="kn">import</span> <span class="nn">stattools</span>
 <span class="kn">import</span> <span class="nn">config.IlluminationConfigurations</span> <span class="k">as</span> <span class="nn">confs</span>
+<span class="kn">from</span> <span class="nn">Illumination</span> <span class="kn">import</span> <span class="n">Illumination</span>
 <span class="kn">from</span> <span class="nn">VectorOperations</span> <span class="kn">import</span> <span class="n">VectorOperations</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
+
 <div class="viewcode-block" id="Field">
 <a class="viewcode-back" href="../source/Box.html#Box.Field">[docs]</a>
 <span class="k">class</span> <span class="nc">Field</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class keeps field values within a given numeric volume.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        identifier (int): Unique identifier for the field.</span>
+<span class="sd">        field_type (str): Type of the field (either &quot;ElectricField&quot; or &quot;Intensity&quot;).</span>
+<span class="sd">        source (Source): The source that produces the field.</span>
+<span class="sd">        field (np.ndarray): The computed field values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Sources</span><span class="o">.</span><span class="n">Source</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">identifier</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the Field, given its source, grid where it must be computed and its unique identifier.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source (Source): The source that produces the field.</span>
+<span class="sd">            grid (np.ndarray): The grid of points in the simulation volume.</span>
+<span class="sd">            identifier (int): Integer number, identifying the field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">field_type</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">get_source_type</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
@@ -68,9 +83,39 @@
 <div class="viewcode-block" id="Box">
 <a class="viewcode-back" href="../source/Box.html#Box.Box">[docs]</a>
 <span class="k">class</span> <span class="nc">Box</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="p">(),</span> <span class="n">box_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">point_number</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">additional_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">additional_info</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class represents a simulation volume where fields and intensities are computed.</span>
 
+<span class="sd">    Attributes:</span>
+<span class="sd">        info (dict): Additional information about the box.</span>
+<span class="sd">        box_size (np.ndarray): Size of the box in each dimension.</span>
+<span class="sd">        point_number (np.ndarray): Number of points in each dimension.</span>
+<span class="sd">        box_volume (float): Volume of the box.</span>
+<span class="sd">        fields (list): List of fields in the box.</span>
+<span class="sd">        numerically_approximated_intensity_fields (list): List of numerically approximated intensity fields.</span>
+<span class="sd">        source_identifier (int): Identifier for the sources.</span>
+<span class="sd">        axes (tuple): Axes for the box.</span>
+<span class="sd">        frequency_axes (tuple): Frequency axes for the box.</span>
+<span class="sd">        grid (np.ndarray): Grid of points in the box.</span>
+<span class="sd">        electric_field (np.ndarray): Electric field in the box.</span>
+<span class="sd">        intensity (np.ndarray): Intensity in the box.</span>
+<span class="sd">        numerically_approximated_intensity (np.ndarray): Numerically approximated intensity in the box.</span>
+<span class="sd">        intensity_fourier_space (np.ndarray): Intensity in the Fourier space.</span>
+<span class="sd">        numerically_approximated_intensity_fourier_space (np.ndarray): Numerically approximated intensity in the Fourier space.</span>
+<span class="sd">        analytic_frequencies (list): List of analytic frequencies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sources</span><span class="o">=</span><span class="p">(),</span> <span class="n">box_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">point_number</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">additional_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the Box with given sources, size, and point number.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sources (tuple): Tuple of sources of the electric field/intensity.</span>
+<span class="sd">            box_size (int or tuple): Size of the box in each dimension.</span>
+<span class="sd">            point_number (int or tuple): Number of points in each dimension.</span>
+<span class="sd">            additional_info (dict, optional): Additional information about the configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">additional_info</span>
 
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">box_size</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">box_size</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
             <span class="n">box_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">box_size</span><span class="p">,</span> <span class="n">box_size</span><span class="p">,</span> <span class="n">box_size</span><span class="p">)</span>
@@ -102,19 +147,24 @@
         <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_source</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
 
-
 <div class="viewcode-block" id="Box.compute_axes">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_axes">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the axes and frequency axes for the box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Axes and frequency axes for the box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span>
 
         <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">Nx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">Ny</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">dz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">Nz</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">Nx</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">Ny</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="mi">10</span><span class="p">,</span> <span class="n">Nz</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Nx</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">Ny</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">10</span><span class="p">,</span> <span class="n">Nz</span><span class="p">)</span>
 
         <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="n">Nx</span><span class="p">)</span>
         <span class="n">fy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dy</span><span class="p">),</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dy</span><span class="p">),</span> <span class="n">Ny</span><span class="p">)</span>
@@ -125,6 +175,9 @@
 <div class="viewcode-block" id="Box.compute_grid">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_grid">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the grid of points in the box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
                                        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
         <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
@@ -138,6 +191,9 @@
 <div class="viewcode-block" id="Box.compute_electric_field">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_electric_field">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_electric_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the electric field in the box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">electric_field</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">electric_field</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_type</span> <span class="o">==</span> <span class="s2">&quot;ElectricField&quot;</span><span class="p">:</span>
@@ -147,12 +203,18 @@
 <div class="viewcode-block" id="Box.compute_intensity_from_electric_field">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_from_electric_field">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_intensity_from_electric_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the intensity from the electric field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl, ijkl-&gt;ijk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_field</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_field</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span><span class="o">.</span><span class="n">real</span></div>
 
 
-<div class="viewcode-block" id="Box.compute_intensity_from_spacial_waves">
-<a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_from_spacial_waves">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_intensity_from_spacial_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Box.compute_intensity_from_spatial_waves">
+<a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_from_spatial_waves">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_intensity_from_spatial_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the intensity from intensity spatial waves.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_type</span> <span class="o">==</span> <span class="s2">&quot;Intensity&quot;</span><span class="p">:</span>
@@ -160,20 +222,23 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">real</span></div>
 
 
-<div class="viewcode-block" id="Box.compute_intensity_and_spacial_waves_numerically">
-<a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_and_spacial_waves_numerically">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_intensity_and_spacial_waves_numerically</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Box.compute_intensity_and_spatial_waves_numerically">
+<a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_and_spatial_waves_numerically">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_intensity_and_spatial_waves_numerically</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find approximately spatial waves from intensity in Fourier space and compute from them the approximated intensity in the box.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_electric_field</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_intensity_from_electric_field</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_intensity_fourier_space</span><span class="p">()</span>
         <span class="n">fourier_peaks</span><span class="p">,</span> <span class="n">amplitudes</span> <span class="o">=</span> <span class="n">stattools</span><span class="o">.</span><span class="n">estimate_localized_peaks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">frequency_axes</span><span class="p">)</span>
-        <span class="n">numeric_spacial_waves</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">numeric_spatial_waves</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">fourier_peak</span><span class="p">,</span> <span class="n">amplitude</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fourier_peaks</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">):</span>
-            <span class="n">numeric_spacial_waves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">(</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fourier_peak</span><span class="p">)))</span>
-        <span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="n">numeric_spacial_waves</span><span class="p">:</span>
+            <span class="n">numeric_spatial_waves</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">(</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fourier_peak</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">wave</span> <span class="ow">in</span> <span class="n">numeric_spatial_waves</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_identifier</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">source_identifier</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity_fields</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">+=</span> <span class="n">field</span><span class="o">.</span><span class="n">field</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span><span class="o">.</span><span class="n">real</span>
@@ -185,13 +250,19 @@
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_fourier_space">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_intensity_fourier_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span> <span class="o">=</span> <span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span> <span class="o">*</span>
-                                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_volume</span> <span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span><span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span></div>
+                                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_volume</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.add_source">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.add_source">[docs]</a>
     <span class="k">def</span> <span class="nf">add_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds a source to the box. The corresponding field is added automatically.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source: Source to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Field</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_identifier</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_identifier</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
@@ -199,61 +270,129 @@
 <div class="viewcode-block" id="Box.remove_source">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.remove_source">[docs]</a>
     <span class="k">def</span> <span class="nf">remove_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_identifier</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a source from the box by its identifier. The corresponding field is removed as well.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source_identifier (int): Identifier of the source to remove.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">source_identifier</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
                 <span class="k">return</span></div>
 
+
 <div class="viewcode-block" id="Box.get_sources">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.get_sources">[docs]</a>
     <span class="k">def</span> <span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of sources in the box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of sources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Box.get_plane_waves">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.get_plane_waves">[docs]</a>
     <span class="k">def</span> <span class="nf">get_plane_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of plane waves in the box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of plane waves.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_type</span> <span class="o">==</span> <span class="s2">&quot;ElectricField&quot;</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="Box.get_spacial_waves">
-<a class="viewcode-back" href="../source/Box.html#Box.Box.get_spacial_waves">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_spacial_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Box.get_spatial_waves">
+<a class="viewcode-back" href="../source/Box.html#Box.Box.get_spatial_waves">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_spatial_waves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of spatial waves in the box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of spatial waves.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_type</span> <span class="o">==</span> <span class="s2">&quot;Intensity&quot;</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="Box.get_approximated_intensity_sources">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.get_approximated_intensity_sources">[docs]</a>
     <span class="k">def</span> <span class="nf">get_approximated_intensity_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of numerically estimated intensity sources in the box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: List of approximated intensity sources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">source</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity_fields</span> <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">field_type</span> <span class="o">==</span> <span class="s2">&quot;Intensity&quot;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Box.plot_approximate_intensity_slices">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.plot_approximate_intensity_slices">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_approximate_intensity_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">plot_approximate_intensity_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots slices of the intensity in the real space, computed from spatial waves found numerically.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot on. Defaults to None.</span>
+<span class="sd">            slider (matplotlib.widgets.Slider, optional): Slider for interactive plotting. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">slider</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.plot_approximate_intensity_fourier_space_slices">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.plot_approximate_intensity_fourier_space_slices">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_approximate_intensity_fourier_space_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots slices of the intensity in the Fourier space, computed from spatial waves found numerically .</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot on. Defaults to None.</span>
+<span class="sd">            slider (matplotlib.widgets.Slider, optional): Slider for interactive plotting. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity_fourier_space</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">slider</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.plot_intensity_slices">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.plot_intensity_slices">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_intensity_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots slices of the intensity in the real space.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot on. Defaults to None.</span>
+<span class="sd">            slider (matplotlib.widgets.Slider, optional): Slider for interactive plotting. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">slider</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.plot_intensity_fourier_space_slices">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.plot_intensity_fourier_space_slices">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_intensity_fourier_space_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots slices of the intensity in the Fourier space.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot on. Defaults to None.</span>
+<span class="sd">            slider (matplotlib.widgets.Slider, optional): Slider for interactive plotting. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_slices</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span><span class="p">),</span> <span class="n">ax</span><span class="p">,</span> <span class="n">slider</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.plot_slices">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.plot_slices">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array3d</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slider</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots slices of a 3D array.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            array3d (np.ndarray): 3D array to plot.</span>
+<span class="sd">            ax (matplotlib.axes.Axes, optional): Axes to plot on. Defaults to None.</span>
+<span class="sd">            slider (matplotlib.widgets.Slider, optional): Slider for interactive plotting. Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">k_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
         <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
@@ -284,10 +423,29 @@
 </div>
 
 
+
 <div class="viewcode-block" id="BoxSIM">
 <a class="viewcode-back" href="../source/Box.html#Box.BoxSIM">[docs]</a>
 <span class="k">class</span> <span class="nc">BoxSIM</span><span class="p">(</span><span class="n">Box</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="o">=</span><span class="n">confs</span><span class="o">.</span><span class="n">BFPConfiguration</span><span class="p">()</span><span class="o">.</span><span class="n">get_widefield</span><span class="p">(),</span> <span class="n">box_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">point_number</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">additional_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is an extension of the class Box that supports SIM specific operations,</span>
+<span class="sd">    such as illumination shifts.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        illumination (IlluminationConfiguration): The illumination configuration.</span>
+<span class="sd">        illuminations_shifted (np.ndarray): Array of shifted illuminations for different angles and shifts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">:</span> <span class="n">Illumination</span> <span class="o">=</span> <span class="n">confs</span><span class="o">.</span><span class="n">BFPConfiguration</span><span class="p">()</span><span class="o">.</span><span class="n">get_widefield</span><span class="p">(),</span> <span class="n">box_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">point_number</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">additional_info</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the BoxSIM with given illumination, size, and point number.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            illumination (IlluminationConfiguration): The illumination configuration.</span>
+<span class="sd">            box_size (int or tuple): Size of the box in each dimension.</span>
+<span class="sd">            point_number (int or tuple): Number of points in each dimension.</span>
+<span class="sd">            additional_info (dict, optional): Additional information about the configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sources</span> <span class="o">=</span> <span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sources</span><span class="p">,</span> <span class="n">box_size</span><span class="p">,</span> <span class="n">point_number</span><span class="p">,</span> <span class="n">additional_info</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span> <span class="o">=</span> <span class="n">illumination</span>
@@ -295,14 +453,27 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_illumination_at_all_rm</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_compute_illumination_at_all_rm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the illumination at all rotation and shift combinations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">illuminations_shifted</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_illumination_at_given_rm</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_compute_illumination_at_given_rm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compute_illumination_at_given_rm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the illumination at a given rotation and shift combination.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r (int): Rotation index.</span>
+<span class="sd">            n (int): Shift index.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            np.ndarray: Computed illumination.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">intensity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-        <span class="n">urn</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
-                                                        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
+        <span class="n">urn</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spatial_shifts</span><span class="p">[</span><span class="n">n</span><span class="p">],</span>
+                                               <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">k0n</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">wavevector</span>
@@ -310,19 +481,18 @@
                 <span class="n">intensity</span> <span class="o">+=</span> <span class="n">field</span><span class="o">.</span><span class="n">field</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phase</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">krm</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">wavevector</span><span class="p">,</span>
-                                                        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
+                                                       <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
                 <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">urn</span><span class="p">,</span> <span class="n">krm</span><span class="p">)</span>
                 <span class="n">source</span> <span class="o">=</span> <span class="n">Sources</span><span class="o">.</span><span class="n">IntensityPlaneWave</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">phase</span><span class="p">,</span> <span class="n">krm</span><span class="p">)</span>
                 <span class="n">field_rotated</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">field</span>
                 <span class="n">intensity</span> <span class="o">+=</span> <span class="n">field_rotated</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">phase</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">illuminations_shifted</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">intensity</span><span class="o">.</span><span class="n">real</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">illuminations_shifted</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
 
         <span class="c1">#</span>
         <span class="c1"># self.intensity = np.zeros(self.intensity.shape, dtype=np.complex128)</span>
         <span class="c1"># for field in self.fields:</span>
         <span class="c1">#     if field.field_type == &quot;Intensity&quot;:</span>
-        <span class="c1">#         krm = VectorOperations.rotate_vector3d(self.illumination.spacial_shifts[m],</span>
+        <span class="c1">#         krm = VectorOperations.rotate_vector3d(self.illumination.spatial_shifts[m],</span>
         <span class="c1">#                                                         np.array((0, 0, 1)), self.illumination.angles[r])</span>
         <span class="c1">#         wavevector = VectorOperations.rotate_vector3d(field.source.wavevector,</span>
         <span class="c1">#                                                         np.array((0, 0, 1)), self.illumination.angles[r])</span>
@@ -333,13 +503,13 @@
 
 <div class="viewcode-block" id="BoxSIM.get_intensity">
 <a class="viewcode-back" href="../source/Box.html#Box.BoxSIM.get_intensity">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">illuminations_shifted</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="BoxSIM.compute_total_illumination">
 <a class="viewcode-back" href="../source/Box.html#Box.BoxSIM.compute_total_illumination">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_total_illumination</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_total_illumination</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">rotation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illuminations_shifted</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">illumination_shifted</span> <span class="ow">in</span> <span class="n">rotation</span><span class="p">:</span>

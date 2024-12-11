@@ -3,11 +3,6 @@ GUI.py
 
 This module contains the main graphical user interface (GUI) components of the application.
 
-Classes:
-    MainWindow: The main window of the application.
-    View: Enum to switch between different planes of view for 3D plots.
-    PlottingMode: Enum to switch between different plotting modes.
-
 This module and related ones is currently a demo-version of the user-interface, and will
 possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
 documentation is provided.
@@ -113,13 +108,13 @@ class MainWindow(QMainWindow):
         add_plane_wave_button = QPushButton("Add a PlaneWave")
         add_plane_wave_button.clicked.connect(self.add_plane_wave)
 
-        add_spacial_frequency_button = QPushButton("Add a Spatial Frequency")
-        add_spacial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
+        add_spatial_frequency_button = QPushButton("Add a Spatial Frequency")
+        add_spatial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
 
         find_fourier_peaks_numerically_button = QPushButton("Find Fourier peaks numerically")
         find_fourier_peaks_numerically_button.clicked.connect(self.compute_numerically_approximated_intensities)
 
-        find_ipw_from_pw_button = QPushButton("Get spacial waves from plane waves")
+        find_ipw_from_pw_button = QPushButton("Get spatial waves from plane waves")
         find_ipw_from_pw_button.clicked.connect(self.get_ipw_from_pw)
 
         compute_total_intensity_button = QPushButton("Compute Total Intensity")
@@ -133,7 +128,7 @@ class MainWindow(QMainWindow):
 
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
-        self.source_buttons_layout.addWidget(add_spacial_frequency_button)
+        self.source_buttons_layout.addWidget(add_spatial_frequency_button)
         self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
         self.source_buttons_layout.addWidget(find_ipw_from_pw_button)
         self.source_buttons_layout.addWidget(compute_total_intensity_button)
@@ -436,7 +431,7 @@ class MainWindow(QMainWindow):
         self.plot_intensity_slices()
 
     def compute_and_plot_from_intensity_sources(self):
-        self.box.compute_intensity_from_spacial_waves()
+        self.box.compute_intensity_from_spatial_waves()
         self.plot_intensity_slices()
 
     def compute_and_plot_fourier_space(self):
@@ -444,7 +439,7 @@ class MainWindow(QMainWindow):
         self.plot_fourier_space_slices()
 
     def compute_numerically_approximated_intensities(self):
-        self.box.compute_intensity_and_spacial_waves_numerically()
+        self.box.compute_intensity_and_spatial_waves_numerically()
 
     def compute_total_intensity(self):
         self.box.compute_total_illumination()
@@ -452,13 +447,13 @@ class MainWindow(QMainWindow):
 
     def compute_next_shift(self):
         self.shift_number +=1
-        self.shift_number %= self.box.illumination.spacial_shifts.shape[0]
+        self.shift_number %= self.box.illumination.spatial_shifts.shape[0]
         self.box.compute_intensity_at_given_shift(self.shift_number)
         self.plot_intensity_slices()
         self.plot_shift_arrow()
-        # self.peak_position += self.box.illumination.spacial_shifts[self.shift_number][:2]
+        # self.peak_position += self.box.illumination.spatial_shifts[self.shift_number][:2]
     def plot_shift_arrow(self):
-        self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spacial_shifts[self.shift_number][:2], width=0.1, color='red')
+        self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spatial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
         for source in Illumination.find_ipw_from_pw(self.box.get_plane_waves()):

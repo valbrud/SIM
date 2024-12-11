@@ -35,18 +35,6 @@
 <span class="sd">This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)</span>
 <span class="sd">for a given system optical system and illumination.</span>
 
-<span class="sd">Classes:</span>
-<span class="sd">    SSNRHandler: Base class for handling SSNR calculations.</span>
-<span class="sd">    SSNRWidefield: Class for calculating SSNR in widefield microscopy.</span>
-<span class="sd">    SSNRConfocal: Class for calculating SSNR in confocal microscopy.</span>
-<span class="sd">    SSNRCalculator: Class for calculating SSNR.</span>
-<span class="sd">    SSNR2dSIM: Class for calculating SSNR in 2D SIM.</span>
-<span class="sd">    SSNR2dSIMFiniteKernel: Class for calculating SSNR in 2D SIM with a finite kernel.</span>
-<span class="sd">    SSNRCalculator3dSIM: Base class for calculating SSNR in 3D SIM.</span>
-<span class="sd">    SSNR3dSIM3dShifts: Class for calculating SSNR in 3D SIM with 3D shifts.</span>
-<span class="sd">    SSNR3dSIM2dShifts: Class for calculating SSNR in 3D SIM with 2D shifts.</span>
-<span class="sd">    SSNR3dSIM2dShiftsFiniteKernel: Class for calculating SSNR in 3D SIM with 2D shifts and a finite kernel.</span>
-
 <span class="sd">Mathematical details will be provided in the later documentation versions and in the corresponding papers.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -285,7 +273,7 @@
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRCalculator.compute_maximum_resolved_lateral">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_maximum_resolved_lateral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">fR</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
-        <span class="n">fourier_peaks_wavevectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spacial_wave</span><span class="o">.</span><span class="n">wavevector</span> <span class="k">for</span> <span class="n">spacial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">fourier_peaks_wavevectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spatial_wave</span><span class="o">.</span><span class="n">wavevector</span> <span class="k">for</span> <span class="n">spatial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
         <span class="n">fI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">wavevector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="k">for</span> <span class="n">wavevector</span> <span class="ow">in</span> <span class="n">fourier_peaks_wavevectors</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">fR</span> <span class="o">+</span> <span class="n">fI</span></div>
 

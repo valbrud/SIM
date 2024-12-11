@@ -3,14 +3,6 @@ Sources.py
 
 This module contains classes for different types of sources used in simulations.
 The sources can provide either electric fields or intensity fields.
-
-Classes:
-    Source: Abstract base class for sources of electric or intensity fields in our simulations.
-    ElectricFieldSource: Abstract base class for sources that provide an electric field.
-    IntensitySource: Abstract base class for sources that provide intensity.
-    PlaneWave: Electric field of a plane wave.
-    PointSource: Electric field of a point source.
-    IntensityPlaneWave: Intensity plane wave is a component of the Fourier transform of the energy density distribution in a given volume (e.g., standing waves).
 """
 
 import numpy as np

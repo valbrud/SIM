@@ -3,14 +3,7 @@ SSNRBasedFiltering.py
 
 This module contains classes for filtering images based on their total SSNR.
 
-Classes:
-    SSNRBasedFiltering: Base class for filtering images based on SSNR.
-    WienerFilter3d: Class for 3D Wiener filtering based on SSNR.
-    WienerFilter3dModel: Class for 3D Wiener filtering of model objects based on SSNR.
-    WienerFilter3dReconstruction: Class for 3D Wiener filtering of reconstructions based on SSNR.
-    WienerFilter3dModelSDR: Class for 3D Wiener filtering of model objects with SDR based on SSNR.
-    FlatNoiseFilter3d: Class for 3D flat noise filtering based on SSNR.
-    FlatNoiseFilter3dModel: Class for 3D flat noise filtering of model objects based on SSNR.
+The detailed documentation for this class will be provided in the further release.
 """
 
 import numpy as np

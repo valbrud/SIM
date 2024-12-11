@@ -41,23 +41,20 @@
 <p>This module contains the SIMulator class for simulating raw
 structured illumination microscopy (SIM) images and/or reconstructing
 the super resolution images from the raw SIM images.</p>
-<dl class="simple">
-<dt>Classes:</dt><dd><p>SIMulator: Class for simulating SIM images and reconstructing real and Fourier space images.</p>
-</dd>
-</dl>
-<div class="graphviz"><img src="../_images/inheritance-0b94855c90d206a3903773baf402ac8cd8328dbe.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
+<p>This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.</p>
+<div class="graphviz"><img src="../_images/inheritance-034236b588650cd0cd6bc3e76c2bdbe8f02ed668.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
 <map id="inheritancee5414e1b2a" name="inheritancee5414e1b2a">
-<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="Box" alt="" coords="5,5,77,32"/>
-<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="BoxSIM" alt="" coords="125,5,197,32"/>
+<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="This class represents a simulation volume where fields and intensities are computed." alt="" coords="5,5,77,32"/>
+<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="This class is an extension of the class Box that supports SIM specific operations," alt="" coords="125,5,197,32"/>
 <area shape="rect" id="node3" href="#SIMulator.SIMulator" target="_top" title="SIMulator" alt="" coords="245,5,323,32"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="SIMulator.SIMulator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="Box.html#Box.BoxSIM" title="Box.BoxSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoxSIM</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-4a115facc2bb8d52f89cde2ca32b4aa4d116f04d.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-eaaf1651e37a5e18fb289447d1711ba3575bb15e.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
 <map id="inheritanceeb6ffd21f5" name="inheritanceeb6ffd21f5">
-<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="Box" alt="" coords="5,5,77,32"/>
-<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="BoxSIM" alt="" coords="125,5,197,32"/>
+<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="This class represents a simulation volume where fields and intensities are computed." alt="" coords="5,5,77,32"/>
+<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="This class is an extension of the class Box that supports SIM specific operations," alt="" coords="125,5,197,32"/>
 <area shape="rect" id="node3" href="#SIMulator.SIMulator" target="_top" title="SIMulator" alt="" coords="245,5,323,32"/>
 </map><dl class="py method">
 <dt class="sig sig-object py" id="SIMulator.SIMulator.generate_sim_images">

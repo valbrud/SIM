@@ -63,8 +63,8 @@
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination._spacial_shifts">
-<span class="sig-name descname"><span class="pre">_spacial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination._spacial_shifts" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.Illumination._spatial_shifts">
+<span class="sig-name descname"><span class="pre">_spatial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination._spatial_shifts" title="Link to this definition">¶</a></dt>
 <dd><p>List of spatial shifts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
@@ -229,7 +229,7 @@
 <dt class="sig sig-object py" id="Illumination.Illumination.compute_phase_matrix">
 <span class="sig-name descname"><span class="pre">compute_phase_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.compute_phase_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.compute_phase_matrix" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>Compute the dictionary of all the relevant phase shifts</dt><dd><p>(products of spacial shifts and illumination pattern spacial frequencies).</p>
+<dt>Compute the dictionary of all the relevant phase shifts</dt><dd><p>(products of spatial shifts and illumination pattern spatial frequencies).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -358,8 +358,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.normalize_spacial_waves">
-<span class="sig-name descname"><span class="pre">normalize_spacial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.normalize_spacial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.normalize_spacial_waves" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.Illumination.normalize_spatial_waves">
+<span class="sig-name descname"><span class="pre">normalize_spatial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.normalize_spatial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.normalize_spatial_waves" title="Link to this definition">¶</a></dt>
 <dd><p>Normalize the spatial waves on zero peak (i.e., a0 = 1).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
@@ -369,9 +369,9 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.set_spacial_shifts_diagonally">
-<span class="sig-name descname"><span class="pre">set_spacial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.set_spacial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.set_spacial_shifts_diagonally" title="Link to this definition">¶</a></dt>
-<dd><p>Set the spatial shifts diagonally (i.e., all the spacial shifts are assumed to be on the same lin).
+<dt class="sig sig-object py" id="Illumination.Illumination.set_spatial_shifts_diagonally">
+<span class="sig-name descname"><span class="pre">set_spatial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.set_spatial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.set_spatial_shifts_diagonally" title="Link to this definition">¶</a></dt>
+<dd><p>Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same lin).
 This is the most common use in practice.
 Appropriate shifts for a given illumination pattern can be computed in the module ‘compute_optimal_lattices.py’</p>
 <dl class="field-list simple">
@@ -385,8 +385,8 @@ Appropriate shifts for a given illumination pattern can be computed in the modul
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="Illumination.Illumination.spacial_shifts">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spacial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination.spacial_shifts" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.Illumination.spatial_shifts">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spatial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination.spatial_shifts" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

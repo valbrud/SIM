@@ -5,8 +5,7 @@ This module contains the SIMulator class for simulating raw
 structured illumination microscopy (SIM) images and/or reconstructing
 the super resolution images from the raw SIM images.
 
-Classes:
-    SIMulator: Class for simulating SIM images and reconstructing real and Fourier space images.
+This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.
 """
 
 import matplotlib.pyplot as plt
@@ -55,7 +54,7 @@ class SIMulator(BoxSIM):
 
             for n in range(self.illumination.Mt):
                 SDR_coefficient = np.zeros(self.point_number, dtype=np.complex128)
-                urn = VectorOperations.rotate_vector3d(self.illumination.spacial_shifts[n], np.array((0, 0, 1)), self.illumination.angles[r])
+                urn = VectorOperations.rotate_vector3d(self.illumination.spatial_shifts[n], np.array((0, 0, 1)), self.illumination.angles[r])
                 for field in normalized_illumination:
                     krm = field.source.wavevector
                     phase = np.dot(urn, krm)

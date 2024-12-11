@@ -2,43 +2,6 @@
 stattools.py
 
 This module contains commonly used operations on arrays, required in the context of our work.
-
-Functions:
-    find_decreasing_surface_levels3d(array, axes=None, direction=None):
-        Finds decreasing surface levels in a 3D array along a specified direction.
-
-    find_decreasing_surface_levels2d(array, axes=None, direction=None):
-        Finds decreasing surface levels in a 2D array along a specified direction.
-
-    find_decreasing_radial_surface_levels(array, axes=None):
-        Finds decreasing radial surface levels in a 3D array.
-
-    average_mask(array, mask, shape='same'):
-        Averages the values in an array based on a mask.
-
-    average_rings2d(array, axes=None, num_angles=360, number_of_samples=None):
-        Averages the 2D array radially using bilinear interpolation in polar coordinates.
-
-    average_rings3d(array, axes=None):
-        Averages the 3D array radially by averaging each 2D slice.
-
-    expand_ring_averages2d(averaged, axes=None):
-        Expands the radially averaged 2D array back to its original shape.
-
-    expand_ring_averages3d(averaged, axes=None):
-        Expands the radially averaged 3D array back to its original shape.
-
-    estimate_localized_peaks(array, axes):
-        Estimates localized peaks in a 3D array.
-
-    gaussian_maxima_fitting(array, axes, maxima_indices, size=5):
-        Fits Gaussian functions to the maxima in a 3D array.
-
-    downsample_circular_function_vectorized(dense_function, small_size):
-        Downsamples a circularly symmetric function from a large grid to a smaller grid using a vectorized approach.
-
-    reverse_interpolation_nearest(x_axis, y_axis, points, values):
-        Interpolates values from known points to a grid, affecting only the nearest grid cells.
 """
 
 import numpy as np
@@ -48,7 +11,7 @@ import matplotlib.pyplot as plt
 import scipy
 
 
-def find_decreasing_surface_levels3d(array, axes=None, direction=None):
+def find_decreasing_surface_levels3d(array: np.ndarray[tuple[int, int, int], np.float64], axes=None, direction=None) -> np.ndarray[tuple[int, int, int], np.int32]:
     """
     Assuming function is monotonically decaying around some point, finds surface levels of this function.
     No interpolation is used.
@@ -90,7 +53,7 @@ def find_decreasing_surface_levels3d(array, axes=None, direction=None):
     return mask
 
 
-def find_decreasing_surface_levels2d(array, axes=None, direction=None):
+def find_decreasing_surface_levels2d(array: np.ndarray[tuple[int, int], np.float64], axes=None, direction=None) -> np.ndarray[tuple[int, int], np.int32]:
     """
     Assuming function is monotonically decaying around some point, finds surface levels of this function.
     No interpolation is used.
@@ -133,7 +96,7 @@ def find_decreasing_radial_surface_levels(array, axes=None):
     return
 
 
-def average_mask(array, mask, shape='same'):
+def average_mask(array: np.ndarray[np.float64], mask: np.ndarray[np.int32], shape='same') -> np.ndarray[np.float64]:
     """
     Averages an array along the surface levels of the mask.
 
@@ -233,7 +196,7 @@ def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, num_angle
     return averaged
 
 
-def average_rings3d(array, axes=None):
+def average_rings3d(array: np.ndarray[tuple[int, int, int], ...], axes: tuple[np.ndarray, np.ndarray, np.ndarray] = None) -> np.ndarray[tuple[int, int], ...]:
     """
     Averages the 3D array radially by averaging each 2D slice.
 
@@ -254,7 +217,7 @@ def average_rings3d(array, axes=None):
     return ring_averages
 
 
-def expand_ring_averages2d(averaged, axes=None):
+def expand_ring_averages2d(averaged: np.ndarray[int, ...], axes: tuple[np.ndarray, np.ndarray] = None) -> np.ndarray[tuple[int, int], ...]:
     """
     Expands the radially averaged 2D array back to its original shape.
 
@@ -283,7 +246,7 @@ def expand_ring_averages2d(averaged, axes=None):
     return expanded
 
 
-def expand_ring_averages3d(averaged, axes=None):
+def expand_ring_averages3d(averaged: np.ndarray[tuple[int, int], ...], axes: tuple[np.ndarray, np.ndarray, np.ndarray] = None) -> np.ndarray[tuple[int, int, int], ...]:
     """
     Expands the radially averaged 3D array back to its original shape.
 

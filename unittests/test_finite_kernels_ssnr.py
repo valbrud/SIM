@@ -1068,16 +1068,16 @@ class TestFinalFilter(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
         illumination_widefield = configurations.get_widefield()
-        # spacial_shifts_s_polarized11 = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0))) - np.array((1., 9, 0))
-        # spacial_shifts_s_polarized11 /= (11 * np.sin(theta))
-        # spacial_shifts_s_polarized10 = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
-        # spacial_shifts_s_polarized10 /= (10 * np.sin(theta))
-        # illumination_s_polarized.spacial_shifts = spacial_shifts_s_polarized10
-        # spacial_shifts_conventional = np.array(((0., 0., 0), (1, 0, 0), (2, 0, 0), (3., 0, 0), (4, 0, 0)))
-        # spacial_shifts_conventional /= (5 * np.sin(theta))
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination_2waves.spacial_shifts = spacial_shifts_conventional2d
+        # spatial_shifts_s_polarized11 = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0))) - np.array((1., 9, 0))
+        # spatial_shifts_s_polarized11 /= (11 * np.sin(theta))
+        # spatial_shifts_s_polarized10 = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
+        # spatial_shifts_s_polarized10 /= (10 * np.sin(theta))
+        # illumination_s_polarized.spatial_shifts = spatial_shifts_s_polarized10
+        # spatial_shifts_conventional = np.array(((0., 0., 0), (1, 0, 0), (2, 0, 0), (3., 0, 0), (4, 0, 0)))
+        # spatial_shifts_conventional /= (5 * np.sin(theta))
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination_2waves.spatial_shifts = spatial_shifts_conventional2d
 
         illumination = illumination_2waves
         # illumination_3waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0)
@@ -1302,9 +1302,9 @@ class TestFinalFilter(unittest.TestCase):
                                            apodization_function="Sine")
 
         illumination_2waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, Mr=3, Mt=1)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination_2waves.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination_2waves.spatial_shifts = spatial_shifts_conventional2d
 
         illumination = illumination_2waves
         kernel_size = 1

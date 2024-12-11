@@ -33,43 +33,6 @@
 <span class="sd">stattools.py</span>
 
 <span class="sd">This module contains commonly used operations on arrays, required in the context of our work.</span>
-
-<span class="sd">Functions:</span>
-<span class="sd">    find_decreasing_surface_levels3d(array, axes=None, direction=None):</span>
-<span class="sd">        Finds decreasing surface levels in a 3D array along a specified direction.</span>
-
-<span class="sd">    find_decreasing_surface_levels2d(array, axes=None, direction=None):</span>
-<span class="sd">        Finds decreasing surface levels in a 2D array along a specified direction.</span>
-
-<span class="sd">    find_decreasing_radial_surface_levels(array, axes=None):</span>
-<span class="sd">        Finds decreasing radial surface levels in a 3D array.</span>
-
-<span class="sd">    average_mask(array, mask, shape=&#39;same&#39;):</span>
-<span class="sd">        Averages the values in an array based on a mask.</span>
-
-<span class="sd">    average_rings2d(array, axes=None, num_angles=360, number_of_samples=None):</span>
-<span class="sd">        Averages the 2D array radially using bilinear interpolation in polar coordinates.</span>
-
-<span class="sd">    average_rings3d(array, axes=None):</span>
-<span class="sd">        Averages the 3D array radially by averaging each 2D slice.</span>
-
-<span class="sd">    expand_ring_averages2d(averaged, axes=None):</span>
-<span class="sd">        Expands the radially averaged 2D array back to its original shape.</span>
-
-<span class="sd">    expand_ring_averages3d(averaged, axes=None):</span>
-<span class="sd">        Expands the radially averaged 3D array back to its original shape.</span>
-
-<span class="sd">    estimate_localized_peaks(array, axes):</span>
-<span class="sd">        Estimates localized peaks in a 3D array.</span>
-
-<span class="sd">    gaussian_maxima_fitting(array, axes, maxima_indices, size=5):</span>
-<span class="sd">        Fits Gaussian functions to the maxima in a 3D array.</span>
-
-<span class="sd">    downsample_circular_function_vectorized(dense_function, small_size):</span>
-<span class="sd">        Downsamples a circularly symmetric function from a large grid to a smaller grid using a vectorized approach.</span>
-
-<span class="sd">    reverse_interpolation_nearest(x_axis, y_axis, points, values):</span>
-<span class="sd">        Interpolates values from known points to a grid, affecting only the nearest grid cells.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -81,7 +44,7 @@
 
 <div class="viewcode-block" id="find_decreasing_surface_levels3d">
 <a class="viewcode-back" href="../source/stattools.html#stattools.find_decreasing_surface_levels3d">[docs]</a>
-<span class="k">def</span> <span class="nf">find_decreasing_surface_levels3d</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">find_decreasing_surface_levels3d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assuming function is monotonically decaying around some point, finds surface levels of this function.</span>
 <span class="sd">    No interpolation is used.</span>
@@ -126,7 +89,7 @@
 
 <div class="viewcode-block" id="find_decreasing_surface_levels2d">
 <a class="viewcode-back" href="../source/stattools.html#stattools.find_decreasing_surface_levels2d">[docs]</a>
-<span class="k">def</span> <span class="nf">find_decreasing_surface_levels2d</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">find_decreasing_surface_levels2d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Assuming function is monotonically decaying around some point, finds surface levels of this function.</span>
 <span class="sd">    No interpolation is used.</span>
@@ -175,7 +138,7 @@
 
 <div class="viewcode-block" id="average_mask">
 <a class="viewcode-back" href="../source/stattools.html#stattools.average_mask">[docs]</a>
-<span class="k">def</span> <span class="nf">average_mask</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">average_mask</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">],</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Averages an array along the surface levels of the mask.</span>
 
@@ -281,7 +244,7 @@
 
 <div class="viewcode-block" id="average_rings3d">
 <a class="viewcode-back" href="../source/stattools.html#stattools.average_rings3d">[docs]</a>
-<span class="k">def</span> <span class="nf">average_rings3d</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">average_rings3d</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Averages the 3D array radially by averaging each 2D slice.</span>
 
@@ -305,7 +268,7 @@
 
 <div class="viewcode-block" id="expand_ring_averages2d">
 <a class="viewcode-back" href="../source/stattools.html#stattools.expand_ring_averages2d">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_ring_averages2d</span><span class="p">(</span><span class="n">averaged</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">expand_ring_averages2d</span><span class="p">(</span><span class="n">averaged</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Expands the radially averaged 2D array back to its original shape.</span>
 
@@ -337,7 +300,7 @@
 
 <div class="viewcode-block" id="expand_ring_averages3d">
 <a class="viewcode-back" href="../source/stattools.html#stattools.expand_ring_averages3d">[docs]</a>
-<span class="k">def</span> <span class="nf">expand_ring_averages3d</span><span class="p">(</span><span class="n">averaged</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">expand_ring_averages3d</span><span class="p">(</span><span class="n">averaged</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span> <span class="n">axes</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Expands the radially averaged 3D array back to its original shape.</span>
 

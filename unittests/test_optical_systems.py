@@ -53,9 +53,9 @@ class TestOpticalSystems3D(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
 
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
         optical_system = System4f3D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
@@ -280,9 +280,9 @@ class TestOpticalSystems2D(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
 
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spacial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spacial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spacial_shifts = spacial_shifts_conventional2d
+        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
+        spatial_shifts_conventional2d /= (3 * np.sin(theta))
+        illumination.spatial_shifts = spatial_shifts_conventional2d
 
         optical_system = System4f2D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))

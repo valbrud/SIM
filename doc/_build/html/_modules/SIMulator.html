@@ -5,45 +5,50 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SIMulator &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
-    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-   
-  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  
-
-  
-  
-
+    <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
-  
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>SIMSSNR 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>SIMulator</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="Top">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          
-
-          <div class="body" role="main">
-            
+      </div>
+      <div class="content" role="main">
+        
+        
   <h1>Source code for SIMulator</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">SIMulator.py</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">Illumination</span> <span class="k">as</span> <span class="nn">illum</span>
-<span class="kn">import</span> <span class="nn">wrappers</span>
-<span class="kn">from</span> <span class="nn">OpticalSystems</span> <span class="kn">import</span> <span class="n">System4f3D</span>
-<span class="kn">import</span> <span class="nn">scipy</span>
-<span class="kn">import</span> <span class="nn">Sources</span>
+<span class="sd">This module contains the SIMulator class for simulating raw</span>
+<span class="sd">structured illumination microscopy (SIM) images and/or reconstructing</span>
+<span class="sd">the super resolution images from the raw SIM images.</span>
+
+<span class="sd">This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+
+<span class="kn">import</span> <span class="nn">Sources</span>
+<span class="kn">import</span> <span class="nn">wrappers</span>
 <span class="kn">from</span> <span class="nn">Box</span> <span class="kn">import</span> <span class="n">BoxSIM</span><span class="p">,</span> <span class="n">Field</span>
-<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">axes3d</span>
 <span class="kn">from</span> <span class="nn">VectorOperations</span> <span class="kn">import</span> <span class="n">VectorOperations</span>
-<span class="kn">import</span> <span class="nn">multiprocessing</span>
+
+
 <div class="viewcode-block" id="SIMulator">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator">[docs]</a>
 <span class="k">class</span> <span class="nc">SIMulator</span><span class="p">(</span><span class="n">BoxSIM</span><span class="p">):</span>
@@ -55,7 +60,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_illumination</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="p">),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">=</span> <span class="n">readout_noise_variance</span>
-
 
     <span class="k">def</span> <span class="nf">_compute_effective_psfs_and_otfs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_psfs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">compute_effectve_psfs_and_otfs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="p">)</span>
@@ -83,7 +87,7 @@
 
             <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
                 <span class="n">SDR_coefficient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-                <span class="n">urn</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
+                <span class="n">urn</span> <span class="o">=</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spatial_shifts</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">angles</span><span class="p">[</span><span class="n">r</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">normalized_illumination</span><span class="p">:</span>
                     <span class="n">krm</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">wavevector</span>
                     <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">urn</span><span class="p">,</span> <span class="n">krm</span><span class="p">)</span>
@@ -115,10 +119,10 @@
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_psfs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_psfs</span><span class="p">()</span>
-        <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span>  <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
             <span class="n">wavevectors2d</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">get_wavevectors_projected</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wavevectors2d</span><span class="p">)):</span> <span class="c1">#to parallelize</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wavevectors2d</span><span class="p">)):</span>  <span class="c1">#to parallelize</span>
                 <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">indices2d</span><span class="p">[</span><span class="n">w</span><span class="p">]</span>
                 <span class="n">wavevector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="o">*</span><span class="n">wavevectors2d</span><span class="p">[</span><span class="n">w</span><span class="p">],</span> <span class="mi">0</span><span class="p">))</span>
                 <span class="n">effective_illumination</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">))</span>
@@ -143,10 +147,10 @@
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_sim_images2d">[docs]</a>
     <span class="k">def</span> <span class="nf">generate_sim_images2d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
         <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
-        <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span>  <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[:</span><span class="mi">2</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[:</span><span class="mi">2</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
             <span class="n">wavevectors</span><span class="p">,</span> <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">get_wavevectors_projected</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">wavevector</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wavevectors</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span> <span class="c1">#to parallelize</span>
+            <span class="k">for</span> <span class="n">wavevector</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wavevectors</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>  <span class="c1">#to parallelize</span>
                 <span class="n">effective_illumination</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,k -&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">wavevector</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
                     <span class="n">effective_illumination_phase_shifted</span> <span class="o">=</span> <span class="n">effective_illumination</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">phase_matrix</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)]</span>
@@ -159,6 +163,7 @@
                 <span class="n">sim_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">poisson</span> <span class="o">+</span> <span class="n">gaussian</span>
 
         <span class="k">return</span> <span class="n">sim_images</span></div>
+
 
 <div class="viewcode-block" id="SIMulator.generate_widefield">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_widefield">[docs]</a>
@@ -182,6 +187,7 @@
                 <span class="n">reconstructed_image</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SDR_coefficients</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">*</span> <span class="n">sim_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">reconstructed_image</span></div>
 
+
 <div class="viewcode-block" id="SIMulator.reconstruct_real2d_finite_kernel">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.reconstruct_real2d_finite_kernel">[docs]</a>
     <span class="k">def</span> <span class="nf">reconstruct_real2d_finite_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_images</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">):</span>
@@ -200,7 +206,8 @@
                 <span class="n">reconstructed_image</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SDR_coefficients</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">low_passed_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">reconstructed_image</span></div>
 
-    <span class="k">def</span> <span class="nf">_compute_shifted_image_ft</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span>  <span class="n">kmr</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">_compute_shifted_image_ft</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">kmr</span><span class="p">):</span>
         <span class="n">kmr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="o">*</span><span class="n">kmr</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
         <span class="n">phase_shifted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">kmr</span><span class="p">))</span> <span class="o">*</span> <span class="n">image</span>
         <span class="n">shifted_image_ft</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">phase_shifted</span><span class="p">)</span>
@@ -228,7 +235,6 @@
                 <span class="n">image1rotation_ft</span> <span class="o">+=</span> <span class="n">sum_shifts</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image1rotation_ft</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">25</span><span class="p">])))</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
 
             <span class="n">reconstructed_image_ft</span> <span class="o">+=</span> <span class="n">image1rotation_ft</span>
             <span class="c1"># print(r, np.amax(image1rotation_ft))</span>
@@ -258,68 +264,20 @@
         <span class="k">return</span> <span class="n">reconstructed_image_ft</span><span class="p">,</span> <span class="n">reconstructed_image</span></div>
 </div>
 
-
-
 </pre></div>
 
-          </div>
-          
-        </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="Main">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">SIMSSNR</a></h1>
+      <div class="bottomnav" role="navigation" aria-label="Bottom">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
 
-
-
-
-
-
-
-
-
-<search id="searchbox" style="display: none" role="search">
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../index.html">Documentation overview</a><ul>
-  <li><a href="index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-
-
-
-
-
-
-
-
-        </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &#169;2024, Valerii Brudanin (TU Delft).
-      
-      |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
-      
-    </div>
 
-    
-
-    
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Valerii Brudanin (TU Delft).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
   </body>
 </html>

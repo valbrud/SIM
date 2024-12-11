@@ -3,11 +3,6 @@ GUIInitializationWidgets.py
 
 This module contains classes and functions for initializing GUI widgets.
 
-Classes:
-    InitializationWidget: Base class for initialization widgets.
-    PlaneWaveInitializationWidget: Widget for initializing plane wave settings.
-    IntensityPlaneWaveInitializationWidget: Widget for initializing intensity plane wave settings.
-
 This module and related ones is currently a demo-version of the user-interface, and will
 possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
 documentation is provided.

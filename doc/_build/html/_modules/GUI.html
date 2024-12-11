@@ -34,11 +34,6 @@
 
 <span class="sd">This module contains the main graphical user interface (GUI) components of the application.</span>
 
-<span class="sd">Classes:</span>
-<span class="sd">    MainWindow: The main window of the application.</span>
-<span class="sd">    View: Enum to switch between different planes of view for 3D plots.</span>
-<span class="sd">    PlottingMode: Enum to switch between different plotting modes.</span>
-
 <span class="sd">This module and related ones is currently a demo-version of the user-interface, and will</span>
 <span class="sd">possibly be sufficiently modified or replaced in the future. For this reason, no in-depth</span>
 <span class="sd">documentation is provided.</span>
@@ -154,13 +149,13 @@
         <span class="n">add_plane_wave_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Add a PlaneWave&quot;</span><span class="p">)</span>
         <span class="n">add_plane_wave_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_plane_wave</span><span class="p">)</span>
 
-        <span class="n">add_spacial_frequency_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Add a Spatial Frequency&quot;</span><span class="p">)</span>
-        <span class="n">add_spacial_frequency_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_intensity_plane_wave</span><span class="p">)</span>
+        <span class="n">add_spatial_frequency_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Add a Spatial Frequency&quot;</span><span class="p">)</span>
+        <span class="n">add_spatial_frequency_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_intensity_plane_wave</span><span class="p">)</span>
 
         <span class="n">find_fourier_peaks_numerically_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Find Fourier peaks numerically&quot;</span><span class="p">)</span>
         <span class="n">find_fourier_peaks_numerically_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_numerically_approximated_intensities</span><span class="p">)</span>
 
-        <span class="n">find_ipw_from_pw_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Get spacial waves from plane waves&quot;</span><span class="p">)</span>
+        <span class="n">find_ipw_from_pw_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Get spatial waves from plane waves&quot;</span><span class="p">)</span>
         <span class="n">find_ipw_from_pw_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_ipw_from_pw</span><span class="p">)</span>
 
         <span class="n">compute_total_intensity_button</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s2">&quot;Compute Total Intensity&quot;</span><span class="p">)</span>
@@ -174,7 +169,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addStretch</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">add_plane_wave_button</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">add_spacial_frequency_button</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">add_spatial_frequency_button</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">find_fourier_peaks_numerically_button</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">find_ipw_from_pw_button</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source_buttons_layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">compute_total_intensity_button</span><span class="p">)</span>
@@ -540,7 +535,7 @@
 <div class="viewcode-block" id="MainWindow.compute_and_plot_from_intensity_sources">
 <a class="viewcode-back" href="../source/GUI.html#GUI.MainWindow.compute_and_plot_from_intensity_sources">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_and_plot_from_intensity_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">compute_intensity_from_spacial_waves</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">compute_intensity_from_spatial_waves</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_intensity_slices</span><span class="p">()</span></div>
 
 
@@ -554,7 +549,7 @@
 <div class="viewcode-block" id="MainWindow.compute_numerically_approximated_intensities">
 <a class="viewcode-back" href="../source/GUI.html#GUI.MainWindow.compute_numerically_approximated_intensities">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_numerically_approximated_intensities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">compute_intensity_and_spacial_waves_numerically</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">compute_intensity_and_spatial_waves_numerically</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="MainWindow.compute_total_intensity">
@@ -568,16 +563,16 @@
 <a class="viewcode-back" href="../source/GUI.html#GUI.MainWindow.compute_next_shift">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_next_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span> <span class="o">+=</span><span class="mi">1</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span> <span class="o">%=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span> <span class="o">%=</span> <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spatial_shifts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">compute_intensity_at_given_shift</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_intensity_slices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plot_shift_arrow</span><span class="p">()</span></div>
 
-        <span class="c1"># self.peak_position += self.box.illumination.spacial_shifts[self.shift_number][:2]</span>
+        <span class="c1"># self.peak_position += self.box.illumination.spatial_shifts[self.shift_number][:2]</span>
 <div class="viewcode-block" id="MainWindow.plot_shift_arrow">
 <a class="viewcode-back" href="../source/GUI.html#GUI.MainWindow.plot_shift_arrow">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_shift_arrow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spacial_shifts</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span><span class="p">][:</span><span class="mi">2</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">box</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">spatial_shifts</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shift_number</span><span class="p">][:</span><span class="mi">2</span><span class="p">],</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MainWindow.get_ipw_from_pw">
