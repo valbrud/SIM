@@ -1,3 +1,4 @@
+import os.path
 import sys
 import matplotlib.pyplot as plt
 import csv
@@ -21,8 +22,15 @@ import stattools
 from Sources import IntensityPlaneWave, PlaneWave
 import tqdm
 
-from globvar import path_to_figures, path_to_animations
-sys.path.append('../')
+path_to_figures = 'Figures/'
+path_to_animations = 'Animations/'
+
+if not os.path.exists('Figures/'):
+    os.makedirs('Figures/')
+if not os.path.exists('Animations/'):
+    os.makedirs('Animations/')
+
+sys.path.append('../../')
 
 configurations = BFPConfiguration(refraction_index=1.5)
 alpha = 2 * np.pi / 5
@@ -442,7 +450,7 @@ class TestArticlePlots(unittest.TestCase):
     def test_illumination_animations(self):
         r_max = 2
         z_max = 1
-        N = 100
+        N = 151
         arg = N//2
         x = np.linspace(-r_max, r_max, N)
         y = np.linspace(-r_max, r_max, N)
@@ -493,6 +501,8 @@ class TestArticlePlots(unittest.TestCase):
         # plt.show()
 
     def test_plot_power_dependence(self):
+        if not os.path.exists('Power.csv'):
+            raise FileExistsError('Power.csv does not exist. Compute it first with test_compute_power_dependence')
         file_path = 'Power.csv'
         data = pd.read_csv(file_path)
         print(data['Configuration'].unique())
@@ -560,6 +570,8 @@ class TestArticlePlots(unittest.TestCase):
         plt.show()
 
     def test_plot_angle_dependence(self):
+        if not os.path.exists('Angles.csv'):
+            raise FileExistsError('Angles.csv does not exist. Compute it first with test_compute_angle_dependence')
         file_path = 'Angles.csv'
         data = pd.read_csv(file_path)
         print(data['Configuration'].unique())
