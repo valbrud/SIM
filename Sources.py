@@ -30,7 +30,7 @@ class ElectricFieldSource(Source):
         return "ElectricField"
 
     @abstractmethod
-    def get_electric_field(self, coordinates: np.float64) -> np.complex128:
+    def get_electric_field(self, coordinates: np.ndarray[tuple[int, int, int], np.float64]) -> np.ndarray[tuple[int, int, int], np.complex128]:
         """Gets the electric field at the given coordinates.
 
         Args:
@@ -48,7 +48,7 @@ class IntensitySource(Source):
         return "Intensity"
 
     @abstractmethod
-    def get_intensity(self, coordinates: np.float64) -> np.int64:
+    def get_intensity(self, coordinates: np.ndarray[tuple[int, int, int], np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
         """Gets the intensity at the given coordinates.
 
         Args:
@@ -62,7 +62,7 @@ class IntensitySource(Source):
 
 class PlaneWave(ElectricFieldSource):
     """Electric field of a plane wave"""
-    def __init__(self, electric_field_p: complex, electric_field_s: complex, phase1: float, phase2: float, wavevector: np.float64):
+    def __init__(self, electric_field_p: complex, electric_field_s: complex, phase1: float, phase2: float, wavevector: np.ndarray[3, np.float64]):
         """
         Constructs a PlaneWave object.
 
@@ -97,7 +97,7 @@ class PlaneWave(ElectricFieldSource):
 
 class PointSource(ElectricFieldSource):
     """Electric field of a point source"""
-    def __init__(self, coordinates: np.float64, brightness: float):
+    def __init__(self, coordinates: np.ndarray[tuple[int, int, int], np.float64], brightness: float):
         """Constructs a PointSource object.
 
         Args:

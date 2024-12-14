@@ -310,6 +310,9 @@ class OpticalSystem3D(OpticalSystem):
                     effective_psf += amplitude * phase_shifted
                 effective_psfs[(r, xy_indices)] = effective_psf
                 effective_otfs[(r, xy_indices)] = wrappers.wrapped_fftn(effective_psf)
+                # if xy_indices == (0, 1):
+                #     plt.imshow(np.log(1 + 10**8 * np.abs(effective_otfs[(r, xy_indices)][:, :, 50])))
+                #     plt.show()
                 # plt.gca().set_title(f'{xy_indices}')
                 # plt.imshow(np.abs(np.log(1 + 10**8 * effective_otfs[(r, xy_indices)][:, :, 50])))
                 # plt.show()
@@ -344,7 +347,7 @@ class OpticalSystem3D(OpticalSystem):
 
         return effective_otfs
 
-    def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.float64:
+    def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":
             raise AttributeError("Due to the major code refactoring, Fourier interpolation is temporarily not available")
 
@@ -364,8 +367,8 @@ class OpticalSystem3D(OpticalSystem):
                                                         self.otf_frequencies[2].size)
             return otf_interpolated
 
-    def compute_psf_and_otf(self) -> tuple[np.float64, np.float64]:
-
+    def compute_psf_and_otf(self) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                           np.ndarray[tuple[int, int, int], np.float64]]:
         ...
 
 
@@ -395,7 +398,8 @@ class System4f2D(OpticalSystem2D):
     def _mask_OTF(self):
         ...
 
-    def compute_psf_and_otf(self, parameters=None, pupil_function=None, mask=None):
+    def compute_psf_and_otf(self, parameters=None, pupil_function=None, mask=None) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                                                                            np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters is not None:
@@ -472,7 +476,8 @@ class System4f3D(OpticalSystem3D):
     def _mask_OTF(self):
         ...
 
-    def compute_psf_and_otf(self, parameters=None, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None):
+    def compute_psf_and_otf(self, parameters=None, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                                                                                                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters:

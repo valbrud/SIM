@@ -162,7 +162,7 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
+        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
             # plt.show()
 
     def test_ssnr_color_maps(self):
@@ -625,7 +625,7 @@ class TestComputeVolumeEntropy(unittest.TestCase):
     def test_compute_angle_dependence(self):
         headers = ["Configuration", "NA_ratio", "Volume", "Volume_a", "Entropy"]
 
-        squareL = lambda angle: configurations.get_4_oblique_s_waves_and_circular_normal(angle, 1, 1, Mt=1)
+        squareL = lambda angle: configurations.get_4_oblique_s_waves_and_s_normal_diagonal(angle, 1, 1, Mt=1)
         squareC = lambda angle: configurations.get_4_circular_oblique_waves_and_circular_normal(angle, 0.58, 1, Mt=1)
         hexagonal = lambda angle: configurations.get_6_oblique_s_waves_and_circular_normal(angle, 1, 1, Mt=1)
         conventional = lambda angle: configurations.get_2_oblique_s_waves_and_s_normal(angle, 1, 1, Mt=1)
@@ -675,7 +675,7 @@ class TestComputeVolumeEntropy(unittest.TestCase):
     def test_compute_power_dependence(self):
         headers = ["Configuration", "Power", "Volume", "Volume_a", "Entropy"]
 
-        squareL = lambda power: configurations.get_4_oblique_s_waves_and_circular_normal(theta, power, 1, Mt=1)
+        squareL = lambda power: configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, power, 1, Mt=1)
         squareC = lambda power: configurations.get_4_circular_oblique_waves_and_circular_normal(theta, power, 1, Mt=1)
         hexagonal = lambda power: configurations.get_6_oblique_s_waves_and_circular_normal(theta, power, 1, Mt=1)
         conventional = lambda power: configurations.get_2_oblique_s_waves_and_s_normal(theta, power, 1, Mt=1)

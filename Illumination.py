@@ -52,7 +52,7 @@ class Illumination:
         self.compute_phase_matrix()
 
     @classmethod
-    def init_from_list(cls, intensity_plane_waves_list: dict[tuple[int, int, int], Sources.IntensityPlaneWave], base_vector_lengths: tuple[float, float, float], Mr = 1):
+    def init_from_list(cls, intensity_plane_waves_list: list[Sources.IntensityPlaneWave], base_vector_lengths: tuple[float, float, float], Mr = 1):
         """
         Class method to initialize Illumination from a list of intensity plane waves.
 
