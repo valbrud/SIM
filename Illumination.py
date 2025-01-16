@@ -68,7 +68,8 @@ class Illumination:
         return cls(intensity_plane_waves_dict, Mr = Mr)
 
     @staticmethod
-    def index_frequencies(waves_list: list[Sources.IntensityPlaneWave], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int], Sources.IntensityPlaneWave]:
+    def index_frequencies(waves_list: list[Sources.IntensityPlaneWave], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int],
+                                                                        Sources.IntensityPlaneWave]:
         """
         Static method to automatically index intensity plane waves given corresponding base vector lengths.
 

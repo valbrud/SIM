@@ -498,7 +498,7 @@ class TestArticlePlots(unittest.TestCase):
         ani = FuncAnimation(fig, update, frames=range(0, N), repeat=False, interval=40)
         ani.save(path_to_animations +
                  '3D_illumination.mp4', writer="ffmpeg")
-        # plt.show()
+        plt.show()
 
     def test_plot_power_dependence(self):
         if not os.path.exists('Power.csv'):

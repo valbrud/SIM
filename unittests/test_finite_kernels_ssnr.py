@@ -1288,7 +1288,7 @@ class TestFinalFilter(unittest.TestCase):
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
         # image = ShapesGenerator.generate_sphere_slices((np.array((2 * max_r, 2 * max_r, 2 * max_z))), N, r=0.5, N=1000, I=20)
-        image = ShapesGenerator.generate_random_lines(N, psf_size, 0.1, 100, 1000)
+        image = ShapesGenerator.generate_random_lines(psf_size, N, 0.1, 100, 1000)
         # image += ShapesGenerator.generate_sphere_slices(N, )
         # plt.imshow(image)
         # plt.show()

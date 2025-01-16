@@ -8,12 +8,12 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
-def generate_random_spheres(image_size: tuple[int, int, int], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
+def generate_random_spheres(image_size: np.ndarray[[int, int, int], np.int64], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
     """
     Generates an array with random spheres.
 
     Args:
-        image_size (tuple[int, int, int]): Size of the point spread function in each dimension.
+        image_size (np.ndarray[[int, int, int], np.int64]): Size of the point spread function in each dimension.
         point_number (int): Number of points in each dimension.
         r (float, optional): Radius of the spheres. Defaults to 0.1.
         N (int, optional): Number of spheres to generate. Defaults to 10.
@@ -90,7 +90,7 @@ def generate_random_lines(image_size: tuple[int, int, int], point_number: int, l
     :param intensity: Total intensity of each line.
     :return: Generated image with lines.
     """
-    np.random.seed(1234)
+    # np.random.seed(1234)
 
     # Calculate the grid spacing based on psf_size and point_number
     dx = image_size[0] / point_number
@@ -129,7 +129,7 @@ def generate_random_lines(image_size: tuple[int, int, int], point_number: int, l
     smoothed_image = gaussian_filter(image, sigma=(line_width, line_width))
 
     # Normalize intensity so that each line has the specified total intensity
-    if np.amax(smoothed_image) > 0:
-        smoothed_image = (smoothed_image / np.amax(smoothed_image)) * intensity
+    # if np.amax(smoothed_image) > 0:
+    #     smoothed_image = (smoothed_image / np.sum(smoothed_image)) * intensity * num_lines
 
     return smoothed_image

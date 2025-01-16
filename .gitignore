@@ -5,3 +5,4 @@
 *.pyo
 .idea/
 __pycache__/
+other_projects/
