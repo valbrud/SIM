@@ -22,7 +22,7 @@ def generate_random_spheres(image_size: np.ndarray[[int, int, int], np.int64], p
     Returns:
         np.ndarray: Array with random spheres.
     """
-    np.random.seed(1234)
+    # np.random.seed(1234)
     indices = np.array(np.meshgrid(np.arange(point_number), np.arange(point_number),
                                    np.arange(point_number))).T.reshape(-1, 3)
     indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
@@ -133,3 +133,61 @@ def generate_random_lines(image_size: tuple[int, int, int], point_number: int, l
     #     smoothed_image = (smoothed_image / np.sum(smoothed_image)) * intensity * num_lines
 
     return smoothed_image
+
+def generate_line_grid_2d(
+        image_size: tuple[int, int],
+        pitch: float,
+        line_width: float,
+        intensity: float
+) -> np.ndarray:
+    """
+    Generate a 2D regular line grid with a given pitch, random orientation,
+    and random initial position.
+
+    Args:
+        image_size (tuple[int, int]): Height and width of the 2D image.
+        pitch (float): Distance between lines.
+        line_width (float): Width of the lines.
+        intensity (float): Intensity (value) assigned to the pixels where lines exist.
+
+    Returns:
+        np.ndarray: 2D array of shape (image_size[0], image_size[1])
+                    with the generated line grid.
+    """
+    # Unpack size for clarity
+    height, width = image_size
+
+    # Prepare empty (zero) grid
+    grid = np.zeros((height, width), dtype=np.float32)
+
+    # Random orientation in [0, 2π)
+    theta = np.random.uniform(0, 2 * np.pi)
+
+    # Random offset in X and Y directions, each within [0, pitch)
+    offset_x = np.random.uniform(0, pitch)
+    offset_y = np.random.uniform(0, pitch)
+
+    # Create coordinate arrays
+    y_coords, x_coords = np.indices((height, width))
+
+    # Shift coordinates by the random offset
+    x_shifted = x_coords - offset_x
+    y_shifted = y_coords - offset_y
+
+    # Project each point onto the direction of the lines
+    # Lines run perpendicular to the normal vector given by theta.
+    # Here we use dot product with the direction (cos(theta), sin(theta)).
+    projection = x_shifted * np.cos(theta) + y_shifted * np.sin(theta)
+
+    # Compute distance (mod pitch) to the nearest line
+    # The expression (projection % pitch) gives how far a point is
+    # within one 'pitch period'.  The distance to the closest line
+    # is the minimum to 0 or pitch boundaries.
+    distance_to_line = projection % pitch
+    distance_to_line = np.minimum(distance_to_line, pitch - distance_to_line)
+
+    # Wherever distance_to_line < (line_width / 2), we set the intensity
+    line_mask = distance_to_line < (line_width / 2)
+    grid[line_mask] = intensity
+
+    return grid
