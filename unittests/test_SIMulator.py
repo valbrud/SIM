@@ -35,9 +35,9 @@ class TestSIMImages(unittest.TestCase):
         y = np.copy(x)
         z = np.linspace(-max_z, max_z, N)
         X, Y, Z = np.meshgrid(x, y, z)
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.5,  N=1000, I=1000)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.5,  N=1000, I=1000)
         # image = np.zeros((N, N, N))
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 4)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.25, N=1000, I=10 ** 4)
         # image[:, :, N//2] = 100000
         image += 100
         arg = N // 2
@@ -140,7 +140,7 @@ class TestReconstruction(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 4)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.25, N=1000, I=10 ** 4)
         image += 100
         arg = N // 2
 
@@ -245,7 +245,7 @@ class TestReconstruction(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=10000, I=10 ** 4)
         image += 100
         arg = N // 2
 
@@ -502,9 +502,9 @@ class TestReconstruction(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 5)
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.25, N=1000, I=10 ** 5)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=10000, I=10 ** 4)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=10000, I=10 ** 10)
         image += 100
         arg = N // 2
 

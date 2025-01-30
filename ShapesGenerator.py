@@ -8,7 +8,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
-def generate_random_spheres(image_size: np.ndarray[[int, int, int], np.int64], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
+def generate_random_spherical_particles(image_size: np.ndarray[[int, int, int], np.int64], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
     """
     Generates an array with random spheres.
 

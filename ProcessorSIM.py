@@ -18,7 +18,7 @@ from VectorOperations import VectorOperations
 from abc import abstractmethod
 import wrappers
 class ProcessorSIM:
-    def __init__(self, illumination, optical_system):
+    def __init__(self, illumination, optical_system, dime=3):
         self.optical_system = optical_system
         self.illumination = illumination
 

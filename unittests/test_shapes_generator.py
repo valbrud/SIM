@@ -1,7 +1,7 @@
 import sys
 from config.IlluminationConfigurations import *
 import unittest
-from ShapesGenerator import generate_random_spheres, generate_sphere_slices
+from ShapesGenerator import generate_random_spherical_particles, generate_sphere_slices
 import matplotlib.pyplot as plt
 sys.path.append('../')
 configurations = BFPConfiguration()
@@ -12,7 +12,7 @@ class TestSpheres(unittest.TestCase):
         max_z = 4
         N = 100
         psf_size = 2 * np.array((max_r, max_r, max_z))
-        spheres = generate_random_spheres(psf_size, N, r =0.5,  N=100)
+        spheres = generate_random_spherical_particles(psf_size, N, r =0.5,  N=100)
         plt.imshow(spheres[:, :, N//2])
         plt.show()
 

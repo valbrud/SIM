@@ -6,6 +6,8 @@ import scipy.ndimage as ndi
 
 from scipy.signal import fftconvolve
 
+# Shallow copy of a skimage richardson-lucy function for convenience
+richardson_lucy_skimage = skimage.restoration.richardson_lucy
 
 def richardson_lucy_homebrew(image: np.ndarray, psf: np.ndarray, step_number: int = 10, storeIntermediate: bool = True, regularization_filter: float = 10 ** -10) -> tuple[np.ndarray, np.ndarray]:
     """

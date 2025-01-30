@@ -1137,9 +1137,9 @@ class TestFinalFilter(unittest.TestCase):
         # image[(N+1)//4, N//2-3, N//2] = 10**9
         # image[(N+1)//4, (3 * N+1)//4, N//2] = 10**9
         # image += 10**6
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 5)
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 4)
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=10000, I=10 ** 10)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.25, N=1000, I=10 ** 5)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=10000, I=10 ** 4)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=10000, I=10 ** 10)
         image += 100
         arg = N // 2
         # wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
@@ -1292,7 +1292,7 @@ class TestFinalFilter(unittest.TestCase):
         # image += ShapesGenerator.generate_sphere_slices(N, )
         # plt.imshow(image)
         # plt.show()
-        # image = ShapesGenerator.generate_random_spheres((np.array((2 * max_r, 2 * max_r, 2 * max_z))), N, r=0.1, N=10000, I=100)
+        # image = ShapesGenerator.generate_random_spherical_particles((np.array((2 * max_r, 2 * max_r, 2 * max_z))), N, r=0.1, N=10000, I=100)
         image += 100
         image = image
         # plt.imshow(image)

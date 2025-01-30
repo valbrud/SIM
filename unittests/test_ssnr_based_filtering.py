@@ -46,7 +46,7 @@ class TestWiener(unittest.TestCase):
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r = 0.5,  N=100)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r = 0.5,  N=100)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
@@ -171,7 +171,7 @@ class TestWiener(unittest.TestCase):
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r = 0.5,  N=100, I=1000)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r = 0.5,  N=100, I=1000)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
@@ -299,7 +299,7 @@ class TestWiener(unittest.TestCase):
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1,  N=500, I=100)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1,  N=500, I=100)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
@@ -425,7 +425,7 @@ class TestWiener(unittest.TestCase):
         X, Y, Z = np.meshgrid(x, y, z)
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r= 0.1,  N=1000, I=200)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r= 0.1,  N=1000, I=200)
         image = ShapesGenerator.generate_sphere_slices(psf_size, N, r= 0.1,  N=100, I=200000)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
@@ -555,7 +555,7 @@ class TestWiener(unittest.TestCase):
         fz = np.linspace(-N / (4 * max_r), N / (4 * max_r), N)
 
         R = (X**2 + Y**2 + Z**2)**0.5
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.25, N=1000, I=10 ** 6)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.25, N=1000, I=10 ** 6)
         image = np.zeros((N, N, N))
         # image[R < max_r/10] = 10**5
         image[N//2, N//2, N//2] = 10**5
@@ -681,7 +681,7 @@ class TestWiener(unittest.TestCase):
         y = np.copy(x)
         z = np.linspace(-max_z, max_z, N)
         X, Y, Z = np.meshgrid(x, y, z)
-        image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=1000, I=10 ** 6)
+        image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=1000, I=10 ** 6)
         # image = ShapesGenerator.generate_sphere_slices(psf_size, N, r = 0.1, N = 100, I=10**5)
         R = (X**2 + Y**2 + Z**2)**0.5
 
@@ -830,7 +830,7 @@ class TestFlat(unittest.TestCase):
         R = (X ** 2 + Y ** 2 + Z ** 2) ** 0.5
         image[N//2, N//2, N//2] = 10000000
 
-        # image = ShapesGenerator.generate_random_spheres(psf_size, N, r=0.1, N=100)
+        # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=100)
         image_ft = wrappers.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()

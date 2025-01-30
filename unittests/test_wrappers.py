@@ -41,3 +41,14 @@ class TestWrappersFT(unittest.TestCase):
         ax.plot_wireframe(X, Y, apertureIFT.real)
         plt.show()
 
+    def test_fftw(self):
+        L = 250 / 10 ** 6
+        b = 5 / 10 ** 6
+        dx = L / N
+        df = 1 / dx / N
+        x = np.array([n * dx - L / 2 for n in range(N)])
+        aperture = np.zeros(len(x))
+        aperture[(x >= -b / 2) * (x <= b / 2)] = 1
+        apertureFT = dx * wrappers.wrapped_fft(aperture)
+        apertureIFT = 1 / dx * wrappers.wrapped_ifft(apertureFT)
+        np.testing.assert_array_almost_equal(aperture, apertureIFT, 12)

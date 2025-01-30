@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 import numpy as np
 import OpticalSystems
-from ShapesGenerator import generate_random_lines, generate_random_spheres, generate_line_grid_2d
+from ShapesGenerator import generate_random_lines, generate_random_spherical_particles, generate_line_grid_2d
 import tqdm
 import wrappers
 import matplotlib.pyplot as plt
@@ -38,7 +38,7 @@ two_NA_fy = fy / (2 * NA)
 optical_system = OpticalSystems.System4f2D(alpha=alpha)
 optical_system.compute_psf_and_otf((psf_size, N))
 
-image_number = 10
+image_number = 100
 
 ground_truth = np.zeros((image_number, N, N))
 ground_truth_ft = np.zeros((image_number, N, N), dtype=np.complex64)
@@ -58,7 +58,7 @@ intensity_value = 25.0
 
 for i in tqdm.tqdm(range(image_number)):
     ground_truth[i] = generate_random_lines(psf_size, N, 0.1, 100, 100) \
-                      + generate_random_spheres(np.array((*psf_size, 2)), point_number=71, r=0.1, N=40, I=100)[:, :, N // 2]
+                      + generate_random_spherical_particles(np.array((*psf_size, 2)), point_number=71, r=0.1, N=40, I=100)[:, :, N // 2]
     ground_truth_ft[i] = wrappers.wrapped_fftn(ground_truth[i])
     # ground_truth[i] = generate_line_grid_2d(
     #     image_size=img_size,

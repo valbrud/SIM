@@ -10,7 +10,11 @@ Functions:
 """
 
 import numpy as np
+import scipy
+import pyfftw
+import pyfftw.interfaces.numpy_fft as fftw
 
+pyfftw.interfaces.cache.enable()
 # Wrappers to avoid shifting the arrays every time DFT is used
 def wrapper_ft(ft):
     """
@@ -23,8 +27,14 @@ def wrapper_ft(ft):
     return wrapper
 
 
-wrapped_fft = wrapper_ft(np.fft.fft)
-wrapped_ifft = wrapper_ft(np.fft.ifft)
+wrapped_fft   = wrapper_ft(fftw.fft)
+wrapped_ifft  = wrapper_ft(fftw.ifft)
+wrapped_fftn  = wrapper_ft(fftw.fftn)
+wrapped_ifftn = wrapper_ft(fftw.ifftn)
 
-wrapped_fftn = wrapper_ft(np.fft.fftn)
-wrapped_ifftn = wrapper_ft(np.fft.ifftn)
+# wrapped_fft = wrapper_ft(scipy.fft.fft)
+# wrapped_ifft = wrapper_ft(scipy.fft.ifft)
+#
+# wrapped_fftn = wrapper_ft(scipy.fft.fftn)
+# wrapped_ifftn = wrapper_ft(scipy.fft.ifftn)
+#
