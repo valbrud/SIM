@@ -19,7 +19,7 @@ from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
 from OpticalSystems import System4f3D
 import ShapesGenerator
 import SIMulator
-from Windowing import make_mask_cosine_edge3d
+from windowing import make_mask_cosine_edge3d
 sys.path.append('../')
 configurations = BFPConfiguration()
 

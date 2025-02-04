@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from abc import abstractmethod
 
 
-class SSNRHandler:
+class SSNRBase:
     def __init__(self, optical_system):
         self._optical_system = optical_system
         self.ssnr = None
@@ -69,7 +69,7 @@ class SSNRHandler:
         return S.real * factor
 
 
-class SSNRWidefield(SSNRHandler):
+class SSNRWidefield(SSNRBase):
     def __init__(self, optical_system):
         super().__init__(optical_system)
         self.ssnr = self.compute_ssnr()
@@ -79,7 +79,7 @@ class SSNRWidefield(SSNRHandler):
         return ssnr
 
 
-class SSNRConfocal(SSNRHandler):
+class SSNRConfocal(SSNRBase):
     def __init__(self, optical_system):
         super().__init__(optical_system)
         self.ssnr = self.compute_ssnr()
@@ -92,7 +92,7 @@ class SSNRConfocal(SSNRHandler):
         return ssnr
 
 
-class SSNRCalculator(SSNRHandler):
+class SSNRSIM(SSNRBase):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(optical_system)
         self._illumination = illumination
@@ -142,6 +142,39 @@ class SSNRCalculator(SSNRHandler):
     @abstractmethod
     def _Vj(self):
         ...
+
+    def _compute_Dj(self, effective_kernels_ft=None):
+        if effective_kernels_ft is None:
+            effective_kernels_ft = self.effective_otfs
+        d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs.keys():
+            d_j += self.effective_otfs[m] * effective_kernels_ft[m].conjugate()
+        d_j *= self.illumination.Mt
+        return np.abs(d_j)
+
+    def _compute_Vj(self, effective_kernels_ft=None):
+        if effective_kernels_ft is None:
+            effective_kernels_ft = self.effective_otfs
+        center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
+        v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
+                    continue
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if m21 not in self.illumination.indices2d:
+                    continue
+                idx_diff = (idx1[0], m21)
+                otf1 = effective_kernels_ft[idx1]
+                otf2 = effective_kernels_ft[idx2]
+                otf3 = self.effective_otfs[idx_diff][*center]
+                term = otf1 * otf2.conjugate() * otf3
+                v_j += term
+        v_j *= self.illumination.Mt
+        return np.abs(v_j)
 
     def compute_ssnr(self):
         dj = self._Dj()
@@ -211,7 +244,7 @@ class SSNRCalculator(SSNRHandler):
         return np.sum(measure) * factor, threshold
 
 
-class SSNR2dSIM(SSNRCalculator):
+class SSNR2dSIM(SSNRSIM):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         if len(optical_system.otf.shape) == 3:
             raise AttributeError("Trying to initialize 2D SIM Calculator with 3D OTF!")
@@ -283,7 +316,7 @@ class SSNR2dSIMFiniteKernel(SSNR2dSIM):
         otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
 
         if ((shape % 2) == 0).any():
-            raise ValueError("Size of the kernel must be even!")
+            raise ValueError("Size of the kernel must be odd!")
 
         if (shape > otf_shape).any():
             raise ValueError("Size of the kernel is bigger than of the PSF!")
@@ -365,7 +398,7 @@ class SSNR2dSIMFiniteKernel(SSNR2dSIM):
         return np.abs(v_j)
 
 
-class SSNRCalculator3dSIM(SSNRCalculator):
+class SSNR3dSIMBase(SSNRSIM):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         if len(optical_system.otf.shape) == 2:
             raise AttributeError("Trying to initialize 3D SIM Calculator with 2D OTF!")
@@ -374,7 +407,7 @@ class SSNRCalculator3dSIM(SSNRCalculator):
         super().__init__(illumination, optical_system, readout_noise_variance=0)
 
 
-class SSNR3dSIM3dShifts(SSNRCalculator3dSIM):
+class SSNR3dSIM3dShifts(SSNR3dSIMBase):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(illumination, optical_system, readout_noise_variance)
         self.effective_otfs = {}
@@ -416,7 +449,7 @@ class SSNR3dSIM3dShifts(SSNRCalculator3dSIM):
         return v_j
 
 
-class SSNR3dSIM2dShifts(SSNRCalculator3dSIM):
+class SSNR3dSIM2dShifts(SSNR3dSIMBase):
     def __init__(self, illumination, optical_system, readout_noise_variance=0):
         super().__init__(illumination, optical_system, readout_noise_variance)
         self.effective_otfs = {}
@@ -477,7 +510,7 @@ class SSNR3dSIM2dShiftsFiniteKernel(SSNR3dSIM2dShifts):
         otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
 
         if ((shape % 2) == 0).any():
-            raise ValueError("Size of the kernel must be even!")
+            raise ValueError("Size of the kernel must be odd!")
 
         if (shape > otf_shape).any():
             raise ValueError("Size of the kernel is bigger than of the PSF!")
@@ -563,3 +596,6 @@ class SSNR3dSIM2dShiftsFiniteKernel(SSNR3dSIM2dShifts):
                 v_j += term
         v_j *= self.illumination.Mt
         return np.abs(v_j)
+
+
+class SSNR3dSIMUniversal(SSNR3dSIMBase): ...

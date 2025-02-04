@@ -14,7 +14,7 @@ from numpy import ndarray
 
 import wrappers
 import matplotlib.pyplot as plt
-import Windowing
+import windowing
 from abc import abstractmethod
 
 from Illumination import Illumination

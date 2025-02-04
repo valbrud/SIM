@@ -17,10 +17,22 @@ import Illumination
 from VectorOperations import VectorOperations
 from abc import abstractmethod
 import wrappers
+import SIMulator
+import Reconstructor
+import SSNRCalculator
 class ProcessorSIM:
-    def __init__(self, illumination, optical_system, dime=3):
+    def __init__(self, illumination, optical_system, dim=3, projected=True, local_kernel=None, apodization_filter=None,
+                 estimate_from_data=False, camera=default, mpi_optimization=False, cuda_optimization=False, prioritize_memory=False):
         self.optical_system = optical_system
         self.illumination = illumination
+        if dim == 3:
+            self.simulator = SIMulator.SIMulator3D(self.optical_system, self.illumination, readout_noise=readout_noise,)
+            self.reconstructor = Reconstructor.Reconstructor3D(self.optical_system, self.illumination)
+            if projected:
+                self.ssnr = SSNRCalculator.SSNR3dSIMUniversal(self.optical_system, self.illumination, readout_noise)
+        else:
+            self.simulator
+
 
     @staticmethod
     @abstractmethod
