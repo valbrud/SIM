@@ -1,6 +1,6 @@
 import numpy as np
 import Sources
-from Illumination import Illumination
+from Illumination import IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from fractions import Fraction
 
@@ -9,6 +9,16 @@ class BFPConfiguration:
     def __init__(self, wavelength=1, refraction_index=1):
         self.n = refraction_index
         self.k = 2 * np.pi * self.n / wavelength
+
+    def get_widefield(self):
+
+        widefield = {
+            (0, 0, 0): Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))
+        }
+
+        illumination = IlluminationPlaneWaves3D(widefield)
+
+        return illumination
 
     def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mr=3, Mt=1):
 
@@ -31,8 +41,8 @@ class BFPConfiguration:
             Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-9, 0, 1e-9))),
 
         ]
-        s_polarized_waves = Illumination.find_ipw_from_pw(sources)
-        illumination = Illumination.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
+        s_polarized_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
+        illumination =  IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -59,9 +69,8 @@ class BFPConfiguration:
             Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
 
         ]
-        s_polarized_waves = Illumination.find_ipw_from_pw(sources)
-        illumination = Illumination.init_from_list(s_polarized_waves, base_vectors)
-        illumination.Mt = Mt
+        s_polarized_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
+        illumination = IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors)
         illumination.normalize_spatial_waves()
 
         return illumination
@@ -104,9 +113,9 @@ class BFPConfiguration:
         #     (0, -1, -1): Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, -k1, -k2)))
         # }
 
-        square_intensity_waves = Illumination.find_ipw_from_pw(square_plane_waves)
+        square_intensity_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(square_plane_waves)
 
-        illumination = Illumination.init_from_list(square_intensity_waves, (k1, k1, k2))
+        illumination =  IlluminationPlaneWaves3D.init_from_list(square_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -161,8 +170,8 @@ class BFPConfiguration:
         #     (0, 0, 0)  : Sources.IntensityPlaneWave(a0, 0, np.array((0, 0, 0)))
         # }
 
-        circular_intensity_waves = Illumination.find_ipw_from_pw(circular_plane_waves)
-        illumination = Illumination.init_from_list(circular_intensity_waves, (k1, k1, k2))
+        circular_intensity_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(circular_plane_waves)
+        illumination =  IlluminationPlaneWaves3D.init_from_list(circular_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -220,21 +229,12 @@ class BFPConfiguration:
             Sources.IntensityPlaneWave((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
         ]
 
-        illumination = Illumination.init_from_list(seven_waves_list, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        illumination =  IlluminationPlaneWaves3D.init_from_list(seven_waves_list, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
         return illumination
 
-    def get_widefield(self):
-
-        widefield = {
-            (0, 0, 0): Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))
-        }
-
-        illumination = Illumination(widefield)
-
-        return illumination
 
     def get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(self, angle1, k_ratio, strength1, strength2, strength_normal=1, Mr=3, Mt=1):
 
@@ -263,8 +263,8 @@ class BFPConfiguration:
             Sources.PlaneWave(0, 1 * p, 0, 0, np.array((10 ** (-10), 0, self.k))),
         ]
 
-        five_waves_2z_illumination = Illumination.find_ipw_from_pw(five_waves_2z_illumination)
-        illumination = Illumination.init_from_list(five_waves_2z_illumination, base_vectors, Mr)
+        five_waves_2z_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(five_waves_2z_illumination)
+        illumination =  IlluminationPlaneWaves3D.init_from_list(five_waves_2z_illumination, base_vectors, Mr)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -300,8 +300,8 @@ class BFPConfiguration:
             Sources.PlaneWave(p, 1j * p, 0, 0, np.array((0, 10 ** -10, self.k))),
         ]
 
-        two_triangles_illumination = Illumination.find_ipw_from_pw(ttillum)
-        illumination = Illumination.init_from_list(two_triangles_illumination, base_vectors)
+        two_triangles_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
+        illumination =  IlluminationPlaneWaves3D.init_from_list(two_triangles_illumination, base_vectors)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -341,8 +341,8 @@ class BFPConfiguration:
             Sources.PlaneWave(1 * p, 1j * p, 0, 0, np.array((0, 10 ** -10, self.k))),
         ]
 
-        two_triangles_illumination = Illumination.find_ipw_from_pw(ttillum)
-        illumination = Illumination.init_from_list(two_triangles_illumination, base_vectors)
+        two_triangles_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
+        illumination =  IlluminationPlaneWaves3D.init_from_list(two_triangles_illumination, base_vectors)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 

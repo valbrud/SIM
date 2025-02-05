@@ -11,7 +11,6 @@ import Box
 from config.IlluminationConfigurations import *
 import unittest
 import time
-import skimage
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
@@ -150,7 +149,7 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
+        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
 
         ax.clear()
         ax.set_xlabel(r"$f_r \; [LCF]$", fontsize=20)
@@ -171,7 +170,7 @@ class TestArticlePlots(unittest.TestCase):
 
         ax.legend(fontsize=18)
         # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
-            # plt.show()
+        plt.show()
 
     def test_ssnr_color_maps(self):
         for illumination in illumination_list:
@@ -214,8 +213,8 @@ class TestArticlePlots(unittest.TestCase):
             cb2.set_label("$1 + 10^8$ SSNR", fontsize=30)
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
-            fig.savefig(f'{path_to_figures}'
-                     + illumination_list[illumination] + '_ssnr.png')
+            # fig.savefig(f'{path_to_figures}'
+            #          + illumination_list[illumination] + '_ssnr.png')
 
             def update1(val):
                 ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
@@ -383,9 +382,9 @@ class TestArticlePlots(unittest.TestCase):
 
             PlaneWave(1 * np.exp(1j * np.pi) / a0 ** 0.5, 1j  * np.exp(1j * np.pi) / a0 ** 0.5, 0, 0, np.array((0, 0, k))),
         ]
-        distorted1 = Illumination.find_ipw_from_pw(sources)
+        distorted1 =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
 
-        illumination_distorted1 = Illumination.init_from_list(distorted1, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        illumination_distorted1 =  IlluminationPlaneWaves3D.init_from_list(distorted1, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
         illumination_distorted1.Mt = 1
         illumination_distorted1.normalize_spatial_waves()
 
@@ -400,9 +399,9 @@ class TestArticlePlots(unittest.TestCase):
 
             PlaneWave(1 / a0 ** 0.5, 1j / a0 ** 0.5, 0, 0, np.array((0, 0, k))),
         ]
-        distorted0 = Illumination.find_ipw_from_pw(sources)
+        distorted0 =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
 
-        illumination_distorted0 = Illumination.init_from_list(distorted0, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        illumination_distorted0 = IlluminationPlaneWaves3D.init_from_list(distorted0, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
         illumination_distorted0.Mt = 1
         illumination_distorted0.normalize_spatial_waves()
 

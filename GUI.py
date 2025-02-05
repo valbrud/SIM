@@ -457,7 +457,7 @@ class MainWindow(QMainWindow):
         self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spatial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
-        for source in Illumination.find_ipw_from_pw(self.box.get_plane_waves()):
+        for source in  IlluminationPlaneWaves3D.find_ipw_from_pw(self.box.get_plane_waves()):
             self.add_source(source)
             self.box.add_source(source)
 

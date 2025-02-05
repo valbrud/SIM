@@ -5,11 +5,10 @@ from mpl_toolkits.mplot3d import axes3d
 from config.IlluminationConfigurations import *
 import unittest
 import time
-import skimage
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
-from Illumination import Illumination
+from Illumination import IlluminationPlaneWaves3D
 from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
 from OpticalSystems import System4f3D, System4f2D
 import stattools
@@ -42,7 +41,7 @@ class Testssnr(unittest.TestCase):
 
         waves = configurations.get_4_oblique_s_waves_and_circular_normal(np.pi/4, 1, 1)
 
-        illumination_polarized = Illumination(waves)
+        illumination_polarized = IlluminationPlaneWaves3D(waves)
         optical_system_fourier = System4f3D(interpolation_method="Fourier")
         optical_system_fourier.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N),
                                                    apodization_function="Sine")
@@ -1238,7 +1237,7 @@ class Testssnr(unittest.TestCase):
         box = Box.Box(sources, size, N)
         box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
-        illumination_2z = Illumination.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
+        illumination_2z =  IlluminationPlaneWaves3D.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
         illumination_2z.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_2z, optical_system)
         ssnr_2z = np.abs(noise_estimator.compute_ssnr())
@@ -1253,8 +1252,8 @@ class Testssnr(unittest.TestCase):
         box = Box.Box(sources, size, N)
         box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
-        il = Illumination.index_frequencies(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
-        illumination_3w = Illumination(il, Mr=5)
+        il =  IlluminationPlaneWaves3D.index_frequencies(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
+        illumination_3w = IlluminationPlaneWaves3D(il, Mr=5)
         illumination_3w.Mt = 1
         illumination_3w.normalize_spatial_waves()
         noise_estimator = SSNR3dSIM2dShifts(illumination_3w, optical_system)
@@ -1262,7 +1261,7 @@ class Testssnr(unittest.TestCase):
         ssnr_3w_ra = noise_estimator.ring_average_ssnr()
         volume_3w = noise_estimator.compute_ssnr_volume(ssnr_3w, dV)
 
-        widefield = Illumination({
+        widefield = IlluminationPlaneWaves3D({
         (0, 0, 0) : Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))}, Mr=1)
         widefield.Mt = 1
         noise_estimator.illumination = widefield

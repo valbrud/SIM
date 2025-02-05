@@ -97,7 +97,7 @@ class PlaneWave(ElectricFieldSource):
 
 class PointSource(ElectricFieldSource):
     """Electric field of a point source"""
-    def __init__(self, coordinates: np.ndarray[tuple[int, int, int], np.float64], brightness: float):
+    def __init__(self, coordinates: np.ndarray[3, np.float64], brightness: float):
         """Constructs a PointSource object.
 
         Args:
@@ -107,7 +107,7 @@ class PointSource(ElectricFieldSource):
         self.coordinates = np.array(coordinates)
         self.brightness = brightness
 
-    def get_electric_field(self, coordinates: np.float64):
+    def get_electric_field(self, coordinates: np.ndarray[tuple[int, int, int, 3], np.float64]) -> np.ndarray[tuple[int, int, int], np.complex128]:
         rvectors = np.array(coordinates - self.coordinates)
         rnorms = np.einsum('ijkl, ijkl->ijk', rvectors, rvectors) ** 0.5
         upper_limit = 1000

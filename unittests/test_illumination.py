@@ -21,7 +21,7 @@ class TestIllumination(unittest.TestCase):
             Sources.IntensityPlaneWave(b / norm, 0, np.array((k1, 0, -k2))),
             Sources.IntensityPlaneWave(b / norm, 0, np.array((-k1, 0, -k2))),
         ]
-        three_waves_dict = Illumination.index_frequencies(sources, (k1, k1, k2))
+        three_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, (k1, k1, k2))
         assert (three_waves_dict.keys() == three_waves_illumination.keys())
 
         sources = [
@@ -39,7 +39,7 @@ class TestIllumination(unittest.TestCase):
             Sources.IntensityPlaneWave(1 * b, 0, np.array((0, k1, -k2))),
             Sources.IntensityPlaneWave(-1 * b, 0, np.array((0, -k1, -k2))),
         ]
-        five_waves_dict = Illumination.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
+        five_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
         assert (five_waves_dict.keys() == s_polarized_waves.keys())
 
     def test_expanded_lattice(self):

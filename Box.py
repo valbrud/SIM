@@ -137,14 +137,13 @@ class Box:
         """
         Computes the grid of points in the box.
         """
-        indices = np.array(np.meshgrid(np.arange(self.point_number[0]), np.arange(self.point_number[1]),
-                                       np.arange(self.point_number[2]))).T.reshape(-1, 3)
-        indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
-            self.point_number[0], self.point_number[1], self.point_number[2], 3)
-        self.grid = self.box_size[None, None, None, :] * (indices / (self.point_number[None, None, None, :] - 1) - 1 / 2)
-        if self.point_number[2] == 1:
-            self.grid = np.where(np.isnan(self.grid), 0, self.grid)
-        return
+
+        # By default, meshgrid uses 'xy' indexing, so specify 'ij' for (nx,ny,nz)
+        X, Y, Z = np.meshgrid(self.axes, indexing='ij')
+
+        # shape => (nx, ny, nz, 3)
+        self.grid = np.stack([X, Y, Z], axis=-1)
+
 
     def compute_electric_field(self):
         """

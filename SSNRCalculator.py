@@ -10,6 +10,8 @@ Mathematical details will be provided in the later documentation versions and in
 import numpy
 import numpy as np
 
+import Illumination
+import OpticalSystems
 import wrappers
 from stattools import average_rings2d
 import VectorOperations
@@ -102,6 +104,8 @@ class SSNRSIM(SSNRBase):
         self.otf_sim = None
         self.maximum_resolved = 0
         self.readout_noise_variance = readout_noise_variance
+        self.effective_otfs={}
+        self._compute_effective_otfs()
 
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
@@ -165,7 +169,7 @@ class SSNRSIM(SSNRBase):
                 m1 = idx1[1]
                 m2 = idx2[1]
                 m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
-                if m21 not in self.illumination.indices2d:
+                if m21 not in self.illumination.rearranged_indices:
                     continue
                 idx_diff = (idx1[0], m21)
                 otf1 = effective_kernels_ft[idx1]
@@ -177,13 +181,11 @@ class SSNRSIM(SSNRBase):
         return np.abs(v_j)
 
     def compute_ssnr(self):
-        dj = self._Dj()
-        ssnr = np.zeros(dj.shape, dtype=np.complex128)
-        vj = self._Vj()
-        mask = (vj != 0) * (dj != 0)
-        numpy.putmask(ssnr, mask, np.abs(dj) ** 2 / vj)
-        self.dj = dj
-        self.vj = vj
+        self.dj = self._compute_Dj()
+        self.vj = self._compute_Vj()
+        ssnr = np.zeros(self.dj.shape, dtype=np.complex128)
+        mask = (self.vj != 0) * (self.dj != 0)
+        numpy.putmask(ssnr, mask, np.abs(self.dj) ** 2 / self.vj)
         self.ssnr = ssnr
         return np.abs(ssnr)
 
@@ -450,13 +452,13 @@ class SSNR3dSIM3dShifts(SSNR3dSIMBase):
 
 
 class SSNR3dSIM2dShifts(SSNR3dSIMBase):
-    def __init__(self, illumination, optical_system, readout_noise_variance=0):
+    def __init__(self, illumination: Illumination.IlluminationPlaneWaves3D, optical_system: OpticalSystems.OpticalSystem2D, readout_noise_variance:int =0):
         super().__init__(illumination, optical_system, readout_noise_variance)
-        self.effective_otfs = {}
-        self._compute_effective_otfs()
+        # self.effective_otfs = {}
+        # self._compute_effective_otfs()
 
     def _compute_effective_otfs(self):
-        self.effective_otfs = self.optical_system.compute_effective_otfs_projective_3dSIM(self.illumination)
+        _, self.effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
         self.otf_sim = np.zeros(self.optical_system.otf.shape)
         for m in self.effective_otfs:
             self.otf_sim += np.abs(self.effective_otfs[m])
