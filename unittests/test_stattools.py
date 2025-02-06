@@ -69,10 +69,10 @@ class TestRingAveraging(unittest.TestCase):
                                            apodization_function="Sine")
 
         noise_estimator_widefield = SSNRWidefield(optical_system)
-        ssnr = noise_estimator_widefield.ssnr
+        ssnr = noise_estimator_widefield.ssnri
         plt.figure(1)
         plt.imshow(np.log(1 + 10**8*ssnr[N//2, :, :]))
-        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnr()
+        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnri()
         plt.figure(2)
         plt.imshow(np.log(1 + 10**8*ssnr_widefield_ra))
         ssnr_diff = ssnr[N//2, N//2:, :] - ssnr_widefield_ra

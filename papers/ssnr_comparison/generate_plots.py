@@ -15,7 +15,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import Illumination
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield, SSNRConfocal
 from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave, PlaneWave
@@ -97,26 +97,25 @@ class TestArticlePlots(unittest.TestCase):
     def test_ring_averaged_ssnr(self):
         n_points = 51
         r = np.linspace(two_NA_fx[N//2], two_NA_fx[-1], n_points)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(widefield, optical_system)
-        noise_estimator_widefield.compute_ssnr()
-        ssnr_widefield = noise_estimator_widefield.ssnr
-        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnr(number_of_samples=n_points)
+        noise_estimator_widefield = SSNRSIM3D(widefield, optical_system)
+        ssnr_widefield = noise_estimator_widefield.ssnri
+        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnri(number_of_samples=n_points)
 
-        noise_estimator = SSNR3dSIM2dShifts(squareL, optical_system)
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr(number_of_samples=n_points)
+        noise_estimator = SSNRSIM3D(squareL, optical_system)
+        ssnr_s_polarized = noise_estimator.ssnri
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri(number_of_samples=n_points)
 
         noise_estimator.illumination = squareC
-        ssnr_circular = np.abs(noise_estimator.compute_ssnr())
-        ssnr_circular_ra = noise_estimator.ring_average_ssnr(number_of_samples=n_points)
+        ssnr_circular = noise_estimator.ssnri
+        ssnr_circular_ra = noise_estimator.ring_average_ssnri(number_of_samples=n_points)
 
         noise_estimator.illumination = hexagonal
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr(number_of_samples=n_points)
+        ssnr_seven_waves = noise_estimator.ssnri
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri(number_of_samples=n_points)
 
         noise_estimator.illumination = conventional
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr(number_of_samples=n_points)
+        ssnr_3waves = noise_estimator.ssnri
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri(number_of_samples=n_points)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig, ax = plt.subplots(figsize=(7, 6), constrained_layout=True)
@@ -174,12 +173,12 @@ class TestArticlePlots(unittest.TestCase):
 
     def test_ssnr_color_maps(self):
         for illumination in illumination_list:
-            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
+            noise_estimator = SSNRSIM3D(illumination, optical_system)
 
-            ssnr = np.abs(noise_estimator.compute_ssnr())
+            ssnr = np.abs(noise_estimator.ssnri)
             scaling_factor = 10 ** 8
             ssnr_scaled = 1 + scaling_factor * ssnr
-            ssnr_ring_averaged = noise_estimator.ring_average_ssnr()
+            ssnr_ring_averaged = noise_estimator.ring_average_ssnri()
             ssnr_ra_scaled = 1 + scaling_factor * ssnr_ring_averaged
 
             Fx, Fy = np.meshgrid(fx, fy)
@@ -260,17 +259,17 @@ class TestArticlePlots(unittest.TestCase):
             illuminationPi2: "$\pi/2$",
             illuminationPi: "$\pi$"
         }
-        noise_estimator_widefield = SSNR3dSIM2dShifts(widefield, optical_system)
-        ssnr_widefield = noise_estimator_widefield.compute_ssnr()
-        noise_estimator0 = SSNR3dSIM2dShifts(illumination0, optical_system)
-        noise_estimatorPi4 = SSNR3dSIM2dShifts(illuminationPi4, optical_system)
-        noise_estimatorPi2 = SSNR3dSIM2dShifts(illuminationPi2, optical_system)
-        noise_estimatorPi = SSNR3dSIM2dShifts(illuminationPi, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(widefield, optical_system)
+        ssnr_widefield = noise_estimator_widefield.ssnri
+        noise_estimator0 = SSNRSIM3D(illumination0, optical_system)
+        noise_estimatorPi4 = SSNRSIM3D(illuminationPi4, optical_system)
+        noise_estimatorPi2 = SSNRSIM3D(illuminationPi2, optical_system)
+        noise_estimatorPi = SSNRSIM3D(illuminationPi, optical_system)
 
-        ssnr0 = np.abs(noise_estimator0.compute_ssnr())
-        ssnrPi4 = np.abs(noise_estimatorPi4.compute_ssnr())
-        ssnrPi2 = np.abs(noise_estimatorPi2.compute_ssnr())
-        ssnrPi = np.abs(noise_estimatorPi.compute_ssnr())
+        ssnr0 = np.abs(noise_estimator0.ssnri)
+        ssnrPi4 = np.abs(noise_estimatorPi4.ssnri)
+        ssnrPi2 = np.abs(noise_estimatorPi2.ssnri)
+        ssnrPi = np.abs(noise_estimatorPi.ssnri)
         scaling_factor = 10 ** 4
 
         Fx, Fy = np.meshgrid(fx, fy)
@@ -405,15 +404,15 @@ class TestArticlePlots(unittest.TestCase):
         illumination_distorted0.Mt = 1
         illumination_distorted0.normalize_spatial_waves()
 
-        noise_estimatorD0 = SSNR3dSIM2dShifts(illumination_distorted0, optical_system)
-        noise_estimatorD1 = SSNR3dSIM2dShifts(illumination_distorted1, optical_system)
-        # noise_estimatorPi2 = SSNR3dSIM2dShifts(illuminationPi2, optical_system)
-        # noise_estimatorPi = SSNR3dSIM2dShifts(illuminationPi, optical_system)
+        noise_estimatorD0 = SSNRSIM3D(illumination_distorted0, optical_system)
+        noise_estimatorD1 = SSNRSIM3D(illumination_distorted1, optical_system)
+        # noise_estimatorPi2 = SSNRSIM3D(illuminationPi2, optical_system)
+        # noise_estimatorPi = SSNRSIM3D(illuminationPi, optical_system)
 
         ssnrD0 = np.abs(noise_estimatorD0.compute_ssnr())
         ssnrD1 = np.abs(noise_estimatorD1.compute_ssnr())
-        entropy0 = noise_estimatorD0.compute_true_ssnr_entropy()
-        entropy1 = noise_estimatorD1.compute_true_ssnr_entropy()
+        entropy0 = noise_estimatorD0.compute_ssnri_entropy()
+        entropy1 = noise_estimatorD1.compute_ssnri_entropy()
         print(entropy0)
         print(entropy1)
         # ssnrPi2 = np.abs(noise_estimatorPi2.compute_ssnr())
@@ -449,7 +448,7 @@ class TestArticlePlots(unittest.TestCase):
     def test_illumination_animations(self):
         r_max = 2
         z_max = 1
-        N = 151
+        N = 51
         arg = N//2
         x = np.linspace(-r_max, r_max, N)
         y = np.linspace(-r_max, r_max, N)
@@ -495,8 +494,8 @@ class TestArticlePlots(unittest.TestCase):
                 ax.imshow(boxes[i].intensity[:, :, int(val)].T, extent=(x[0], x[-1], y[0], y[-1]))
                 i+=1
         ani = FuncAnimation(fig, update, frames=range(0, N), repeat=False, interval=40)
-        ani.save(path_to_animations +
-                 '3D_illumination.mp4', writer="ffmpeg")
+        # ani.save(path_to_animations +
+        #          '3D_illumination.mp4', writer="ffmpeg")
         plt.show()
 
     def test_plot_power_dependence(self):
@@ -654,11 +653,11 @@ class TestComputeVolumeEntropy(unittest.TestCase):
             writer = csv.writer(file)
             writer.writerow(headers)
             widefield = configurations.get_widefield()
-            ssnr_calc = SSNR3dSIM2dShifts(widefield, optical_system)
-            ssnr = ssnr_calc.compute_ssnr()
-            volume = ssnr_calc.compute_ssnr_volume()
+            ssnr_calc = SSNRSIM3D(widefield, optical_system)
+            ssnr = ssnr_calc.ssnri
+            volume = ssnr_calc.compute_ssnri_volume()
             volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-            entropy = ssnr_calc.compute_true_ssnr_entropy()
+            entropy = ssnr_calc.compute_ssnri_entropy()
             params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
             print(params)
             writer.writerow(params)
@@ -668,12 +667,12 @@ class TestComputeVolumeEntropy(unittest.TestCase):
                     sin_theta = ratio * (NA / nmedium)
                     theta = np.arcsin(sin_theta)
                     illumination = config_methods[configuration](theta)
-                    ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
-                    ssnr = ssnr_calc.compute_ssnr()
+                    ssnr_calc = SSNRSIM3D(illumination, optical_system)
+                    ssnr = ssnr_calc.ssnri
 
-                    volume = ssnr_calc.compute_ssnr_volume()
+                    volume = ssnr_calc.compute_ssnri_volume()
                     volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-                    entropy = ssnr_calc.compute_true_ssnr_entropy()
+                    entropy = ssnr_calc.compute_ssnri_entropy()
 
                     print("Volume ", round(volume))
                     print("Volume a", round(volume_a))
@@ -704,11 +703,11 @@ class TestComputeVolumeEntropy(unittest.TestCase):
             writer = csv.writer(file)
             writer.writerow(headers)
             widefield = configurations.get_widefield()
-            ssnr_calc = SSNR3dSIM2dShifts(widefield, optical_system)
-            ssnr = ssnr_calc.compute_ssnr()
-            volume = ssnr_calc.compute_ssnr_volume()
+            ssnr_calc = SSNRSIM3D(widefield, optical_system)
+            ssnr = ssnr_calc.ssnri
+            volume = ssnr_calc.compute_ssnri_volume()
             volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-            entropy = ssnr_calc.compute_true_ssnr_entropy()
+            entropy = ssnr_calc.compute_ssnri_entropy()
             params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
             print(params)
             writer.writerow(params)
@@ -716,12 +715,12 @@ class TestComputeVolumeEntropy(unittest.TestCase):
             for configuration in config_methods:
                 for ratio in ratios:
                     illumination = config_methods[configuration](ratio)
-                    ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
-                    ssnr = ssnr_calc.compute_ssnr()
+                    ssnr_calc = SSNRSIM3D(illumination, optical_system)
+                    ssnr = ssnr_calc.ssnri
 
-                    volume = ssnr_calc.compute_ssnr_volume()
+                    volume = ssnr_calc.compute_ssnri_volume()
                     volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-                    entropy = ssnr_calc.compute_true_ssnr_entropy()
+                    entropy = ssnr_calc.compute_ssnri_entropy()
 
                     print("Volume ", round(volume))
                     print("Volume a", round(volume_a))

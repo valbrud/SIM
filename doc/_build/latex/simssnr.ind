@@ -122,15 +122,15 @@
 		\hyperpage{22}
   \item \spxentry{compute\_q\_grid()}\spxextra{OpticalSystems.OpticalSystem3D method}, 
 		\hyperpage{23}
-  \item \spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+  \item \spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRBase method},
 		\hyperpage{31}
   \item \spxentry{compute\_sim\_support()}\spxextra{ProcessorSIM.ProcessorSIM method}, 
 		\hyperpage{25}
   \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}, \hyperpage{30}
   \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRConfocal method}, \hyperpage{31}
-  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}, \hyperpage{31}
+  \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRBase method}, \hyperpage{31}
   \item \spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRWidefield method}, \hyperpage{32}
-  \item \spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+  \item \spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRBase method},
 		\hyperpage{31}
   \item \spxentry{compute\_ssnr\_waterline\_measure()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
 		\hyperpage{30}
@@ -138,7 +138,7 @@
   \item \spxentry{compute\_total\_intensity()}\spxextra{GUI.MainWindow method}, \hyperpage{7}
   \item \spxentry{compute\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}, 
 		\hyperpage{30}
-  \item \spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+  \item \spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRBase method},
 		\hyperpage{31}
   \item \spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem method}, \hyperpage{21}
   \item \spxentry{compute\_x\_grid()}\spxextra{OpticalSystems.OpticalSystem2D method}, 
@@ -429,7 +429,7 @@
 		\hyperpage{11}
   \item \spxentry{on\_receive\_info()}\spxextra{GUIWidgets.PlaneWaveWidget method}, \hyperpage{12}
   \item \spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRCalculator property}, \hyperpage{30}
-  \item \spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRHandler property}, \hyperpage{31}
+  \item \spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRBase property}, \hyperpage{31}
   \item \spxentry{OpticalSystem}\spxextra{class in OpticalSystems}, \hyperpage{19}
   \item \spxentry{OpticalSystem2D}\spxextra{class in OpticalSystems}, \hyperpage{21}
   \item \spxentry{OpticalSystem3D}\spxextra{class in OpticalSystems}, \hyperpage{22}
@@ -514,7 +514,7 @@
 		\hyperpage{13}
   \item \spxentry{reverse\_interpolation\_nearest()}\spxextra{in module stattools}, \hyperpage{45}
   \item \spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNR2dSIM method}, \hyperpage{29}
-  \item \spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}, 
+  \item \spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRBase method},
 		\hyperpage{31}
   \item \spxentry{rotate\_vector2d()}\spxextra{VectorOperations.VectorOperations static method}, 
 		\hyperpage{37}
@@ -571,9 +571,9 @@
   \item \spxentry{SSNRCalculator}
     \subitem \spxentry{module}, \hyperpage{28}
   \item \spxentry{SSNRCalculator}\spxextra{class in SSNRCalculator}, \hyperpage{30}
-  \item \spxentry{SSNRCalculator3dSIM}\spxextra{class in SSNRCalculator}, \hyperpage{30}
+  \item \spxentry{SSNR3dSIMBase}\spxextra{class in SSNRCalculator}, \hyperpage{30}
   \item \spxentry{SSNRConfocal}\spxextra{class in SSNRCalculator}, \hyperpage{31}
-  \item \spxentry{SSNRHandler}\spxextra{class in SSNRCalculator}, \hyperpage{31}
+  \item \spxentry{SSNRBase}\spxextra{class in SSNRCalculator}, \hyperpage{31}
   \item \spxentry{SSNRWidefield}\spxextra{class in SSNRCalculator}, \hyperpage{31}
   \item \spxentry{stattools}
     \subitem \spxentry{module}, \hyperpage{43}

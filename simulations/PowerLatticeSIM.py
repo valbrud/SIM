@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
+from SSNRCalculator import SSNRSIM3D, SSNRSIM3D3dShifts
 from OpticalSystems import System4f3D
 
 if __name__ == "__main__":
@@ -53,13 +53,13 @@ if __name__ == "__main__":
         writer.writerow(headers)
         # illumination_widefield = config.get_widefield()
         # illumination_widefield.normalize_spatial_waves()
-        # ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        # ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
         # wssnr = ssnr_widefield.compute_ssnr()
-        # wvolume = ssnr_widefield.compute_ssnr_volume()
+        # wvolume = ssnr_widefield.compute_ssnri_volume()
         # wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
-        # wtotal = ssnr_widefield.compute_total_ssnr()
-        # wtotal_a = ssnr_widefield.compute_analytic_total_ssnr()
-        # wentropy = ssnr_widefield.compute_true_ssnr_entropy()
+        # wtotal = ssnr_widefield.compute_total_signal_to_noise()
+        # wtotal_a = ssnr_widefield.compute_total_analytic_signal_to_noise()
+        # wentropy = ssnr_widefield.compute_ssnri_entropy()
         # wmeasure, _ = ssnr_widefield.compute_ssnr_waterline_measure()
         # print("Volume ", round(wvolume))
         # print("Volume a", round(wvolume_a))
@@ -79,13 +79,13 @@ if __name__ == "__main__":
                 # strength = 1 if config_method != config.get_4_circular_oblique_waves_and_circular_normal else 1 / 2 ** 0.5
                 strength = b
                 illumination = config_methods[config_method](theta, strength)
-                ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
+                ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.compute_ssnr()
-                volume = ssnr_calc.compute_ssnr_volume()
+                volume = ssnr_calc.compute_ssnri_volume()
                 volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-                # total = ssnr_calc.compute_total_ssnr()
-                # total_a = ssnr_calc.compute_analytic_total_ssnr()
-                entropy = ssnr_calc.compute_true_ssnr_entropy()
+                # total = ssnr_calc.compute_total_signal_to_noise()
+                # total_a = ssnr_calc.compute_total_analytic_signal_to_noise()
+                entropy = ssnr_calc.compute_ssnri_entropy()
                 # measure, _ = ssnr_calc.compute_ssnr_waterline_measure()
 
                 print("Volume ", round(volume))
@@ -103,13 +103,13 @@ if __name__ == "__main__":
     #     writer.writerow(headers)
     #     illumination_widefield = config.get_widefield()
     #     illumination_widefield.normalize_spatial_waves()
-    #     ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+    #     ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
     #     wssnr = ssnr_widefield.compute_ssnr()
-    #     wvolume = ssnr_widefield.compute_ssnr_volume()
+    #     wvolume = ssnr_widefield.compute_ssnri_volume()
     #     wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
-    #     wtotal = ssnr_widefield.compute_total_ssnr()
-    #     wtotal_a = ssnr_widefield.compute_analytic_total_ssnr()
-    #     wentropy = ssnr_widefield.compute_true_ssnr_entropy()
+    #     wtotal = ssnr_widefield.compute_total_signal_to_noise()
+    #     wtotal_a = ssnr_widefield.compute_total_analytic_signal_to_noise()
+    #     wentropy = ssnr_widefield.compute_ssnri_entropy()
     #     wmeasure, _ = ssnr_widefield.compute_ssnr_waterline_measure()
     #     print("Volume ", round(wvolume))
     #     print("Volume a", round(wvolume_a))
@@ -128,13 +128,13 @@ if __name__ == "__main__":
     #             k2 = k * (np.cos(angle) - 1)
     #             strength = 1 if config_method != config.get_4_circular_oblique_waves_and_circular_normal else 1 / 2 ** 0.5
     #             illumination = config_methods[config_method](angle, strength)
-    #             ssnr_calc = SSNR3dSIM3dShifts(illumination, optical_system)
+    #             ssnr_calc = SSNRSIM3D3dShifts(illumination, optical_system)
     #             ssnr = ssnr_calc.compute_ssnr()
-    #             volume = ssnr_calc.compute_ssnr_volume()
+    #             volume = ssnr_calc.compute_ssnri_volume()
     #             volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-    #             total = ssnr_calc.compute_total_ssnr()
-    #             total_a = ssnr_calc.compute_analytic_total_ssnr()
-    #             entropy = ssnr_calc.compute_true_ssnr_entropy()
+    #             total = ssnr_calc.compute_total_signal_to_noise()
+    #             total_a = ssnr_calc.compute_total_analytic_signal_to_noise()
+    #             entropy = ssnr_calc.compute_ssnri_entropy()
     #             measure, _ = ssnr_calc.compute_ssnr_waterline_measure()
     #
     #             print("Volume ", round(volume))

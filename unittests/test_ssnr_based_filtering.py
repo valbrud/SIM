@@ -15,7 +15,7 @@ import skimage
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
+from SSNRCalculator import SSNRSIM3D, SSNRSIM3D3dShifts
 from OpticalSystems import System4f3D
 import ShapesGenerator
 import SIMulator
@@ -73,12 +73,12 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        noise_estimator.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_3waves, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
+        noise_estimator.ssnri
+        noise_estimator_widefield.ssnri
 
-        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnr[:, :, N//2])))
+        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
         wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
         wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
@@ -198,12 +198,12 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system, readout_noise_variance=1)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system, readout_noise_variance=1)
-        noise_estimator.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_3waves, optical_system, readout_noise_variance=1)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system, readout_noise_variance=1)
+        noise_estimator.ssnri
+        noise_estimator_widefield.ssnri
 
-        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnr[:, :, N//2])))
+        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
         wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
         wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
@@ -326,12 +326,12 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        noise_estimator.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
+        noise_estimator.ssnri
+        noise_estimator_widefield.ssnri
 
-        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnr[:, :, N//2])))
+        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
         wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
         wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
@@ -453,18 +453,18 @@ class TestWiener(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_linear = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
-        noise_estimator_s_polarized = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        noise_estimator_circular = SSNR3dSIM2dShifts(illumination_circular, optical_system)
-        noise_estimator_hexagonal = SSNR3dSIM2dShifts(illumination_seven_waves, optical_system)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        noise_estimator_linear = SSNRSIM3D(illumination_3waves, optical_system)
+        noise_estimator_s_polarized = SSNRSIM3D(illumination_s_polarized, optical_system)
+        noise_estimator_circular = SSNRSIM3D(illumination_circular, optical_system)
+        noise_estimator_hexagonal = SSNRSIM3D(illumination_seven_waves, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
         noise_estimator_linear.compute_ssnr()
         noise_estimator_s_polarized.compute_ssnr()
         noise_estimator_circular.compute_ssnr()
         noise_estimator_hexagonal.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator_widefield.ssnri
 
-        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnr[:, :, N//2])))
+        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
         wiener_linear = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_linear)
         wiener_s = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_s_polarized)
@@ -584,10 +584,10 @@ class TestWiener(unittest.TestCase):
         spatial_shifts = np.array(((0., 0, 0), (1, 3, 0), (2, 6, 0), (3, 9, 0), (4, 2, 0), (5, 5, 0), (6, 8, 0), (7, 1, 0), (8, 4, 0), (9, 7, 0)))
         spatial_shifts /= (10 * np.sin(theta))
         illumination_s_polarized.spatial_shifts = spatial_shifts
-        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        noise_estimator.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
+        noise_estimator.ssnri
+        noise_estimator_widefield.ssnri
 
 
         wiener = SSNRBasedFiltering.WienerFilter3dModelSDR(noise_estimator)
@@ -717,8 +717,8 @@ class TestWiener(unittest.TestCase):
         illumination_3waves.spatial_shifts = spatial_shifts
 
         illumination = illumination_3waves
-        noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system, readout_noise_variance=0)
-        noise_estimator.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination, optical_system, readout_noise_variance=0)
+        noise_estimator.ssnri
 
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N, readout_noise_variance=0)
         images = simulator.generate_sim_images(image)
@@ -857,12 +857,12 @@ class TestFlat(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        noise_estimator.compute_ssnr()
-        noise_estimator_widefield.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_3waves, optical_system)
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
+        noise_estimator.ssnri
+        noise_estimator_widefield.ssnri
 
-        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnr[:, :, N//2])))
+        # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
         flat = SSNRBasedFiltering.FlatNoiseFilter3dModel(noise_estimator)
         flat_widefield = SSNRBasedFiltering.FlatNoiseFilter3dModel(noise_estimator_widefield)

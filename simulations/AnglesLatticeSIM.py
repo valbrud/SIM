@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM3dShifts
+from SSNRCalculator import SSNRSIM3D, SSNRSIM3D3dShifts
 from OpticalSystems import System4f3D
 import matplotlib.pyplot as plt
 
@@ -54,11 +54,11 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(headers)
         widefield = configurator.get_widefield()
-        ssnr_calc = SSNR3dSIM2dShifts(widefield, optical_system)
+        ssnr_calc = SSNRSIM3D(widefield, optical_system)
         ssnr = ssnr_calc.compute_ssnr()
-        volume = ssnr_calc.compute_ssnr_volume()
+        volume = ssnr_calc.compute_ssnri_volume()
         volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-        entropy = ssnr_calc.compute_true_ssnr_entropy()
+        entropy = ssnr_calc.compute_ssnri_entropy()
         params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
         print(params)
         writer.writerow(params)
@@ -68,12 +68,12 @@ if __name__ == "__main__":
                 sin_theta = ratio * NA
                 theta = np.arcsin(sin_theta)
                 illumination = configurations[configuration](theta)
-                ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
+                ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.compute_ssnr()
 
-                volume = ssnr_calc.compute_ssnr_volume()
+                volume = ssnr_calc.compute_ssnri_volume()
                 volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-                entropy = ssnr_calc.compute_true_ssnr_entropy()
+                entropy = ssnr_calc.compute_ssnri_entropy()
 
                 print("Volume ", round(volume))
                 print("Volume a", round(volume_a))

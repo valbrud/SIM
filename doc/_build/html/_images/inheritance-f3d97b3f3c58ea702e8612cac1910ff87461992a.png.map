@@ -1,7 +1,7 @@
 <map id="inheritance53fe8c5a3d" name="inheritance53fe8c5a3d">
 <area shape="rect" id="node1" href="#SSNRCalculator.SSNR3dSIM2dShifts" target="_top" title="SSNR3dSIM2dShifts" alt="" coords="431,4,550,26"/>
 <area shape="rect" id="node3" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel" target="_top" title="SSNR3dSIM2dShiftsFiniteKernel" alt="" coords="589,4,764,26"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRCalculator3dSIM" target="_top" title="SSNRCalculator3dSIM" alt="" coords="264,4,392,26"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNR3dSIMBase" target="_top" title="SSNR3dSIMBase" alt="" coords="264,4,392,26"/>
 <area shape="rect" id="node4" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="129,4,225,26"/>
-<area shape="rect" id="node5" href="#SSNRCalculator.SSNRHandler" target="_top" title="SSNRHandler" alt="" coords="4,4,89,26"/>
+<area shape="rect" id="node5" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="4,4,89,26"/>
 </map>

@@ -259,16 +259,16 @@
 \indexentry{compute\_total\_ssnr() (SSNRCalculator.SSNRCalculator method)@\spxentry{compute\_total\_ssnr()}\spxextra{SSNRCalculator.SSNRCalculator method}|hyperpage}{30}
 \indexentry{illumination (SSNRCalculator.SSNRCalculator property)@\spxentry{illumination}\spxextra{SSNRCalculator.SSNRCalculator property}|hyperpage}{30}
 \indexentry{optical\_system (SSNRCalculator.SSNRCalculator property)@\spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRCalculator property}|hyperpage}{30}
-\indexentry{SSNRCalculator3dSIM (class in SSNRCalculator)@\spxentry{SSNRCalculator3dSIM}\spxextra{class in SSNRCalculator}|hyperpage}{30}
+\indexentry{SSNR3dSIMBase (class in SSNRCalculator)@\spxentry{SSNR3dSIMBase}\spxextra{class in SSNRCalculator}|hyperpage}{30}
 \indexentry{SSNRConfocal (class in SSNRCalculator)@\spxentry{SSNRConfocal}\spxextra{class in SSNRCalculator}|hyperpage}{31}
 \indexentry{compute\_ssnr() (SSNRCalculator.SSNRConfocal method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRConfocal method}|hyperpage}{31}
-\indexentry{SSNRHandler (class in SSNRCalculator)@\spxentry{SSNRHandler}\spxextra{class in SSNRCalculator}|hyperpage}{31}
-\indexentry{compute\_radial\_ssnr\_entropy() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
-\indexentry{compute\_ssnr() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
-\indexentry{compute\_ssnr\_volume() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
-\indexentry{compute\_true\_ssnr\_entropy() (SSNRCalculator.SSNRHandler method)@\spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
-\indexentry{optical\_system (SSNRCalculator.SSNRHandler property)@\spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRHandler property}|hyperpage}{31}
-\indexentry{ring\_average\_ssnr() (SSNRCalculator.SSNRHandler method)@\spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRHandler method}|hyperpage}{31}
+\indexentry{SSNRBase (class in SSNRCalculator)@\spxentry{SSNRBase}\spxextra{class in SSNRCalculator}|hyperpage}{31}
+\indexentry{compute\_radial\_ssnr\_entropy() (SSNRCalculator.SSNRBase method)@\spxentry{compute\_radial\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRBase method}|hyperpage}{31}
+\indexentry{compute\_ssnr() (SSNRCalculator.SSNRBase method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRBase method}|hyperpage}{31}
+\indexentry{compute\_ssnr\_volume() (SSNRCalculator.SSNRBase method)@\spxentry{compute\_ssnr\_volume()}\spxextra{SSNRCalculator.SSNRBase method}|hyperpage}{31}
+\indexentry{compute\_true\_ssnr\_entropy() (SSNRCalculator.SSNRBase method)@\spxentry{compute\_true\_ssnr\_entropy()}\spxextra{SSNRCalculator.SSNRBase method}|hyperpage}{31}
+\indexentry{optical\_system (SSNRCalculator.SSNRBase property)@\spxentry{optical\_system}\spxextra{SSNRCalculator.SSNRBase property}|hyperpage}{31}
+\indexentry{ring\_average\_ssnr() (SSNRCalculator.SSNRBase method)@\spxentry{ring\_average\_ssnr()}\spxextra{SSNRCalculator.SSNRBase method}|hyperpage}{31}
 \indexentry{SSNRWidefield (class in SSNRCalculator)@\spxentry{SSNRWidefield}\spxextra{class in SSNRCalculator}|hyperpage}{31}
 \indexentry{compute\_ssnr() (SSNRCalculator.SSNRWidefield method)@\spxentry{compute\_ssnr()}\spxextra{SSNRCalculator.SSNRWidefield method}|hyperpage}{32}
 \indexentry{module@\spxentry{module}!ShapesGenerator@\spxentry{ShapesGenerator}|hyperpage}{32}

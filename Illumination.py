@@ -253,6 +253,10 @@ class PlaneWavesSIM(PeriodicStructure):
             wavevectors2d.extend(wavevectors2d_r)
         return wavevectors2d
 
+    @abstractmethod
+    def compute_effective_kernels(self, psf, psf_coordinates):
+        print("Child classes of SIM interface can compute effective kernels.")
+
 
 class IlluminationPlaneWaves2D(Illumination2D, PlaneWavesSIM):
     def __init__(self, intensity_plane_waves_dict: dict[tuple[int, ...], Sources.IntensityPlaneWave], dimensions: tuple[int, int] = (1, 1), Mr: int = 1, spatial_shifts = np.array([(0, 0)])

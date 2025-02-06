@@ -9,7 +9,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import IlluminationPlaneWaves3D
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR2dSIM, SSNRWidefield, SSNRConfocal
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield, SSNRConfocal
 from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityPlaneWave
@@ -50,17 +50,17 @@ class Testssnr(unittest.TestCase):
                                                   apodization_function="Sine")
         wavevectors = illumination_polarized.get_all_wavevectors()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_polarized, optical_system_fourier)
+        noise_estimator = SSNRSIM3D(illumination_polarized, optical_system_fourier)
 
         begin_shifted = time.time()
         optical_system_fourier.prepare_Fourier_interpolation(wavevectors)
-        ssnr_F = np.abs(noise_estimator.compute_ssnr())
+        ssnr_F = np.abs(noise_estimator.ssnri)
         end_shifted = time.time()
         print("fourier time is ", end_shifted - begin_shifted)
 
         noise_estimator.optical_system = optical_system_linear
         begin_interpolation = time.time()
-        ssnr_L = np.abs(noise_estimator.compute_ssnr())
+        ssnr_L = np.abs(noise_estimator.ssnri)
         end_interpolation = time.time()
         print("linear time is ", end_interpolation - begin_interpolation)
 
@@ -159,17 +159,17 @@ class Testssnr(unittest.TestCase):
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r), N))
 
-        noise_estimator_wf = SSNR2dSIM(illumination_widefield, optical_system)
+        noise_estimator_wf = SSNRSIM2D(illumination_widefield, optical_system)
         ssnr_wf = np.abs(noise_estimator_wf.compute_ssnr())
 
         for illumination in illumination_list:
-            noise_estimator = SSNR2dSIM(illumination, optical_system)
+            noise_estimator = SSNRSIM2D(illumination, optical_system)
 
-            ssnr = np.abs(noise_estimator.compute_ssnr())
+            ssnr = np.abs(noise_estimator.ssnri)
             scaling_factor = 10 ** 4
             # ssnr_diff = ssnr - ssnr_wf
             # ssnr_scaled = 1 + scaling_factor * ssnr
-            ssnr_ring_averaged = noise_estimator.ring_average_ssnr()
+            ssnr_ring_averaged = noise_estimator.ring_average_ssnri()
             # ssnr_ra_scaled = 1 + scaling_factor * ssnr_ring_averaged
 
             Fx, Fy = np.meshgrid(fr, fr)
@@ -244,17 +244,17 @@ class Testssnr(unittest.TestCase):
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
-        noise_estimator_wf = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        noise_estimator_wf = SSNRSIM3D(illumination_widefield, optical_system)
         ssnr_wf = np.abs(noise_estimator_wf.compute_ssnr())
 
         for illumination in illumination_list:
-            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
+            noise_estimator = SSNRSIM3D(illumination, optical_system)
 
-            ssnr = np.abs(noise_estimator.compute_ssnr())
+            ssnr = np.abs(noise_estimator.ssnri)
             scaling_factor = 10**4
             # ssnr_diff = ssnr - ssnr_wf
             ssnr_scaled = 1 + scaling_factor * ssnr
-            ssnr_ring_averaged = noise_estimator.ring_average_ssnr()
+            ssnr_ring_averaged = noise_estimator.ring_average_ssnri()
             # ssnr_ra_scaled = 1 + scaling_factor * ssnr_ring_averaged
 
             Fx, Fy = np.meshgrid(fx, fy)
@@ -367,12 +367,12 @@ class Testssnr(unittest.TestCase):
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
-            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
-            ssnr = np.abs(noise_estimator.compute_ssnr())
+            noise_estimator = SSNRSIM3D(illumination, optical_system)
+            ssnr = np.abs(noise_estimator.ssnri)
             ssnr_scaled = np.log10(1 + 10**8 * np.abs(ssnr))
 
             noise_estimator.illumination = configurations.get_widefield()
-            ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
+            ssnr_widefield = np.abs(noise_estimator.ssnri)
             ssnr_widefield_scaled = np.log10(1 + 10**8 * np.abs(ssnr_widefield))
 
             constant_value = 0.2
@@ -510,52 +510,52 @@ class Testssnr(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        noise_estimator_widefield.compute_ssnr()
-        ssnr_widefield = noise_estimator_widefield.ssnr
-        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnr()
+        noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
+        noise_estimator_widefield.ssnri
+        ssnr_widefield = noise_estimator_widefield.ssnri
+        ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnri()
 
         noise_estimator_confocal = SSNRConfocal(optical_system)
         ssnr_confocal = noise_estimator_confocal.ssnr
-        ssnr_confocal_ra = noise_estimator_confocal.ring_average_ssnr()
+        ssnr_confocal_ra = noise_estimator_confocal.ring_average_ssnri()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        # noise_estimator_true = SSNR3dSIM3dShifts(illumination_s_polarized, optical_system)
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
+        noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system)
+        # noise_estimator_true = SSNRSIM3D3dShifts(illumination_s_polarized, optical_system)
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
         measure_s_polarized, threshold_s_polarized = noise_estimator.compute_ssnr_waterline_measure()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_circular
-        ssnr_circular = np.abs(noise_estimator.compute_ssnr())
-        ssnr_circular_ra = noise_estimator.ring_average_ssnr()
-        volume_circular = noise_estimator.compute_ssnr_volume()
+        ssnr_circular = np.abs(noise_estimator.ssnri)
+        ssnr_circular_ra = noise_estimator.ring_average_ssnri()
+        volume_circular = noise_estimator.compute_ssnri_volume()
         measure_circular, threshold_circular = noise_estimator.compute_ssnr_waterline_measure()
-        entropy_circular = noise_estimator.compute_true_ssnr_entropy()
+        entropy_circular = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
         measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
         #
         noise_estimator.illumination = illumination_3waves
         # noise_estimator_true.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
         # ssnr_3waves_true = np.abs(noise_estimator_true.compute_ssnr())
-        # ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
+        # ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
         volume_a_3waves = noise_estimator.compute_analytic_ssnr_volume()
         measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         # noise_estimator.illumination = illumination_widefield
-        # ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        # # volume_widefield = noise_estimator.compute_ssnr_volume()
+        # ssnr_widefield = np.abs(noise_estimator.ssnri)
+        # ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        # # volume_widefield = noise_estimator.compute_ssnri_volume()
         # measure_widefield, _ = noise_estimator.compute_ssnr_waterline_measure()
 
 
@@ -738,41 +738,41 @@ class Testssnr(unittest.TestCase):
         illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_five_waves_two_angles, optical_system)
-        # ssnr_ttnr = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_ttnr_ra = noise_estimator.ring_average_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_five_waves_two_angles, optical_system)
+        # ssnr_ttnr = np.abs(noise_estimator.ssnri)
+        # ssnr_ttnr_ra = noise_estimator.ring_average_ssnri()
         # volume_ttnr = np.sum(ssnr_ttnr)
-        # volume_ttnr_a = noise_estimator.compute_analytic_total_ssnr()
+        # volume_ttnr_a = noise_estimator.compute_total_analytic_signal_to_noise()
 
         # noise_estimator.illumination = illumination_two_triangles_rotated
-        # ssnr_ttr= np.abs(noise_estimator.compute_ssnr())
-        # ssnr_ttr_ra = noise_estimator.ring_average_ssnr()
+        # ssnr_ttr= np.abs(noise_estimator.ssnri)
+        # ssnr_ttr_ra = noise_estimator.ring_average_ssnri()
         # volume_ttr = np.sum(np.abs(ssnr_ttr))
-        # volume_ttr_a = noise_estimator.compute_analytic_total_ssnr()
+        # volume_ttr_a = noise_estimator.compute_total_analytic_signal_to_noise()
         #
         # noise_estimator.illumination = illumination_two_squares_not_rotated
-        # ssnr_tsnr = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_tsnr_ra = noise_estimator.ring_average_ssnr()
+        # ssnr_tsnr = np.abs(noise_estimator.ssnri)
+        # ssnr_tsnr_ra = noise_estimator.ring_average_ssnri()
         # volume_tsnr = np.sum(np.abs(ssnr_tsnr))
-        # volume_tsnr_a = noise_estimator.compute_analytic_total_ssnr()
+        # volume_tsnr_a = noise_estimator.compute_total_analytic_signal_to_noise()
         #
         # noise_estimator.illumination = illumination_two_squares_rotated
-        # ssnr_tsr = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_tsr_ra = noise_estimator.ring_average_ssnr()
+        # ssnr_tsr = np.abs(noise_estimator.ssnri)
+        # ssnr_tsr_ra = noise_estimator.ring_average_ssnri()
         # volume_tsr = np.sum(np.abs(ssnr_tsr))
-        # volume_tsr_a = noise_estimator.compute_analytic_total_ssnr()
+        # volume_tsr_a = noise_estimator.compute_total_analytic_signal_to_noise()
         #
         # noise_estimator.illumination = illumination_five_waves_two_angles
-        ssnr_5w = np.abs(noise_estimator.compute_ssnr())
-        ssnr_5w_ra = noise_estimator.ring_average_ssnr()
+        ssnr_5w = np.abs(noise_estimator.ssnri)
+        ssnr_5w_ra = noise_estimator.ring_average_ssnri()
         volume_5w = np.sum(np.abs(ssnr_5w))
-        volume_5w_a = noise_estimator.compute_analytic_total_ssnr()
+        volume_5w_a = noise_estimator.compute_total_analytic_signal_to_noise()
 
         # noise_estimator.illumination = illumination_widefield
-        # ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
-        # ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
+        # ssnr_widefield = np.abs(noise_estimator.ssnri)
+        # ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
         # volume_widefield = np.sum(np.abs(ssnr_widefield))
-        # volume_widefield_a = noise_estimator.compute_analytic_total_ssnr()
+        # volume_widefield_a = noise_estimator.compute_total_analytic_signal_to_noise()
 
         # print("Volume ssnr widefield = ", volume_widefield)
         # print("Volume ssnr widefield_a = ", volume_widefield_a)
@@ -943,12 +943,12 @@ class Testssnr(unittest.TestCase):
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2 * max_z), N))
 
         for illumination in illumination_list:
-            noise_estimator = SSNR3dSIM2dShifts(illumination, optical_system)
+            noise_estimator = SSNRSIM3D(illumination, optical_system)
 
-            ssnr = np.abs(noise_estimator.compute_ssnr())
+            ssnr = np.abs(noise_estimator.ssnri)
             scaling_factor = 10**8
             ssnr_scaled = 1 + scaling_factor * ssnr
-            ssnr_ring_averaged = noise_estimator.ring_average_ssnr()
+            ssnr_ring_averaged = noise_estimator.ring_average_ssnri()
             ssnr_ra_scaled = 1 + scaling_factor * ssnr_ring_averaged
 
             Fx, Fy = np.meshgrid(fx, fy)
@@ -1047,34 +1047,34 @@ class Testssnr(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        # volume_squareSP = noise_estimator.compute_ssnr_volume(ssnr_s_polarized, dV)
+        noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system)
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        # volume_squareSP = noise_estimator.compute_ssnri_volume(ssnr_s_polarized, dV)
         # measure_s_polarized, threshold_s_polarized = noise_estimator.compute_ssnr_waterline_measure(ssnr_s_polarized)
 
         noise_estimator.illumination = illumination_circular
-        ssnr_circular = np.abs(noise_estimator.compute_ssnr())
-        ssnr_circular_ra = noise_estimator.ring_average_ssnr()
-        # volume_circular = noise_estimator.compute_ssnr_volume(ssnr_circular, dV)
+        ssnr_circular = np.abs(noise_estimator.ssnri)
+        ssnr_circular_ra = noise_estimator.ring_average_ssnri()
+        # volume_circular = noise_estimator.compute_ssnri_volume(ssnr_circular, dV)
         # measure_circular, threshold_circular = noise_estimator.compute_ssnr_waterline_measure(ssnr_circular)
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        # volume_hexagonal = noise_estimator.compute_ssnr_volume(ssnr_seven_waves, dV)
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        # volume_hexagonal = noise_estimator.compute_ssnri_volume(ssnr_seven_waves, dV)
         # measure_seven_waves, threshold7waves = noise_estimator.compute_ssnr_waterline_measure(ssnr_seven_waves)
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        # volume_conventional = noise_estimator.compute_ssnr_volume(ssnr_3waves, dV)
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        # volume_conventional = noise_estimator.compute_ssnri_volume(ssnr_3waves, dV)
         # measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure(ssnr_3waves)
 
         noise_estimator.illumination = illumination_widefield
-        ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        # volume_widefield = noise_estimator.compute_ssnr_volume(ssnr_widefield, dV)
+        ssnr_widefield = np.abs(noise_estimator.ssnri)
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        # volume_widefield = noise_estimator.compute_ssnri_volume(ssnr_widefield, dV)
         # measure_widefield, _ = noise_estimator.compute_ssnr_waterline_measure(ssnr_widefield)
 
         # print("Volume ssnr widefield = ", volume_widefield)
@@ -1239,10 +1239,10 @@ class Testssnr(unittest.TestCase):
         iwaves = box.get_approximated_intensity_sources()
         illumination_2z =  IlluminationPlaneWaves3D.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
         illumination_2z.normalize_spatial_waves()
-        noise_estimator = SSNR3dSIM2dShifts(illumination_2z, optical_system)
-        ssnr_2z = np.abs(noise_estimator.compute_ssnr())
-        ssnr_2z_ra = noise_estimator.ring_average_ssnr()
-        volume_2z = noise_estimator.compute_ssnr_volume(ssnr_2z, dV)
+        noise_estimator = SSNRSIM3D(illumination_2z, optical_system)
+        ssnr_2z = np.abs(noise_estimator.ssnri)
+        ssnr_2z_ra = noise_estimator.ring_average_ssnri()
+        volume_2z = noise_estimator.compute_ssnri_volume(ssnr_2z, dV)
         b = 1/2**0.5
         sources = [
             Sources.PlaneWave(0, b, 0, 0, np.array((0, k * NA,k * np.cos(np.pi/3)))),
@@ -1256,18 +1256,18 @@ class Testssnr(unittest.TestCase):
         illumination_3w = IlluminationPlaneWaves3D(il, Mr=5)
         illumination_3w.Mt = 1
         illumination_3w.normalize_spatial_waves()
-        noise_estimator = SSNR3dSIM2dShifts(illumination_3w, optical_system)
-        ssnr_3w = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3w_ra = noise_estimator.ring_average_ssnr()
-        volume_3w = noise_estimator.compute_ssnr_volume(ssnr_3w, dV)
+        noise_estimator = SSNRSIM3D(illumination_3w, optical_system)
+        ssnr_3w = np.abs(noise_estimator.ssnri)
+        ssnr_3w_ra = noise_estimator.ring_average_ssnri()
+        volume_3w = noise_estimator.compute_ssnri_volume(ssnr_3w, dV)
 
         widefield = IlluminationPlaneWaves3D({
         (0, 0, 0) : Sources.IntensityPlaneWave(1, 0, np.array((0, 0, 0)))}, Mr=1)
         widefield.Mt = 1
         noise_estimator.illumination = widefield
-        ssnr_widefield = np.abs(noise_estimator.compute_ssnr())
-        ssnr_widefield_ra= noise_estimator.ring_average_ssnr()
-        volume_w = noise_estimator.compute_ssnr_volume(ssnr_widefield, dV)
+        ssnr_widefield = np.abs(noise_estimator.ssnri)
+        ssnr_widefield_ra= noise_estimator.ring_average_ssnri()
+        volume_w = noise_estimator.compute_ssnri_volume(ssnr_widefield, dV)
         print("volume 3 waves = ", volume_3w)
         print("volume two triangles = ", volume_2z)
         print("volume widefield = ", volume_w)
@@ -1390,16 +1390,16 @@ class Testssnr(unittest.TestCase):
 
         k = 2 * np.pi
         il4 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 0)
-        noise4 = SSNR3dSIM2dShifts(il4, optical_system)
+        noise4 = SSNRSIM3D(il4, optical_system)
         ssnr4 = noise4.ssnr()
 
         il5 = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
-        noise5 = SSNR3dSIM2dShifts(il5, optical_system)
+        noise5 = SSNRSIM3D(il5, optical_system)
         ssnr5 = noise5.ssnr()
-        ra4 = noise4.ring_average_ssnr()
-        ra5 = noise5.ring_average_ssnr()
-        volume4 = noise4.compute_ssnr_volume(ssnr4, 1)
-        volume5 = noise5.compute_ssnr_volume(ssnr5, 1)
+        ra4 = noise4.ring_average_ssnri()
+        ra5 = noise5.ring_average_ssnri()
+        volume4 = noise4.compute_ssnri_volume(ssnr4, 1)
+        volume5 = noise5.compute_ssnri_volume(ssnr5, 1)
 
         print("volume 4 waves = ", volume4)
         print("volume 5 waves = ", volume5)
@@ -1530,12 +1530,12 @@ class TestApproximations(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_widefield   = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        noise_estimator_widefield   = SSNRSIM3D(illumination_widefield, optical_system)
         # noise_estimator_confocal    = SSNRConfocal(optical_system)
-        noise_estimator_s_polarized = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system)
-        noise_estimator_circular    = SSNR3dSIM2dShifts(illumination_circular, optical_system)
-        noise_estimator_seven_waves = SSNR3dSIM2dShifts(illumination_seven_waves, optical_system)
-        noise_estimator_3waves      = SSNR3dSIM2dShifts(illumination_3waves, optical_system)
+        noise_estimator_s_polarized = SSNRSIM3D(illumination_s_polarized, optical_system)
+        noise_estimator_circular    = SSNRSIM3D(illumination_circular, optical_system)
+        noise_estimator_seven_waves = SSNRSIM3D(illumination_seven_waves, optical_system)
+        noise_estimator_3waves      = SSNRSIM3D(illumination_3waves, optical_system)
 
         noise_estimators = {"widefield" : noise_estimator_widefield,
                             "s_polarized" : noise_estimator_s_polarized,
@@ -1546,7 +1546,7 @@ class TestApproximations(unittest.TestCase):
 
         for name in noise_estimators:
             noise_estimator = noise_estimators[name]
-            noise_estimator.compute_ssnr()
+            noise_estimator.ssnri
             dj_ra = stattools.average_rings3d(noise_estimator.dj, (fx, fy, fz))
             dj2_ra = stattools.average_rings3d(noise_estimator.dj**2, (fx, fy, fz))
             full_fraction_approximation = 1/2 * dj2_ra/dj_ra + dj_ra

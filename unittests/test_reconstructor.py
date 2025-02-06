@@ -15,7 +15,7 @@ from matplotlib.widgets import Slider
 from OpticalSystems import System4f3D
 import ShapesGenerator
 from SIMulator import SIMulator
-from SSNRCalculator import SSNR3dSIM2dShifts, SSNR3dSIM2dShiftsFiniteKernel
+from SSNRCalculator import SSNRSIM3D, SSNRSIM3DFiniteKernel
 from SSNRBasedFiltering import WienerFilter3dModel, FlatNoiseFilter3d, WienerFilter3dReconstruction
 sys.path.append('../')
 configurations = BFPConfiguration()
@@ -182,8 +182,8 @@ class TestReconstruction(unittest.TestCase):
         image_sr_ft, image_sr = simulator.reconstruct_Fourier_space(images)
         image_widefield = simulator.generate_widefield(images)
 
-        noise_estimator = SSNR3dSIM2dShifts(illumination_s_polarized, optical_system, 0)
-        noise_estimator.compute_ssnr()
+        noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system, 0)
+        noise_estimator.ssnri
 
         wiener = WienerFilter3dModel(noise_estimator)
         expected_image, ssnr, wj, otf_sim, tj = wiener.filter_object(image, real_space=True)
@@ -439,8 +439,8 @@ class TestReconstruction(unittest.TestCase):
         simulator = SIMulator(illumination_2waves, optical_system, psf_size, N)
         images = simulator.generate_sim_images(image)
 
-        noise_estimator = SSNR3dSIM2dShiftsFiniteKernel(illumination_2waves, optical_system, kernel=kernel)
-        noise_estimator.compute_ssnr()
+        noise_estimator = SSNRSIM3DFiniteKernel(illumination_2waves, optical_system, kernel=kernel)
+        noise_estimator.ssnri
 
         image_sr_ft, image_sr = simulator.reconstruct_Fourier2d_finite_kernel(images, shifted_kernels=noise_estimator.effective_kernels_ft)
         image_widefield = simulator.generate_widefield(images)

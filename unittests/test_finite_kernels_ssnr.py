@@ -63,56 +63,56 @@ class TestAgainstIdeal(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
         ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.plot_effective_kernel_and_otf()
         plt.show()
 
         noise_estimator_finite.illumination = illumination_s_polarized
         ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
         ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
         ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
 
-        noise_estimator = SSNRCalculator.SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        ssnr_widefield = noise_estimator.compute_ssnr()
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system)
+        ssnr_widefield = noise_estimator.ssnri
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        volume_widefield = noise_estimator.compute_ssnri_volume()
+        entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         print("Volume ssnr widefield = ", volume_widefield)
         print("Entropy ssnr widefield = ", entropy_widefield)
@@ -294,56 +294,56 @@ class TestAgainstIdeal(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
         ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.plot_effective_kernel_and_otf()
         plt.show()
 
         noise_estimator_finite.illumination = illumination_s_polarized
         ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
         ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
         ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
 
-        noise_estimator = SSNRCalculator.SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        ssnr_widefield = noise_estimator.compute_ssnr()
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system)
+        ssnr_widefield = noise_estimator.ssnri
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        volume_widefield = noise_estimator.compute_ssnri_volume()
+        entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         print("Volume ssnr widefield = ", volume_widefield)
         print("Entropy ssnr widefield = ", entropy_widefield)
@@ -537,53 +537,53 @@ class TestAgainstIdeal(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
         ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_s_polarized
         ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
         ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
         ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
 
-        noise_estimator = SSNRCalculator.SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        ssnr_widefield = noise_estimator.compute_ssnr()
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system)
+        ssnr_widefield = noise_estimator.ssnri
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        volume_widefield = noise_estimator.compute_ssnri_volume()
+        entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         ssnr_diff_conventional = ssnr_3waves - ssnr_finite_3waves
         ssnr_diff_square = ssnr_s_polarized - ssnr_finite_s_polarized
@@ -716,53 +716,53 @@ class TestAgainstIdeal(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
         ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_s_polarized
         ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
         ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
         ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
 
-        noise_estimator = SSNRCalculator.SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-        ssnr_widefield = noise_estimator.compute_ssnr()
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system)
+        ssnr_widefield = noise_estimator.ssnri
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        volume_widefield = noise_estimator.compute_ssnri_volume()
+        entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         ssnr_diff_conventional = ssnr_3waves - ssnr_finite_3waves
         ssnr_diff_square = ssnr_s_polarized - ssnr_finite_s_polarized
@@ -878,56 +878,56 @@ class TestAgainstIdeal(unittest.TestCase):
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNR2dSIMFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM2DFiniteKernel(illumination_widefield, optical_system, kernel)
         ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
-        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_widefield = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_widefield = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.plot_effective_kernel_and_otf()
         plt.show()
 
         noise_estimator_finite.illumination = illumination_s_polarized
         ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_s_polarized = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_s_polarized = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
         ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_seven_waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_seven_waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
         ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
-        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnr()
-        volume_finite_3waves = noise_estimator_finite.compute_ssnr_volume()
-        entropy_finite_3waves = noise_estimator_finite.compute_true_ssnr_entropy()
+        ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
+        volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
+        entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
 
-        noise_estimator = SSNRCalculator.SSNR2dSIM(illumination_widefield, optical_system)
-        ssnr_widefield = noise_estimator.compute_ssnr()
-        ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-        volume_widefield = noise_estimator.compute_ssnr_volume()
-        entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+        noise_estimator = SSNRCalculator.SSNRSIM2D(illumination_widefield, optical_system)
+        ssnr_widefield = noise_estimator.ssnri
+        ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+        volume_widefield = noise_estimator.compute_ssnri_volume()
+        entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-        volume_squareSP = noise_estimator.compute_ssnr_volume()
-        entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+        volume_squareSP = noise_estimator.compute_ssnri_volume()
+        entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-        volume_hexagonal = noise_estimator.compute_ssnr_volume()
-        entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+        volume_hexagonal = noise_estimator.compute_ssnri_volume()
+        entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-        ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-        volume_conventional = noise_estimator.compute_ssnr_volume()
-        entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+        volume_conventional = noise_estimator.compute_ssnri_volume()
+        entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
         print("Volume ssnr widefield = ", volume_widefield)
         print("Entropy ssnr widefield = ", entropy_widefield)
@@ -1081,7 +1081,7 @@ class TestFinalFilter(unittest.TestCase):
 
         illumination = illumination_2waves
         # illumination_3waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0)
-        noise_estimator_finite = SSNRCalculator.SSNR2dSIM(illumination_2waves, optical_system, kernel[:, :, 0])
+        noise_estimator_finite = SSNRCalculator.SSNRSIM2D(illumination_2waves, optical_system, kernel[:, :, 0])
 
         ssnr_finite = np.abs(noise_estimator_finite.compute_ssnr())
         plt.imshow(ssnr_finite)
@@ -1309,7 +1309,7 @@ class TestFinalFilter(unittest.TestCase):
         illumination = illumination_2waves
         kernel_size = 1
         kernel = kernels.psf_kernel2d(kernel_size, (dx, dx))[:, :, 0]
-        noise_estimator_finite = SSNRCalculator.SSNR2dSIMFiniteKernel(illumination_2waves, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM2DFiniteKernel(illumination_2waves, optical_system, kernel)
         plt.imshow(np.abs(noise_estimator_finite.ssnr))
         plt.show()
 

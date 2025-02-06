@@ -29,7 +29,7 @@ class ProcessorSIM:
             self.simulator = SIMulator.SIMulator3D(self.optical_system, self.illumination, readout_noise=readout_noise,)
             self.reconstructor = Reconstructor.Reconstructor3D(self.optical_system, self.illumination)
             if projected:
-                self.ssnr = SSNRCalculator.SSNR3dSIMUniversal(self.optical_system, self.illumination, readout_noise)
+                self.ssnri= SSNRCalculator.SSNRSIM3DUniversal(self.optical_system, self.illumination, readout_noise)
         else:
             self.simulator
 

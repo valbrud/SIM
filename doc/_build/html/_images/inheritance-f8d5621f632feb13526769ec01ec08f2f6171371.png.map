@@ -1,4 +1,4 @@
 <map id="inheritance0a8856f9a5" name="inheritance0a8856f9a5">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRHandler" target="_top" title="SSNRHandler" alt="" coords="5,5,110,32"/>
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
 <area shape="rect" id="node2" href="#SSNRCalculator.SSNRWidefield" target="_top" title="SSNRWidefield" alt="" coords="158,5,270,32"/>
 </map>

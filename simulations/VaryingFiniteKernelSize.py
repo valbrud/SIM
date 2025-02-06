@@ -56,29 +56,29 @@ if __name__ == "__main__":
                      "Square" : illumination_s_polarized,
                      "Hexagonal" : illumination_seven_waves}
 
-    noise_estimator = SSNRCalculator.SSNR3dSIM2dShifts(illumination_widefield, optical_system)
-    ssnr_widefield = noise_estimator.compute_ssnr()
-    ssnr_widefield_ra = noise_estimator.ring_average_ssnr()
-    volume_widefield = noise_estimator.compute_ssnr_volume()
-    entropy_widefield = noise_estimator.compute_true_ssnr_entropy()
+    noise_estimator = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system)
+    ssnr_widefield = noise_estimator.ssnri
+    ssnr_widefield_ra = noise_estimator.ring_average_ssnri()
+    volume_widefield = noise_estimator.compute_ssnri_volume()
+    entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
     noise_estimator.illumination = illumination_s_polarized
-    ssnr_s_polarized = np.abs(noise_estimator.compute_ssnr())
-    ssnr_s_polarized_ra = noise_estimator.ring_average_ssnr()
-    volume_squareSP = noise_estimator.compute_ssnr_volume()
-    entropy_s_polarized = noise_estimator.compute_true_ssnr_entropy()
+    ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+    ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
+    volume_squareSP = noise_estimator.compute_ssnri_volume()
+    entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
     noise_estimator.illumination = illumination_seven_waves
-    ssnr_seven_waves = np.abs(noise_estimator.compute_ssnr())
-    ssnr_seven_waves_ra = noise_estimator.ring_average_ssnr()
-    volume_hexagonal = noise_estimator.compute_ssnr_volume()
-    entropy_seven_waves = noise_estimator.compute_true_ssnr_entropy()
+    ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+    ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
+    volume_hexagonal = noise_estimator.compute_ssnri_volume()
+    entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
     noise_estimator.illumination = illumination_3waves
-    ssnr_3waves = np.abs(noise_estimator.compute_ssnr())
-    ssnr_3waves_ra = noise_estimator.ring_average_ssnr()
-    volume_conventional = noise_estimator.compute_ssnr_volume()
-    entropy_3waves = noise_estimator.compute_true_ssnr_entropy()
+    ssnr_3waves = np.abs(noise_estimator.ssnri)
+    ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
+    volume_conventional = noise_estimator.compute_ssnri_volume()
+    entropy_3waves = noise_estimator.compute_ssnri_entropy()
 
     with open('RadiallySymmetricKernel.csv', 'w', newline='') as file:
         writer = csv.writer(file)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         print("Entropy ideal hexagonal = ", entropy_seven_waves)
         kernel = np.zeros((1,1,1))
         kernel[0,0,0] = 1
-        noise_estimator_finite = SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel(illumination_widefield, optical_system, kernel)
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
 
         for configuration in configurations:
             illumination = configurations[configuration]
@@ -120,12 +120,12 @@ if __name__ == "__main__":
                 noise_estimator_finite.kernel = kernel
 
                 ssnr_finite= noise_estimator_finite.compute_ssnr()
-                ssnr_finite_ra = noise_estimator_finite.ring_average_ssnr()
+                ssnr_finite_ra = noise_estimator_finite.ring_average_ssnri()
                 # if configuration == "Conventional":
                 #     plt.plot(1 + 10**4 * ssnr_finite_ra[N//4  , :], label=f"{kernel_size}")
                 #     plt.gca().set_yscale("log")
-                volume_finite = noise_estimator_finite.compute_ssnr_volume()
-                entropy_finite = noise_estimator_finite.compute_true_ssnr_entropy()
+                volume_finite = noise_estimator_finite.compute_ssnri_volume()
+                entropy_finite = noise_estimator_finite.compute_ssnri_entropy()
 
                 print(f"Volume finite {configuration} = ", volume_finite)
                 print(f"Entropy finite {configuration} = ", entropy_finite)

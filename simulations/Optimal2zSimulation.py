@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNR3dSIM2dShifts
+from SSNRCalculator import SSNRSIM3D
 from OpticalSystems import System4f3D
 
 
@@ -49,12 +49,12 @@ if __name__ == "__main__":
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
         illumination_widefield.normalize_spatial_waves()
-        ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
         wssnr = ssnr_widefield.compute_ssnr()
-        wvolume = ssnr_widefield.compute_ssnr_volume(factor)
-        wtotal = ssnr_widefield.compute_total_ssnr()
-        wtotal_a = ssnr_widefield.compute_analytic_total_ssnr()
-        wentropy = ssnr_widefield.compute_true_ssnr_entropy(factor)
+        wvolume = ssnr_widefield.compute_ssnri_volume(factor)
+        wtotal = ssnr_widefield.compute_total_signal_to_noise()
+        wtotal_a = ssnr_widefield.compute_total_analytic_signal_to_noise()
+        wentropy = ssnr_widefield.compute_ssnri_entropy(factor)
         wmeasure, _ = ssnr_widefield.compute_ssnr_waterline_measure(factor)
         print("Volume ", round(wvolume))
         print("Total", round(wtotal))
@@ -75,12 +75,12 @@ if __name__ == "__main__":
                         k2 = k * (np.cos(angle) - 1)
                         k4 = k * (np.cos(np.arcsin(a * np.sin(angle))) - 1)
                         illumination = config.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(angle, a, b, c, 1)
-                        ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
+                        ssnr_calc = SSNRSIM3D(illumination, optical_system)
                         ssnr = ssnr_calc.compute_ssnr()
-                        volume = ssnr_calc.compute_ssnr_volume(factor)
-                        total = ssnr_calc.compute_total_ssnr()
-                        total_a = ssnr_calc.compute_analytic_total_ssnr()
-                        entropy = ssnr_calc.compute_true_ssnr_entropy(factor)
+                        volume = ssnr_calc.compute_ssnri_volume(factor)
+                        total = ssnr_calc.compute_total_signal_to_noise()
+                        total_a = ssnr_calc.compute_total_analytic_signal_to_noise()
+                        entropy = ssnr_calc.compute_ssnri_entropy(factor)
                         measure, _ = ssnr_calc.compute_ssnr_waterline_measure(factor)
                         print("Volume ", round(volume))
                         print("Total", round(total))

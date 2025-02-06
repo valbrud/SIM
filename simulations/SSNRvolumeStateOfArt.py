@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNR3dSIM2dShifts
+from SSNRCalculator import SSNRSIM3D
 from OpticalSystems import System4f3D
 import matplotlib.pyplot as plt
 
@@ -49,12 +49,12 @@ if __name__ == "__main__":
         writer.writerow(headers)
         illumination_widefield = config.get_widefield()
         illumination_widefield.normalize_spatial_waves()
-        ssnr_widefield = SSNR3dSIM2dShifts(illumination_widefield, optical_system)
+        ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
         wssnr = ssnr_widefield.compute_ssnr()
-        wvolume = ssnr_widefield.compute_ssnr_volume()
+        wvolume = ssnr_widefield.compute_ssnri_volume()
         wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
-        wentropy = ssnr_widefield.compute_true_ssnr_entropy()
-        wrentropy = ssnr_widefield.compute_radial_ssnr_entropy()
+        wentropy = ssnr_widefield.compute_ssnri_entropy()
+        wrentropy = ssnr_widefield.compute_radial_ssnri_entropy()
         print("Volume ", round(wvolume))
         print("Volume a", round(wvolume_a))
         print("Entropy ", round(wentropy, 3))
@@ -69,14 +69,14 @@ if __name__ == "__main__":
                 k2 = k * (np.cos(angle) - 1)
                 strength = 1
                 illumination = config.get_2_oblique_s_waves_and_s_normal(angle, strength, Mr=Mr)
-                ssnr_calc = SSNR3dSIM2dShifts(illumination, optical_system)
+                ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.compute_ssnr()
                 # plt.imshow(1 + 10**8 * np.log (ssnr[:, :, 50]))
                 # plt.show()
-                volume = ssnr_calc.compute_ssnr_volume()
+                volume = ssnr_calc.compute_ssnri_volume()
                 volume_a = ssnr_calc.compute_analytic_ssnr_volume()
-                entropy = ssnr_calc.compute_true_ssnr_entropy()
-                rentropy = ssnr_calc.compute_radial_ssnr_entropy()
+                entropy = ssnr_calc.compute_ssnri_entropy()
+                rentropy = ssnr_calc.compute_radial_ssnri_entropy()
                 print("Volume ", round(volume))
                 print("Mr", Mr)
                 print("Volume a", round(volume_a))

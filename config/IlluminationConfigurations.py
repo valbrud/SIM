@@ -113,7 +113,7 @@ class BFPConfiguration:
         #     (0, -1, -1): Sources.IntensityPlaneWave((-1 * p * b), 0, np.array((0, -k1, -k2)))
         # }
 
-        square_intensity_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(square_plane_waves)
+        square_intensity_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(square_plane_waves)
 
         illumination =  IlluminationPlaneWaves3D.init_from_list(square_intensity_waves, (k1, k1, k2))
         illumination.Mt = Mt

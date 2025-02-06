@@ -139,7 +139,7 @@ class Box:
         """
 
         # By default, meshgrid uses 'xy' indexing, so specify 'ij' for (nx,ny,nz)
-        X, Y, Z = np.meshgrid(self.axes, indexing='ij')
+        X, Y, Z = np.meshgrid(*self.axes, indexing='ij')
 
         # shape => (nx, ny, nz, 3)
         self.grid = np.stack([X, Y, Z], axis=-1)

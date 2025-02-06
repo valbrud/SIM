@@ -48,15 +48,15 @@
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 
 
-<div class="viewcode-block" id="SSNRHandler">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNRHandler</span><span class="p">:</span>
+<div class="viewcode-block" id="SSNRBase">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase">[docs]</a>
+<span class="k">class</span> <span class="nc">SSNRBase</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optical_system</span> <span class="o">=</span> <span class="n">optical_system</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="SSNRHandler.compute_ssnr">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_ssnr">[docs]</a>
+<div class="viewcode-block" id="SSNRBase.compute_ssnr">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase.compute_ssnr">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">compute_ssnr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="o">...</span></div>
@@ -71,8 +71,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_optical_system</span> <span class="o">=</span> <span class="n">new_optical_system</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="SSNRHandler.ring_average_ssnr">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler.ring_average_ssnr">[docs]</a>
+<div class="viewcode-block" id="SSNRBase.ring_average_ssnr">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase.ring_average_ssnr">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">ring_average_ssnr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">q_axes</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span>
@@ -88,14 +88,14 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">averaged_slices</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
-<div class="viewcode-block" id="SSNRHandler.compute_ssnr_volume">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_ssnr_volume">[docs]</a>
+<div class="viewcode-block" id="SSNRBase.compute_ssnr_volume">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase.compute_ssnr_volume">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_ssnr_volume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">volume_element</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span><span class="p">))</span> <span class="o">*</span> <span class="n">volume_element</span> <span class="o">*</span> <span class="n">factor</span></div>
 
 
-<div class="viewcode-block" id="SSNRHandler.compute_true_ssnr_entropy">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_true_ssnr_entropy">[docs]</a>
+<div class="viewcode-block" id="SSNRBase.compute_true_ssnr_entropy">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase.compute_true_ssnr_entropy">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_true_ssnr_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="n">noise_filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span><span class="p">)]</span>
         <span class="nb">sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">noise_filtered</span><span class="p">)</span>
@@ -104,8 +104,8 @@
         <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">factor</span></div>
 
 
-<div class="viewcode-block" id="SSNRHandler.compute_radial_ssnr_entropy">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRHandler.compute_radial_ssnr_entropy">[docs]</a>
+<div class="viewcode-block" id="SSNRBase.compute_radial_ssnr_entropy">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRBase.compute_radial_ssnr_entropy">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_radial_ssnr_entropy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
         <span class="n">ssnr_ra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring_average_ssnr</span><span class="p">()</span>
         <span class="n">ssnr_ra</span> <span class="o">=</span> <span class="n">ssnr_ra</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ssnr_ra</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ssnr_ra</span><span class="o">.</span><span class="n">imag</span><span class="p">)]</span>
@@ -120,7 +120,7 @@
 
 <div class="viewcode-block" id="SSNRWidefield">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRWidefield">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNRWidefield</span><span class="p">(</span><span class="n">SSNRHandler</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SSNRWidefield</span><span class="p">(</span><span class="n">SSNRBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">optical_system</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_ssnr</span><span class="p">()</span>
@@ -136,7 +136,7 @@
 
 <div class="viewcode-block" id="SSNRConfocal">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRConfocal">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNRConfocal</span><span class="p">(</span><span class="n">SSNRHandler</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SSNRConfocal</span><span class="p">(</span><span class="n">SSNRBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">optical_system</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ssnr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_ssnr</span><span class="p">()</span>
@@ -155,7 +155,7 @@
 
 <div class="viewcode-block" id="SSNRCalculator">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRCalculator">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNRCalculator</span><span class="p">(</span><span class="n">SSNRHandler</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SSNRCalculator</span><span class="p">(</span><span class="n">SSNRBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">optical_system</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illumination</span> <span class="o">=</span> <span class="n">illumination</span>
@@ -459,9 +459,9 @@
 
 
 
-<div class="viewcode-block" id="SSNRCalculator3dSIM">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRCalculator3dSIM">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNRCalculator3dSIM</span><span class="p">(</span><span class="n">SSNRCalculator</span><span class="p">):</span>
+<div class="viewcode-block" id="SSNR3dSIMBase">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNR3dSIMBase">[docs]</a>
+<span class="k">class</span> <span class="nc">SSNR3dSIMBase</span><span class="p">(</span><span class="n">SSNRCalculator</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Trying to initialize 3D SIM Calculator with 2D OTF!&quot;</span><span class="p">)</span>
@@ -473,7 +473,7 @@
 
 <div class="viewcode-block" id="SSNR3dSIM3dShifts">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNR3dSIM3dShifts">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNR3dSIM3dShifts</span><span class="p">(</span><span class="n">SSNRCalculator3dSIM</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SSNR3dSIM3dShifts</span><span class="p">(</span><span class="n">SSNR3dSIMBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -518,7 +518,7 @@
 
 <div class="viewcode-block" id="SSNR3dSIM2dShifts">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNR3dSIM2dShifts">[docs]</a>
-<span class="k">class</span> <span class="nc">SSNR3dSIM2dShifts</span><span class="p">(</span><span class="n">SSNRCalculator3dSIM</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">SSNR3dSIM2dShifts</span><span class="p">(</span><span class="n">SSNR3dSIMBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="p">{}</span>
