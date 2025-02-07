@@ -81,6 +81,42 @@ class SSNRBase:
     def compute_full_ssnr(self, object_ft):
         ...
 
+class SSNRPointScanning(SSNRBase):
+    def __init__(self, optical_system):
+        super().__init__(optical_system)
+        self._compute_ssnri()
+
+    def _compute_ssnri(self):
+        self._ssnri = np.abs(self.optical_system.otf) ** 2
+
+    def compute_full_ssnr(self, object_ft):
+        return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
+
+
+class SSNRPointScanning2D(SSNRPointScanning):
+    def __init__(self, optical_system):
+        if len(optical_system.otf.shape) == 3:
+            raise AttributeError("Trying to initialize 2D Confocal Calculator with 3D OTF!")
+        if not len(optical_system.otf.shape) == 2:
+            raise AttributeError("Trying to initialize 2D Confocal Calculator with wrong OTF!")
+        super().__init__(optical_system)
+
+
+class SSNRPointScanning3D(SSNRPointScanning):
+    def __init__(self, optical_system):
+        if len(optical_system.otf.shape) == 2:
+            raise AttributeError("Trying to initialize 3D Confocal Calculator with 2D OTF!")
+        if not len(optical_system.otf.shape) == 3:
+            raise AttributeError("Trying to initialize 3D Confocal Calculator with wrong OTF!")
+        super().__init__(optical_system)
+
+
+SSNRConfocal2D = SSNRPointScanning2D
+SSNRConfocal3D = SSNRPointScanning3D
+
+SSNRRCM2D = SSNRPointScanning2D
+SSNRRCM3D = SSNRPointScanning3D
+
 
 class SSNRWidefield(SSNRBase):
     def __init__(self, optical_system):
@@ -94,40 +130,11 @@ class SSNRWidefield(SSNRBase):
         return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
 
 
-class SSNRConfocal(SSNRBase):
-    def __init__(self, optical_system):
-        super().__init__(optical_system)
-        self._compute_ssnri()
-
-    def _compute_ssnri(self):
-        otf_confocal = np.abs(wrappers.wrapped_fftn(np.abs(self.optical_system.psf) ** 2))
-        otf_confocal /= np.amax(otf_confocal)
-        self._ssnri = otf_confocal ** 2
-
-    def compute_full_ssnr(self, object_ft):
-        return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
-
-
-class SSNRConfocal2D(SSNRConfocal):
-    def __init__(self, optical_system):
-        if len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 2D Confocal Calculator with 3D OTF!")
-        if not len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 2D Confocal Calculator with wrong OTF!")
-        super().__init__(optical_system)
-
-
-class SSNRConfocal3D(SSNRConfocal):
-    def __init__(self, optical_system):
-        if len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 3D Confocal Calculator with 2D OTF!")
-        if not len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 3D Confocal Calculator with wrong OTF!")
-        super().__init__(optical_system)
-
-
 class SSNRSIM(SSNRBase):
-    def __init__(self, illumination: PlaneWavesSIM, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system, kernel=None,
+                 readout_noise_variance=0,
+                 save_memory=False):
         if not isinstance(illumination, PlaneWavesSIM):
             raise AttributeError("Illumination data is not of SIM type!")
         super().__init__(optical_system)

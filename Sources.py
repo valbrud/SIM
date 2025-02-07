@@ -119,7 +119,7 @@ class PointSource(ElectricFieldSource):
         return electric_field
 
 
-class IntensityPlaneWave(IntensitySource):
+class IntensityHarmonic(IntensitySource):
     """
     Intensity plane wave is a component of the Fourier
     transform of the energy density distribution in a given volume
@@ -127,7 +127,7 @@ class IntensityPlaneWave(IntensitySource):
     """
     def __init__(self, amplitude=0., phase=0., wavevector=np.array((0., 0., 0.))):
         """
-        Constructs an IntensityPlaneWave object.
+        Constructs an IntensityHarmonic object.
 
         Args:
             amplitude (float): The amplitude of the plane wave.
@@ -143,3 +143,36 @@ class IntensityPlaneWave(IntensitySource):
                                                  + self.phase))
         return intensity
 
+def multiply_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
+    """
+    Multiplies two harmonic sources.
+
+    Args:
+        harmonic1 (IntensityHarmonic): The first harmonic source.
+        harmonic2 (IntensityHarmonic): The second harmonic source.
+
+    Returns:
+        IntensityHarmonic: The product of the two harmonic sources.
+    """
+    amplitude = harmonic1.amplitude * harmonic2.amplitude
+    phase = harmonic1.phase + harmonic2.phase
+    wavevector = harmonic1.wavevector + harmonic2.wavevector
+    return IntensityHarmonic(amplitude, phase, wavevector)
+
+def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
+    """
+    Adds two harmonic sources.
+
+    Args:
+        harmonic1 (IntensityHarmonic): The first harmonic source.
+        harmonic2 (IntensityHarmonic): The second harmonic source.
+
+    Returns:
+        IntensityHarmonic: The sum of the two harmonic sources.
+    """
+    if not np.isclose(harmonic1.wavevector, harmonic2.wavevector).all():
+        raise ValueError("k1 != k2. Addition of harmonics (interference) only defined for the same wavevectors!")
+    amplitude = harmonic1.amplitude * np.exp(1j * harmonic1.phase) + harmonic2.amplitude * np.exp(1j * harmonic2.phase)
+    phase = 0 # Return 'normal' form of harmonics with a complex amplitude containing all the phase information
+    wavevector = harmonic1.wavevector
+    return IntensityHarmonic(amplitude, phase, wavevector)

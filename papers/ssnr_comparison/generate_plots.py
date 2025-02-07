@@ -14,11 +14,11 @@ import time
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
-from Illumination import Illumination
-from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield, SSNRConfocal
+import Illumination
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield
 from OpticalSystems import System4f3D, System4f2D
 import stattools
-from Sources import IntensityPlaneWave, PlaneWave
+from Sources import IntensityHarmonic, PlaneWave
 import tqdm
 
 path_to_figures = 'Figures/'
@@ -71,6 +71,7 @@ squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+squareLNonLinear = Illumination.IlluminationNPhotonSIM3D.init_from_linear_illumination(squareL, 2)
 
 # box = Box.Box(conventional.waves.values(), box_size=psf_size, point_number=N)
 # box.compute_intensity_from_spatial_waves()
@@ -85,11 +86,12 @@ conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3,
 widefield = configurations.get_widefield()
 
 illumination_list = {
-    widefield: "Widefield",
-    conventional: "Conventional",
+    # widefield: "Widefield",
+    # conventional: "Conventional",
     squareL: "SquareL",
-    squareC: "SquareC",
-    hexagonal: "Hexagonal",
+    squareLNonLinear: "SquareLNonLinear",
+    # squareC: "SquareC",
+    # hexagonal: "Hexagonal",
 }
 
 

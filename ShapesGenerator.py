@@ -79,7 +79,7 @@ def generate_sphere_slices(image_size: tuple[int, int, int], point_number: int, 
     return array
 
 
-def generate_random_lines(image_size: tuple[int, int, int], point_number: int, line_width: float, num_lines: int, intensity: float) -> np.ndarray:
+def generate_random_lines(image_size: tuple[int, int], point_number: int, line_width: float, num_lines: int, intensity: float) -> np.ndarray:
     """
     Generate an image with randomly oriented lines.
 
@@ -120,10 +120,10 @@ def generate_random_lines(image_size: tuple[int, int, int], point_number: int, l
             y_high = min(y_low + 1, point_number - 1)
 
             # Bilinear interpolation to distribute intensity between neighboring pixels
-            image[x_low, y_low] += intensity / num_points * (x_high - x_idx) * (y_high - y_idx)
-            image[x_high, y_low] += intensity / num_points * (x_idx - x_low) * (y_high - y_idx)
-            image[x_low, y_high] += intensity / num_points * (x_high - x_idx) * (y_idx - y_low)
-            image[x_high, y_high] += intensity / num_points * (x_idx - x_low) * (y_idx - y_low)
+            image[x_low, y_low] += intensity  * (x_high - x_idx) * (y_high - y_idx)
+            image[x_high, y_low] += intensity  * (x_idx - x_low) * (y_high - y_idx)
+            image[x_low, y_high] += intensity  * (x_high - x_idx) * (y_idx - y_low)
+            image[x_high, y_high] += intensity  * (x_idx - x_low) * (y_idx - y_low)
 
     # Apply Gaussian smoothing to create smooth line edges
     smoothed_image = gaussian_filter(image, sigma=(line_width, line_width))

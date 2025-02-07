@@ -62,19 +62,19 @@ class TestBox(unittest.TestCase):
         k1 = k * np.sin(theta)
         k2 = k * (np.cos(theta) - 1)
         waves = [
-                 Sources.IntensityPlaneWave(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
-                 Sources.IntensityPlaneWave(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
-                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, k2))),
-                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, k2))),
-                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, k1, k2))),
-                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, -k1, k2))),
-                 Sources.IntensityPlaneWave(-1j * b / 2, 0, np.array((k1, 0, -k2))),
-                 Sources.IntensityPlaneWave(1j * b / 2, 0, np.array((-k1, 0, -k2))),
-                 Sources.IntensityPlaneWave(1 * b / 2, 0, np.array((0, k1, -k2))),
-                 Sources.IntensityPlaneWave(-1 * b / 2, 0, np.array((0, -k1, -k2)))
+                 Sources.IntensityHarmonic(1 + 2 * b ** 2, 0, np.array((0, 0, 0))),
+                 Sources.IntensityHarmonic(-b ** 2 / 2, 0, np.array((-2 * k1, 0, 0))),
+                 Sources.IntensityHarmonic(-b ** 2 / 2, 0, np.array((2 * k1, 0, 0))),
+                 Sources.IntensityHarmonic(-b ** 2 / 2, 0, np.array((0, 2 * k1, 0))),
+                 Sources.IntensityHarmonic(-b ** 2 / 2, 0, np.array((0, -2 * k1, 0))),
+                 Sources.IntensityHarmonic(-1j * b / 2, 0, np.array((k1, 0, k2))),
+                 Sources.IntensityHarmonic(1j * b / 2, 0, np.array((-k1, 0, k2))),
+                 Sources.IntensityHarmonic(-1 * b / 2, 0, np.array((0, k1, k2))),
+                 Sources.IntensityHarmonic(1 * b / 2, 0, np.array((0, -k1, k2))),
+                 Sources.IntensityHarmonic(-1j * b / 2, 0, np.array((k1, 0, -k2))),
+                 Sources.IntensityHarmonic(1j * b / 2, 0, np.array((-k1, 0, -k2))),
+                 Sources.IntensityHarmonic(1 * b / 2, 0, np.array((0, k1, -k2))),
+                 Sources.IntensityHarmonic(-1 * b / 2, 0, np.array((0, -k1, -k2)))
                 ]
         box = Box(waves, 10, 40)
         box.compute_intensity_from_spatial_waves()

@@ -184,37 +184,6 @@ class OpticalSystem2D(OpticalSystem):
         x_grid = x_sorted.reshape(x.size, y.size, 2)
         return x_grid
 
-    def compute_effective_otfs_2dSIM(self, illumination: Illumination) -> dict[tuple[int, tuple[int]], np.float64]:
-        """
-        Compute the effective OTFs for 2D SIM illumination
-        (in the case of 2D SIM they are just shifted).
-
-        Args:
-            illumination: Illumination object containing wave information.
-
-        Returns:
-            dict: Effective OTFs.
-        """
-        waves = illumination.waves
-        effective_psfs = {}
-        effective_otfs = {}
-        if len(illumination.indices2d) != len(illumination.indices3d):
-            raise AttributeError("2D optical system assums 2D illumination!")
-        X, Y = np.meshgrid(*self.psf_coordinates)
-        for r in range(illumination.Mr):
-            wavevectors, indices = illumination.get_wavevectors_projected(r)
-            for wavevector, index in zip(wavevectors, indices):
-                effective_psf = 0
-                amplitude = waves[(*index, 0)].amplitude
-                phase_shifted = np.exp(1j * np.einsum('ijk,i ->jk', np.array((X, Y)), wavevector)) * self.psf
-                effective_psf += amplitude * phase_shifted
-                effective_psfs[(r, index)] = effective_psf
-                effective_otfs[(r, index)] = wrappers.wrapped_fftn(effective_psf)
-                # effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
-                # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
-                # plt.show()
-        return effective_otfs
-
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":
             raise AttributeError("Due to the major code refactoring, Fourier interpolation is temporarily not available")
@@ -282,70 +251,6 @@ class OpticalSystem3D(OpticalSystem):
         x_sorted = x_vectors[np.lexsort((x_vectors[:, -2], x_vectors[:, -1], x_vectors[:, 0]))]
         x_grid = x_sorted.reshape(x.size, y.size, z.size, 3)
         return x_grid
-
-    def compute_effective_otfs_projective_3dSIM(self, illumination: Illumination) -> dict[tuple[int, tuple[int]], np.float64]:
-        """
-        Compute the effective OTFs for projective 3D SIM illumination.
-
-        Args:
-            illumination: Illumination object containing wave information.
-
-        Returns:
-            dict: Effective OTFs.
-        """
-        waves = illumination.waves
-        effective_psfs = {}
-        effective_otfs = {}
-        X, Y, Z = np.meshgrid(*self.psf_coordinates)
-        for r in range(illumination.Mr):
-            angle = illumination.angles[r]
-            indices = illumination.rearranged_indices
-            for xy_indices in illumination.indices2d:
-                effective_psf = 0
-                for z_index in indices[xy_indices]:
-                    wavevector = VectorOperations.rotate_vector3d(
-                        waves[(*xy_indices, z_index)].wavevector, np.array((0, 0, 1)), angle)
-                    amplitude = waves[(*xy_indices, z_index)].amplitude
-                    phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevector)), axes=(1, 0, 2)) * self.psf
-                    effective_psf += amplitude * phase_shifted
-                effective_psfs[(r, xy_indices)] = effective_psf
-                effective_otfs[(r, xy_indices)] = wrappers.wrapped_fftn(effective_psf)
-                # if xy_indices == (0, 1):
-                #     plt.imshow(np.log(1 + 10**8 * np.abs(effective_otfs[(r, xy_indices)][:, :, 50])))
-                #     plt.show()
-                # plt.gca().set_title(f'{xy_indices}')
-                # plt.imshow(np.abs(np.log(1 + 10**8 * effective_otfs[(r, xy_indices)][:, :, 50])))
-                # plt.show()
-                # effective_otfs[(r, xy_indices)] = np.transpose(wrappers.wrapped_fftn(effective_psf), axes=(1, 0, 2))
-                # plt.imshow(np.abs((effective_otfs[(r, xy_indices)][:, :, 25])))
-                # plt.show()
-        return effective_otfs
-
-    def compute_effective_otfs_true_3dSIM(self, illumination: Illumination) -> dict[tuple[int, tuple[int]], np.float64]:
-        """
-        Compute the effective OTFs for true 3D SIM
-        (in the case of true 3D SIM, they are just shifted).
-
-        Args:
-            illumination: Illumination object containing wave information.
-
-        Returns:
-            tuple: Effective PSFs and OTFs.
-        """
-        waves = illumination.waves
-        effective_psfs = {}
-        effective_otfs = {}
-        X, Y, Z = np.meshgrid(*self.psf_coordinates)
-        for r in range(illumination.Mr):
-            wavevectors, indices = illumination.get_wavevectors(r)
-            for index in indices:
-                amplitude = waves[indices].amplitude
-                phase_shifted = np.exp(1j * np.transpose(np.einsum('ijkl,i ->jkl', np.array((X, Y, Z)), wavevectors[index])), axes=(1, 0, 2)) * self.psf
-                effective_psf = amplitude * phase_shifted
-                effective_psfs[(r, index)] = effective_psf
-                effective_otfs[(r, index)] = wrappers.wrapped_fftn(effective_psf)
-
-        return effective_otfs
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":

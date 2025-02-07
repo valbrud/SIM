@@ -1,7 +1,7 @@
 import unittest
 from config.IlluminationConfigurations import *
 from Box import Box
-from Sources import PlaneWave, IntensityPlaneWave
+from Sources import PlaneWave, IntensityHarmonic
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
@@ -11,33 +11,33 @@ sys.path.append('../')
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):
         sources = [
-            Sources.IntensityPlaneWave(a0 / norm, 0, np.array((0, 0, 0))),
+            Sources.IntensityHarmonic(a0 / norm, 0, np.array((0, 0, 0))),
 
-            Sources.IntensityPlaneWave(b ** 2 / norm, 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave(b ** 2 / norm, 0, np.array((-2 * k1, 0, 0))),
+            Sources.IntensityHarmonic(b ** 2 / norm, 0, np.array((2 * k1, 0, 0))),
+            Sources.IntensityHarmonic(b ** 2 / norm, 0, np.array((-2 * k1, 0, 0))),
 
-            Sources.IntensityPlaneWave(b / norm, 0, np.array((k1, 0, k2))),
-            Sources.IntensityPlaneWave(b / norm, 0, np.array((-k1, 0, k2))),
-            Sources.IntensityPlaneWave(b / norm, 0, np.array((k1, 0, -k2))),
-            Sources.IntensityPlaneWave(b / norm, 0, np.array((-k1, 0, -k2))),
+            Sources.IntensityHarmonic(b / norm, 0, np.array((k1, 0, k2))),
+            Sources.IntensityHarmonic(b / norm, 0, np.array((-k1, 0, k2))),
+            Sources.IntensityHarmonic(b / norm, 0, np.array((k1, 0, -k2))),
+            Sources.IntensityHarmonic(b / norm, 0, np.array((-k1, 0, -k2))),
         ]
         three_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, (k1, k1, k2))
         assert (three_waves_dict.keys() == three_waves_illumination.keys())
 
         sources = [
-            Sources.IntensityPlaneWave(2 + 4 * b ** 2, 0, np.array((0, 0, 0))),
-            Sources.IntensityPlaneWave(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave(-b ** 2, 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityPlaneWave(-b ** 2, 0, np.array((0, 2 * k1, 0))),
-            Sources.IntensityPlaneWave(-b ** 2, 0, np.array((0, -2 * k1, 0))),
-            Sources.IntensityPlaneWave(-1j * b, 0, np.array((k1, 0, k2))),
-            Sources.IntensityPlaneWave(1j * b, 0, np.array((-k1, 0, k2))),
-            Sources.IntensityPlaneWave(-1 * b, 0, np.array((0, k1, k2))),
-            Sources.IntensityPlaneWave(1 * b, 0, np.array((0, -k1, k2))),
-            Sources.IntensityPlaneWave(-1j * b, 0, np.array((k1, 0, -k2))),
-            Sources.IntensityPlaneWave(1j * b, 0, np.array((-k1, 0, -k2))),
-            Sources.IntensityPlaneWave(1 * b, 0, np.array((0, k1, -k2))),
-            Sources.IntensityPlaneWave(-1 * b, 0, np.array((0, -k1, -k2))),
+            Sources.IntensityHarmonic(2 + 4 * b ** 2, 0, np.array((0, 0, 0))),
+            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
+            Sources.IntensityHarmonic(-b ** 2, 0, np.array((2 * k1, 0, 0))),
+            Sources.IntensityHarmonic(-b ** 2, 0, np.array((0, 2 * k1, 0))),
+            Sources.IntensityHarmonic(-b ** 2, 0, np.array((0, -2 * k1, 0))),
+            Sources.IntensityHarmonic(-1j * b, 0, np.array((k1, 0, k2))),
+            Sources.IntensityHarmonic(1j * b, 0, np.array((-k1, 0, k2))),
+            Sources.IntensityHarmonic(-1 * b, 0, np.array((0, k1, k2))),
+            Sources.IntensityHarmonic(1 * b, 0, np.array((0, -k1, k2))),
+            Sources.IntensityHarmonic(-1j * b, 0, np.array((k1, 0, -k2))),
+            Sources.IntensityHarmonic(1j * b, 0, np.array((-k1, 0, -k2))),
+            Sources.IntensityHarmonic(1 * b, 0, np.array((0, k1, -k2))),
+            Sources.IntensityHarmonic(-1 * b, 0, np.array((0, -k1, -k2))),
         ]
         five_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
         assert (five_waves_dict.keys() == s_polarized_waves.keys())
@@ -76,7 +76,7 @@ class TestIllumination(unittest.TestCase):
         print(len(fourier_peaks))
         intensity_sources_discrete = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
-            intensity_sources_discrete.append(IntensityPlaneWave(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+            intensity_sources_discrete.append(IntensityHarmonic(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
             print(fourier_peak*np.pi * 2)
         res = stattools.find_optimal_base_vectors(fourier_peaks)
         print(fourier_peaks[:10])

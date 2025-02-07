@@ -108,7 +108,7 @@ class PlaneWaveInitializationWidget(InitializationWidget):
         self.sendInfo.emit(info)
 
 
-class IntensityPlaneWaveInitializationWidget(InitializationWidget):
+class IntensityHarmonicInitializationWidget(InitializationWidget):
     sendInfo = pyqtSignal(list)
 
     def __init__(self):

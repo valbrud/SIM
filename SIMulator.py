@@ -11,84 +11,37 @@ This class will be probably split into two classes in the future. The detailed d
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-
+from OpticalSystems import OpticalSystem
+from abc import abstractmethod
 import Sources
 import wrappers
 from Box import BoxSIM, Field
+from Illumination import PlaneWavesSIM
+from Camera import Camera
 from VectorOperations import VectorOperations
 
 
-class SIMulator(BoxSIM):
-    def __init__(self, illumination, optical_system, box_size=10, point_number=100, readout_noise_variance=0, additional_info=None):
-        super().__init__(illumination, box_size, point_number, additional_info)
+class SIMulator:
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system: OpticalSystem,
+                 camera: Camera = None,
+                 readout_noise_variance=0):
         self.optical_system = optical_system
-        self.SDR_coefficients = None
-        self.effective_psfs = {}
-        self.effective_otfs = {}
-        self.effective_illumination = np.zeros((self.illumination.Mr, self.illumination.Mt, len(self.illumination.waves), *self.optical_system.psf.shape))
+        self.illumination = illumination
         self.readout_noise_variance = readout_noise_variance
+        self.camera = camera
+        self.readout_noise_variance = 0
+        self.effective_psfs = {}
+        self.effective_illumination_patterns = {}
+        self._compute_effective_illumination_patterns()
 
-    def _compute_effective_psfs(self):
-        waves = self.illumination.waves
-        X, Y, Z = np.meshgrid(*self.optical_system.psf_coordinates)
-        indices = self.illumination.rearranged_indices
-        for m in self.illumination.indices2d:
-            effective_psf = 0
-            for z_index in indices[m]:
-                wavevector = waves[(*m, z_index)].wavevector
-                kp = wavevector[2]
-                amplitude = waves[(*m, z_index)].amplitude
-                phase_shifted = np.exp(1j * Z * kp) * self.optical_system.psf
-                effective_psf += amplitude * phase_shifted
-            self.effective_psfs[m] = effective_psf
-            # plt.imshow(np.log(1 + 10**4 * np.abs(effective_otfs[(r, w)][:, :, 50])))
-            # plt.show()
+    @abstractmethod
+    def generate_sim_images(self, object, effective_psfs=None):
+        ...
 
-    def generate_sim_images(self, object):
-        np.random.seed(1234)
-        if not self.effective_psfs:
-            self._compute_effective_psfs()
-        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.point_number), dtype=np.complex128)
-        for r in range(self.illumination.Mr):
-            wavevectors2d, _ = self.illumination.get_wavevectors_projected(r)
-            for w in range(len(wavevectors2d)):  #to parallelize
-                m = self.illumination.indices2d[w]
-                wavevector = np.array((*wavevectors2d[w], 0))
-                effective_illumination = np.exp(1j * np.einsum('ijkl,l ->ijk', self.grid, wavevector))
-                for n in range(self.illumination.Mt):
-                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, m)]
-                    sim_images[r, n] += scipy.signal.convolve(effective_illumination_phase_shifted * object, self.effective_psfs[m], mode='same')
-        sim_images = np.abs(sim_images)
-        for r in range(self.illumination.Mr):
-            for n in range(self.illumination.Mt):
-                # print(r, n, np.sum(sim_images[r, n]))
-                # plt.imshow(sim_images[r, n][:, :, 25])
-                # plt.show()
-
-                poisson = np.random.poisson(sim_images[r, n])
-                gaussian = np.random.normal(0, scale=self.readout_noise_variance, size=object.shape)
-                sim_images[r, n] = poisson + gaussian
-
-        return sim_images
-
-    def generate_sim_images2d(self, object):
-        np.random.seed(1234)
-        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.point_number[:2]), dtype=np.complex128)
-        for r in range(self.illumination.Mr):
-            wavevectors, keys = self.illumination.get_wavevectors_projected(r)
-            for wavevector, m in zip(wavevectors, keys):  #to parallelize
-                effective_illumination = np.exp(1j * np.einsum('ijk,k ->ij', self.grid[:, :, 0, :2], wavevector))
-                for n in range(self.illumination.Mt):
-                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, m)]
-                    sim_images[r, n] += scipy.signal.convolve(effective_illumination_phase_shifted * object, self.optical_system.psf, mode='same')
-        sim_images = np.abs(sim_images)
-        for r in range(self.illumination.Mr):
-            for n in range(self.illumination.Mt):
-                poisson = np.random.poisson(sim_images[r, n])
-                gaussian = np.random.normal(0, scale=self.readout_noise_variance, size=object.shape)
-                sim_images[r, n] = poisson + gaussian
-
-        return sim_images
+    @abstractmethod
+    def compute_effective_illumination_patterns(self, object, effective_psfs=None):
+        ...
 
     def generate_widefield(self, sim_images):
         widefield_image = np.zeros(sim_images.shape[2:])
@@ -97,3 +50,89 @@ class SIMulator(BoxSIM):
                 widefield_image += image
         return widefield_image
 
+
+class SIMulator2D(SIMulator):
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system: OpticalSystem,
+                 camera: Camera = None,
+                 readout_noise_variance=0):
+        if not len(optical_system.psf.shape) == 2:
+            raise ValueError("The PSF must be 2D for 2D SIM simulations.")
+        super().__init__(illumination, optical_system, camera, readout_noise_variance)
+
+
+    def generate_sim_images(self, object, effective_psfs=None):
+        if not effective_psfs:
+            if not self.effective_psfs:
+                self.effective_psfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+        else:
+            self.effective_psfs = effective_psfs
+
+        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        X, Y = np.meshgrid(*self.optical_system.psf_coordinates)
+        grid = np.stack((X, Y), axis=-1)
+        for r in range(self.illumination.Mr):
+            for sim_index in self.illumination.rearranged_indices:
+                projective_index = self.illumination.rearranged_indices[sim_index][0]
+                index = self.illumination.glue_indices(sim_index, projective_index)
+                wavevector = np.array(self.illumination.waves[index])
+                wavevector[np.bool(1 - np.array(self.illumination.dimensions))] = 0
+                effective_illumination = np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
+                for n in range(self.illumination.Mt):
+                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, sim_index)]
+                    sim_images[r, n] += scipy.signal.convolve(effective_illumination_phase_shifted * object, self.effective_psfs[sim_index], mode='same')
+        sim_images = np.real(sim_images)
+
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                if self.camera:
+                    sim_images[r, n] = self.camera.get_image(sim_images[r, n])
+                else:
+                    poisson = np.random.poisson(sim_images[r, n])
+                    gaussian = np.random.normal(0, scale=self.readout_noise_variance, size=object.shape)
+                    sim_images[r, n] = poisson + gaussian
+
+        return sim_images
+
+
+class SIMulator3D(SIMulator):
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system: OpticalSystem,
+                 camera: Camera = None,
+                 readout_noise_variance=0):
+        if not len(optical_system.psf.shape) == 3:
+            raise ValueError("The PSF must be 3D for 3D SIM simulations.")
+        super().__init__(illumination, optical_system, camera, readout_noise_variance)
+
+    def generate_sim_images(self, object, effective_psfs=None):
+        if not effective_psfs:
+            if not self.effective_psfs:
+                self.effective_psfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+        else:
+            self.effective_psfs = effective_psfs
+
+        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        X, Y, Z = np.meshgrid(*self.optical_system.psf_coordinates)
+        grid = np.stack((X, Y, Z), axis=-1)
+        for r in range(self.illumination.Mr):
+            for sim_index in self.illumination.rearranged_indices:
+                projective_index = self.illumination.rearranged_indices[sim_index][0]
+                index = self.illumination.glue_indices(sim_index, projective_index)
+                wavevector = np.array(self.illumination.waves[index])
+                wavevector[np.bool(1 - np.array(self.illumination.dimensions))] = 0
+                effective_illumination = np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
+                for n in range(self.illumination.Mt):
+                    effective_illumination_phase_shifted = effective_illumination * self.illumination.phase_matrix[(r, n, sim_index)]
+                    sim_images[r, n] += scipy.signal.convolve(effective_illumination_phase_shifted * object, self.effective_psfs[sim_index], mode='same')
+        sim_images = np.real(sim_images)
+
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                if self.camera:
+                    sim_images[r, n] = self.camera.get_image(sim_images[r, n])
+                else:
+                    poisson = np.random.poisson(sim_images[r, n])
+                    gaussian = np.random.normal(0, scale=self.readout_noise_variance, size=object.shape)
+                    sim_images[r, n] = poisson + gaussian
+
+        return sim_images

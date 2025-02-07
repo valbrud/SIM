@@ -12,7 +12,7 @@ import time
 from matplotlib.widgets import Slider
 from OpticalSystems import System4f3D
 import ShapesGenerator
-from SIMulator import SIMulator
+from SIMulator import SIMulator3D
 sys.path.append('../')
 configurations = BFPConfiguration()
 
@@ -42,19 +42,13 @@ class TestSIMImages(unittest.TestCase):
                                            apodization_function="Sine")
         plt.imshow(optical_system.psf[:, :, N//2])
         # plt.show()
-        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
-        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1 / 2 ** 0.5, 1, Mt=64)
-        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=64)
         illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
-        illumination_widefield = configurations.get_widefield()
 
         spatial_shifts = np.array(((0., 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)))
         spatial_shifts /= (5 * np.sin(theta))
-        # spatial_shifts = np.array(((1., 9, 0), (2, 2, 0), (3, 6, 0), (4, 10, 0), (5, 3, 0), (6, 7, 0), (7, 11, 0), (8, 4, 0), (9, 8, 0), (10, 1, 0), (11, 5, 0)))
-        # spatial_shifts /= (11 * np.sin(np.pi / 4))
         illumination_3waves.spatial_shifts = spatial_shifts
 
-        simulator = SIMulator(illumination_3waves, optical_system, psf_size, N)
+        simulator = SIMulator3D(illumination_3waves, optical_system)
         images = simulator.generate_sim_images(image)
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
         plt.subplots_adjust(left=0.1,

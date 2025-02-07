@@ -180,7 +180,7 @@ class Box:
         fourier_peaks, amplitudes = stattools.estimate_localized_peaks(self.intensity_fourier_space, self.frequency_axes)
         numeric_spatial_waves = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
-            numeric_spatial_waves.append(Sources.IntensityPlaneWave(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+            numeric_spatial_waves.append(Sources.IntensityHarmonic(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
         for wave in numeric_spatial_waves:
             self.numerically_approximated_intensity_fields.append(Field(wave, self.grid, self.source_identifier))
             self.source_identifier += 1
@@ -389,7 +389,7 @@ class BoxSIM(Box):
                 krm = VectorOperations.rotate_vector3d(field.source.wavevector,
                                                        np.array((0, 0, 1)), self.illumination.angles[r])
                 phase = np.dot(urn, krm)
-                source = Sources.IntensityPlaneWave(field.source.amplitude, field.source.phase, krm)
+                source = Sources.IntensityHarmonic(field.source.amplitude, field.source.phase, krm)
                 field_rotated = Field(source, self.grid, 0).field
                 intensity += field_rotated * np.exp(-1j * phase)
         self.illuminations_shifted[r, n] = intensity.real
