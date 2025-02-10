@@ -56,7 +56,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                     amplitude = 1
                 else:
                     raise AttributeError("The mode is not known and amplitudes are not provided")
-                source = Sources.IntensityHarmonic(amplitude, 0, np.array((*wavevector, 0)))
+                source = Sources.IntensityHarmonic3D(amplitude, 0, np.array((*wavevector, 0)))
                 normalized_illumination.append(Field(source, self.grid, self.source_identifier))
 
             for n in range(self.illumination.Mt):

@@ -180,7 +180,7 @@ class Box:
         fourier_peaks, amplitudes = stattools.estimate_localized_peaks(self.intensity_fourier_space, self.frequency_axes)
         numeric_spatial_waves = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
-            numeric_spatial_waves.append(Sources.IntensityHarmonic(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
+            numeric_spatial_waves.append(Sources.IntensityHarmonic3D(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
         for wave in numeric_spatial_waves:
             self.numerically_approximated_intensity_fields.append(Field(wave, self.grid, self.source_identifier))
             self.source_identifier += 1
@@ -342,7 +342,7 @@ class BoxSIM(Box):
         illuminations_shifted (np.ndarray): Array of shifted illuminations for different angles and shifts.
     """
 
-    def __init__(self, illumination: Illumination = confs.BFPConfiguration().get_widefield(), box_size=10, point_number=100, additional_info=None):
+    def __init__(self, illumination: Illumination, box_size=10, point_number=100, additional_info=None):
         """
         Initializes the BoxSIM with given illumination, size, and point number.
 
@@ -389,7 +389,7 @@ class BoxSIM(Box):
                 krm = VectorOperations.rotate_vector3d(field.source.wavevector,
                                                        np.array((0, 0, 1)), self.illumination.angles[r])
                 phase = np.dot(urn, krm)
-                source = Sources.IntensityHarmonic(field.source.amplitude, field.source.phase, krm)
+                source = Sources.IntensityHarmonic3D(field.source.amplitude, field.source.phase, krm)
                 field_rotated = Field(source, self.grid, 0).field
                 intensity += field_rotated * np.exp(-1j * phase)
         self.illuminations_shifted[r, n] = intensity.real

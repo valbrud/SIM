@@ -1,6 +1,6 @@
 import numpy as np
 import Sources
-from Illumination import IlluminationPlaneWaves3D
+from Illumination import IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from fractions import Fraction
 
@@ -13,7 +13,7 @@ class BFPConfiguration:
     def get_widefield(self):
 
         widefield = {
-            (0, 0, 0): Sources.IntensityHarmonic(1, 0, np.array((0, 0, 0)))
+            (0, 0, 0): Sources.IntensityHarmonic3D(1, 0, np.array((0, 0, 0)))
         }
 
         illumination = IlluminationPlaneWaves3D(widefield)
@@ -41,8 +41,8 @@ class BFPConfiguration:
             Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-9, 0, 1e-9))),
 
         ]
-        s_polarized_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
-        illumination =  IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
+        s_polarized_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
+        illumination = IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -95,22 +95,22 @@ class BFPConfiguration:
         }
 
         # s_polarized_waves = {
-        #     (0, 0, 0)  : Sources.IntensityHarmonic(a0, 0, np.array((0, 0, 0))),
+        #     (0, 0, 0)  : Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0))),
         #
-        #     (-2, 0, 0) : Sources.IntensityHarmonic((-b ** 2), 0, np.array((-2 * k1, 0, 0))),
-        #     (2, 0, 0)  : Sources.IntensityHarmonic((-b ** 2), 0, np.array((2 * k1, 0, 0))),
-        #     (0, 2, 0)  : Sources.IntensityHarmonic((-b ** 2), 0, np.array((0, 2 * k1, 0))),
-        #     (0, -2, 0) : Sources.IntensityHarmonic((-b ** 2), 0, np.array((0, -2 * k1, 0))),
+        #     (-2, 0, 0) : Sources.IntensityHarmonic3D((-b ** 2), 0, np.array((-2 * k1, 0, 0))),
+        #     (2, 0, 0)  : Sources.IntensityHarmonic3D((-b ** 2), 0, np.array((2 * k1, 0, 0))),
+        #     (0, 2, 0)  : Sources.IntensityHarmonic3D((-b ** 2), 0, np.array((0, 2 * k1, 0))),
+        #     (0, -2, 0) : Sources.IntensityHarmonic3D((-b ** 2), 0, np.array((0, -2 * k1, 0))),
         #
-        #     (1, 0, 1)  : Sources.IntensityHarmonic((-1j * p * b), 0, np.array((k1, 0, k2))),
-        #     (-1, 0, 1) : Sources.IntensityHarmonic((1j * p * b), 0, np.array((-k1, 0, k2))),
-        #     (0, 1, 1)  : Sources.IntensityHarmonic((-1 * p * b), 0, np.array((0, k1, k2))),
-        #     (0, -1, 1) : Sources.IntensityHarmonic((1 * p * b), 0, np.array((0, -k1, k2))),
+        #     (1, 0, 1)  : Sources.IntensityHarmonic3D((-1j * p * b), 0, np.array((k1, 0, k2))),
+        #     (-1, 0, 1) : Sources.IntensityHarmonic3D((1j * p * b), 0, np.array((-k1, 0, k2))),
+        #     (0, 1, 1)  : Sources.IntensityHarmonic3D((-1 * p * b), 0, np.array((0, k1, k2))),
+        #     (0, -1, 1) : Sources.IntensityHarmonic3D((1 * p * b), 0, np.array((0, -k1, k2))),
         #
-        #     (1, 0, -1) : Sources.IntensityHarmonic((-1j * p * b), 0, np.array((k1, 0, -k2))),
-        #     (-1, 0, -1): Sources.IntensityHarmonic((1j * p * b), 0, np.array((-k1, 0, -k2))),
-        #     (0, 1, -1) : Sources.IntensityHarmonic((1 * p * b), 0, np.array((0, k1, -k2))),
-        #     (0, -1, -1): Sources.IntensityHarmonic((-1 * p * b), 0, np.array((0, -k1, -k2)))
+        #     (1, 0, -1) : Sources.IntensityHarmonic3D((-1j * p * b), 0, np.array((k1, 0, -k2))),
+        #     (-1, 0, -1): Sources.IntensityHarmonic3D((1j * p * b), 0, np.array((-k1, 0, -k2))),
+        #     (0, 1, -1) : Sources.IntensityHarmonic3D((1 * p * b), 0, np.array((0, k1, -k2))),
+        #     (0, -1, -1): Sources.IntensityHarmonic3D((-1 * p * b), 0, np.array((0, -k1, -k2)))
         # }
 
         square_intensity_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(square_plane_waves)
@@ -147,27 +147,27 @@ class BFPConfiguration:
         #     Sources.PlaneWave(p/a0**0.5 * np.exp(1j * phase_shift), 1j * p/a0**0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, 0))),
         # }
         # circular_intensity_waves = {
-        #     (1, 1, 0)  : Sources.IntensityHarmonic(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, k1, 0))),
-        #     (-1, 1, 0) : Sources.IntensityHarmonic(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, k1, 0))),
-        #     (1, -1, 0) : Sources.IntensityHarmonic(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, -k1, 0))),
-        #     (-1, -1, 0): Sources.IntensityHarmonic(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, -k1, 0))),
+        #     (1, 1, 0)  : Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, k1, 0))),
+        #     (-1, 1, 0) : Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, k1, 0))),
+        #     (1, -1, 0) : Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, -k1, 0))),
+        #     (-1, -1, 0): Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, -k1, 0))),
         #
-        #     (0, 2, 0)  : Sources.IntensityHarmonic(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, 2 * k1, 0))),
-        #     (0, -2, 0) : Sources.IntensityHarmonic(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, -2 * k1, 0))),
-        #     (2, 0, 0)  : Sources.IntensityHarmonic(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((2 * k1, 0, 0))),
-        #     (-2, 0, 0) : Sources.IntensityHarmonic(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((-2 * k1, 0, 0))),
+        #     (0, 2, 0)  : Sources.IntensityHarmonic3D(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, 2 * k1, 0))),
+        #     (0, -2, 0) : Sources.IntensityHarmonic3D(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((0, -2 * k1, 0))),
+        #     (2, 0, 0)  : Sources.IntensityHarmonic3D(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((2 * k1, 0, 0))),
+        #     (-2, 0, 0) : Sources.IntensityHarmonic3D(-2 * b ** 2 * np.cos(theta) ** 2, 0, np.array((-2 * k1, 0, 0))),
         #
-        #     (1, 0, -1) : Sources.IntensityHarmonic(b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, -k2))),
-        #     (-1, 0, 1) : Sources.IntensityHarmonic(b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, k2))),
-        #     (1, 0, 1)  : Sources.IntensityHarmonic(-b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, k2))),
-        #     (-1, 0, -1): Sources.IntensityHarmonic(-b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, -k2))),
+        #     (1, 0, -1) : Sources.IntensityHarmonic3D(b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, -k2))),
+        #     (-1, 0, 1) : Sources.IntensityHarmonic3D(b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, k2))),
+        #     (1, 0, 1)  : Sources.IntensityHarmonic3D(-b * p * (1 + np.cos(theta)), 0, np.array((k1, 0, k2))),
+        #     (-1, 0, -1): Sources.IntensityHarmonic3D(-b * p * (1 + np.cos(theta)), 0, np.array((-k1, 0, -k2))),
         #
-        #     (0, 1, -1) : Sources.IntensityHarmonic(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, -k2))),
-        #     (0, 1, 1)  : Sources.IntensityHarmonic(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, k2))),
-        #     (0, -1, 1) : Sources.IntensityHarmonic(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, k2))),
-        #     (0, -1, -1): Sources.IntensityHarmonic(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, -k2))),
+        #     (0, 1, -1) : Sources.IntensityHarmonic3D(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, -k2))),
+        #     (0, 1, 1)  : Sources.IntensityHarmonic3D(-1j * b * p * (1 + np.cos(theta)), 0, np.array((0, k1, k2))),
+        #     (0, -1, 1) : Sources.IntensityHarmonic3D(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, k2))),
+        #     (0, -1, -1): Sources.IntensityHarmonic3D(1j * b * p * (1 + np.cos(theta)), 0, np.array((0, -k1, -k2))),
         #
-        #     (0, 0, 0)  : Sources.IntensityHarmonic(a0, 0, np.array((0, 0, 0)))
+        #     (0, 0, 0)  : Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0)))
         # }
 
         circular_intensity_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(circular_plane_waves)
@@ -189,44 +189,44 @@ class BFPConfiguration:
         a0 = 2 * p ** 2 + 6 * b ** 2
 
         seven_waves_list = [
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-k1, 3 ** 0.5 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((k1, 3 ** 0.5 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-k1, -3 ** 0.5 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((k1, -3 ** 0.5 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((0, 3 ** 0.5 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((0, -3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((2 * k1, 0, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-k1, 3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((k1, 3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-k1, -3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((k1, -3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((0, 3 ** 0.5 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((0, -3 ** 0.5 * k1, 0))),
 
-            Sources.IntensityHarmonic(a0, 0, np.array((0, 0, 0))),
+            Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0))),
 
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((k1, 0, 0))),
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((-k1, 0, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((k1, 0, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((-k1, 0, 0))),
 
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(b ** 2, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, 0))),
 
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((3 / 2 * k1, -3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-3 / 2 * k1, -3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((3 / 2 * k1, 3 ** 0.5 / 2 * k1, 0))),
-            Sources.IntensityHarmonic(-b ** 2, 0, np.array((-3 / 2 * k1, 3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((3 / 2 * k1, -3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-3 / 2 * k1, -3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((3 / 2 * k1, 3 ** 0.5 / 2 * k1, 0))),
+            Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-3 / 2 * k1, 3 ** 0.5 / 2 * k1, 0))),
 
-            Sources.IntensityHarmonic(1j * b * p, 0, np.array((-k1, 0, k2))),
-            Sources.IntensityHarmonic(1j * b * p, 0, np.array((-k1, 0, -k2))),
-            Sources.IntensityHarmonic(-1j * b * p, 0, np.array((k1, 0, k2))),
-            Sources.IntensityHarmonic(-1j * b * p, 0, np.array((k1, 0, -k2))),
+            Sources.IntensityHarmonic3D(1j * b * p, 0, np.array((-k1, 0, k2))),
+            Sources.IntensityHarmonic3D(1j * b * p, 0, np.array((-k1, 0, -k2))),
+            Sources.IntensityHarmonic3D(-1j * b * p, 0, np.array((k1, 0, k2))),
+            Sources.IntensityHarmonic3D(-1j * b * p, 0, np.array((k1, 0, -k2))),
 
-            Sources.IntensityHarmonic((2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, k2))),
-            Sources.IntensityHarmonic((-2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, k2))),
-            Sources.IntensityHarmonic((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, k2))),
-            Sources.IntensityHarmonic((-2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, k2))),
+            Sources.IntensityHarmonic3D((2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, k2))),
+            Sources.IntensityHarmonic3D((-2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, k2))),
+            Sources.IntensityHarmonic3D((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, k2))),
+            Sources.IntensityHarmonic3D((-2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, k2))),
 
-            Sources.IntensityHarmonic((-2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, -k2))),
-            Sources.IntensityHarmonic((2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
-            Sources.IntensityHarmonic((-2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, -k2))),
-            Sources.IntensityHarmonic((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
+            Sources.IntensityHarmonic3D((-2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, 3 ** 0.5 / 2 * k1, -k2))),
+            Sources.IntensityHarmonic3D((2 * 3 ** 0.5 - 2j) / 4 * b * p, 0, np.array((k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
+            Sources.IntensityHarmonic3D((-2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, 3 ** 0.5 / 2 * k1, -k2))),
+            Sources.IntensityHarmonic3D((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
         ]
 
         illumination =  IlluminationPlaneWaves3D.init_from_list(seven_waves_list, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
@@ -341,7 +341,7 @@ class BFPConfiguration:
             Sources.PlaneWave(1 * p, 1j * p, 0, 0, np.array((0, 10 ** -10, self.k))),
         ]
 
-        two_triangles_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
+        two_triangles_illumination = IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
         illumination =  IlluminationPlaneWaves3D.init_from_list(two_triangles_illumination, base_vectors)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()

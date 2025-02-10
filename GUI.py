@@ -243,7 +243,7 @@ class MainWindow(QMainWindow):
             print("source_added")
 
     def add_source(self, source):
-        if type(source) == Sources.IntensityHarmonic:
+        if type(source) == Sources.IntensityHarmonic3D:
             self.add_intensity_plane_wave(source)
         if type(source) == Sources.PlaneWave:
             self.add_plane_wave(source)
@@ -269,7 +269,7 @@ class MainWindow(QMainWindow):
         source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
 
     def add_intensity_plane_wave(self, ipw=None):
-        source = GUIWidgets.IntensityHarmonicWidget(ipw)
+        source = GUIWidgets.IntensityHarmonic3DWidget(ipw)
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
         source.isDeleted.connect(lambda identifier: self.remove_source(identifier))

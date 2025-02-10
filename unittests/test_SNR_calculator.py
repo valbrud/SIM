@@ -12,7 +12,7 @@ from Illumination import IlluminationPlaneWaves3D
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield, SSNRConfocal
 from OpticalSystems import System4f3D, System4f2D
 import stattools
-from Sources import IntensityHarmonic
+from Sources import IntensityHarmonic3D
 import tqdm
 sys.path.append('../')
 
@@ -1262,7 +1262,7 @@ class Testssnr(unittest.TestCase):
         volume_3w = noise_estimator.compute_ssnri_volume(ssnr_3w, dV)
 
         widefield = IlluminationPlaneWaves3D({
-        (0, 0, 0) : Sources.IntensityHarmonic(1, 0, np.array((0, 0, 0)))}, Mr=1)
+        (0, 0, 0) : Sources.IntensityHarmonic3D(1, 0, np.array((0, 0, 0)))}, Mr=1)
         widefield.Mt = 1
         noise_estimator.illumination = widefield
         ssnr_widefield = np.abs(noise_estimator.ssnri)

@@ -35,7 +35,7 @@ class SourceWidget(QWidget):
     def change_widget(self): ...
 
 
-class IntensityHarmonicWidget(SourceWidget):
+class IntensityHarmonic3DWidget(SourceWidget):
     isSet = pyqtSignal(bool)
     def __init__(self, ipw):
         super().__init__(ipw)
@@ -47,7 +47,7 @@ class IntensityHarmonicWidget(SourceWidget):
         if not ipw:
             self.initialization_window = QWidget()
             self.iwlayout = QVBoxLayout()
-            self.data_widget = IntensityHarmonicInitializationWidget()
+            self.data_widget = IntensityHarmonic3DInitializationWidget()
             self.iwlayout.addWidget(self.data_widget)
             self.initialization_window.setLayout(self.iwlayout)
             self.initialization_window.show()
@@ -58,7 +58,7 @@ class IntensityHarmonicWidget(SourceWidget):
             self.intensity_plane_wave = ipw
 
             layout = QVBoxLayout()
-            layout.addWidget(QLabel('IntensityHarmonic'))
+            layout.addWidget(QLabel('IntensityHarmonic3D'))
             layout.addWidget(QLabel('A = ' + str(ipw.amplitude)))
             layout.addWidget(QLabel('Phase = ' + str(ipw.phase)))
             layout.addWidget(QLabel('Wavevector = ' + str(ipw.wavevector)))
@@ -70,13 +70,13 @@ class IntensityHarmonicWidget(SourceWidget):
         A, phase = [complex(value) for value in info[:2]]
         wavevector = [float(value) for value in info[2:]]
         print(A, phase, wavevector)
-        self.intensity_plane_wave = Sources.IntensityHarmonic(A, phase, wavevector)
+        self.intensity_plane_wave = Sources.IntensityHarmonic3D(A, phase, wavevector)
 
         self.initialization_window.close()
         self.isSet.emit(True)
 
         layout = QVBoxLayout()
-        layout.addWidget(QLabel('IntensityHarmonic'))
+        layout.addWidget(QLabel('IntensityHarmonic3D'))
         layout.addWidget(QLabel('A = ' + str(A)))
         layout.addWidget(QLabel('Phase = ' + str(phase)))
         layout.addWidget(QLabel('Wavevector = ' + str(wavevector)))

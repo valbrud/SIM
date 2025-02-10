@@ -18,7 +18,7 @@ import Illumination
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield
 from OpticalSystems import System4f3D, System4f2D
 import stattools
-from Sources import IntensityHarmonic, PlaneWave
+from Sources import IntensityHarmonic3D, PlaneWave
 import tqdm
 
 path_to_figures = 'Figures/'
@@ -86,12 +86,12 @@ squareLNonLinear = Illumination.IlluminationNPhotonSIM3D.init_from_linear_illumi
 widefield = configurations.get_widefield()
 
 illumination_list = {
-    # widefield: "Widefield",
-    # conventional: "Conventional",
+    widefield: "Widefield",
+    conventional: "Conventional",
     squareL: "SquareL",
-    squareLNonLinear: "SquareLNonLinear",
-    # squareC: "SquareC",
-    # hexagonal: "Hexagonal",
+    # squareLNonLinear: "SquareLNonLinear",
+    squareC: "SquareC",
+    hexagonal: "Hexagonal",
 }
 
 
@@ -142,7 +142,7 @@ class TestArticlePlots(unittest.TestCase):
         ax.grid(which='minor', linestyle='--')
         ax.tick_params(labelsize=20)
 
-        ax.plot(r, 1 + multiplier / 10 * ssnr_widefield_ra[:, arg], label="Widefield")
+        ax.plot(r, 1 + multiplier / 10 * ssnr_widefield_ra[:, arg], color='black', label="Widefield")
         ax.plot(r, 1 + multiplier / 10 * ssnr_3waves_ra[:, arg], label="Conventional")
         ax.plot(r, 1 + multiplier / 10 * ssnr_s_polarized_ra[:, arg], label="SquareL")
         ax.plot(r, 1 + multiplier / 10 * ssnr_circular_ra[:, arg], label="SquareC")
@@ -150,7 +150,8 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
+        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
+        # plt.show()
 
         ax.clear()
         ax.set_xlabel(r"$f_r \; [LCF]$", fontsize=20)
@@ -162,7 +163,7 @@ class TestArticlePlots(unittest.TestCase):
         ax.grid(which='minor', linestyle='--')
         ax.tick_params(labelsize=20)
 
-        ax.plot(r, 1 + multiplier * ssnr_widefield_ra[:, arg//2], label="Widefield")
+        ax.plot(r, 1 + multiplier * ssnr_widefield_ra[:, arg//2], color='black', label="Widefield")
         ax.plot(r, 1 + multiplier * ssnr_3waves_ra[:, arg//2], label="Conventional")
         ax.plot(r, 1 + multiplier * ssnr_s_polarized_ra[:, arg//2], label="SquareL")
         ax.plot(r, 1 + multiplier * ssnr_circular_ra[:, arg//2], label="SquareC")
@@ -170,8 +171,8 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
-        plt.show()
+        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
+        # plt.show()
 
     def test_ssnr_color_maps(self):
         for illumination in illumination_list:

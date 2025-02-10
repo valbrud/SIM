@@ -125,9 +125,9 @@ class IntensityHarmonic(IntensitySource):
     transform of the energy density distribution in a given volume
     (e.g., standing waves)
     """
-    def __init__(self, amplitude=0., phase=0., wavevector=np.array((0., 0., 0.))):
+    def __init__(self, amplitude=0., phase=0., wavevector=np.array(())):
         """
-        Constructs an IntensityHarmonic object.
+        Constructs an IntensityHarmonic3D object.
 
         Args:
             amplitude (float): The amplitude of the plane wave.
@@ -138,26 +138,22 @@ class IntensityHarmonic(IntensitySource):
         self.amplitude = amplitude
         self.phase = phase
 
-    def get_intensity(self, coordinates: np.float64):
-        intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
-                                                 + self.phase))
-        return intensity
 
 def multiply_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
     """
     Multiplies two harmonic sources.
 
     Args:
-        harmonic1 (IntensityHarmonic): The first harmonic source.
-        harmonic2 (IntensityHarmonic): The second harmonic source.
+        harmonic1 (IntensityHarmonic3D): The first harmonic source.
+        harmonic2 (IntensityHarmonic3D): The second harmonic source.
 
     Returns:
-        IntensityHarmonic: The product of the two harmonic sources.
+        IntensityHarmonic3D: The product of the two harmonic sources.
     """
     amplitude = harmonic1.amplitude * harmonic2.amplitude
     phase = harmonic1.phase + harmonic2.phase
     wavevector = harmonic1.wavevector + harmonic2.wavevector
-    return IntensityHarmonic(amplitude, phase, wavevector)
+    return IntensityHarmonic3D(amplitude, phase, wavevector)
 
 def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
     """
@@ -168,7 +164,7 @@ def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) ->
         harmonic2 (IntensityHarmonic): The second harmonic source.
 
     Returns:
-        IntensityHarmonic: The sum of the two harmonic sources.
+        IntensityHarmonic3D: The sum of the two harmonic sources.
     """
     if not np.isclose(harmonic1.wavevector, harmonic2.wavevector).all():
         raise ValueError("k1 != k2. Addition of harmonics (interference) only defined for the same wavevectors!")
@@ -176,3 +172,22 @@ def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) ->
     phase = 0 # Return 'normal' form of harmonics with a complex amplitude containing all the phase information
     wavevector = harmonic1.wavevector
     return IntensityHarmonic(amplitude, phase, wavevector)
+
+
+class IntensityHarmonic3D(IntensityHarmonic):
+    def get_intensity(self, coordinates: np.float64):
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
+                                                 + self.phase))
+        return intensity
+
+
+class IntensityHarmonic2D(IntensityHarmonic):
+    @classmethod
+    def init_from_3D(cls, harmonic: IntensityHarmonic3D):
+        return cls(harmonic.amplitude, harmonic.phase, harmonic.wavevector[:2])
+
+
+    def get_intensity(self, coordinates: np.float64):
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ij,l ->ijl', coordinates, self.wavevector)
+                                                  + self.phase))
+        return intensity
