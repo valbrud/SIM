@@ -57,11 +57,25 @@ class SIMulator:
         sim_images = np.real(sim_images)
         return sim_images
 
-    def generate_widefield(self, sim_images):
-        widefield_image = np.zeros(sim_images.shape[2:])
-        for rotation in sim_images:
-            for image in rotation:
-                widefield_image += image
+    def add_noise(self, image):
+        if self.camera:
+            image = self.camera.get_image(image, self.readout_noise_variance)
+        else:
+            image = (np.random.poisson(image) +
+                                  np.sqrt(self.readout_noise_variance))
+            sigma = np.sqrt(self.readout_noise_variance)
+            image += np.random.normal(loc=0.0, scale=sigma, size=image.shape)
+        return image
+
+    def generate_noisy_images(self, sim_images):
+        noisy_images = np.zeros(sim_images.shape)
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                noisy_images[r, n] = self.add_noise(sim_images[r, n])
+
+        return noisy_images
+    def generate_widefield(self, image):
+        widefield_image = scipy.signal.convolve(image, self.optical_system.psf, mode='same')
         return widefield_image
 
 

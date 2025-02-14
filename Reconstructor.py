@@ -12,6 +12,12 @@ class ReconstructorSIM:
     @abstractmethod
     def reconstruct(self, images): ...
 
+    def get_widefield(self, sim_images):
+        widefield_image = np.zeros(sim_images.shape[2:])
+        for rotation in sim_images:
+            for image in rotation:
+                widefield_image += image
+        return widefield_image
 
 class ReconstructorFourierDomain(ReconstructorSIM):
 

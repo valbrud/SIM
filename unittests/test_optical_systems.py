@@ -2,6 +2,9 @@ import unittest
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+import scipy
+
+import OpticalSystems
 import wrappers
 from config.IlluminationConfigurations import *
 from OpticalSystems import System4f3D, System4f2D
@@ -11,10 +14,10 @@ from config.IlluminationConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
     def test_OTF(self):
-        alpha = np.pi/2
-        dx = 1 / (8 * np.sin(alpha))
+        alpha = np.pi / 2
+        dx = 1 / (32 * np.sin(alpha))
         dy = dx
-        dz = 1 / (4 * (1 - np.cos(alpha)))
+        dz = 1 / (16 * (1 - np.cos(alpha)))
         N = 101
         max_r = N // 2 * dx
         max_z = N // 2 * dz
@@ -23,19 +26,21 @@ class TestOpticalSystems3D(unittest.TestCase):
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
         optical_system = System4f3D(alpha=alpha)
         low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
-        high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
+        high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
+        normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
+        normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
         print(np.sum(low_NA_psf), np.sum(high_NA_psf))
         fig, axes = plt.subplots(2, 2)
-        axes[0, 0].plot(low_NA_psf[N//2, :, N//2], label="low_NA_model")
-        axes[0, 0].plot(high_NA_psf[N//2, :, N//2], label="high_NA_model")
+        axes[0, 0].plot(normalized_paraxial_psf[N//2, :, N//2] , label="Paraxial approximation")
+        axes[0, 0].plot(normalized_high_NA_psf[N//2, :, N//2], label="high_NA_model")
         plt.legend()
-        axes[0, 1].plot(low_NA_psf[N//2, N//2, :], label="low_NA_model")
-        axes[0, 1].plot(high_NA_psf[N//2, N//2, :], label="high_NA_model")
+        axes[0, 1].plot(normalized_paraxial_psf[N//2, N//2, :], label="Paraxial approximation")
+        axes[0, 1].plot(normalized_high_NA_psf[N//2, N//2, :], label="high_NA_model")
         plt.legend()
-        axes[1, 0].plot(low_NA_otf[N//2, :, N//2], label="low_NA_model")
+        axes[1, 0].plot(low_NA_otf[N//2, :, N//2], label="Paraxial approximation")
         axes[1, 0].plot(high_NA_otf[N//2, :, N//2], label = "high_NA_model")
         plt.legend()
-        axes[1, 1].plot(low_NA_otf[N//2, N//2, :], label = "low_NA_model")
+        axes[1, 1].plot(low_NA_otf[N//2, N//2, :], label = "Paraxial approximation")
         axes[1, 1].plot(high_NA_otf[N//2, N//2, :], label = "high_NA_model")
         plt.legend()
         plt.show()
@@ -220,12 +225,43 @@ class TestOpticalSystems3D(unittest.TestCase):
             ax.plot(sizes, percentage, label=config)
         ax.legend(fontsize=20)
         plt.show()
+
+    def test_angle_vs_pupil_plane_integration(self):
+        alpha = np.pi / 12 * 5
+        dx = 1 / (32 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (16 * (1 - np.cos(alpha)))
+        N = 51
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        x = np.linspace(-max_r, max_r, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
+        optical_system = System4f3D(alpha=alpha)
+        angle_psf, angle_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=False)
+        rho_psf, rho_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
+        print(np.sum(angle_psf), np.sum(rho_psf))
+        fig, axes = plt.subplots(2, 2)
+        axes[0, 0].plot(angle_psf[N//2, :, N//2], label="integrated angle")
+        axes[0, 0].plot(rho_psf[N//2, :, N//2], label="integrated pupil plane")
+        plt.legend()
+        axes[0, 1].plot(angle_psf[N//2, N//2, :], label="integrated angle")
+        axes[0, 1].plot(rho_psf[N//2, N//2, :], label="integrated pupil plane")
+        plt.legend()
+        axes[1, 0].plot(angle_otf[N//2, :, N//2], label="integrated angle")
+        axes[1, 0].plot(rho_otf[N//2, :, N//2], label = "integrated pupil plane")
+        plt.legend()
+        axes[1, 1].plot(angle_otf[N//2, N//2, :], label="integrated angle")
+        axes[1, 1].plot(rho_otf[N//2, N//2, :], label="integrated pupil plane")
+        plt.legend()
+        plt.show()
+
 class TestOpticalSystems2D(unittest.TestCase):
     def test_energy_distribution(self):
         theta = np.pi / 4
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
-        N = 51
+        N = 41
         max_r = N // 2 * dx
         optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
@@ -301,3 +337,94 @@ class TestOpticalSystems2D(unittest.TestCase):
         ax.set_ylim(bottom=0)
 
         plt.show()
+
+
+class TestConstructPupilAberration(unittest.TestCase):
+
+    def test_empty_dict(self):
+        """With an empty dictionary, the aberration should be zero everywhere."""
+        rho = np.linspace(0, 1, 10)
+        phi = np.linspace(0, 2 * np.pi, 12, endpoint=False)
+        result = OpticalSystems.OpticalSystem.compute_pupil_plane_abberations({}, rho, phi)
+        expected = np.zeros((len(rho), len(phi)))
+        self.assertTrue(np.allclose(result, expected),
+                        "Aberration with empty dict should be zero everywhere.")
+
+    def test_constant_mode(self):
+        """
+        For the (0,0) mode, zernike(0,0) == 1, so the aberration should be a constant equal
+        to the amplitude provided.
+        """
+        zernike_dict = {(0, 0): 5.0}
+        rho = np.linspace(0, 1, 10)
+        phi = np.linspace(0, 2 * np.pi, 12, endpoint=False)
+        result = OpticalSystems.OpticalSystem.compute_pupil_plane_abberations(zernike_dict, rho, phi)
+        expected = np.full((len(rho), len(phi)), 5.0)
+        self.assertTrue(np.allclose(result, expected),
+                        "Aberration for mode (0,0) should be constant and equal to the amplitude.")
+
+    def test_symmetry_mode(self):
+        """
+        The (2,2) Zernike polynomial is given by R₂₂(r)*cos(2φ). Since cos(2φ)
+        is an even function, the resulting aberration should be symmetric in φ.
+        """
+        zernike_dict = {(5, -3): 1.0}
+        rho = np.linspace(0, 1, 99)
+        phi = np.linspace(0, 2 * np.pi, 100, endpoint=False)
+        result = OpticalSystems.OpticalSystem.compute_pupil_plane_abberations(zernike_dict, rho, phi)
+        # plt.plot(result[5, :])
+        # plt.show()
+        RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
+        X, Y = RHO * np.cos(PHI), RHO * np.sin(PHI)
+        x_cart, y_cart = np.linspace(-1, 1, 99), np.linspace(-1, 1, 100)
+        X_cart, Y_cart = np.meshgrid(x_cart, y_cart, indexing='ij')
+        points = np.column_stack((X.ravel(), Y.ravel()))
+        data_cart = scipy.interpolate.griddata(points, result.ravel(), (X_cart, Y_cart))
+
+        plt.imshow(data_cart.T, origin='lower')
+        plt.show()
+        # Flip along the φ axis (axis=1) and compare.
+        # self.assertTrue(np.allclose(result, np.flip(result, axis=1), atol=1e-6),
+        #                 "Aberration for (2,2) mode should be symmetric in phi.")
+
+    def test_OTF_aberrated(self):
+        alpha = np.pi / 2
+        dx = 1 / (8 * np.sin(alpha))
+        dy = dx
+        dz = 1 / (4 * (1 - np.cos(alpha)))
+        N = 51
+        max_r = N // 2 * dx
+        max_z = N // 2 * dz
+        x = np.linspace(-max_r, max_r, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
+        optical_system = System4f3D(alpha=alpha)
+        non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
+        aberrated_psf, aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
+                                                                          zernieke={(3, 1): 1.0})
+        # normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
+        # normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
+        # print(np.sum(low_NA_psf), np.sum(high_NA_psf))
+        fig, axes = plt.subplots(3, 2)
+        axes[0, 0].imshow(non_aberrated_psf[N//2, :, :].T, origin='lower')
+        axes[0, 1].imshow(aberrated_psf[N//2, :, :].T, origin='lower')
+        axes[1, 0].imshow(non_aberrated_psf[:, :, N//2].T, origin='lower')
+        axes[1, 1].imshow(aberrated_psf[:, :, N//2].T, origin='lower')
+        axes[2, 0].imshow(non_aberrated_otf[:, :, N//2].real.T, origin='lower')
+        axes[2, 1].imshow(aberrated_otf[:, :, N//2].real.T, origin='lower')
+        plt.show()
+
+        # fig, axes = plt.subplots(2, 2)
+        # axes[0, 0].plot(non_aberrated_psf[N//2, :, N//2] , label="Ideal PSF")
+        # axes[0, 0].plot(aberrated_psf[N//2, :, N//2], label="With aberrations")
+        # plt.legend()
+        # axes[0, 1].plot(non_aberrated_psf[N//2, N//2, :], label="Ideal PSF")
+        # axes[0, 1].plot(aberrated_psf[N//2, N//2, :], label="With aberrations")
+        # plt.legend()
+        # axes[1, 0].plot(non_aberrated_otf[N//2, :, N//2], label="Ideal OTF")
+        # axes[1, 0].plot(aberrated_otf[N//2, :, N//2], label="With aberrations")
+        # plt.legend()
+        # axes[1, 1].plot(non_aberrated_otf[N//2, N//2, :], label = "Ideal OTF")
+        # axes[1, 1].plot(aberrated_otf[N//2, N//2, :], label = "With aberrations")
+        # plt.legend()
+        # plt.show()

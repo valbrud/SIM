@@ -11,6 +11,8 @@ import numpy as np
 import scipy as sp
 import scipy.interpolate
 from numpy import ndarray
+from hcipy import zernike, SeparatedCoords, PolarGrid
+from math import factorial
 
 import wrappers
 import matplotlib.pyplot as plt
@@ -88,7 +90,7 @@ class OpticalSystem:
 
     @abstractmethod
     def compute_psf_and_otf(self) -> tuple[ndarray[tuple[int, int, int], np.float64],
-                                           ndarray[tuple[int, int, int], np.float64]]:
+    ndarray[tuple[int, int, int], np.float64]]:
         """
         Compute the PSF and OTF.
         """
@@ -140,6 +142,69 @@ class OpticalSystem:
             np.ndarray: Interpolated OTF.
         """
         pass
+
+    @staticmethod
+    def radial_zernike(n, m, r):
+        """
+        Compute the radial part R_{n,|m|}(r) of the Zernike polynomial
+        for each r in the 1D array `r`.
+        """
+        m_abs = abs(m)
+        R = np.zeros_like(r, dtype=float)
+
+        # The sum goes up to floor((n - m_abs)/2)
+        upper_k = (n - m_abs) // 2
+        for k in range(upper_k + 1):
+            c = ((-1) ** k
+                 * factorial(n - k)
+                 / (factorial(k)
+                    * factorial((n + m_abs) // 2 - k)
+                    * factorial((n - m_abs) // 2 - k)))
+            R += c * r ** (n - 2 * k)
+        return R
+
+    @staticmethod
+    def azimuthal_zernike(m, phi):
+        """
+        Compute the azimuthal part for Zernike polynomial Z_n^m.
+        - if m >= 0: cos(m * phi)
+        - if m <  0: sin(|m| * phi)
+
+        `phi` is a 1D array of angles.
+        """
+        if m >= 0:
+            return np.cos(m * phi)
+        else:
+            return np.sin(abs(m) * phi)
+
+    @staticmethod
+    def compute_pupil_plane_abberations(zernieke_polynomials, rho, phi):
+        """
+        Construct a 2D pupil-plane aberration by summing Zernike modes using HCIPy's zernike().
+
+        Parameters
+        ----------
+        zernieke_polynomials : dict
+            Dictionary with keys = (n, m) and values = amplitudes.
+            Example: {(2, 2): 0.1, (3, 1): -0.05, (4, -2): 0.07, ...}
+        rho : ndarray
+            1D array of radial coordinates (0 <= rho <= 1 typically).
+        phi : ndarray
+            1D array of azimuthal coordinates (in radians, e.g. -π to +π or 0 to 2π).
+
+        Returns
+        -------
+        aberration : ndarray
+            The resulting 2D aberration (same shape as rho, phi).
+        """
+        RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
+        # grid = PolarGrid(SeparatedCoords((rho, phi)))
+        aberration = np.zeros((rho.size, phi.size))
+
+        for (n, m), amplitude in zernieke_polynomials.items():
+            # aberration += amplitude * zernike(n, m, grid=grid)
+            aberration += amplitude * OpticalSystem.radial_zernike(n, m, RHO) * OpticalSystem.azimuthal_zernike(m, PHI)
+        return aberration
 
 
 class OpticalSystem2D(OpticalSystem):
@@ -273,11 +338,10 @@ class OpticalSystem3D(OpticalSystem):
             return otf_interpolated
 
     def compute_psf_and_otf(self) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
-                                           np.ndarray[tuple[int, int, int], np.float64]]:
-        ...
+                                           np.ndarray[tuple[int, int, int], np.float64]]: ...
 
 
-#
+
 class System4f2D(OpticalSystem2D):
     def __init__(self, alpha=np.pi / 4, refractive_index=1, interpolation_method="linear"):
         super().__init__(interpolation_method)
@@ -303,8 +367,9 @@ class System4f2D(OpticalSystem2D):
     def _mask_OTF(self):
         ...
 
-    def compute_psf_and_otf(self, parameters=None, pupil_function=None, mask=None) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
-                                                                                            np.ndarray[tuple[int, int, int], np.float64]]:
+    def compute_psf_and_otf(self, parameters=None, pupil_function =None, mask=None)\
+            -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                     np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters is not None:
@@ -335,7 +400,13 @@ class System4f3D(OpticalSystem3D):
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
         self.NA = self.nm * np.sin(self.alpha)
 
-    def _PSF(self, c_vectors, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None):
+    def _PSF(self, c_vectors,
+             high_NA=False,
+             pupil_function=lambda rho: 1,
+             mask=None,
+             integrate_rho=True,
+             zernieke={},
+             **kwargs):
         r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
         z = c_vectors[:, :, :, 2]
         v = 2 * np.pi * r * self.NA
@@ -355,19 +426,53 @@ class System4f3D(OpticalSystem3D):
             I = (h * h.conjugate()).real
 
         else:
-            def integrand(theta):
-                return apodization_function(theta) * np.sin(theta) * np.exp(1j * u[:, :, :, None] *
-                                                                            np.sin(theta / 2) ** 2 / (2 * np.sin(self.alpha / 2) ** 2)
-                                                                            ) * sp.special.j0(v[:, :, :, None] * np.sin(theta) / np.sin(self.alpha))
+            # Here Abbe sine condition is assumed to be satisfied, and the P(theta) apodization function is assumed to be sqrt(cos(theta))
+            # Integration in theta is much more stable numerically at the values of alpha approaching 90 degrees. However, it's not
+            # as convenient to work with aberrations, that are given in the pupil plane and are more precisely computed in terms of rho.
+            # For these reasons, both implementations are provided.
+            if not integrate_rho:
+                def integrand(theta):
+                    return (pupil_function(np.sin(theta) / np.sin(self.alpha)) * (np.cos(theta)) ** 0.5 * np.sin(theta)
+                            * np.exp(1j * u[:, :, :, None] / 2 * (np.sin(theta / 2) ** 2 / np.sin(self.alpha / 2) ** 2))
+                            * sp.special.j0(v[:, :, :, None] * np.sin(theta) / np.sin(self.alpha)))
 
-            if apodization_function == "Sine":
-                def apodization_function(theta):
-                    test = pupil_function(np.sin(theta))
-                    return pupil_function(np.sin(theta)) * (np.cos(theta)) ** 0.5
 
-            theta = np.linspace(0, self.alpha, 100)
-            integrands = integrand(theta)
-            h = sp.integrate.simpson(integrands, x=theta)
+                theta = np.linspace(0, self.alpha - 1e-9, 100)
+                integrands = integrand(theta)
+                h = sp.integrate.simpson(integrands, x=theta)
+
+            else:
+                # Taking final value slightly less than 1 to avoid division by zero in the integrand
+                rho = np.linspace(0, 1 - 1e-9, 100)
+                if not zernieke:
+                    def integrand(rho):
+                        return (pupil_function(rho) * rho / (1 - rho**2 * np.sin(self.alpha)**2)**0.25
+                            * np.exp(1j * (u[:, :, :, None] / 2 * ((1 - np.sqrt(1 - rho ** 2 * np.sin(self.alpha) ** 2)) / (1 - np.cos(self.alpha)))))
+                            * sp.special.j0(v[:, :, :, None] * rho)
+                            )
+                    integrands = integrand(rho)
+                    h = sp.integrate.simpson(integrands, x=rho)
+
+                else:
+                    vx, vy = 2 * np.pi * c_vectors[:, :, :, 0], 2 * np.pi * c_vectors[:, :, :, 1]
+                    psy = np.arctan2(vy, vx)[:, :, 0]
+                    phi = np.linspace(0, 2 * np.pi, 30)
+                    aberration_function = OpticalSystem.compute_pupil_plane_abberations(zernieke, rho, phi)
+                    phase_change = np.exp(1j * aberration_function)
+                    h = np.zeros(u.shape, dtype=np.complex128)
+                    def integrand_no_aberrations(rho, phi, i):
+                        apodization_part = pupil_function(rho) * rho / (1 - rho ** 2 * np.sin(self.alpha) ** 2) ** 0.25
+                        u_dependent_part = np.exp(1j * (u[:, :, i, None] / 2 * ((1 - np.sqrt(1 - rho ** 2 * np.sin(self.alpha) ** 2)) / (1 - np.cos(self.alpha)))))
+                        v_dependent_part = np.exp(-1j * v[:, :, i, None, None] * rho[None, None, :, None] * np.cos(phi[None, None, None, :] - psy[:, :, None, None]))
+                        return apodization_part[None, None, :, None] * u_dependent_part[:, :, :, None] * v_dependent_part
+
+                    for i in range(u.shape[2]):
+                        integrands = integrand_no_aberrations(rho, phi, i)
+                        integrands_aberrated = integrands * phase_change[None, None, :, :]
+                        integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)
+                        integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)
+                        h[:, :, i] = integrated_rho
+
             I = (h * h.conjugate()).real
 
         if mask:
@@ -381,8 +486,13 @@ class System4f3D(OpticalSystem3D):
     def _mask_OTF(self):
         ...
 
-    def compute_psf_and_otf(self, parameters=None, high_NA=False, apodization_function="Sine", pupil_function=lambda rho: 1, mask=None) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
-                                                                                                                                                 np.ndarray[tuple[int, int, int], np.float64]]:
+    def compute_psf_and_otf(self, parameters=None,
+                            high_NA=False,
+                            pupil_function=lambda rho: 1,
+                            integrate_rho=False,
+                            mask=None,
+                            zernieke={}) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+    np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         elif parameters:
@@ -392,9 +502,9 @@ class System4f3D(OpticalSystem3D):
         c_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
         c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
         grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
-        psf = self._PSF(grid, high_NA, apodization_function="Sine", pupil_function=pupil_function, mask=mask)
+        psf = self._PSF(grid, high_NA, pupil_function=pupil_function, integrate_rho=integrate_rho, mask=mask, zernieke=zernieke)
         self.psf = psf / np.sum(psf)
-        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf = wrappers.wrapped_ifftn(self.psf)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
         return self.psf, self.otf
