@@ -169,8 +169,8 @@ class TestOpticalSystems3D(unittest.TestCase):
         plt.show()
 
     def test_energy_distribution(self):
-        theta = np.pi / 4
-        alpha = np.pi / 4
+        theta = np.pi / 10
+        alpha = np.pi / 10
         dx = 1 / (8 * np.sin(alpha))
         dy = dx
         dz = 1 / (4 * (1 - np.cos(alpha)))
@@ -368,7 +368,7 @@ class TestConstructPupilAberration(unittest.TestCase):
         The (2,2) Zernike polynomial is given by R₂₂(r)*cos(2φ). Since cos(2φ)
         is an even function, the resulting aberration should be symmetric in φ.
         """
-        zernike_dict = {(5, -3): 1.0}
+        zernike_dict = {(4, 0): 1}
         rho = np.linspace(0, 1, 99)
         phi = np.linspace(0, 2 * np.pi, 100, endpoint=False)
         result = OpticalSystems.OpticalSystem.compute_pupil_plane_abberations(zernike_dict, rho, phi)
@@ -376,22 +376,29 @@ class TestConstructPupilAberration(unittest.TestCase):
         # plt.show()
         RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
         X, Y = RHO * np.cos(PHI), RHO * np.sin(PHI)
-        x_cart, y_cart = np.linspace(-1, 1, 99), np.linspace(-1, 1, 100)
+        x_cart, y_cart = np.linspace(-1, 1, 101), np.linspace(-1, 1, 101)
+        dx, dy = 1/50, 1/50
         X_cart, Y_cart = np.meshgrid(x_cart, y_cart, indexing='ij')
         points = np.column_stack((X.ravel(), Y.ravel()))
         data_cart = scipy.interpolate.griddata(points, result.ravel(), (X_cart, Y_cart))
-
-        plt.imshow(data_cart.T, origin='lower')
+        data_cart = np.nan_to_num(data_cart)
+        print(np.sum(data_cart[X_cart**2 + Y_cart**2 <= 1]**2) * dx * dy / np.pi)
+        phase = np.exp(1j * 2 * np.pi * 0.072 * data_cart[X_cart**2 + Y_cart**2 <= 1])
+        print(np.sum(phase) * dx * dy)
+        I = (1 / np.pi)**2 * np.abs(np.sum(phase) * dx * dy)**2
+        print(I)
+        im = plt.imshow(data_cart.T, origin='lower')
+        plt.colorbar(im)
         plt.show()
         # Flip along the φ axis (axis=1) and compare.
         # self.assertTrue(np.allclose(result, np.flip(result, axis=1), atol=1e-6),
         #                 "Aberration for (2,2) mode should be symmetric in phi.")
 
     def test_OTF_aberrated(self):
-        alpha = np.pi / 2
-        dx = 1 / (8 * np.sin(alpha))
+        alpha = np.pi / 10
+        dx = 1 / (32 * np.sin(alpha))
         dy = dx
-        dz = 1 / (4 * (1 - np.cos(alpha)))
+        dz = 1 / (16 * (1 - np.cos(alpha)))
         N = 51
         max_r = N // 2 * dx
         max_z = N // 2 * dz
@@ -400,31 +407,29 @@ class TestConstructPupilAberration(unittest.TestCase):
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
         optical_system = System4f3D(alpha=alpha)
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
-        aberrated_psf, aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
-                                                                          zernieke={(3, 1): 1.0})
+        aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
+                                                                          zernieke={(4, 0): 0.072})
+        aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
+                                                                          zernieke={(3, 1): 0.072})
+        aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
+                                                                          zernieke={(2, 2): 0.072})
         # normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
         # normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
         # print(np.sum(low_NA_psf), np.sum(high_NA_psf))
         fig, axes = plt.subplots(3, 2)
         axes[0, 0].imshow(non_aberrated_psf[N//2, :, :].T, origin='lower')
-        axes[0, 1].imshow(aberrated_psf[N//2, :, :].T, origin='lower')
+        axes[0, 1].imshow(aberrated_psf_spherical[N//2, :, :].T, origin='lower')
         axes[1, 0].imshow(non_aberrated_psf[:, :, N//2].T, origin='lower')
-        axes[1, 1].imshow(aberrated_psf[:, :, N//2].T, origin='lower')
-        axes[2, 0].imshow(non_aberrated_otf[:, :, N//2].real.T, origin='lower')
-        axes[2, 1].imshow(aberrated_otf[:, :, N//2].real.T, origin='lower')
+        axes[1, 1].imshow(aberrated_psf_comma[:, :, N//2].T, origin='lower')
+        axes[2, 0].imshow(non_aberrated_psf[:, :, N//2].T, origin='lower')
+        axes[2, 1].imshow(aberrated_psf_astigmatism[:, :, N//2].T, origin='lower')
         plt.show()
 
-        # fig, axes = plt.subplots(2, 2)
-        # axes[0, 0].plot(non_aberrated_psf[N//2, :, N//2] , label="Ideal PSF")
-        # axes[0, 0].plot(aberrated_psf[N//2, :, N//2], label="With aberrations")
-        # plt.legend()
-        # axes[0, 1].plot(non_aberrated_psf[N//2, N//2, :], label="Ideal PSF")
-        # axes[0, 1].plot(aberrated_psf[N//2, N//2, :], label="With aberrations")
-        # plt.legend()
-        # axes[1, 0].plot(non_aberrated_otf[N//2, :, N//2], label="Ideal OTF")
-        # axes[1, 0].plot(aberrated_otf[N//2, :, N//2], label="With aberrations")
-        # plt.legend()
-        # axes[1, 1].plot(non_aberrated_otf[N//2, N//2, :], label = "Ideal OTF")
-        # axes[1, 1].plot(aberrated_otf[N//2, N//2, :], label = "With aberrations")
-        # plt.legend()
-        # plt.show()
+        fig, ax = plt.subplots()
+        norm = np.max(non_aberrated_psf)
+        ax.plot(non_aberrated_psf[N//2, :, N//2] / norm , label="Ideal PSF")
+        ax.plot(aberrated_psf_spherical[N//2, :, N//2] / norm, label="Sperical")
+        ax.plot(aberrated_psf_comma[N//2, :, N//2] / norm, label="Comma")
+        ax.plot(aberrated_psf_astigmatism[N//2, :, N//2] / norm, label="Astigmatism")
+        plt.legend()
+        plt.show()

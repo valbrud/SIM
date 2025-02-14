@@ -6,7 +6,7 @@ This module contains classes for simulating and analyzing optical systems.
 Note: More reasonable interface for accessing and calculating of the PSF and OTF is expected in the future.
 For this reason the detailed documentation on the computations is not provided yet.
 """
-
+from joblib import Parallel, delayed
 import numpy as np
 import scipy as sp
 import scipy.interpolate
@@ -161,6 +161,7 @@ class OpticalSystem:
                     * factorial((n + m_abs) // 2 - k)
                     * factorial((n - m_abs) // 2 - k)))
             R += c * r ** (n - 2 * k)
+        R *= np.sqrt(2 * (n + 1) / (1 + (m == 0)))
         return R
 
     @staticmethod
@@ -443,7 +444,7 @@ class System4f3D(OpticalSystem3D):
 
             else:
                 # Taking final value slightly less than 1 to avoid division by zero in the integrand
-                rho = np.linspace(0, 1 - 1e-9, 100)
+                rho = np.linspace(0, 1 - 1e-9, 50)
                 if not zernieke:
                     def integrand(rho):
                         return (pupil_function(rho) * rho / (1 - rho**2 * np.sin(self.alpha)**2)**0.25
@@ -456,9 +457,12 @@ class System4f3D(OpticalSystem3D):
                 else:
                     vx, vy = 2 * np.pi * c_vectors[:, :, :, 0], 2 * np.pi * c_vectors[:, :, :, 1]
                     psy = np.arctan2(vy, vx)[:, :, 0]
-                    phi = np.linspace(0, 2 * np.pi, 30)
+                    dphi = 2 * np.pi / 30
+                    phi = np.arange(0, 2 * np.pi, dphi)
                     aberration_function = OpticalSystem.compute_pupil_plane_abberations(zernieke, rho, phi)
-                    phase_change = np.exp(1j * aberration_function)
+                    # plt.plot(aberration_function[50, :])
+                    # plt.show()
+                    phase_change = np.exp(1j * 2 * np.pi * self.nm * aberration_function)
                     h = np.zeros(u.shape, dtype=np.complex128)
                     def integrand_no_aberrations(rho, phi, i):
                         apodization_part = pupil_function(rho) * rho / (1 - rho ** 2 * np.sin(self.alpha) ** 2) ** 0.25
@@ -466,13 +470,19 @@ class System4f3D(OpticalSystem3D):
                         v_dependent_part = np.exp(-1j * v[:, :, i, None, None] * rho[None, None, :, None] * np.cos(phi[None, None, None, :] - psy[:, :, None, None]))
                         return apodization_part[None, None, :, None] * u_dependent_part[:, :, :, None] * v_dependent_part
 
-                    for i in range(u.shape[2]):
-                        integrands = integrand_no_aberrations(rho, phi, i)
-                        integrands_aberrated = integrands * phase_change[None, None, :, :]
-                        integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)
-                        integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)
-                        h[:, :, i] = integrated_rho
+                    # for i in range(u.shape[2]):
+                    #     integrands = integrand_no_aberrations(rho, phi, i)
+                    #     integrands_aberrated = integrands * phase_change[None, None, :, :]
+                    #     integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)
+                    #     integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)
+                    #     h[:, :, i] = integrated_rho
 
+                    # Replace your for-loop with a parallelized version:
+                    h = np.stack(Parallel(n_jobs=5)(
+                        delayed(lambda i: sp.integrate.simpson(
+                            np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :],axis=3) * dphi,
+                        x = rho, axis=2))(i) for i in range(u.shape[2])
+                    ), axis=2)
             I = (h * h.conjugate()).real
 
         if mask:
