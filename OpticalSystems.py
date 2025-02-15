@@ -401,16 +401,70 @@ class System4f3D(OpticalSystem3D):
         self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
         self.NA = self.nm * np.sin(self.alpha)
 
-    def _PSF(self, c_vectors,
+    def _integrand_no_aberrations(self, rho, phi, i, u, v, psy, pupil_function):
+        """
+        Compute the integrand for slice index i.
+        Note: here u, v, and psy are arrays such that:
+          - u and v have shape (nx, ny, nz)
+          - psy has shape (nx, ny) (computed from grid)
+        """
+        # Apodization part (rho is 1D, so broadcasting adds new axes)
+        apodization_part = pupil_function(rho) * rho / ((1 - rho ** 2 * np.sin(self.alpha) ** 2) ** 0.25)
+        # u-dependent part: use u[:,:,i] (resulting shape (nx, ny)) and add integration axis
+        u_dependent_part = np.exp(1j * (u[:, :, i, None] / 2 *
+                                        ((1 - np.sqrt(1 - rho ** 2 * np.sin(self.alpha) ** 2)) / (1 - np.cos(self.alpha)))))
+        # v-dependent part: use v[:,:,i] and psy (both with shape (nx, ny))
+        v_dependent_part = np.exp(-1j * v[:, :, i, None, None] * rho[None, None, :, None] *
+                                  np.cos(phi[None, None, None, :] - psy[:, :, None, None]))
+        # The integrand shape becomes (nx, ny, len(rho), len(phi))
+        return apodization_part[None, None, :, None] * u_dependent_part[:, :, :, None] * v_dependent_part
+
+    def _process_slice(self, i, u, v, rho, phi, phase_change, psy, pupil_function):
+        """
+        Process a single slice (index i) of u, integrating first over phi and then over rho.
+        """
+        integrands = self._integrand_no_aberrations(rho, phi, i, u, v, psy, pupil_function)
+        # Multiply by the aberration phase change (which has shape (len(rho), len(phi)))
+        integrands_aberrated = integrands * phase_change[None, None, :, :]
+        # Integrate over phi (axis=3)
+        integrated_phi = scipy.integrate.simpson(integrands_aberrated, x=phi, axis=3)
+        # Then integrate over rho (axis=2)
+        integrated_rho = scipy.integrate.simpson(integrated_phi, x=rho, axis=2)
+        return integrated_rho  # shape: (nx, ny)
+
+    def _process_chunk(self, indices, u, v, rho, phi, phase_change, psy, pupil_function):
+        # Process a small chunk (list) of slices.
+        results = [self._process_slice(i, u, v, rho, phi, phase_change, psy, pupil_function)
+                   for i in indices]
+        # Stack the results along the third axis.
+        return np.stack(results, axis=2)
+
+    def _compute_h_parallel(self, u, rho, phi, phase_change, psy, pupil_function, n_jobs=3, chunksize=5):
+        """
+        Parallel version: split the integration over the z-dimension into chunks.
+        u, v, and psy are computed in _PSF, and u.shape is (nx, ny, nz).
+        """
+        nz = u.shape[2]
+        indices = np.arange(nz)
+        chunks = [indices[i:i + chunksize] for i in range(0, nz, chunksize)]
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(self._process_chunk)(chunk, u, self.v, rho, phi, phase_change, psy, pupil_function)
+            for chunk in chunks)
+        # Concatenate results along the z-dimension.
+        return np.concatenate(results, axis=2)
+
+    # --- End parallelization helpers ---
+    def _PSF(self, grid,
              high_NA=False,
              pupil_function=lambda rho: 1,
              mask=None,
              integrate_rho=True,
              zernieke={},
              **kwargs):
-        r = (c_vectors[:, :, :, 0] ** 2 + c_vectors[:, :, :, 1] ** 2) ** 0.5
-        z = c_vectors[:, :, :, 2]
+        r = (grid[:, :, :, 0] ** 2 + grid[:, :, :, 1] ** 2) ** 0.5
+        z = grid[:, :, :, 2]
         v = 2 * np.pi * r * self.NA
+        self.v = v  # store for use in the parallel helper
         if self.NA <= self.ns:
             u = 4 * np.pi * z * (self.ns - np.sqrt(self.ns ** 2 - self.NA ** 2))
         else:
@@ -444,8 +498,8 @@ class System4f3D(OpticalSystem3D):
 
             else:
                 # Taking final value slightly less than 1 to avoid division by zero in the integrand
-                rho = np.linspace(0, 1 - 1e-9, 50)
                 if not zernieke:
+                    rho = np.linspace(0, 1 - 1e-9, 100)
                     def integrand(rho):
                         return (pupil_function(rho) * rho / (1 - rho**2 * np.sin(self.alpha)**2)**0.25
                             * np.exp(1j * (u[:, :, :, None] / 2 * ((1 - np.sqrt(1 - rho ** 2 * np.sin(self.alpha) ** 2)) / (1 - np.cos(self.alpha)))))
@@ -455,9 +509,10 @@ class System4f3D(OpticalSystem3D):
                     h = sp.integrate.simpson(integrands, x=rho)
 
                 else:
-                    vx, vy = 2 * np.pi * c_vectors[:, :, :, 0], 2 * np.pi * c_vectors[:, :, :, 1]
+                    rho = np.linspace(0, 1 - 1e-9, 60)
+                    vx, vy = 2 * np.pi * grid[:, :, :, 0], 2 * np.pi * grid[:, :, :, 1]
                     psy = np.arctan2(vy, vx)[:, :, 0]
-                    dphi = 2 * np.pi / 30
+                    dphi = 2 * np.pi / 60
                     phi = np.arange(0, 2 * np.pi, dphi)
                     aberration_function = OpticalSystem.compute_pupil_plane_abberations(zernieke, rho, phi)
                     # plt.plot(aberration_function[50, :])
@@ -478,15 +533,16 @@ class System4f3D(OpticalSystem3D):
                     #     h[:, :, i] = integrated_rho
 
                     # Replace your for-loop with a parallelized version:
-                    h = np.stack(Parallel(n_jobs=5)(
+                    h = np.stack(Parallel(n_jobs=4)(
                         delayed(lambda i: sp.integrate.simpson(
                             np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :],axis=3) * dphi,
                         x = rho, axis=2))(i) for i in range(u.shape[2])
                     ), axis=2)
+
             I = (h * h.conjugate()).real
 
         if mask:
-            shape = np.array(c_vectors.shape[:-1])
+            shape = np.array(grid.shape[:-1])
             m = mask(shape, np.amin(shape) // 5)
             I *= m
 

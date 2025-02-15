@@ -395,17 +395,42 @@ class TestConstructPupilAberration(unittest.TestCase):
         #                 "Aberration for (2,2) mode should be symmetric in phi.")
 
     def test_OTF_aberrated(self):
-        alpha = np.pi / 10
-        dx = 1 / (32 * np.sin(alpha))
+        alpha = 2 * np.pi / 5
+        nmedium = 1.5
+        nobject = 1.5
+        NA = nmedium * np.sin(alpha)
+        theta = np.asin(0.9 * np.sin(alpha))
+        fz_max_diff = nmedium * (1 - np.cos(alpha))
+        dx = 1 / (8 * NA)
         dy = dx
-        dz = 1 / (16 * (1 - np.cos(alpha)))
-        N = 51
+        dz = 1 / (4 * fz_max_diff)
+        N = 101
         max_r = N // 2 * dx
         max_z = N // 2 * dz
+        psf_size = 2 * np.array((max_r, max_r, max_z))
+        dV = dx * dy * dz
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        z = np.linspace(-max_z, max_z, N)
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
+        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), N)
+
+        arg = N // 2
+        # print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        two_NA_fy = fy / (2 * NA)
+        scaled_fz = fz / fz_max_diff
+
+        multiplier = 10 ** 5
+        ylim = 10 ** 2
+
+        optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
         x = np.linspace(-max_r, max_r, N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
-        optical_system = System4f3D(alpha=alpha)
+
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
         aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
                                                                           zernieke={(4, 0): 0.072})
@@ -425,11 +450,21 @@ class TestConstructPupilAberration(unittest.TestCase):
         axes[2, 1].imshow(aberrated_psf_astigmatism[:, :, N//2].T, origin='lower')
         plt.show()
 
-        fig, ax = plt.subplots()
-        norm = np.max(non_aberrated_psf)
-        ax.plot(non_aberrated_psf[N//2, :, N//2] / norm , label="Ideal PSF")
-        ax.plot(aberrated_psf_spherical[N//2, :, N//2] / norm, label="Sperical")
-        ax.plot(aberrated_psf_comma[N//2, :, N//2] / norm, label="Comma")
-        ax.plot(aberrated_psf_astigmatism[N//2, :, N//2] / norm, label="Astigmatism")
-        plt.legend()
+        fig, axes = plt.subplots(3, 2)
+        axes[0, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        axes[0, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_spherical[:, :, N//2].T)), origin='lower')
+        axes[1, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        axes[1, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_comma[:, :, N//2].T)), origin='lower')
+        axes[2, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        axes[2, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_astigmatism[:, :, N//2].T)), origin='lower')
+
         plt.show()
+
+        # fig, ax = plt.subplots()
+        # norm = np.max(non_aberrated_psf)
+        # ax.plot(non_aberrated_psf[N//2, :, N//2] / norm , label="Ideal PSF")
+        # ax.plot(aberrated_psf_spherical[N//2, :, N//2] / norm, label="Sperical")
+        # ax.plot(aberrated_psf_comma[N//2, :, N//2] / norm, label="Comma")
+        # ax.plot(aberrated_psf_astigmatism[N//2, :, N//2] / norm, label="Astigmatism")
+        # plt.legend()
+        # plt.show()

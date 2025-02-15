@@ -57,7 +57,7 @@ if __name__ == "__main__":
         ssnr_calc = SSNRSIM3D(widefield, optical_system)
         ssnr = ssnr_calc.compute_ssnr()
         volume = ssnr_calc.compute_ssnri_volume()
-        volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+        volume_a = ssnr_calc.compute_analytic_ssnri_volume()
         entropy = ssnr_calc.compute_ssnri_entropy()
         params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
         print(params)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
                 ssnr = ssnr_calc.compute_ssnr()
 
                 volume = ssnr_calc.compute_ssnri_volume()
-                volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+                volume_a = ssnr_calc.compute_analytic_ssnri_volume()
                 entropy = ssnr_calc.compute_ssnri_entropy()
 
                 print("Volume ", round(volume))

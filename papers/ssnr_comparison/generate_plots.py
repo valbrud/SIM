@@ -57,7 +57,6 @@ arg = N // 2
 # print(fz[arg])
 
 two_NA_fx = fx / (2 * NA)
-print(two_NA_fx)
 two_NA_fy = fy / (2 * NA)
 scaled_fz = fz / fz_max_diff
 
@@ -65,13 +64,12 @@ multiplier = 10 ** 5
 ylim = 10 ** 2
 
 optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
-optical_system.compute_psf_and_otf((psf_size, N), high_NA=True,
-                                   apodization_function="Sine")
+conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
+
+optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
-conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
-squareLNonLinear = Illumination.IlluminationNPhotonSIM3D.init_from_linear_illumination(squareL, 2)
 
 # box = Box.Box(conventional.waves.values(), box_size=psf_size, point_number=N)
 # box.compute_intensity_from_spatial_waves()
@@ -150,8 +148,8 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
-        # plt.show()
+        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg]}.png', pad_inches=0, dpi=300)
+        plt.show()
 
         ax.clear()
         ax.set_xlabel(r"$f_r \; [LCF]$", fontsize=20)
@@ -171,8 +169,8 @@ class TestArticlePlots(unittest.TestCase):
         ax.set_aspect(1. / ax.get_data_ratio())
 
         ax.legend(fontsize=18)
-        fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
-        # plt.show()
+        # fig.savefig(f'{path_to_figures}ring_averaged_ssnr_fz={scaled_fz[arg//2]}.png', pad_inches=0, dpi=300)
+        plt.show()
 
     def test_ssnr_color_maps(self):
         for illumination in illumination_list:
@@ -502,9 +500,9 @@ class TestArticlePlots(unittest.TestCase):
         plt.show()
 
     def test_plot_power_dependence(self):
-        if not os.path.exists('Power.csv'):
+        if not os.path.exists('Power_new.csv'):
             raise FileExistsError('Power.csv does not exist. Compute it first with test_compute_power_dependence')
-        file_path = 'Power.csv'
+        file_path = 'Power_new.csv'
         data = pd.read_csv(file_path)
         print(data['Configuration'].unique())
         fig1, axes1 = plt.subplots(figsize=(12, 10))
@@ -571,9 +569,9 @@ class TestArticlePlots(unittest.TestCase):
         plt.show()
 
     def test_plot_angle_dependence(self):
-        if not os.path.exists('Angles.csv'):
+        if not os.path.exists('Angles_new.csv'):
             raise FileExistsError('Angles.csv does not exist. Compute it first with test_compute_angle_dependence')
-        file_path = 'Angles.csv'
+        file_path = 'Angles_new.csv'
         data = pd.read_csv(file_path)
         print(data['Configuration'].unique())
         fig1, axes1 = plt.subplots(figsize=(12, 10))
@@ -652,14 +650,14 @@ class TestComputeVolumeEntropy(unittest.TestCase):
 
         ratios = np.linspace(0.2, 1, 41)
 
-        with open("Angles.csv", 'w', newline='') as file:
+        with open("Angles_new.csv", 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
             widefield = configurations.get_widefield()
             ssnr_calc = SSNRSIM3D(widefield, optical_system)
             ssnr = ssnr_calc.ssnri
             volume = ssnr_calc.compute_ssnri_volume()
-            volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+            volume_a = ssnr_calc.compute_analytic_ssnri_volume()
             entropy = ssnr_calc.compute_ssnri_entropy()
             params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
             print(params)
@@ -672,9 +670,11 @@ class TestComputeVolumeEntropy(unittest.TestCase):
                     illumination = config_methods[configuration](theta)
                     ssnr_calc = SSNRSIM3D(illumination, optical_system)
                     ssnr = ssnr_calc.ssnri
+                    plt.imshow(np.log(1 + 10**8 * np.abs(ssnr[:, :, N // 2])))
+                    plt.show()
 
                     volume = ssnr_calc.compute_ssnri_volume()
-                    volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+                    volume_a = ssnr_calc.compute_analytic_ssnri_volume()
                     entropy = ssnr_calc.compute_ssnri_entropy()
 
                     print("Volume ", round(volume))
@@ -702,14 +702,14 @@ class TestComputeVolumeEntropy(unittest.TestCase):
 
         ratios = np.linspace(0, 2, 41)
 
-        with open("Power.csv", 'w', newline='') as file:
+        with open("Power_new.csv", 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
             widefield = configurations.get_widefield()
             ssnr_calc = SSNRSIM3D(widefield, optical_system)
             ssnr = ssnr_calc.ssnri
             volume = ssnr_calc.compute_ssnri_volume()
-            volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+            volume_a = ssnr_calc.compute_analytic_ssnri_volume()
             entropy = ssnr_calc.compute_ssnri_entropy()
             params = ["Widefield", 1, round(volume), round(volume_a), round(entropy)]
             print(params)
@@ -722,7 +722,7 @@ class TestComputeVolumeEntropy(unittest.TestCase):
                     ssnr = ssnr_calc.ssnri
 
                     volume = ssnr_calc.compute_ssnri_volume()
-                    volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+                    volume_a = ssnr_calc.compute_analytic_ssnri_volume()
                     entropy = ssnr_calc.compute_ssnri_entropy()
 
                     print("Volume ", round(volume))

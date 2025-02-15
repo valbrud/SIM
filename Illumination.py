@@ -267,7 +267,7 @@ class PlaneWavesSIM(PeriodicStructure):
         waves = self.waves
         effective_kernels = {}
         effective_kernels_ft = {}
-        grid =  np.stack(np.meshgrid(*coordinates), -1)
+        grid = np.stack(np.meshgrid(*coordinates), -1)
         for r in range(self.Mr):
             angle = self.angles[r]
             indices = self._rearrange_indices(self.dimensions)
@@ -275,12 +275,13 @@ class PlaneWavesSIM(PeriodicStructure):
                 effective_kernel = 0
                 for projected_index in indices[sim_index]:
                     index = self.glue_indices(sim_index, projected_index, self.dimensions)
-                    wavevector = waves[index].wavevector
+                    wavevector = waves[index].wavevector.copy()
                     wavevector[:2] = VectorOperations.rotate_vector2d(
                         waves[index].wavevector[:2], angle)
+                    # print(angle, sim_index, wavevector)
                     amplitude = waves[index].amplitude
                     if len(self.dimensions) == 2:
-                        phase_shifted = np.transpose(np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))) * kernel
+                        phase_shifted = np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector)) * kernel
                     elif len(self.dimensions) == 3:
                         phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
                     else:

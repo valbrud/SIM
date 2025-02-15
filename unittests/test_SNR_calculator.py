@@ -548,7 +548,7 @@ class Testssnr(unittest.TestCase):
         # ssnr_3waves_true = np.abs(noise_estimator_true.compute_ssnr())
         # ssnr_3waves_true_ra = noise_estimator_true.ring_average_ssnri()
         volume_conventional = noise_estimator.compute_ssnri_volume()
-        volume_a_3waves = noise_estimator.compute_analytic_ssnr_volume()
+        volume_a_3waves = noise_estimator.compute_analytic_ssnri_volume()
         measure_3waves, threshold3waves = noise_estimator.compute_ssnr_waterline_measure()
         entropy_3waves = noise_estimator.compute_ssnri_entropy()
 

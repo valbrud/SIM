@@ -38,7 +38,7 @@ class BFPConfiguration:
         sources = [
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
             Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
-            Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-9, 0, 1e-9))),
+            Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
 
         ]
         s_polarized_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(sources)

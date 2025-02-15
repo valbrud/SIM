@@ -1,7 +1,7 @@
 from config.IlluminationConfigurations import BFPConfiguration
 import csv
 import numpy as np
-from SSNRCalculator import SSNRSIM3D, SSNRSIM3D3dShifts
+from SSNRCalculator import SSNRSIM3D
 from OpticalSystems import System4f3D
 
 if __name__ == "__main__":
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     angles = np.linspace(alpha_lens/8, alpha_lens, 8)
     powers = np.linspace(0., 2, 21)
     optical_system = System4f3D(alpha=alpha_lens)
-    optical_system.compute_psf_and_otf((psf_size, N), apodization_function="Sine")
+    optical_system.compute_psf_and_otf((psf_size, N))
 
     with open("circular_b.csv", 'w', newline='') as file:
         writer = csv.writer(file)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         # ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
         # wssnr = ssnr_widefield.compute_ssnr()
         # wvolume = ssnr_widefield.compute_ssnri_volume()
-        # wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
+        # wvolume_a = ssnr_widefield.compute_analytic_ssnri_volume()
         # wtotal = ssnr_widefield.compute_total_signal_to_noise()
         # wtotal_a = ssnr_widefield.compute_total_analytic_signal_to_noise()
         # wentropy = ssnr_widefield.compute_ssnri_entropy()
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                 ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.compute_ssnr()
                 volume = ssnr_calc.compute_ssnri_volume()
-                volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+                volume_a = ssnr_calc.compute_analytic_ssnri_volume()
                 # total = ssnr_calc.compute_total_signal_to_noise()
                 # total_a = ssnr_calc.compute_total_analytic_signal_to_noise()
                 entropy = ssnr_calc.compute_ssnri_entropy()
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     #     ssnr_widefield = SSNRSIM3D(illumination_widefield, optical_system)
     #     wssnr = ssnr_widefield.compute_ssnr()
     #     wvolume = ssnr_widefield.compute_ssnri_volume()
-    #     wvolume_a = ssnr_widefield.compute_analytic_ssnr_volume()
+    #     wvolume_a = ssnr_widefield.compute_analytic_ssnri_volume()
     #     wtotal = ssnr_widefield.compute_total_signal_to_noise()
     #     wtotal_a = ssnr_widefield.compute_total_analytic_signal_to_noise()
     #     wentropy = ssnr_widefield.compute_ssnri_entropy()
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     #             ssnr_calc = SSNRSIM3D3dShifts(illumination, optical_system)
     #             ssnr = ssnr_calc.compute_ssnr()
     #             volume = ssnr_calc.compute_ssnri_volume()
-    #             volume_a = ssnr_calc.compute_analytic_ssnr_volume()
+    #             volume_a = ssnr_calc.compute_analytic_ssnri_volume()
     #             total = ssnr_calc.compute_total_signal_to_noise()
     #             total_a = ssnr_calc.compute_total_analytic_signal_to_noise()
     #             entropy = ssnr_calc.compute_ssnri_entropy()

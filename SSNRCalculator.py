@@ -242,6 +242,9 @@ class SSNRSIM(SSNRBase):
         for m in self.effective_otfs.keys():
             d_j += self.effective_otfs[m] * effective_kernels_ft[m].conjugate()
         d_j *= self.illumination.Mt
+        # plt.title("Dj")
+        # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
+        # plt.show()
         return np.abs(d_j)
 
     def _compute_Vj(self):
@@ -269,6 +272,9 @@ class SSNRSIM(SSNRBase):
                 term = otf1 * otf2.conjugate() * otf3
                 v_j += term
         v_j *= self.illumination.Mt
+        # plt.title("Vj")
+        # plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))
+        # plt.show()
         return np.abs(v_j)
 
     def _compute_ssnri(self):
@@ -280,9 +286,9 @@ class SSNRSIM(SSNRBase):
 
         self.dj = self._compute_Dj()
         self.vj = self._compute_Vj()
-        ssnr = np.zeros(self.dj.shape, dtype=np.complex128)
+        ssnr = np.zeros(self.dj.shape, dtype=np.float64)
         mask = (self.vj != 0) * (self.dj != 0)
-        numpy.putmask(ssnr, mask, np.abs(self.dj) ** 2 / (self.vj))
+        numpy.putmask(ssnr, mask, np.abs(self.dj) ** 2 / self.vj)
         self._ssnri = ssnr
         if self.save_memory:
             self.effective_otfs = {}
@@ -292,7 +298,7 @@ class SSNRSIM(SSNRBase):
         return ((self.dj * np.abs(object_ft)) ** 2 /
                 (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
 
-    def compute_analytic_ssnr_volume(self, factor=10, volume_element=1):
+    def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
         g0 = np.abs(np.amax(self.optical_system.otf))
         weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
