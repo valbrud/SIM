@@ -20,7 +20,7 @@ from Sources import IntensityHarmonic3D
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
-
+from ShiftsFinder import ShiftsFinder3d, ShiftsFinder2d
 
 class Illumination:
 
@@ -250,6 +250,33 @@ class PlaneWavesSIM(PeriodicStructure):
             wavevectors2d.extend(wavevectors2d_r)
         return wavevectors2d
 
+    def get_base_vectors(self):
+        """
+        Get the base vectors of the illumination Fourier space Bravais lattice.
+
+        Returns:
+            tuple: Base vectors of the illumination Fourier space Bravais lattice.
+        """
+        base_vectors = np.zeros(len(self.dimensions)) + np.inf
+        for i in range(len(self.dimensions)):
+            for wave in self.waves.keys():
+                if wave[i] != 0:
+                    base_vectors[i] = self.waves[wave].wavevector[i] /wave[i]
+                    break
+        return tuple(base_vectors)
+
+    @abstractmethod
+    def set_spatial_shifts_diagonally(self, number: int = 0):
+        """
+        Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same line).
+        This is the most common use in practice.
+        Appropriate shifts for a given illumination pattern can be computed in the module 'ShiftsFinder.py'
+
+        Args:
+            number (int): Number of shifts.
+        """
+        pass
+
     def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray]) -> tuple[
         dict[tuple[int, tuple[int, ...]], np.ndarray], dict[tuple[int, tuple[int, ...]], np.ndarray]]:
         """
@@ -415,20 +442,14 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         print(len(expanded_lattice3d))
         return expanded_lattice3d
 
-    def set_spatial_shifts_diagonally(self, number: int, base_vectors: tuple[float, float, float]):
-        """
-        Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same lin).
-        This is the most common use in practice.
-        Appropriate shifts for a given illumination pattern can be computed in the module 'compute_optimal_lattices.py'
-
-        Args:
-            number (int): Number of shifts.
-            base_vectors (tuple): Base vectors for the shifts.
-        """
-        kx, ky = base_vectors[0], base_vectors[1]
-        shiftsx = np.arange(0, number) / number / kx
-        shiftsy = np.arange(0, number) / number / ky
-        self.spatial_shifts = np.array([(shiftsx[i], shiftsy[i], 0) for i in range(number)])
+    def set_spatial_shifts_diagonally(self, number: int = 0):
+        expanded_lattice = self.compute_expanded_lattice()
+        shift_ratios = ShiftsFinder3d.get_shift_ratios(expanded_lattice)
+        bases = sorted(list(shift_ratios.keys()))
+        base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
+        base_vectors = self.get_base_vectors()
+        shifts = 2 * np.pi / np.array(base_vectors) * ratios / base
+        self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
     def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
         if not grid and not coordinates:
@@ -490,7 +511,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         Returns:
             set: Set of expanded 2D lattice peaks.
         """
-        self.xy_fourier_peaks = set((mx, my) for mx, my, mz in self.waves.keys())
+        self.xy_fourier_peaks = set((mx, my) for mx, my in self.waves.keys())
         expanded_lattice2d = set()
         for peak1 in self.xy_fourier_peaks:
             for peak2 in self.xy_fourier_peaks:
@@ -498,20 +519,15 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         print(len(expanded_lattice2d))
         return expanded_lattice2d
 
-    def set_spatial_shifts_diagonally(self, number: int, base_vectors: tuple[float, float]):
-        """
-        Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same lin).
-        This is the most common use in practice.
-        Appropriate shifts for a given illumination pattern can be computed in the module 'compute_optimal_lattices.py'
+    def set_spatial_shifts_diagonally(self, number: int = 0):
+        expanded_lattice = self.compute_expanded_lattice()
+        shift_ratios = ShiftsFinder2d.get_shift_ratios(expanded_lattice)
+        bases = sorted(list(shift_ratios.keys()))
+        base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
+        base_vectors = self.get_base_vectors()
+        shifts = 2 * np.pi / np.array(base_vectors) * ratios / base
+        self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
-        Args:
-            number (int): Number of shifts.
-            base_vectors (tuple): Base vectors for the shifts.
-        """
-        kx, ky = base_vectors[0], base_vectors[1]
-        shiftsx = np.arange(0, number) / number / kx
-        shiftsy = np.arange(0, number) / number / ky
-        self.spatial_shifts = np.array([(shiftsx[i], shiftsy[i]) for i in range(number)])
 
     def normalize_spatial_waves(self):
         if not (0, 0) in self.waves.keys():

@@ -61,9 +61,11 @@ class TestReconstruction(unittest.TestCase):
             illumination_3waves3d, self.dimensions
         )
 
-        spatial_shifts = np.array(((0., 0.), (1, 0), (2, 0)))
-        spatial_shifts /= (3 * 2 * self.nmedium * np.sin(self.theta))
-        self.illumination.spatial_shifts = spatial_shifts
+        # spatial_shifts = np.array(((0., 0.), (1, 0), (2, 0)))
+        # spatial_shifts /= (3 * 2 * self.nmedium * np.sin(self.theta))
+        # self.illumination.spatial_shifts = spatial_shifts
+        self.illumination.set_spatial_shifts_diagonally()
+
 
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system)
