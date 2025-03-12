@@ -45,15 +45,16 @@ optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refrac
 
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
 
+widefield = configurations.get_widefield()
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 
 aberrations = {
-    'Spherical' : (4, 0),
+    # 'Spherical' : (4, 0),
     'Comma' : (3, 1),
-    'Astigmatism' : (2, 2)
+    # 'Astigmatism' : (2, 2)
 }
 RMS = 0.072
 aberration_power = np.linspace(0, 2, 21)
@@ -61,24 +62,25 @@ aberration_power = np.linspace(0, 2, 21)
 headers = ["Configuration", "Aberration", "Aberration Strength", "Volume", "Volume_a", "Entropy"]
 
 config_methods = {
-    "Conventional": conventional,
-    "SquareL": squareL,
-    "SquareC": squareC,
-    "Hexagonal": hexagonal,
+    "Widefield" : widefield
+    # "Conventional": conventional,
+    # "SquareL": squareL,
+    # "SquareC": squareC,
+    # "Hexagonal": hexagonal,
 }
 
-with open("Aberrations.csv", 'w', newline='') as file:
+with open("Aberrations_widefield.csv", 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(headers)
-    for configuration in config_methods:
-        for aberration in aberrations:
+    for aberration in aberrations:
+        for configuration in config_methods:
             for power in aberration_power:
                 illumination = config_methods[configuration]
                 optical_system.compute_psf_and_otf(high_NA=True, integrate_rho=True, zernieke={aberrations[aberration]: power * RMS})
                 ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.ssnri
-                plt.imshow(np.log(1 + 10**8 * ssnr[:, N//2, :]))
-                plt.show()
+                # plt.imshow(np.log(1 + 10**8 * ssnr[:, N//2, :]))
+                # plt.show()
                 volume = ssnr_calc.compute_ssnri_volume()
                 volume_a = ssnr_calc.compute_analytic_ssnri_volume()
                 entropy = ssnr_calc.compute_ssnri_entropy()

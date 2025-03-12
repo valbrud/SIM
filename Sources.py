@@ -8,7 +8,7 @@ The sources can provide either electric fields or intensity fields.
 import numpy as np
 import cmath
 from abc import abstractmethod
-
+from VectorOperations import VectorOperations
 
 class Source:
     """
@@ -175,8 +175,9 @@ def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) ->
 
 
 class IntensityHarmonic3D(IntensityHarmonic):
-    def get_intensity(self, coordinates: np.float64):
-        intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', coordinates, self.wavevector)
+    def get_intensity(self, grid: np.float64, rotated_frame_vector=np.array((0, 0, 1)), rotated_angle=0.):
+        wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector3d(self.wavevector, rotated_frame_vector, -rotated_angle)
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', grid, wavevector)
                                                  + self.phase))
         return intensity
 
@@ -187,7 +188,8 @@ class IntensityHarmonic2D(IntensityHarmonic):
         return cls(harmonic.amplitude, harmonic.phase, harmonic.wavevector[:2])
 
 
-    def get_intensity(self, coordinates: np.float64):
-        intensity = self.amplitude * np.exp(1j * (np.einsum('ij,l ->ijl', coordinates, self.wavevector)
+    def get_intensity(self, grid: np.float64, rotated_angle=0.):
+        wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector2d(self.wavevector, -rotated_angle)
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ijl,l ->ij', grid, wavevector)
                                                   + self.phase))
         return intensity

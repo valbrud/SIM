@@ -642,10 +642,10 @@ class TestComputeVolumeEntropy(unittest.TestCase):
         conventional = lambda angle: configurations.get_2_oblique_s_waves_and_s_normal(angle, 1, 1, Mt=1)
 
         config_methods = {
-            "Conventional": conventional,
+            # "Conventional": conventional,
             "SquareL": squareL,
-            "SquareC": squareC,
-            "Hexagonal": hexagonal,
+            # "SquareC": squareC,
+            # "Hexagonal": hexagonal,
         }
 
         ratios = np.linspace(0.2, 1, 41)
@@ -670,8 +670,8 @@ class TestComputeVolumeEntropy(unittest.TestCase):
                     illumination = config_methods[configuration](theta)
                     ssnr_calc = SSNRSIM3D(illumination, optical_system)
                     ssnr = ssnr_calc.ssnri
-                    plt.imshow(np.log(1 + 10**8 * np.abs(ssnr[:, :, N // 2])))
-                    plt.show()
+                    # plt.imshow(np.log(1 + 10**8 * np.abs(ssnr[:, :, N // 2])))
+                    # plt.show()
 
                     volume = ssnr_calc.compute_ssnri_volume()
                     volume_a = ssnr_calc.compute_analytic_ssnri_volume()

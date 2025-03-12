@@ -25,36 +25,38 @@ class SIMulator:
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
-                 readout_noise_variance=0):
+                 readout_noise_variance=0,
+                 effective_psfs = None,
+                 ):
         self.optical_system = optical_system
         self.illumination = illumination
         self.readout_noise_variance = readout_noise_variance
         self.camera = camera
         self.readout_noise_variance = 0
-        self.effective_psfs = {}
-        self.phase_modulation_patterns = {}
-
-    def generate_sim_images(self, ground_truth, effective_psfs=None):
         if not effective_psfs:
-            if not self.effective_psfs:
-                self.effective_psfs, _ = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+            self.effective_psfs, _ = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
         else:
             self.effective_psfs = effective_psfs
+        self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
-        if not self.phase_modulation_patterns:
-            self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
-
+    def generate_sim_images(self, ground_truth):
         sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        # sim_images_ft = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
         for r in range(self.illumination.Mr):
             for sim_index in self.illumination.rearranged_indices:
                 projective_index = self.illumination.rearranged_indices[sim_index][0] if self.illumination.rearranged_indices[sim_index] else ()
                 index = self.illumination.glue_indices(sim_index, projective_index, self.illumination.dimensions)
-                wavevector = self.illumination.waves[index].wavevector
+                wavevector = np.copy(self.illumination.waves[index].wavevector)
                 wavevector[np.bool(1 - np.array(self.illumination.dimensions))] = 0
                 for n in range(self.illumination.Mt):
-                    total_phase_modulation = self.phase_modulation_patterns[r, sim_index] * self.illumination.phase_matrix[(r, n, sim_index)]
-                    sim_images[r, n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.effective_psfs[r, sim_index], mode='same')
-        sim_images = np.real(sim_images)
+                    total_phase_modulation = self.phase_modulation_patterns[r, sim_index] * self.illumination.phase_matrix[(n, sim_index)]
+                    # Exta phase modulation for effective PSFs is required as they are already defined as phase modulated (ft of shifted OTFs)
+                    sim_images[r, n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[r, sim_index].conjugate() * self.effective_psfs[r, sim_index], mode='same')
+                    # sim_images_ft[r, n] += self.illumination.phase_matrix[(n, sim_index)] * self.effective_otfs[r, sim_index]
+        # for r in range(self.illumination.Mr):
+        #     for n in range(self.illumination.Mt):
+        #         sim_images[r, n] = np.real(wrappers.wrapped_ifftn(sim_images_ft[r, n])) + 10**-10
+        sim_images = np.real(sim_images) + 10**-10
         return sim_images
 
     def add_noise(self, image):
@@ -83,18 +85,22 @@ class SIMulator2D(SIMulator):
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
-                 readout_noise_variance=0):
+                 readout_noise_variance=0,
+                 effective_psfs = None,
+                 ):
         if not len(optical_system.psf.shape) == 2:
             raise ValueError("The PSF must be 2D for 2D SIM simulations.")
-        super().__init__(illumination, optical_system, camera, readout_noise_variance)
+        super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 
 
 class SIMulator3D(SIMulator):
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
-                 readout_noise_variance=0):
+                 readout_noise_variance=0,
+                 effective_psfs = None,
+                 ):
         if not len(optical_system.psf.shape) == 3:
             raise ValueError("The PSF must be 3D for 3D SIM simulations.")
-        super().__init__(illumination, optical_system, camera, readout_noise_variance)
+        super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 

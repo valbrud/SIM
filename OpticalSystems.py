@@ -48,11 +48,14 @@ class OpticalSystem:
     def __init__(self, interpolation_method: str):
         self.psf = None
         self.otf = None
+        self._x_grid = None
+        self._q_grid = None
         self.interpolator = None
         self._otf_frequencies = None
         self._psf_coordinates = None
         self._interpolation_method = None
         self.interpolation_method = interpolation_method
+
 
     @property
     def interpolation_method(self):
@@ -77,6 +80,19 @@ class OpticalSystem:
     def otf_frequencies(self):
         return self._otf_frequencies
 
+    # To avoid unnecessary memory usage, the grid is stored only if needed.
+    @property
+    def x_grid(self):
+        if self._x_grid is None:
+            self._compute_x_grid()
+        return self._x_grid
+
+    @property
+    def q_grid(self):
+        if self._q_grid is None:
+            self._compute_q_grid()
+        return self._q_grid
+
     @abstractmethod
     def compute_psf_and_otf_cordinates(self, psf_size: tuple[int], N: int):
         """
@@ -96,25 +112,23 @@ class OpticalSystem:
         """
         pass
 
-    @abstractmethod
-    def compute_q_grid(self) -> ndarray[tuple[int, int, int, 3], np.float64]:
+    def _compute_q_grid(self) -> ndarray[tuple[int, ..., 3], np.float64]:
         """
         Compute the q-grid for the OTF.
 
         Returns:
             np.ndarray: Computed q-grid.
         """
-        pass
+        self._q_grid= np.stack(np.meshgrid(*self.otf_frequencies), axis=-1)
 
-    @abstractmethod
-    def compute_x_grid(self) -> ndarray[tuple[int, int, int, 3], np.float64]:
+    def _compute_x_grid(self) -> ndarray[tuple[int, ..., 3], np.float64]:
         """
         Compute the x-grid for the PSF.
 
         Returns:
             np.ndarray: Computed x-grid.
         """
-        pass
+        self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
 
     def _prepare_interpolator(self):
         """
@@ -230,25 +244,6 @@ class OpticalSystem2D(OpticalSystem):
         fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
         self._otf_frequencies = np.array((fx, fy))
 
-    def compute_q_grid(self) -> ndarray[tuple[int, int, 2], np.float64]:
-        if self.otf_frequencies is None:
-            raise AttributeError("Major bug, OTF frequencies are missing")
-        q_axes = 2 * np.pi * self.otf_frequencies
-        qx, qy = np.array(q_axes[0]), np.array(q_axes[1])
-        q_vectors = np.array(np.meshgrid(qx, qy)).T.reshape(-1, 2)
-        q_sorted = q_vectors[np.lexsort((q_vectors[:, -1], q_vectors[:, 0]))]
-        q_grid = q_sorted.reshape(qx.size, qy.size, 2)
-        return q_grid
-
-    def compute_x_grid(self) -> ndarray[tuple[int, int, 2], np.float64]:
-        if self.psf_coordinates is None:
-            raise AttributeError("PSF coordinates are missing")
-        x_axes = self.psf_coordinates
-        x, y = np.array(x_axes[0]), np.array(x_axes[1])
-        x_vectors = np.array(np.meshgrid(x, y)).T.reshape(-1, 2)
-        x_sorted = x_vectors[np.lexsort((x_vectors[:, -1], x_vectors[:, 0]))]
-        x_grid = x_sorted.reshape(x.size, y.size, 2)
-        return x_grid
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":
@@ -297,26 +292,6 @@ class OpticalSystem3D(OpticalSystem):
         fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
         fz = np.linspace(-Nz / (2 * Lz), Nz / (2 * Lz), Nz)
         self._otf_frequencies = np.array((fx, fy, fz))
-
-    def compute_q_grid(self) -> ndarray[tuple[int, int, int, int], np.float64]:
-        if self.otf_frequencies is None:
-            raise AttributeError("Major bug, OTF frequencies are missing")
-        q_axes = 2 * np.pi * self.otf_frequencies
-        qx, qy, qz = np.array(q_axes[0]), np.array(q_axes[1]), np.array(q_axes[2])
-        q_vectors = np.array(np.meshgrid(qx, qy, qz)).T.reshape(-1, 3)
-        q_sorted = q_vectors[np.lexsort((q_vectors[:, -2], q_vectors[:, -1], q_vectors[:, 0]))]
-        q_grid = q_sorted.reshape(qx.size, qy.size, qz.size, 3)
-        return q_grid
-
-    def compute_x_grid(self) -> ndarray[tuple[int, int, int, int], np.float64]:
-        if self.psf_coordinates is None:
-            raise AttributeError("PSF coordinates are missing")
-        x_axes = self.psf_coordinates
-        x, y, z = np.array(x_axes[0]), np.array(x_axes[1]), np.array(x_axes[2])
-        x_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
-        x_sorted = x_vectors[np.lexsort((x_vectors[:, -2], x_vectors[:, -1], x_vectors[:, 0]))]
-        x_grid = x_sorted.reshape(x.size, y.size, z.size, 3)
-        return x_grid
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":
@@ -509,10 +484,10 @@ class System4f3D(OpticalSystem3D):
                     h = sp.integrate.simpson(integrands, x=rho)
 
                 else:
-                    rho = np.linspace(0, 1 - 1e-9, 60)
+                    rho = np.linspace(0, 1 - 1e-9, 100)
                     vx, vy = 2 * np.pi * grid[:, :, :, 0], 2 * np.pi * grid[:, :, :, 1]
                     psy = np.arctan2(vy, vx)[:, :, 0]
-                    dphi = 2 * np.pi / 60
+                    dphi = 2 * np.pi / 100
                     phi = np.arange(0, 2 * np.pi, dphi)
                     aberration_function = OpticalSystem.compute_pupil_plane_abberations(zernieke, rho, phi)
                     # plt.plot(aberration_function[50, :])
@@ -533,9 +508,9 @@ class System4f3D(OpticalSystem3D):
                     #     h[:, :, i] = integrated_rho
 
                     # Replace your for-loop with a parallelized version:
-                    h = np.stack(Parallel(n_jobs=4)(
+                    h = np.stack(Parallel(n_jobs=2)(
                         delayed(lambda i: sp.integrate.simpson(
-                            np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :],axis=3) * dphi,
+                            np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :], axis=3) * dphi,
                         x = rho, axis=2))(i) for i in range(u.shape[2])
                     ), axis=2)
 

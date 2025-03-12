@@ -285,7 +285,7 @@ class PlaneWavesSIM(PeriodicStructure):
                     elif len(self.dimensions) == 3:
                         phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
                     else:
-                        raise ValueError("The number of dimensions is meaningless in the context of microscopy!")
+                        raise ValueError(f"{len(self.dimensions)} dimensions is meaningless in the context of microscopy!")
                     effective_kernel += amplitude * phase_shifted
                 effective_kernels[(r, sim_index)] = effective_kernel
                 effective_kernels_ft[(r, sim_index)] = wrappers.wrapped_fftn(effective_kernel)
@@ -295,18 +295,23 @@ class PlaneWavesSIM(PeriodicStructure):
         phase_modulation_patterns = {}
         grid = np.stack(np.meshgrid(*coordinates), axis=-1)
         for r in range(self.Mr):
+            test_image = np.zeros(grid.shape[:2], dtype=np.complex128)
             for sim_index in self.rearranged_indices:
                 projective_index = self.rearranged_indices[sim_index][0]
                 index = self.glue_indices(sim_index, projective_index, self.dimensions)
-                wavevector = self.waves[index].wavevector
+                wavevector = np.copy(self.waves[index].wavevector)
+                wavevector[:2] = VectorOperations.rotate_vector2d(wavevector[:2], self.angles[r])
                 wavevector[np.bool(1 - np.array(self.dimensions))] = 0
                 if len(self.dimensions) == 2:
                     phase_modulation = np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))
+                    test_image += phase_modulation
                 elif len(self.dimensions) == 3:
                     phase_modulation = np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
                 else:
                     raise ValueError("The number of dimensions is meaningless in the context of microscopy!")
                 phase_modulation_patterns[r, sim_index] = phase_modulation
+            # plt.imshow(np.real(test_image))
+            # plt.show()
         return phase_modulation_patterns
 
     def compute_phase_matrix(self):
@@ -315,14 +320,13 @@ class PlaneWavesSIM(PeriodicStructure):
          (products of spatial shifts and illumination pattern spatial frequencies).
         """
         self.phase_matrix = {}
-        for r in range(self.Mr):
-            for n in range(self.Mt):
-                urn = self.spatial_shifts[n]
-                urn[:2] = VectorOperations.rotate_vector2d(urn[:2], self.angles[r])
-                wavevectors, indices = self.get_wavevectors_projected(r)
-                for i in range(len(wavevectors)):
-                    wavevector = wavevectors[i]
-                    self.phase_matrix[(r, n, indices[i])] = np.exp(-1j * np.dot(urn[np.bool(np.array(self.dimensions))], wavevector))
+        for n in range(self.Mt):
+            urn = self.spatial_shifts[n]
+            wavevectors, indices = self.get_wavevectors_projected(0)
+            for i in range(len(wavevectors)):
+                wavevector = wavevectors[i]
+                test = np.dot(urn[np.bool(np.array(self.dimensions))], wavevector)
+                self.phase_matrix[(n, indices[i])] = np.exp(-1j * np.dot(urn[np.bool(np.array(self.dimensions))], wavevector))
 
 
 class IlluminationPlaneWaves3D(PlaneWavesSIM):
@@ -438,7 +442,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         illumination_density = np.zeros(grid.shape[:3], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self.phase_matrix[(r, n, indices[i])]
+            phase = self.phase_matrix[(n, indices[i])]
             amplitude = self.waves[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic3D(amplitude, phase, wavevector).get_intensity(grid)
@@ -532,7 +536,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         illumination_density = np.zeros(grid.shape[:2], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self.phase_matrix[(r, n, indices[i])]
+            phase = self.phase_matrix[(n, indices[i])]
             amplitude = self.waves[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic2D(amplitude, phase, wavevector).get_intensity(grid)
