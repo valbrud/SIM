@@ -1,4 +1,7 @@
 import unittest
+
+from scipy.special import factorial
+
 from config.IlluminationConfigurations import *
 from Box import Box
 from Sources import PlaneWave, IntensityHarmonic3D
@@ -7,6 +10,7 @@ import matplotlib.pyplot as plt
 import stattools
 import sys
 sys.path.append('../')
+from Illumination import IlluminationNonLinearSIM2D
 
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):
@@ -87,3 +91,61 @@ class TestIllumination(unittest.TestCase):
         # plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
         # plt.show()
 
+    def test_non_linear_polynomial_illumination(self):
+        configurations = BFPConfiguration(refraction_index=1.5)
+        alpha = 2 * np.pi / 5
+        nmedium = 1.5
+        nobject = 1.5
+        NA = nmedium * np.sin(alpha)
+        theta = np.asin(0.9 * np.sin(alpha))
+        fz_max_diff = nmedium * (1 - np.cos(alpha))
+        dx = 1 / (64 * NA)
+        dy = dx
+        dz = 1 / (4 * fz_max_diff)
+
+        N = 255
+        max_r = N // 2 * dx
+
+        psf_size = 2 * np.array((2 * max_r, 2 * max_r))
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        dimensions = (1, 1)
+        illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
+        illumination_3waves2d = IlluminationPlaneWaves2D.init_from_3D(illumination_3waves3d, dimensions)
+
+        p = 10
+        nonlinear_expansion_coefficients = [0, ]
+        n=1
+        while(p**n / factorial(n)) > 10**-2:
+            nonlinear_expansion_coefficients.append(p**n / factorial(n) * (-1)**(n+1))
+            n += 1
+
+        illumination_3waves_non_linear = IlluminationNonLinearSIM2D.init_from_linear_illumination(illumination_3waves2d, tuple(nonlinear_expansion_coefficients))
+        for wave in illumination_3waves_non_linear.waves:
+            print(wave, illumination_3waves_non_linear.waves[wave].wavevector, illumination_3waves_non_linear.waves[wave].amplitude)
+        illumination_density = illumination_3waves2d.get_illumination_density(coordinates=(x, y))
+        emission_density = illumination_3waves_non_linear.get_illumination_density(coordinates=(x, y))
+
+
+        fig = plt.figure(figsize=(15, 9), constrained_layout=True)
+        plt.subplots_adjust(left=0.1,
+                            bottom=0.1,
+                            right=0.9,
+                            top=0.9,
+                            wspace=0.4,
+                            hspace=0.4)
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
+
+        ax1.set_title("Linear", fontsize=25, pad=15)
+        ax1.tick_params(labelsize=20)
+
+        ax2.set_title("Non-linear", fontsize=25)
+        ax2.tick_params(labelsize=20)
+
+        im1 = ax1.imshow(illumination_density, vmin=0)
+        im2 = ax2.imshow(emission_density, vmin=0)
+        plt.show()
+
+        plt.plot(emission_density[127, :])
+        plt.show()

@@ -15,20 +15,21 @@ from skimage.color.rgb_colors import dimgray
 
 import Sources
 import wrappers
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from Sources import IntensityHarmonic3D
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
 from ShiftsFinder import ShiftsFinder3d, ShiftsFinder2d
 
-class Illumination:
+
+class Illumination(ABC):
 
     @abstractmethod
     def get_illumination_density(self, **kwargs): ...
 
 
-class PeriodicStructure:
+class PeriodicStructure(ABC):
 
     @abstractmethod
     def get_elementary_cell(self): ...
@@ -80,16 +81,20 @@ class PlaneWavesSIM(PeriodicStructure):
     def init_from_list(cls,
                        intensity_harmonics_list: list[Sources.IntensityHarmonic],
                        base_vector_lengths: tuple[float, ...],
-                       dimensions, Mr=1,
-                       spatial_shifts=[]):
+                       dimensions,
+                       Mr=1,
+                       spatial_shifts=None):
         """
         Class method to initialize Illumination from a list of intensity plane waves.
 
         Args:
             intensity_harmonics_list (list): List of intensity plane waves.
             base_vector_lengths (tuple): Base vector lengths of the illumination Fourier space Bravais lattice.
+            dimensions (tuple): Indicates which SIM dimensions are projective(0) and true(1). In this notation
+            'true' means that illumination shifts are necessary for disentanglement in this direction. For example,
+            standard 3D SIM has dimensions (1, 1, 0), as there are now shifts in the z-direction.
             Mr (int): Number of rotations.
-
+            spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.
         Returns:
             Illumination: Initialized Illumination object.
         """
@@ -162,7 +167,6 @@ class PlaneWavesSIM(PeriodicStructure):
                 j += 1
         return tuple(index)
 
-
     def get_elementary_cell(self):
         ...
 
@@ -180,6 +184,17 @@ class PlaneWavesSIM(PeriodicStructure):
     def compute_expanded_lattice(self) -> set[tuple[int, ...]]:
         ...
 
+    def get_amplitudes(self) -> tuple[list[complex, ...], list[tuple[int, ...]]]:
+        """
+         Get the amplitudes and indices of the harmonics.
+
+         Returns:
+             tuple: List of amplitudes and list of indices.
+         """
+        amplitudes = [self.waves[index].amplitude for index in self.waves.keys()]
+        indices = [index for index in self.waves.keys()]
+        return amplitudes, indices
+
     def get_wavevectors(self, r: int) -> tuple[list[np.ndarray, ...], list[tuple[int, ...]]]:
         """
          Get the wavevectors and indices for a given rotation.
@@ -195,8 +210,8 @@ class PlaneWavesSIM(PeriodicStructure):
         indices = []
         for index in self.waves:
             indices.append(index)
-            wavevector = VectorOperations.rotate_vector3d(
-                self.waves[index].wavevector, np.array((0, 0, 1)), angle)
+            wavevector = np.copy(self.waves[index].wavevector)
+            wavevector = VectorOperations.rotate_vector2d(wavevector[:2], angle)
             wavevectors.append(wavevector)
         return wavevectors, indices
 
@@ -261,7 +276,7 @@ class PlaneWavesSIM(PeriodicStructure):
         for i in range(len(self.dimensions)):
             for wave in self.waves.keys():
                 if wave[i] != 0:
-                    base_vectors[i] = self.waves[wave].wavevector[i] /wave[i]
+                    base_vectors[i] = self.waves[wave].wavevector[i] / wave[i]
                     break
         return tuple(base_vectors)
 
@@ -285,7 +300,6 @@ class PlaneWavesSIM(PeriodicStructure):
         Args:
             kernel(np.ndarray): SIM reconstruction kernel, e.g., OTF.
             coordinates(tuple): coordinates
-            dimensions(tuple): defines which dimensions are fixed w.r.t. a sample (1)
             and which are fixed w.r.t. focal plane (0), i.e. projected
 
         Returns:
@@ -364,7 +378,11 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts)
 
     @classmethod
-    def init_from_list(cls, intensity_harmonics_list: list[Sources.IntensityHarmonic3D], base_vector_lengths: tuple[float, ...], dimensions=(1, 1, 0), Mr: int = 1,
+    def init_from_list(cls,
+                       intensity_harmonics_list: list[Sources.IntensityHarmonic3D],
+                       base_vector_lengths: tuple[float, ...],
+                       dimensions=(1, 1, 0),
+                       Mr: int = 1,
                        spatial_shifts=np.array([(0, 0, 0)])):
         return super().init_from_list(intensity_harmonics_list, base_vector_lengths, dimensions, Mr, spatial_shifts)
 
@@ -390,7 +408,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         return intensity_harmonics_dict
 
     @staticmethod
-    def find_ipw_from_pw(plane_waves) -> tuple[IntensityHarmonic3D, ...]:
+    def find_ipw_from_pw(plane_waves) -> dict[tuple[Any], IntensityHarmonic3D].values:
         """
         Static method to find intensity plane waves
          (i.e. Fourier transform of the illumination pattern) from plane waves.
@@ -419,7 +437,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                         continue
                     wavevector2 = plane_wave2.wavevector
                     wavevector_new = tuple(wavevector1 - wavevector2)
-                    if not wavevector_new in intensity_harmonics.keys():
+                    if wavevector_new not in intensity_harmonics.keys():
                         intensity_harmonics[wavevector_new] = (Sources.IntensityHarmonic3D(amplitude1 * amplitude2.conjugate(), 0,
                                                                                            np.array(wavevector_new)))
                     else:
@@ -455,7 +473,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         if not grid and not coordinates:
             raise ValueError("Either grid or coordinates must be provided!")
         if not grid and coordinates:
-            X, Y, Z = np.meshgrid(coordinates)
+            X, Y, Z = np.meshgrid(*coordinates)
             grid = np.stack((X, Y, Z), axis=-1)
         if depth:
             grid[:, :, :, 2] -= depth
@@ -468,7 +486,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic3D(amplitude, phase, wavevector).get_intensity(grid)
 
-        return illumination_density
+        return illumination_density.real
 
     def get_elementary_cell(self):
         ...
@@ -491,8 +509,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         return cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts)
 
     @staticmethod
-    def index_frequencies(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int],
-    Sources.IntensityHarmonic2D]:
+    def index_frequencies(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int], Sources.IntensityHarmonic2D]:
         intensity_harmonics_dict = {}
         for wave in waves_list:
             wavevector = wave.wavevector
@@ -528,7 +545,6 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         shifts = 2 * np.pi / np.array(base_vectors) * ratios / base
         self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
-
     def normalize_spatial_waves(self):
         if not (0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
@@ -542,7 +558,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         if not grid and coordinates:
             if not len(coordinates) == 2:
                 raise ValueError("Coordinates must be 2D for 2D illumination!")
-            X, Y = np.meshgrid(coordinates)
+            X, Y = np.meshgrid(*coordinates)
             grid = np.stack((X, Y), axis=-1)
 
         else:
@@ -557,7 +573,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic2D(amplitude, phase, wavevector).get_intensity(grid)
 
-        return illumination_density
+        return illumination_density.real
 
     def get_elementary_cell(self):
         ...
@@ -565,11 +581,11 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
 
 class PlaneWavesSIMNonlinear(PlaneWavesSIM):
     def __init__(self,
-                 intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
-                 nonlinear_expansion_coefficients: tuple[int, ...],
+                 intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic],
+                 nonlinear_expansion_coefficients: tuple[float, ...],
                  dimensions: tuple[int, ...],
                  Mr=1,
-                 spatial_shifts=[]):
+                 spatial_shifts=None):
         intensity_harmonics_dict_nonlinear = self.get_intensity_harmonics_nonlinear(intensity_harmonics_dict, nonlinear_expansion_coefficients)
         super().__init__(intensity_harmonics_dict_nonlinear, dimensions, Mr, spatial_shifts)
 
@@ -579,16 +595,22 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
         for index1 in harmonics_dict1:
             for index2 in harmonics_dict2:
                 index = tuple([index1[p] + index2[p] for p in range(len(index1))])
-                harmonic = Sources.multiply_harmonics(harmonics_dict1[index1], harmonics_dict2[index2])
+                harmonic = harmonics_dict1[index1] * harmonics_dict2[index2]
                 if index not in harmonics_dict:
                     harmonics_dict[index] = harmonic
                 else:
-                    harmonics_dict[index] = Sources.add_harmonics(harmonics_dict[index], harmonic)
+                    harmonics_dict[index] += harmonic
         return harmonics_dict
 
     @staticmethod
     def harmonics_to_the_power(harmonics_dict, power):
-        harmonics_dict_power = {(0, 0, 0): Sources.IntensityHarmonic3D(1, 0, np.array([0, 0, 0]))}
+        if len(next(iter(harmonics_dict.keys()))) == 2:
+            harmonics_dict_power = {(0, 0): Sources.IntensityHarmonic2D(1, 0, np.array([0, 0]))}
+        elif len(next(iter(harmonics_dict.keys()))) == 3:
+            harmonics_dict_power = {(0, 0, 0): Sources.IntensityHarmonic3D(1, 0, np.array([0, 0, 0]))}
+        else:
+            raise ValueError("The number of dimensions is meaningless in the context of microscopy!")
+
         if not isinstance(power, int):
             raise ValueError("The operation for fractional power is not supported!")
 
@@ -611,7 +633,7 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
         harmonics_dict = harmonics_dict1.copy()
         for harmonic in harmonics_dict2:
             if harmonic in harmonics_dict:
-                harmonics_dict[harmonic] = Sources.add_harmonics(harmonics_dict[harmonic], harmonics_dict2[harmonic])
+                harmonics_dict[harmonic] += harmonics_dict2[harmonic]
             else:
                 harmonics_dict[harmonic] = harmonics_dict2[harmonic]
         return harmonics_dict
@@ -627,21 +649,28 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
 
     @classmethod
     def init_from_list(cls,
-                       intensity_harmonics_list: list[Sources.IntensityHarmonic3D],
+                       intensity_harmonics_list: list[Sources.IntensityHarmonic],
                        base_vector_lengths: tuple[float, ...],
-                       nonlinear_expansion_coefficients: tuple[int, ...],
                        dimensions: tuple[int, ...],
                        Mr=1,
-                       spatial_shifts=[]):
+                       spatial_shifts=[],
+                       nonlinear_expansion_coefficients: tuple[float, ...] = (0, 1),
+                       ):
         intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
         return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr=Mr)
 
     @classmethod
     def init_from_linear_illumination(cls,
                                       illumination: PlaneWavesSIM,
-                                      nonlinear_expansion_coefficients: tuple[int, ...]):
+                                      nonlinear_expansion_coefficients: tuple[float, ...]):
         intensity_harmonics_dict = illumination.waves
         return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, illumination.dimensions, illumination.Mr, illumination.spatial_shifts)
+
+    @classmethod
+    def init_from_linear_illumination_no_taylor(cls,
+                                                illumination: PlaneWavesSIM,
+                                                nonlinear_dependence: lambda x: float):
+        ...
 
 
 class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2D):
@@ -652,10 +681,6 @@ class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2
                  Mr=1,
                  spatial_shifts=[]):
         super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts)
-        for wave in self.waves.keys():
-            if wave[2] != 0:
-                raise ValueError("Non-zero z-component of the wavevector is not allowed in 2D illumination!")
-        self.waves = {key[:2]: self.waves[key] for key in self.waves}
 
 
 class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3D):
@@ -664,7 +689,7 @@ class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3
                  nonlinear_expansion_coefficients: tuple[int, ...],
                  dimensions: tuple[int, ...],
                  Mr=1,
-                 spatial_shifts=[]):
+                 spatial_shifts=None):
         super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts)
 
 
@@ -674,7 +699,7 @@ class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
                  nphoton: int,
                  dimensions: tuple[int, int],
                  Mr=1,
-                 spatial_shifts=((0, 0))):
+                 spatial_shifts=np.array((0, 0))):
         nonlinear_expansion_coefficients = tuple([0] * (nphoton - 1) + [1])
         super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts)
 
@@ -685,6 +710,6 @@ class IlluminationNPhotonSIM3D(IlluminationNonLinearSIM3D):
                  nphoton: int,
                  dimensions: tuple[int, ...],
                  Mr=1,
-                 spatial_shifts=((0, 0, 0))):
+                 spatial_shifts=np.array((0, 0, 0))):
         nonlinear_expansion_coefficients = tuple([0] * nphoton + [1])
         super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts)

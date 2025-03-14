@@ -7,14 +7,16 @@ The sources can provide either electric fields or intensity fields.
 
 import numpy as np
 import cmath
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from VectorOperations import VectorOperations
 
-class Source:
+
+class Source(ABC):
     """
     Abstract base class for sources of electric or intensity fields
     in our simulations.
     """
+
     @abstractmethod
     def get_source_type(self) -> str:
         """
@@ -26,6 +28,7 @@ class Source:
 
 class ElectricFieldSource(Source):
     """Abstract base class for sources that provide an electric field."""
+
     def get_source_type(self) -> str:
         return "ElectricField"
 
@@ -44,6 +47,7 @@ class ElectricFieldSource(Source):
 
 class IntensitySource(Source):
     """Abstract base class for sources that provide intensity."""
+
     def get_source_type(self) -> str:
         return "Intensity"
 
@@ -62,6 +66,7 @@ class IntensitySource(Source):
 
 class PlaneWave(ElectricFieldSource):
     """Electric field of a plane wave"""
+
     def __init__(self, electric_field_p: complex, electric_field_s: complex, phase1: float, phase2: float, wavevector: np.ndarray[3, np.float64]):
         """
         Constructs a PlaneWave object.
@@ -97,6 +102,7 @@ class PlaneWave(ElectricFieldSource):
 
 class PointSource(ElectricFieldSource):
     """Electric field of a point source"""
+
     def __init__(self, coordinates: np.ndarray[3, np.float64], brightness: float):
         """Constructs a PointSource object.
 
@@ -107,11 +113,11 @@ class PointSource(ElectricFieldSource):
         self.coordinates = np.array(coordinates)
         self.brightness = brightness
 
-    def get_electric_field(self, coordinates: np.ndarray[tuple[int, int, int, 3], np.float64]) -> np.ndarray[tuple[int, int, int], np.complex128]:
-        rvectors = np.array(coordinates - self.coordinates)
+    def get_electric_field(self, grid: np.ndarray[tuple[int, int, int, 3], np.float64]) -> np.ndarray[tuple[int, int, int], np.complex128]:
+        rvectors = np.array(grid - self.coordinates)
         rnorms = np.einsum('ijkl, ijkl->ijk', rvectors, rvectors) ** 0.5
         upper_limit = 1000
-        electric_field = np.zeros(coordinates.shape)
+        electric_field = np.zeros(grid.shape)
         electric_field[rnorms == 0] = np.array((1, 1, 1)) * upper_limit * np.sign(self.brightness)
         electric_field[rnorms != 0] = self.brightness / (rnorms[rnorms > 0] ** 3)[:, None] * rvectors[rnorms != 0]
         electric_field_norms = np.einsum('ijkl, ijkl->ijk', electric_field, electric_field.conjugate()).real ** 0.5
@@ -125,7 +131,8 @@ class IntensityHarmonic(IntensitySource):
     transform of the energy density distribution in a given volume
     (e.g., standing waves)
     """
-    def __init__(self, amplitude=0., phase=0., wavevector=np.array(())):
+
+    def __init__(self, amplitude: complex = 0., phase: float = 0., wavevector=np.array(())):
         """
         Constructs an IntensityHarmonic3D object.
 
@@ -138,47 +145,39 @@ class IntensityHarmonic(IntensitySource):
         self.amplitude = amplitude
         self.phase = phase
 
+    def __add__(self, other):
+        if not np.allclose(self.wavevector, other.wavevector):
+            raise ValueError("Cannot add harmonics with different wavevectors.")
+        combined_amplitude = (self.amplitude * np.exp(1j * self.phase) +
+                              other.amplitude * np.exp(1j * other.phase))
+        return self.__class__(combined_amplitude, 0, self.wavevector)
 
-def multiply_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
-    """
-    Multiplies two harmonic sources.
+    def __iadd__(self, other):
+        if not np.allclose(self.wavevector, other.wavevector):
+            raise ValueError("Cannot add harmonics with different wavevectors.")
+        self.amplitude = (self.amplitude * np.exp(1j * self.phase) +
+                          other.amplitude * np.exp(1j * other.phase))
+        self.phase = 0
+        return self
 
-    Args:
-        harmonic1 (IntensityHarmonic3D): The first harmonic source.
-        harmonic2 (IntensityHarmonic3D): The second harmonic source.
+    def __mul__(self, other):
+        combined_amplitude = self.amplitude * other.amplitude
+        combined_phase = self.phase + other.phase
+        combined_wavevector = self.wavevector + other.wavevector
+        return self.__class__(combined_amplitude, combined_phase, combined_wavevector)
 
-    Returns:
-        IntensityHarmonic3D: The product of the two harmonic sources.
-    """
-    amplitude = harmonic1.amplitude * harmonic2.amplitude
-    phase = harmonic1.phase + harmonic2.phase
-    wavevector = harmonic1.wavevector + harmonic2.wavevector
-    return IntensityHarmonic3D(amplitude, phase, wavevector)
-
-def add_harmonics(harmonic1: IntensityHarmonic, harmonic2: IntensityHarmonic) -> IntensityHarmonic:
-    """
-    Adds two harmonic sources.
-
-    Args:
-        harmonic1 (IntensityHarmonic): The first harmonic source.
-        harmonic2 (IntensityHarmonic): The second harmonic source.
-
-    Returns:
-        IntensityHarmonic3D: The sum of the two harmonic sources.
-    """
-    if not np.isclose(harmonic1.wavevector, harmonic2.wavevector).all():
-        raise ValueError("k1 != k2. Addition of harmonics (interference) only defined for the same wavevectors!")
-    amplitude = harmonic1.amplitude * np.exp(1j * harmonic1.phase) + harmonic2.amplitude * np.exp(1j * harmonic2.phase)
-    phase = 0 # Return 'normal' form of harmonics with a complex amplitude containing all the phase information
-    wavevector = harmonic1.wavevector
-    return IntensityHarmonic(amplitude, phase, wavevector)
+    def __imul__(self, other):
+        self.amplitude = self.amplitude * other.amplitude
+        self.phase = self.phase + other.phase
+        self.wavevector = self.wavevector + other.wavevector
+        return self
 
 
 class IntensityHarmonic3D(IntensityHarmonic):
     def get_intensity(self, grid: np.float64, rotated_frame_vector=np.array((0, 0, 1)), rotated_angle=0.):
         wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector3d(self.wavevector, rotated_frame_vector, -rotated_angle)
         intensity = self.amplitude * np.exp(1j * (np.einsum('ijkl,l ->ijk', grid, wavevector)
-                                                 + self.phase))
+                                                  + self.phase))
         return intensity
 
 
@@ -186,7 +185,6 @@ class IntensityHarmonic2D(IntensityHarmonic):
     @classmethod
     def init_from_3D(cls, harmonic: IntensityHarmonic3D):
         return cls(harmonic.amplitude, harmonic.phase, harmonic.wavevector[:2])
-
 
     def get_intensity(self, grid: np.float64, rotated_angle=0.):
         wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector2d(self.wavevector, -rotated_angle)
