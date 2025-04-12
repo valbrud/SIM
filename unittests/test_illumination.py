@@ -1,16 +1,66 @@
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
+
 import unittest
 
 from scipy.special import factorial
 
 from config.IlluminationConfigurations import *
 from Box import Box
-from Sources import PlaneWave, IntensityHarmonic3D
+from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
 import sys
-sys.path.append('../')
-from Illumination import IlluminationNonLinearSIM2D
+
+from Illumination import *
+from config.SIM_N100_NA15 import *
+
+class TestInitialization(unittest.TestCase):
+    def setUp(self):
+        self.Mr = 3
+        self.Mt = 1
+        self.dimensions2D = (1, 1)
+        self.dimensions3D = (1, 1, 1)
+        self.intensity_dict_2D = {
+            (0, 0): IntensityHarmonic2D(wavevector=np.array((0, 0)), amplitude=1),
+        }
+        self.intensity_dict_3D = {
+            (0, 0, 0): IntensityHarmonic3D(wavevector=np.array((0, 0, 0)), amplitude=1),
+        }
+        self.spatial_shifts_2D = np.array(((0., 0.),))
+        self.spatial_shifts_3D = np.array(((0., 0., 0.), ))
+    def test_cannot_instantiate_PlaneWavesSIM(self):
+        # PlaneWavesSIM is abstract so instantiation should raise an error.
+        with self.assertRaises(TypeError):
+            _ = PlaneWavesSIM({}, self.dimensions2D, self.Mr, self.spatial_shifts_2D)
+
+    def test_instantiate_IlluminationPlaneWaves2D(self):
+        # Should instantiate without error.
+        illum2D = IlluminationPlaneWaves2D(
+            self.intensity_dict_2D,
+            dimensions=self.dimensions2D,
+            Mr=self.Mr,
+            spatial_shifts=self.spatial_shifts_2D
+        )
+        self.assertIsNotNone(illum2D)
+        # Check some property (for example, that angles attribute exists)
+        self.assertTrue(hasattr(illum2D, 'angles'))
+
+    def test_instantiate_IlluminationPlaneWaves3D(self):
+        # Should instantiate without error.
+        illum3D = IlluminationPlaneWaves3D(
+            self.intensity_dict_3D,
+            dimensions=self.dimensions3D,
+            Mr=self.Mr,
+            spatial_shifts=self.spatial_shifts_3D
+        )
 
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):

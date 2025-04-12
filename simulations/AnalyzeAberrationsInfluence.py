@@ -1,10 +1,15 @@
+import os.path
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+
 import math
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
 # Path to your CSV file (adjust as needed)
-file_path = "Aberrations.csv"
+file_path = current_dir + "/Aberrations.csv"
 
 # Read the CSV file into a DataFrame
 df = pd.read_csv(file_path)
@@ -62,7 +67,7 @@ for idx, ab in enumerate(aberration_types):
     ax.legend(fontsize=10)
 
     fig2_vol.tight_layout(rect=[0, 0, 1, 0.93])
-    fig2_vol.savefig(f"SSNR_volume_with_{ab}.png", bbox_inches='tight', pad_inches=0.1)
+    # fig2_vol.savefig(f"SSNR_volume_with_{ab}.png", bbox_inches='tight', pad_inches=0.1)
 # ---- Normalized SSNR (Entropy) Plots ----
 # fig2_ssnr.suptitle("Normalized SSNR (Entropy) vs Aberration Strength\n(Each subplot: one Aberration type)", fontsize=20)
 
@@ -96,6 +101,6 @@ for idx, ab in enumerate(aberration_types):
     ax.legend(fontsize=17)
 
     fig2_ssnr.tight_layout(rect=[0, 0, 1, 0.93])
-    fig2_ssnr.savefig(f"SSNR_entropy_with_{ab}.png", bbox_inches='tight', pad_inches=0.1)
+    # fig2_ssnr.savefig(f"SSNR_entropy_with_{ab}.png", bbox_inches='tight', pad_inches=0.1)
 
-# plt.show()
+plt.show()

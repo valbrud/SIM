@@ -4,5 +4,7 @@
 *.pyc
 *.pyo
 .idea/
+env/
+.venv/
 __pycache__/
 other_projects/

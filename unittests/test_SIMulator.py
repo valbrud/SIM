@@ -1,4 +1,10 @@
+import os.path
 import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
 
 import numpy as np
 import scipy.signal
@@ -15,20 +21,7 @@ import ShapesGenerator
 from SIMulator import SIMulator2D, SIMulator3D
 from Camera import Camera
 # from simulations.mutual_information_filtering import psf_size
-
-sys.path.append('../')
-
-configurations = BFPConfiguration(refraction_index=1.5)
-alpha = 2 * np.pi / 5
-nmedium = 1.5
-nobject = 1.5
-NA = nmedium * np.sin(alpha)
-theta = np.asin(0.9 * np.sin(alpha))
-fz_max_diff = nmedium * (1 - np.cos(alpha))
-dx = 1 / (8 * NA)
-dy = dx
-dz = 1 / (4 * fz_max_diff)
-
+from config.SIM_N100_NA15 import *
 
 class TestSIMImages(unittest.TestCase):
     def test_generate_images2d(self):

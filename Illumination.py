@@ -6,7 +6,16 @@ This module contains the Illumination class, which handles the simulation and an
 Classes:
     Illumination: Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts.
 """
-# from collections.abc import dict_values
+
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
+
 from typing import Dict, Tuple, Any, List
 
 import numpy as np
@@ -21,27 +30,33 @@ from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 import stattools
 from ShiftsFinder import ShiftsFinder3d, ShiftsFinder2d
+from Dimensions import *
+from Dimensions import DimensionMetaAbstract
 
+class Illumination(ABC, metaclass=DimensionMetaAbstract):
+    """
+    Abstract class for managing illumination patterns.
+    """
 
-class Illumination(ABC):
+    dimensionality = None
 
     @abstractmethod
     def get_illumination_density(self, **kwargs): ...
 
 
-class PeriodicStructure(ABC):
+class PeriodicStructure():
 
     @abstractmethod
     def get_elementary_cell(self): ...
 
 
-class IlluminationArray2D(PeriodicStructure): ...
+class IlluminationArray2D(PeriodicStructure, Illumination):
+    dimensionality=2
 
+class IlluminationArray3D(PeriodicStructure, Illumination): 
+    dimensionality=3
 
-class IlluminationArray3D(PeriodicStructure): ...
-
-
-class PlaneWavesSIM(PeriodicStructure):
+class PlaneWavesSIM(Illumination, PeriodicStructure):
     """
     Manages the properties and behavior of illumination patterns in SIM with a finite number of plane waves interference.
 
@@ -53,6 +68,7 @@ class PlaneWavesSIM(PeriodicStructure):
         waves (dict): Dictionary of intensity plane waves.
         phase_matrix (dict): Dictionary of all phase the relevant phase shifts.
     """
+    dimensionality = None  # Base class should not define dimensionality
 
     def __init__(self, intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic], dimensions: tuple[int, ...], Mr=1, spatial_shifts=[]):
         """
@@ -169,6 +185,22 @@ class PlaneWavesSIM(PeriodicStructure):
 
     def get_elementary_cell(self):
         ...
+    
+    def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
+        """
+        Get the illumination density for a given grid or coordinates.
+
+        Args:
+            grid (np.ndarray): Grid of coordinates.
+            coordinates (tuple): Coordinates.
+            depth (float): Depth of the illumination.
+            r (int): Rotation index.
+            n (int): Spatial shift index.
+
+        Returns:
+            np.ndarray: Illumination density.
+        """
+        pass
 
     @abstractmethod
     def normalize_spatial_waves(self):
@@ -371,6 +403,7 @@ class PlaneWavesSIM(PeriodicStructure):
 
 
 class IlluminationPlaneWaves3D(PlaneWavesSIM):
+    dimensionality=3
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  dimensions: tuple[bool, bool, bool] = (1, 1, 0),
@@ -493,7 +526,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
 
 
 class IlluminationPlaneWaves2D(PlaneWavesSIM):
-
+    dimensionality=2
     def __init__(self, intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic2D], dimensions: tuple[int, int] = (1, 1), Mr: int = 1, spatial_shifts=np.array([(0, 0)])):
         super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts)
 
@@ -580,6 +613,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
 
 
 class PlaneWavesSIMNonlinear(PlaneWavesSIM):
+        
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic],
                  nonlinear_expansion_coefficients: tuple[float, ...],
@@ -674,6 +708,7 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
 
 
 class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2D):
+    dimensionality=2
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  nonlinear_expansion_coefficients: tuple[int, ...],
@@ -684,6 +719,7 @@ class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2
 
 
 class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3D):
+    dimensionality=3
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  nonlinear_expansion_coefficients: tuple[int, ...],
@@ -694,6 +730,7 @@ class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3
 
 
 class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
+    dimensionality=2
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  nphoton: int,
@@ -705,6 +742,7 @@ class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
 
 
 class IlluminationNPhotonSIM3D(IlluminationNonLinearSIM3D):
+    dimensionality=3
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  nphoton: int,

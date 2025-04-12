@@ -2,15 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy
 from abc import abstractmethod
-from OpticalSystems import OpticalSystem
+from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 import Sources
 import wrappers
 from Box import BoxSIM, Field
-from Illumination import PlaneWavesSIM
+from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
+from abc import ABC, abstractmethod
 
-class ReconstructorSIM:
+
+class ReconstructorSIM(ABC):
 
     def __init__(self,
                  illumination: PlaneWavesSIM,
@@ -48,7 +50,7 @@ class ReconstructorSIM:
         return widefield_image
 
 
-class ReconstructorFourierDomain(ReconstructorSIM):
+class ReconstructorFourierDomain(ReconstructorSIM, ABC):
     def __init__(self,
                  illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem = None,
@@ -59,6 +61,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                  apodization_filter=None,
                  regularization_filter=None,
                  ):
+        
         super().__init__(illumination,
                          optical_system,
                          kernel=kernel,
@@ -107,7 +110,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         return reconstructed_image
 
 
-class ReconstructorSpatialDomain(ReconstructorSIM):
+class ReconstructorSpatialDomain(ReconstructorSIM, ABC):
     def __init__(self,
                  illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem = None,
@@ -117,6 +120,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                  illumination_patterns=None,
                  apodization_kernel=None,
                  ):
+        
         super().__init__(illumination,
                          optical_system,
                          kernel=kernel,
@@ -168,7 +172,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                     for wave in self.illumination.waves:
                         m = tuple([wave[dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
                         illumination_pattern += (self.illumination.phase_matrix[(n, m)] * self.illumination.waves[wave].get_intensity(self.optical_system.x_grid, -self.illumination.angles[r])).conjugate()
-                        # illumination_pattern += self.illumination.phase_matrix[r, n, m] * self.phase_modulation_patterns[r, m]
+                    # illumination_pattern += self.illumination.phase_matrix[r, n, m] * self.phase_modulation_patterns[r, m]
                     # plt.imshow(illumination_pattern.real)
                     # plt.show()
                     # illumination_pattern_one_rotation += illumination_pattern
@@ -207,10 +211,27 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             reconstructed_image = scipy.signal.convolve(reconstructed_image, self.apodization_kernel, mode='same')
         return reconstructed_image
 
-
-class Reconstructor2DFourier(ReconstructorFourierDomain):
-    ...
-
-
-class Reconstructor2dSIM2dShiftsSpatial(ReconstructorSpatialDomain):
-    ...
+class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
+    def __init__(self,
+                 illumination: IlluminationPlaneWaves2D,
+                 optical_system: OpticalSystem2D = None,
+                 kernel=None,
+                 deconvolution=None,
+                 phase_modulation_patterns=None,
+                 apodization_filter=None,
+                 regularization_filter=None,
+                 ):
+        
+        if not isinstance(illumination, IlluminationPlaneWaves2D):
+            raise TypeError("illumination must be an instance of IlluminationPlaneWaves2D")
+        
+        if not isinstance(optical_system, OpticalSystem2D):
+            raise TypeError("optical_system must be an instance of OpticalSystem2D")
+        
+        super().__init__(illumination=illumination,
+                         optical_system=optical_system,
+                         kernel=kernel,
+                         deconvolution=deconvolution,
+                         phase_modulation_patterns=phase_modulation_patterns,
+                         apodization_filter=apodization_filter,
+                         regularization_filter=regularization_filter)

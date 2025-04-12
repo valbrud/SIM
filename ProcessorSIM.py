@@ -1,13 +1,18 @@
 """
 ProcessorSIM.py
 
-When implemented, this class will be a top-level class, responsible for SIM reconstructions.
+A top-level class, combining the whole SIM functionality. 
 
 Classes:
     ProcessorSIM: Base class for SIM processors.
-    ProcessorProjective3dSIM: Class for processing projective 3D SIM data.
-    ProcessorTrue3dSIM: Class for processing true 3D SIM data.
 """
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
 
 import numpy as np
 import scipy
@@ -20,19 +25,46 @@ import wrappers
 import SIMulator
 import Reconstructor
 import SSNRCalculator
+
 class ProcessorSIM:
-    def __init__(self, illumination, optical_system, dim=3, projected=True, local_kernel=None, apodization_filter=None,
-                 estimate_from_data=False, camera=default, mpi_optimization=False, cuda_optimization=False, prioritize_memory=False):
+    modes =('general', 'simulation', 'reconstruction')
+    regularizatoinion_filters = ('TrueWiener', 'Flat', 'Constant') 
+    apodization_filter = ('Lukosz', 'Autoconvolution')
+    deconvolution_scheme = ('Wiener', 'Richardson-Lucy', 'Bayesian', 'MutualInformation') 
+    estimation_scheme = ('CrossCorrelation')
+    
+    def __init__(self,
+                 illumination,
+                 optical_system,
+                 dim=3,
+                 kernel=None,
+                 estimate_ssnr=False,
+                 deconvolution_scheme=None,
+                 regularization_filter=None,
+                 apodization_filter=None,
+                 estimate_patterns_from_data=False,
+                 camera=None,
+                 mpi_optimization=False,
+                 cuda_optimization=False,
+                 prioritize_memory=False
+                 ):
         self.optical_system = optical_system
         self.illumination = illumination
-        if dim == 3:
-            self.simulator = SIMulator.SIMulator3D(self.optical_system, self.illumination, readout_noise=readout_noise,)
-            self.reconstructor = Reconstructor.Reconstructor3D(self.optical_system, self.illumination)
-            if projected:
-                self.ssnri= SSNRCalculator.SSNRSIM3DUniversal(self.optical_system, self.illumination, readout_noise)
-        else:
-            self.simulator
+        
+        match dim: 
+            case 2:
+                SIMulator = SIMulator.SIMulator2D
+                Reconstructor = Reconstructor.Reconstructor2D
+                SSNRCalculator = SSNRCalculator.SSNRSIM2D
+            case 3:
+                SIMulator = SIMulator.SIMulator3D
+                Reconstructor = Reconstructor.Reconstructor3D
+                SSNRCalculator = SSNRCalculator.SSNRSIM3D
+        
 
+        if estimate_ssnr:
+            self.ssnr_calculator = SSNRCalculator(self.optical_system, self.illumination)
+                
 
     @staticmethod
     @abstractmethod
@@ -42,7 +74,3 @@ class ProcessorSIM:
 
     def compute_apodization_filter_autoconvolution(self): ...
 
-class ProcessorProjective3dSIM(ProcessorSIM):
-    def __init__(self, illumination, optical_system):
-        super().__init__(illumination, optical_system)
-class ProcessorTrue3dSIM(ProcessorSIM): ...

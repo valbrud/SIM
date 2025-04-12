@@ -1,7 +1,16 @@
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
+import sys
 
 # --- Imports from your simulation modules ---
 from OpticalSystems import System4f2D
@@ -11,7 +20,6 @@ from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain, ReconstructorSpatialDomain
 from kernels import sinc_kernel, psf_kernel2d
-from papers.ssnr_comparison.generate_plots import nmedium
 
 
 class TestReconstruction(unittest.TestCase):
@@ -71,12 +79,12 @@ class TestReconstruction(unittest.TestCase):
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system)
         self.sim_images = self.simulator.generate_sim_images(self.image)
-        for r in range(self.illumination.Mr):
-            for n in range(self.illumination.Mt):
-                image = self.sim_images[r, n]
-                plt.title(f"Simulated image{r, n}")
-                plt.imshow(image)
-                plt.show()
+        # for r in range(self.illumination.Mr):
+        #     for n in range(self.illumination.Mt):
+        #         image = self.sim_images[r, n]
+        #         plt.title(f"Simulated image{r, n}")
+        #         plt.imshow(image)
+        #         plt.show()
 
 
     def test_widefield_reconstruction(self):
@@ -259,5 +267,3 @@ class TestNonlinearReconstruction(unittest.TestCase):
         axes[3].imshow(reconstructed_non_linear)
         plt.show()
 
-if __name__ == '__main__':
-    unittest.main()

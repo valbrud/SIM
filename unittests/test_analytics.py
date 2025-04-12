@@ -80,3 +80,57 @@ class TestAnalyticResults(unittest.TestCase):
         slider.on_changed(update)
 
         plt.show()
+
+    def test_distribtuion_properties(self):
+        import mpmath as mp
+        import numpy as np
+        import matplotlib.pyplot as plt
+
+        def ER_sigma(sigma_b):
+            # For sigma_b=0, R = sqrt(A1^2+A2^2) is Rayleigh with E[R]=sqrt(pi/2)
+            if sigma_b == 0:
+                return mp.sqrt(mp.pi/2)
+            # Define the pdfs for u and v:
+            f_u = lambda u: (u)*mp.e**(-u**2/2)
+            print(mp.quad(lambda u: u * f_u(u), [0, mp.inf]))
+            f_v = lambda v: (v/sigma_b**2)*mp.e**(-v**2/(2*sigma_b**2))
+            print(mp.quad(lambda v: v * f_v(v), [0, mp.inf]))
+            # Compute E[R] = ∫_0∞∫_0∞ sqrt(u+v) f_u(u) f_v(v) du dv.
+            inner_integral = lambda u: mp.quad(lambda v: mp.sqrt(u**2+v**2) * f_v(v), [0, mp.inf])
+            return mp.quad(lambda u: f_u(u)*inner_integral(u), [0, mp.inf])
+
+        def ratio(sigma_b):
+            ER = ER_sigma(sigma_b)
+            ER2 = 2 + 2*sigma_b**2  # since E[R^2] = 2+2*sigma_b^2
+            return ER2/ER
+
+        # Compute for sigma_b from 0 to 1 (since sigma_a=1, symmetry implies maximum when sigma_b=1)
+        sigma_bs = np.linspace(0, 2, 21)
+        ratios = []
+        for sb in sigma_bs:
+            r_val = ratio(sb)
+            ratios.append(r_val)
+            print(f"sigma_b = {sb:4.2f}, E[R^2]/E[R] = {r_val}")
+
+        # Plot the ratio vs sigma_b
+        plt.figure()
+        plt.plot(sigma_bs, ratios, marker='o')
+        plt.xlabel("sigma_b")
+        plt.ylabel("E[R^2] / E[R]")
+        plt.title("Ratio E[R^2]/E[R] vs sigma_b (with sigma_a = 1)")
+        plt.grid(True)
+        plt.show()
+
+    def test_distribtuion_properties_monte_carlo(self):
+        sigma_a = 1
+        sigma_b = np.linspace(0, 10, 101)
+        n_points = 1000000
+        for sb in sigma_b:
+            a1, a2 = np.random.normal(0, sigma_a, n_points), np.random.normal(0, sigma_a, n_points)
+            b1, b2 = np.random.normal(0, sb, n_points), np.random.normal(0, sb, n_points)
+            R = np.sqrt(a1**2 + a2**2 + b1**2 + b2**2)
+            R2 = a1**2 + a2**2 + b1**2 + b2**2
+            R_mean = np.mean(R)
+            R2_mean = np.mean(R2)
+            ratio = R2_mean**0.5 / R_mean
+            print(f"Sigma_b = {round(sb, 1)}, Monte Carlo Ratio: {ratio}")

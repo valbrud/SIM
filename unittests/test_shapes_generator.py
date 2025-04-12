@@ -29,3 +29,4 @@ class TestSpheres(unittest.TestCase):
         spheres = generate_sphere_slices(psf_size, N, r =0.5,  N=100)
         plt.imshow(spheres[:, :, N//2])
         plt.show()
+

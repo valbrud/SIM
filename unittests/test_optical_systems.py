@@ -15,11 +15,11 @@ from config.IlluminationConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
     def test_OTF(self):
-        alpha = np.pi / 2
+        alpha = np.pi / 3
         dx = 1 / (32 * np.sin(alpha))
         dy = dx
         dz = 1 / (16 * (1 - np.cos(alpha)))
-        N = 101
+        N = 51
         max_r = N // 2 * dx
         max_z = N // 2 * dz
         x = np.linspace(-max_r, max_r, N)

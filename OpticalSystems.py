@@ -21,9 +21,10 @@ from abc import abstractmethod
 
 from Illumination import Illumination
 from VectorOperations import VectorOperations
+from Dimensions import DimensionMetaAbstract
 
 
-class OpticalSystem:
+class OpticalSystem(metaclass=DimensionMetaAbstract):
     """
     Base class for optical systems, providing common functionality.
 
@@ -36,6 +37,8 @@ class OpticalSystem:
         _psf_coordinates (np.ndarray): Coordinates for PSF.
         _interpolation_method (str): Interpolation method.
     """
+
+    dimensionality = None 
 
     #: A list of currently supported interpolation methods.
     #: Other scipy interpolation methods are not directly supported due to high memory usage.
@@ -224,6 +227,8 @@ class OpticalSystem:
 
 class OpticalSystem2D(OpticalSystem):
 
+    dimensionality = 2
+
     def __init__(self, interpolation_method):
         super().__init__(interpolation_method)
 
@@ -270,6 +275,8 @@ class OpticalSystem2D(OpticalSystem):
 
 
 class OpticalSystem3D(OpticalSystem):
+
+    dimensionality = 3
 
     def __init__(self, interpolation_method):
         super().__init__(interpolation_method)
@@ -319,6 +326,8 @@ class OpticalSystem3D(OpticalSystem):
 
 
 class System4f2D(OpticalSystem2D):
+    dimensionality = 2
+
     def __init__(self, alpha=np.pi / 4, refractive_index=1, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.n = refractive_index
@@ -368,6 +377,8 @@ class System4f2D(OpticalSystem2D):
 
 
 class System4f3D(OpticalSystem3D):
+    dimensionality = 3
+
     def __init__(self, alpha=np.pi / 4, refractive_index_sample=1, refractive_index_medium=1, regularization_parameter=0.01, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.ns = refractive_index_sample

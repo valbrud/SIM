@@ -18,6 +18,7 @@ from OpticalSystems import System4f3D, System4f2D
 sys.path.append('../')
 configurations = BFPConfiguration()
 import kernels
+
 class TestAgainstIdeal(unittest.TestCase):
     def test_compare_ssnr(self):
         theta = np.pi / 4
