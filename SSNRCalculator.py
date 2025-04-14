@@ -17,9 +17,25 @@ from stattools import average_rings2d
 import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
+from Dimensions import DimensionMeta
 
 
-class SSNRBase:
+class SSNRBase(metaclass=DimensionMeta):
+    """
+    Base class for SSNR calculators. 
+    
+
+    Attributes:
+        optical_system: OpticalSystem object, the optical system used in the experiment.
+        ssnri: numpy.ndarray, the spectral signal-to-noise ratio (SSNR) image.
+    Methods:
+        ring_average_ssnri(number_of_samples=None): Computes the ring-averaged SSNR.
+        compute_ssnri_volume(factor=10, volume_element=1): Computes the SSNR volume.
+        compute_ssnri_entropy(factor=100): Computes the SSNR entropy.
+        compute_radial_ssnri_entropy(factor=100): Computes the radial SSNR entropy.
+        compute_full_ssnr(object_ft): Computes the full SSNR for a given object Fourier transform.        
+    """
+
     def __init__(self, optical_system):
         self._optical_system = optical_system
         self._ssnri = None
@@ -87,27 +103,25 @@ class SSNRPointScanning(SSNRBase):
         self._compute_ssnri()
 
     def _compute_ssnri(self):
-        self._ssnri = np.abs(self.optical_system.otf) ** 2
+        self._ssnri = np.abs(self.optical_system.otf) ** 2 / np.amax(np.abs(self.optical_system.otf))
 
     def compute_full_ssnr(self, object_ft):
         return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
 
 
 class SSNRPointScanning2D(SSNRPointScanning):
+    dimensionality = 2
     def __init__(self, optical_system):
-        if len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 2D Confocal Calculator with 3D OTF!")
-        if not len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 2D Confocal Calculator with wrong OTF!")
+        if not isinstance(optical_system, OpticalSystems.OpticalSystem2D):	
+            raise AttributeError("Trying to initialize 2D SSNR class with the wrong OTF!")
         super().__init__(optical_system)
 
 
 class SSNRPointScanning3D(SSNRPointScanning):
+    dimensionality = 2
     def __init__(self, optical_system):
-        if len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 3D Confocal Calculator with 2D OTF!")
-        if not len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 3D Confocal Calculator with wrong OTF!")
+        if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
+            raise AttributeError("Trying to initialize 3D SSNR class with the wrong OTF!")
         super().__init__(optical_system)
 
 
@@ -117,46 +131,46 @@ SSNRConfocal3D = SSNRPointScanning3D
 SSNRRCM2D = SSNRPointScanning2D
 SSNRRCM3D = SSNRPointScanning3D
 
-
-class SSNRWidefield(SSNRBase):
-    def __init__(self, optical_system):
-        super().__init__(optical_system)
-        self._compute_ssnri()
-
-    def _compute_ssnri(self):
-        self._ssnr = np.abs(self.optical_system.otf) ** 2 / np.amax(np.abs(self.optical_system.otf))
-
-    def compute_full_ssnr(self, object_ft):
-        return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
-
+SSNRWidefield2D = SSNRPointScanning2D
+SSNRWidefield3D = SSNRPointScanning3D
 
 class SSNRSIM(SSNRBase):
     def __init__(self, illumination: PlaneWavesSIM,
-                 optical_system, kernel=None,
-                 readout_noise_variance=0,
-                 save_memory=False):
+                 optical_system:OpticalSystems.OpticalSystem,
+                 kernel: np.ndarray=None,
+                 readout_noise_variance:float=0,
+                 effective_otfs=None,
+                 effective_kernels_ft=None,
+                 save_memory=False
+                 ):
         if not isinstance(illumination, PlaneWavesSIM):
             raise AttributeError("Illumination data is not of SIM type!")
         super().__init__(optical_system)
         self._illumination = illumination
         self.vj = None
         self.dj = None
-        self.effective_otfs = {}
+
+        self.effective_otfs = {} if effective_otfs is None else effective_otfs
         self.otf_sim = None
-        self.effective_kernels_ft = {}
+        if not self.effective_otfs is None:
+            self._computte_otf_sim()
+
+        self.effective_kernels_ft = {} if effective_kernels_ft is None else effective_kernels_ft
         self._kernel = None
         self._kernel_ft = None
+
         self.save_memory = save_memory
         self.readout_noise_variance = readout_noise_variance
 
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
 
-        self._compute_effective_otfs()
+        if self.effective_otfs is None:
+            self._compute_effective_otfs()
 
-        if kernel:
-            self.kernel = kernel
-            self._compute_effective_kernels_ft()
+        if self.effective_kernels_ft is None:
+            if kernel:
+                self.kernel = kernel
 
         self._compute_ssnri()
 
@@ -225,6 +239,9 @@ class SSNRSIM(SSNRBase):
 
     def _compute_effective_otfs(self):
         _, self.effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+        self._compute_otf_sim()
+
+    def _compute_otf_sim(self):
         self.otf_sim = np.zeros(self.optical_system.otf.shape)
         for m in self.effective_otfs:
             self.otf_sim += np.abs(self.effective_otfs[m])
@@ -279,10 +296,8 @@ class SSNRSIM(SSNRBase):
 
     def _compute_ssnri(self):
         # Only needed if effective kernels/otfs were deleted in a memory efficient mode
-        if not self.effective_otfs:
+        if self.effective_otfs is None:
             self._compute_effective_otfs()
-        if self.kernel and not self.effective_kernels_ft:
-            self._compute_effective_kernels_ft()
 
         self.dj = self._compute_Dj()
         self.vj = self._compute_Vj()
@@ -356,13 +371,12 @@ class SSNRSIM(SSNRBase):
 
 
 class SSNRSIM2D(SSNRSIM):
+    dimensionality = 2
     def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise AttributeError("Illumination data is not of the valid dimension!")
-        if len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 2D SIM Calculator with 3D OTF!")
-        if not len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 2D SIM Calculator with wrong OTF!")
+        if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
+            raise AttributeError("Optical system data is not of the valid dimension!")
         super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory)
 
     def plot_effective_kernel_and_otf(self):
@@ -391,9 +405,10 @@ class SSNRSIM2D(SSNRSIM):
 
 
 class SSNRSIM3D(SSNRSIM):
+    dimensionality = 3
     def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
-        if len(optical_system.otf.shape) == 2:
-            raise AttributeError("Trying to initialize 3D SIM Calculator with 2D OTF!")
-        if not len(optical_system.otf.shape) == 3:
-            raise AttributeError("Trying to initialize 3D SIM Calculator with wrong OTF!")
+        if not isinstance(illumination, IlluminationPlaneWaves3D):
+            raise AttributeError("Illumination data is not of the valid dimension!")
+        if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
+            raise AttributeError("Optical system data is not of the valid dimension!")
         super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory)

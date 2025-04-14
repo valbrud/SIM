@@ -19,9 +19,28 @@ from Box import BoxSIM, Field
 from Illumination import PlaneWavesSIM
 from Camera import Camera
 from VectorOperations import VectorOperations
+from Dimensions import DimensionMeta, DimensionMetaAbstract
 
-
-class SIMulator:
+class SIMulator(metaclass=DimensionMetaAbstract):
+    """
+    SIMulator class for simulating raw structured illumination microscopy (SIM) images.
+    The base class implements all the functionality but cannot be implemented.
+    Use dimensional children classes instead.
+    
+    Atrubtes:
+        illumination: PlaneWavesSIM object, the illumination configuration for the SIM experiment.
+        optical_system: OpticalSystem object, the optical system used in the experiment.
+        camera: Camera object, optional, the camera used to capture images.
+        readout_noise_variance: float, optional, the variance of readout noise.
+        effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simulation.
+    
+    methods:
+        generate_sim_images(ground_truth): Generates simulated images based on the ground truth image.
+        add_noise(image): Adds noise to the simulated images based on the camera settings or readout noise variance.
+        generate_noisy_images(sim_images): Generates noisy images from the simulated images.
+        generate_widefield(image): Generates a widefield image from the input image using the optical system's PSF.
+    """
+    
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
@@ -50,12 +69,8 @@ class SIMulator:
                 wavevector[np.bool(1 - np.array(self.illumination.dimensions))] = 0
                 for n in range(self.illumination.Mt):
                     total_phase_modulation = self.phase_modulation_patterns[r, sim_index] * self.illumination.phase_matrix[(n, sim_index)]
-                    # Exta phase modulation for effective PSFs is required as they are already defined as phase modulated (ft of shifted OTFs)
                     sim_images[r, n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[r, sim_index].conjugate() * self.effective_psfs[r, sim_index], mode='same')
-                    # sim_images_ft[r, n] += self.illumination.phase_matrix[(n, sim_index)] * self.effective_otfs[r, sim_index]
-        # for r in range(self.illumination.Mr):
-        #     for n in range(self.illumination.Mt):
-        #         sim_images[r, n] = np.real(wrappers.wrapped_ifftn(sim_images_ft[r, n])) + 10**-10
+                    
         sim_images = np.real(sim_images) + 10**-10
         return sim_images
 
@@ -82,25 +97,27 @@ class SIMulator:
 
 
 class SIMulator2D(SIMulator):
+    dimensionality = 2
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
                  readout_noise_variance=0,
                  effective_psfs = None,
                  ):
-        if not len(optical_system.psf.shape) == 2:
+        if not optical_system.dimensionality == 2:
             raise ValueError("The PSF must be 2D for 2D SIM simulations.")
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 
 
 class SIMulator3D(SIMulator):
+    dimensionality = 3
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system: OpticalSystem,
                  camera: Camera = None,
                  readout_noise_variance=0,
                  effective_psfs = None,
                  ):
-        if not len(optical_system.psf.shape) == 3:
+        if not optical_system.dimensionality == 3:
             raise ValueError("The PSF must be 3D for 3D SIM simulations.")
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 

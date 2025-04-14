@@ -58,7 +58,11 @@ class IlluminationArray3D(PeriodicStructure, Illumination):
 
 class PlaneWavesSIM(Illumination, PeriodicStructure):
     """
-    Manages the properties and behavior of illumination patterns in SIM with a finite number of plane waves interference.
+    Manages the properties and behavior of illumination patterns in SIM 
+    with a finite number of plane waves interfering.
+    The base class implements all the functionality but cannot be implemented.
+    Use dimensional children classes instead.
+
 
     Attributes:
         angles (np.ndarray): Array of rotation angles.
@@ -67,6 +71,17 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         Mt (int): Number of spatial shifts.
         waves (dict): Dictionary of intensity plane waves.
         phase_matrix (dict): Dictionary of all phase the relevant phase shifts.
+
+    methods:
+        init_from_list: Class method to initialize Illumination from a list of intensity plane waves.
+        index_frequencies: Index the frequencies of the intensity harmonics.
+        glue_indices: Glue the indices of the SIM and projected indices.
+        get_wavevectors: Get the wavevectors for a given rotation.
+        get_all_wavevectors: Get all wavevectors for all rotations.
+        get_wavevectors_projected: Get the projected wavevectors for a given rotation.
+        get_all_wavevectors_projected: Get all projected wavevectors for all rotations.
+        get_base_vectors: Get the base vectors of the illumination Fourier space Bravais lattice.
+        compute_effective_kernels: Compute effective kernels for SIM computations.
     """
     dimensionality = None  # Base class should not define dimensionality
 
@@ -93,6 +108,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         self.phase_matrix = {}
         self.compute_phase_matrix()
 
+        self.electric_field_plane_waves = []
+
     @classmethod
     def init_from_list(cls,
                        intensity_harmonics_list: list[Sources.IntensityHarmonic],
@@ -116,7 +133,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         """
         intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
         return cls(intensity_harmonics_dict, dimensions, Mr=Mr)
-
+    
     @property
     def Mr(self):
         return self._Mr
@@ -419,6 +436,35 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                        spatial_shifts=np.array([(0, 0, 0)])):
         return super().init_from_list(intensity_harmonics_list, base_vector_lengths, dimensions, Mr, spatial_shifts)
 
+    @classmethod
+    def init_from_plane_waves(cls, 
+                              plane_waves: list[Sources.PlaneWave],
+                              base_vector_lengths: tuple[float, ...],
+                              dimensions,
+                              Mr=1,
+                              spatial_shifts=np.array([(0, 0, 0)]), 
+                              store_plane_waves=False):
+        """
+        Class method to initialize Illumination from a list of plane waves.
+
+        Args:
+            plane_waves_list (list): List of plane waves.
+            base_vector_lengths (tuple): Base vector lengths of the illumination Fourier space Bravais lattice.
+            dimensions (tuple): Indicates which SIM dimensions are projective(0) and true(1). In this notation
+            'true' means that illumination shifts are necessary for disentanglement in this direction. For example,
+            standard 3D SIM has dimensions (1, 1, 0), as there are now shifts in the z-direction.
+            Mr (int): Number of rotations.
+            spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.
+        Returns:
+            Illumination: Initialized Illumination object.
+        """
+        intensity_harmonics_list = IlluminationPlaneWaves3D.find_ipw_from_pw(plane_waves)
+        intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
+        illumination = cls(intensity_harmonics_dict, dimensions, Mr=Mr)
+        if store_plane_waves:
+            illumination.electric_field_plane_waves = plane_waves
+        return illumination
+    
     def normalize_spatial_waves(self):
         if not (0, 0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
@@ -539,8 +585,11 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         intensity_harmonics_dict = {tuple(wave[:2]): Sources.IntensityHarmonic2D.init_from_3D(illumination_3d.waves[wave])
                                     for wave in illumination_3d.waves}
         spatial_shifts = illumination_3d.spatial_shifts[:, :2]
-        return cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts)
-
+        illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts)
+        if illumination_3d.electric_field_plane_waves:
+            illumination.electric_field_plane_waves = illumination_3d.electric_field_plane_waves
+        return illumination
+    
     @staticmethod
     def index_frequencies(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int], Sources.IntensityHarmonic2D]:
         intensity_harmonics_dict = {}
@@ -613,7 +662,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
 
 
 class PlaneWavesSIMNonlinear(PlaneWavesSIM):
-        
+
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic],
                  nonlinear_expansion_coefficients: tuple[float, ...],

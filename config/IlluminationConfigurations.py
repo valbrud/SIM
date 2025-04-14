@@ -41,8 +41,11 @@ class BFPConfiguration:
             Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
 
         ]
-        s_polarized_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
-        illumination = IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors, Mr=Mr)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = Mr, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -69,10 +72,13 @@ class BFPConfiguration:
             Sources.PlaneWave(p / a0 ** 0.5, -p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
 
         ]
-        s_polarized_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(sources)
-        illumination = IlluminationPlaneWaves3D.init_from_list(s_polarized_waves, base_vectors)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
+        illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
 
     def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, phase_shift=0):

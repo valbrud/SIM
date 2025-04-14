@@ -18,7 +18,7 @@ from SIMulator import SIMulator2D
 from config.IlluminationConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
-from Reconstructor import ReconstructorFourierDomain, ReconstructorSpatialDomain
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from kernels import sinc_kernel, psf_kernel2d
 
 
@@ -54,7 +54,7 @@ class TestReconstruction(unittest.TestCase):
         self.optical_system = System4f2D(alpha=self.alpha, refractive_index=self.nmedium)
         self.optical_system.compute_psf_and_otf((self.psf_size, self.N))
 
-        self.image = 10**5 * np.ones(self.optical_system.psf.shape)
+        # self.image = 10**5 * np.ones(self.optical_system.psf.shape)
 
         self.widefield = scipy.signal.convolve(self.image, self.optical_system.psf, mode='same')
         # plt.title("Widefield image")
@@ -73,8 +73,8 @@ class TestReconstruction(unittest.TestCase):
         # spatial_shifts /= (3 * 2 * self.nmedium * np.sin(self.theta))
         # self.illumination.spatial_shifts = spatial_shifts
         self.illumination.set_spatial_shifts_diagonally()
-        plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, y)))
-        plt.show()
+        # plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, y)))
+        # plt.show()
 
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system)
@@ -88,7 +88,7 @@ class TestReconstruction(unittest.TestCase):
 
 
     def test_widefield_reconstruction(self):
-        reconstructor = ReconstructorFourierDomain(
+        reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system
         )
@@ -100,7 +100,7 @@ class TestReconstruction(unittest.TestCase):
     def test_fourier_reconstruction(self):
         # self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
 
-        fourier_reconstructor = ReconstructorFourierDomain(
+        fourier_reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             # regularization_filter=self.optical_system.otf**2 + 0.01
@@ -114,7 +114,7 @@ class TestReconstruction(unittest.TestCase):
         plt.show()
 
     def test_spatial_reconstruction(self):
-        spatial_reconstructor = ReconstructorSpatialDomain(
+        spatial_reconstructor = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
         )
@@ -126,7 +126,7 @@ class TestReconstruction(unittest.TestCase):
         plt.show()
 
     def test_spatial_reconstruction_finite_kernel(self):
-        spatial_reconstructor = ReconstructorSpatialDomain(
+        spatial_reconstructor = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             kernel=psf_kernel2d(5, (self.dx, self.dx))
@@ -138,29 +138,29 @@ class TestReconstruction(unittest.TestCase):
         plt.show()
 
     def test_compare_kernel_size_effect(self):
-        spatial_reconstructor1 = ReconstructorSpatialDomain(
+        spatial_reconstructor1 = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             kernel=psf_kernel2d(1, (self.dx, self.dx))
         )
 
-        spatial_reconstructor3 = ReconstructorSpatialDomain(
+        spatial_reconstructor3 = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             kernel=psf_kernel2d(3, (self.dx, self.dx))
         )
-        spatial_reconstructor5 = ReconstructorSpatialDomain(
+        spatial_reconstructor5 = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             kernel=psf_kernel2d(5, (self.dx, self.dx))
         )
-        spatial_reconstructor7 = ReconstructorSpatialDomain(
+        spatial_reconstructor7 = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
             kernel=psf_kernel2d(5, (self.dx, self.dx))
         )
 
-        self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
+        self.sim_images += np.random.normal(0, 2, self.sim_images.shape)
         reconstructed_image1 = spatial_reconstructor1.reconstruct(self.sim_images)
         reconstructed_image3 = spatial_reconstructor3.reconstruct(self.sim_images)
         reconstructed_image5 = spatial_reconstructor5.reconstruct(self.sim_images)
@@ -178,7 +178,7 @@ class TestReconstruction(unittest.TestCase):
 
 class TestNonlinearReconstruction(unittest.TestCase):
     def setUp(self):
-        self.N = 511
+        self.N = 255
         self.alpha = 2 * np.pi / 5
         self.nmedium = 1.5
         self.theta = np.arcsin(0.9 * np.sin(self.alpha))
@@ -228,7 +228,7 @@ class TestNonlinearReconstruction(unittest.TestCase):
 
         self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
 
-        self.linear_reconstructor = ReconstructorFourierDomain(
+        self.linear_reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination_linear,
             optical_system=self.optical_system,
         )
@@ -254,7 +254,7 @@ class TestNonlinearReconstruction(unittest.TestCase):
 
         simulator_non_linear = SIMulator2D(illumination_non_linear, self.optical_system)
         sim_images_non_linear = simulator_non_linear.generate_sim_images(self.image)
-        nonlinear_reconstructor = ReconstructorFourierDomain(
+        nonlinear_reconstructor = ReconstructorFourierDomain2D(
             illumination=illumination_non_linear,
             optical_system=self.optical_system
         )

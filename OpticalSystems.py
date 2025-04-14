@@ -27,6 +27,8 @@ from Dimensions import DimensionMetaAbstract
 class OpticalSystem(metaclass=DimensionMetaAbstract):
     """
     Base class for optical systems, providing common functionality.
+    The base class implements all the functionality but cannot be implemented.
+    Use dimensional children classes instead.
 
     Attributes:
         supported_interpolation_methods (list): List of supported interpolation methods.
@@ -324,35 +326,26 @@ class OpticalSystem3D(OpticalSystem):
                                            np.ndarray[tuple[int, int, int], np.float64]]: ...
 
 
-
-class System4f2D(OpticalSystem2D):
-    dimensionality = 2
-
+class System4f2DCoherent(OpticalSystem2D): 
     def __init__(self, alpha=np.pi / 4, refractive_index=1, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.n = refractive_index
         self.alpha = alpha
         self.NA = self.n * np.sin(self.alpha)
 
-    def _PSF(self, c_vectors, mask=None):
-        r = (c_vectors[:, :, 0] ** 2 + c_vectors[:, :, 1] ** 2) ** 0.5
+    def _PSF(self, grid):
+        r = (grid[:, :, 0] ** 2 + grid[:, :, 1] ** 2) ** 0.5
         v = 2 * np.pi * r * self.NA
-        I = (2 * scipy.special.j1(v) / v) ** 2
-        cx, cy = np.array(I.shape) // 2
-        I[cx, cy] = 1
-        I /= np.sum(I)
-        return I
+        E = 2 * scipy.special.j1(v) / v
+        cx, cy = grid.shape[0] // 2, grid.shape[1] // 2
+        E[cx, cy] = 1
+        return E
 
-    def _PSF_from_pupil_function(self, pupil_function, mask=None):
+    def _PSF_from_pupil_function(self, pupil_function):
         E = wrappers.wrapped_fftn(pupil_function)
-        I = np.abs(E) ** 2
-        I /= np.sum(I)
-        return I
+        return E
 
-    def _mask_OTF(self):
-        ...
-
-    def compute_psf_and_otf(self, parameters=None, pupil_function =None, mask=None)\
+    def compute_psf_and_otf(self, parameters=None, pupil_function =None)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
@@ -360,31 +353,26 @@ class System4f2D(OpticalSystem2D):
         elif parameters is not None:
             psf_size, N = parameters
             self.compute_psf_and_otf_cordinates(psf_size, N)
-        x, y = self.psf_coordinates
-        N = x.size
-        c_vectors = np.array(np.meshgrid(x, y)).T.reshape(-1, 2)
-        c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 1], c_vectors[:, 0]))]
-        grid = c_vectors_sorted.reshape((len(x), len(y), 2))
+
+        grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
+
         if pupil_function is None:
-            psf = self._PSF(grid, mask=None)
+            psf = self._PSF(grid)
         else:
             psf = self._PSF_from_pupil_function(pupil_function)
-        self.psf = psf / np.sum(psf)
+
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
         return self.psf, self.otf
 
 
-class System4f3D(OpticalSystem3D):
-    dimensionality = 3
-
-    def __init__(self, alpha=np.pi / 4, refractive_index_sample=1, refractive_index_medium=1, regularization_parameter=0.01, interpolation_method="linear"):
+class System4f3DCoherent(OpticalSystem3D):
+    def __init__(self, alpha=np.pi / 4, refractive_index_sample=1, refractive_index_medium=1, interpolation_method="linear"):
         super().__init__(interpolation_method)
         self.ns = refractive_index_sample
         self.nm = refractive_index_medium
         self.alpha = alpha
-        self.e = regularization_parameter / (4 * np.sin(self.alpha / 2) ** 2)
         self.NA = self.nm * np.sin(self.alpha)
 
     def _integrand_no_aberrations(self, rho, phi, i, u, v, psy, pupil_function):
@@ -443,7 +431,6 @@ class System4f3D(OpticalSystem3D):
     def _PSF(self, grid,
              high_NA=False,
              pupil_function=lambda rho: 1,
-             mask=None,
              integrate_rho=True,
              zernieke={},
              **kwargs):
@@ -463,8 +450,7 @@ class System4f3D(OpticalSystem3D):
 
             rho = np.linspace(0, 1, 100)
             integrands = integrand(rho)
-            h = sp.integrate.simpson(integrands, x=rho)
-            I = (h * h.conjugate()).real
+            E = sp.integrate.simpson(integrands, x=rho)
 
         else:
             # Here Abbe sine condition is assumed to be satisfied, and the P(theta) apodization function is assumed to be sqrt(cos(theta))
@@ -477,10 +463,9 @@ class System4f3D(OpticalSystem3D):
                             * np.exp(1j * u[:, :, :, None] / 2 * (np.sin(theta / 2) ** 2 / np.sin(self.alpha / 2) ** 2))
                             * sp.special.j0(v[:, :, :, None] * np.sin(theta) / np.sin(self.alpha)))
 
-
                 theta = np.linspace(0, self.alpha - 1e-9, 100)
                 integrands = integrand(theta)
-                h = sp.integrate.simpson(integrands, x=theta)
+                E = sp.integrate.simpson(integrands, x=theta)
 
             else:
                 # Taking final value slightly less than 1 to avoid division by zero in the integrand
@@ -492,7 +477,7 @@ class System4f3D(OpticalSystem3D):
                             * sp.special.j0(v[:, :, :, None] * rho)
                             )
                     integrands = integrand(rho)
-                    h = sp.integrate.simpson(integrands, x=rho)
+                    E = sp.integrate.simpson(integrands, x=rho)
 
                 else:
                     rho = np.linspace(0, 1 - 1e-9, 100)
@@ -504,7 +489,7 @@ class System4f3D(OpticalSystem3D):
                     # plt.plot(aberration_function[50, :])
                     # plt.show()
                     phase_change = np.exp(1j * 2 * np.pi * self.nm * aberration_function)
-                    h = np.zeros(u.shape, dtype=np.complex128)
+                    E = np.zeros(u.shape, dtype=np.complex128)
                     def integrand_no_aberrations(rho, phi, i):
                         apodization_part = pupil_function(rho) * rho / (1 - rho ** 2 * np.sin(self.alpha) ** 2) ** 0.25
                         u_dependent_part = np.exp(1j * (u[:, :, i, None] / 2 * ((1 - np.sqrt(1 - rho ** 2 * np.sin(self.alpha) ** 2)) / (1 - np.cos(self.alpha)))))
@@ -516,45 +501,134 @@ class System4f3D(OpticalSystem3D):
                     #     integrands_aberrated = integrands * phase_change[None, None, :, :]
                     #     integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)
                     #     integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)
-                    #     h[:, :, i] = integrated_rho
+                    #     E[:, :, i] = integrated_rho
 
                     # Replace your for-loop with a parallelized version:
-                    h = np.stack(Parallel(n_jobs=2)(
+                    E = np.stack(Parallel(n_jobs=2)(
                         delayed(lambda i: sp.integrate.simpson(
                             np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :], axis=3) * dphi,
                         x = rho, axis=2))(i) for i in range(u.shape[2])
                     ), axis=2)
 
-            I = (h * h.conjugate()).real
-
-        if mask:
-            shape = np.array(grid.shape[:-1])
-            m = mask(shape, np.amin(shape) // 5)
-            I *= m
-
-        return I
-
-    # Could not get good numbers yet
-    def _mask_OTF(self):
-        ...
+        return E
 
     def compute_psf_and_otf(self, parameters=None,
                             high_NA=False,
                             pupil_function=lambda rho: 1,
                             integrate_rho=False,
-                            mask=None,
                             zernieke={}) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
     np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
+        
         elif parameters:
             psf_size, N = parameters
             self.compute_psf_and_otf_cordinates(psf_size, N)
-        x, y, z = self.psf_coordinates
-        c_vectors = np.array(np.meshgrid(x, y, z)).T.reshape(-1, 3)
-        c_vectors_sorted = c_vectors[np.lexsort((c_vectors[:, 2], c_vectors[:, 1], c_vectors[:, 0]))]
-        grid = c_vectors_sorted.reshape((len(x), len(y), len(z), 3))
-        psf = self._PSF(grid, high_NA, pupil_function=pupil_function, integrate_rho=integrate_rho, mask=mask, zernieke=zernieke)
+
+        grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
+        psf = self._PSF(grid, high_NA, 
+                        pupil_function=pupil_function, 
+                        integrate_rho=integrate_rho,
+                        zernieke=zernieke)
+        self.psf = psf / np.sum(psf)
+        self.otf = wrappers.wrapped_ifftn(self.psf)
+        self.otf /= np.amax(self.otf)
+        self._prepare_interpolator()
+        return self.psf, self.otf
+
+
+class System4f2D(System4f2DCoherent):
+
+    def _PSF(self, grid, save_pupil_function=False):
+        E = super()._PSF(grid)
+        if save_pupil_function:
+            self.__dict__['pupil_function'] = wrappers.wrapped_ifftn(E)
+        
+        I = np.abs(E) ** 2
+        I /= np.sum(I)
+        return I
+
+    def _PSF_from_pupil_function(self, pupil_function, save_pupil_function=False):
+        if save_pupil_function:
+            self.__dict__['pupil_function'] = pupil_function
+    
+        E = wrappers.wrapped_fftn(pupil_function)
+        I = np.abs(E) ** 2
+        I /= np.sum(I)
+        return I
+
+    def compute_psf_and_otf(self,
+                            parameters=None,
+                            pupil_function =None, 
+                            save_pupil_function=False)\
+            -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                     np.ndarray[tuple[int, int, int], np.float64]]:
+        
+        if self.psf_coordinates is None and parameters is None and pupil_function is None:
+            raise AttributeError("Compute psf first or provide psf parameters")
+        elif parameters is not None:
+            psf_size, N = parameters
+            self.compute_psf_and_otf_cordinates(psf_size, N)
+
+        grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
+
+        if pupil_function is None:
+            psf = self._PSF(grid, save_pupil_function=save_pupil_function)
+
+        else:
+            psf = self._PSF_from_pupil_function(pupil_function, save_pupil_function=save_pupil_function)
+                    
+        self.psf = psf / np.sum(psf)
+        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf /= np.amax(self.otf)
+        self._prepare_interpolator()
+
+        return self.psf, self.otf
+
+
+class System4f3D(System4f3DCoherent):
+    def _PSF(self, grid,
+             high_NA=False,
+             pupil_function=lambda rho: 1,
+             integrate_rho=True,
+             zernieke={},
+             save_pupil_function=False,
+             **kwargs):
+        
+        E = super()._PSF(grid,
+                        high_NA,
+                        pupil_function,
+                        integrate_rho,
+                        zernieke,
+                        **kwargs)
+        
+        if save_pupil_function:
+            self.__dict__['pupil_function'] = wrappers.wrapped_ifftn(E)
+        
+        I = (E * E.conjugate()).real
+        return I
+
+    def compute_psf_and_otf(self, parameters=None,
+                            high_NA=False,
+                            pupil_function=lambda rho: 1,
+                            integrate_rho=False,
+                            zernieke={}, 
+                            save_pupil_function=False,
+                            ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                       np.ndarray[tuple[int, int, int], np.float64]]:
+        if self.psf_coordinates is None and parameters is None:
+            raise AttributeError("Compute psf first or provide psf parameters")
+        
+        elif parameters:
+            psf_size, N = parameters
+            self.compute_psf_and_otf_cordinates(psf_size, N)
+
+        grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
+        psf = self._PSF(grid, high_NA, 
+                        pupil_function=pupil_function, 
+                        integrate_rho=integrate_rho,
+                        zernieke=zernieke,
+                        save_pupil_function=save_pupil_function)
         self.psf = psf / np.sum(psf)
         self.otf = wrappers.wrapped_ifftn(self.psf)
         self.otf /= np.amax(self.otf)

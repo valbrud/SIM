@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-import SSNRBasedFiltering
+import WienerFiltering
 import matplotlib.colors
 import ShapesGenerator
 import scipy
@@ -1373,7 +1373,7 @@ class TestFinalFilter(unittest.TestCase):
         # plt.show()
         # plt.imshow(image_sr)
         # plt.show()
-        wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
+        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator_finite)
         ideal, _, _, _, tj = wiener.filter_object(image)
         # plt.gca().set_xlabel("fy")
         # plt.gca().set_ylabel("tj")

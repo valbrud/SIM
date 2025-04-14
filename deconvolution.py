@@ -103,8 +103,8 @@ def richardson_lucy_blind_homebrew(image: np.ndarray, psf0: np.ndarray, step_num
     return object_estimated, psf_estimated, history
 
 
-def bayesian_gaussian_frequency_estimate(image_ft: np.ndarray, noise_power: np.ndarray, ground_truth_average: np.ndarray,
-                                         ground_truth_variance: np.ndarray, otf: np.ndarray, numerical_threshold: float = 10 ** -10) -> np.ndarray:
+def bayesian_gaussian_frequency_estimate(image_ft: np.ndarray, noise_power: np.ndarray, known_average: np.ndarray,
+                                         known_variance: np.ndarray, otf: np.ndarray, numerical_threshold: float = 10 ** -10) -> np.ndarray:
     """
     Estimates ground truth spatial frequencies in the assumption that they, as well as the noise, are Gaussian.
     p(f|I) = p(I|f)p(f) / p(I) = ((i/g)*g^2*Sigma^2 + sigma^2*fa) / (sigma^2 + Sigma^2*g^2)
@@ -112,8 +112,8 @@ def bayesian_gaussian_frequency_estimate(image_ft: np.ndarray, noise_power: np.n
     Args:
         image_ft (np.ndarray): Noisy, otf-multiplied image spatial frequencies. (i = g * f + n)
         noise_power (np.ndarray): Noise power spectrum.
-        ground_truth_average (np.ndarray): a-priory information about the average spatial frequencies of the ground truth.
-        ground_truth_variance (np.ndarray): a-priory information about the variance of the spatial frequencies of the ground truth.
+        known_average (np.ndarray): a-priory information about the average spatial frequencies of the ground truth.
+        known_variance (np.ndarray): a-priory information about the variance of the spatial frequencies of the ground truth.
         otf (np.ndarray): Optical transfer function. Assumed to be normalized by its maximal value.
         numerical_threshold (float, optional): Defaults to 10**-10.
     Returns:
@@ -121,14 +121,14 @@ def bayesian_gaussian_frequency_estimate(image_ft: np.ndarray, noise_power: np.n
     """
     i = image_ft
     sigma = noise_power
-    fa = ground_truth_average
-    Sigma = ground_truth_variance
+    fa = known_average
+    Sigma = known_variance
     g = otf
     return np.where(g > numerical_threshold, ((i / g) * Sigma ** 2 * g ** 2 + sigma ** 2 * fa) / (sigma ** 2 + Sigma ** 2 * g ** 2), 0)
 
 
-def information_optimal_gaussian_frequency_estimate(image_ft: np.ndarray, noise_power: np.ndarray, ground_truth_average: np.ndarray,
-                                                    ground_truth_variance: np.ndarray, otf: np.ndarray, max_iters: int = 100, tolerance: float = 1e-8,
+def image_of_maximal_surprise_estimate(image_ft: np.ndarray, noise_power: np.ndarray, known_average: np.ndarray,
+                                                    known_variance: np.ndarray, otf: np.ndarray, max_iters: int = 100, tolerance: float = 1e-8,
                                                     numerical_threshold: float = 10 ** -10) -> np.ndarray:
     """
     Estimates ground truth spatial frequencies, finding object that cares most mutual information with the observed image.
@@ -138,8 +138,8 @@ def information_optimal_gaussian_frequency_estimate(image_ft: np.ndarray, noise_
     Args:
         image_ft (np.ndarray): Noisy, otf-multiplied image spatial frequencies. (i = g * f + n)
         noise_power (np.ndarray): Noise power spectrum.
-        ground_truth_average (np.ndarray): a-priory information about the average spatial frequencies of the ground truth.
-        ground_truth_variance (np.ndarray): a-priory information about the variance of the spatial frequencies of the ground truth.
+        known_average (np.ndarray): a-priory information about the average spatial frequencies of the ground truth.
+        known_variance (np.ndarray): a-priory information about the variance of the spatial frequencies of the ground truth.
         otf (np.ndarray): Optical transfer function. Assumed to be normalized by its maximal value.
         max_iters (int): Maximum number of iterations for iterative solution search.
         tolerance (float): Tolerance for iterative solution search.
@@ -149,8 +149,8 @@ def information_optimal_gaussian_frequency_estimate(image_ft: np.ndarray, noise_
     """
     i = image_ft
     sigma = noise_power
-    fa = ground_truth_average
-    Sigma = ground_truth_variance
+    fa = known_average
+    Sigma = known_variance
     g = otf
 
     # Auxiliary functions

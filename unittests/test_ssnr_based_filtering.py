@@ -6,7 +6,7 @@ import scipy.signal
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
-import SSNRBasedFiltering
+import WienerFiltering
 import wrappers
 from config.IlluminationConfigurations import *
 import unittest
@@ -80,8 +80,8 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
+        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
+        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
 
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
@@ -205,8 +205,8 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
+        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
+        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
 
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
@@ -333,8 +333,8 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
+        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
+        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
 
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
@@ -466,11 +466,11 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener_linear = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_linear)
-        wiener_s = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_s_polarized)
-        wiener_circular = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_circular)
-        wiener_hexagonal = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_hexagonal)
-        wiener_widefield = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_widefield)
+        wiener_linear = WienerFiltering.WienerFilter3dModel(noise_estimator_linear)
+        wiener_s = WienerFiltering.WienerFilter3dModel(noise_estimator_s_polarized)
+        wiener_circular = WienerFiltering.WienerFilter3dModel(noise_estimator_circular)
+        wiener_hexagonal = WienerFiltering.WienerFilter3dModel(noise_estimator_hexagonal)
+        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
 
         image_linear = wiener_linear.filter_object(image_ft, real_space=False)[0]
         image_s = wiener_s.filter_object(image_ft, real_space=False)[0]
@@ -590,8 +590,8 @@ class TestWiener(unittest.TestCase):
         noise_estimator_widefield.ssnri
 
 
-        wiener = SSNRBasedFiltering.WienerFilter3dModelSDR(noise_estimator)
-        wiener_widefield = SSNRBasedFiltering.WienerFilter3dModelSDR(noise_estimator_widefield)
+        wiener = WienerFiltering.WienerFilter3dModelSDR(noise_estimator)
+        wiener_widefield = WienerFiltering.WienerFilter3dModelSDR(noise_estimator_widefield)
         simulator = SIMulator.SIMulator(illumination_s_polarized, optical_system, psf_size, N)
         images = simulator.generate_sim_images(image)
         image_sr = simulator.reconstruct_real_space(images)
@@ -729,10 +729,10 @@ class TestWiener(unittest.TestCase):
         # plt.plot(np.log(1 + 10**4 * np.abs(wrappers.wrapped_fftn(image_widefield)[:, N//2, N//2])))
         plt.legend()
         plt.show()
-        wiener_model = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator)
+        wiener_model = WienerFiltering.WienerFilter3dModel(noise_estimator)
         expected_image, ssnr, wj, otf_sim, tj = wiener_model.filter_object(image, real_space=True)
 
-        wiener_reconstruction = SSNRBasedFiltering.WienerFilter3dReconstruction(noise_estimator)
+        wiener_reconstruction = WienerFiltering.WienerFilter3dReconstruction(noise_estimator)
         filtered_image, ssnr_rec, wj_rec, otf_sim_rec, tj_rec = wiener_reconstruction.filter_object(image_sr, real_space=True, average="surface_levels_3d")
         # filtered_image = np.abs(wrappers.wrapped_ifftn(tj_rec * wrappers.wrapped_fftn(image_sr)))
         plt.plot(np.log(1 + 10 ** 4 * np.abs(ssnr_rec[:, N//2, N//2])), label='ssnr rec')
@@ -864,8 +864,8 @@ class TestFlat(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        flat = SSNRBasedFiltering.FlatNoiseFilter3dModel(noise_estimator)
-        flat_widefield = SSNRBasedFiltering.FlatNoiseFilter3dModel(noise_estimator_widefield)
+        flat = WienerFiltering.FlatNoiseFilter3dModel(noise_estimator)
+        flat_widefield = WienerFiltering.FlatNoiseFilter3dModel(noise_estimator_widefield)
 
         image_filtered, wj, otf_sim, tj = flat.filter_object(image_ft, real_space=False)
         widefield_benchmark, wjw, otf_simw, tjw = flat_widefield.filter_object(image_ft, real_space=False)
