@@ -16,6 +16,7 @@ import numpy as np
 import scipy 
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
+from Dimensions import DimensionMetaAbstract
 
 class AutoconvolutionApodization(ABC):
     """
@@ -67,7 +68,9 @@ class AutoconvolutionApodizationWidefield(AutoconvolutionApodization):
     def _compute_ideal_transfer_functions(self, **kwargs):
         self._ideal_ctf = np.where(np.abs(self.pupil_function) > 10**-12 * np.amax(self.pupil_function), 1, 0)
         self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
+        self._ideal_otf /= np.amax(self._ideal_otf)
         self._ideal_psf = wrappers.wrapped_ifftn(self._ideal_otf)
+        self._ideal_psf /= np.sum(self._ideal_psf)
 
         
     
@@ -99,14 +102,16 @@ class AutoconvolutionApodizationPointScanning(AutoconvolutionApodizationWidefiel
         ctf_effective = scipy.signal.convolve(ideal_excitatiton, ideal_detection, mode='same')
         self._ideal_ctf = np.where(np.abs(ctf_effective) > 10**-12 * np.amax(ctf_effective), 1, 0)
         self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
+        self._ideal_otf /= np.amax(self._ideal_otf)
         self._ideal_psf = wrappers.wrapped_ifftn(self._ideal_otf)
+        self._ideal_psf /= np.sum(self._ideal_psf)
 
 
 AutoconvolutionApodizationConfocal = AutoconvolutionApodizationPointScanning
 AutoconvolutionApodizationISM = AutoconvolutionApodizationPointScanning
 AutoconvolutionApodizationRCM = AutoconvolutionApodizationPointScanning
 
-class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield):
+class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metaclass=DimensionMetaAbstract):
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
         if not illumination.dimensionality == optical_system.dimensionality:
             raise ValueError("The illumination and pupil function dimensions do not match.")
@@ -125,15 +130,54 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield):
         super().__init__(self._optical_system.pupil_function)
 
     def _compute_ideal_transfer_functions(self, **kwargs):
+        raise NotImplementedError("The autoconvolution method of apodization is dimension-specific due to numeric issues.")
         # var1 = scipy.signal.convolve(self.pupil_function, np.flip(self.pupil_function).conjugate(), mode='same')
-        var2 = scipy.signal.convolve(self.pupil_function, self.pupil_function.conjugate(), mode='same')
+        # var2 = scipy.signal.convolve(self.pupil_function, self.pupil_function.conjugate(), mode='same')
+        # var3 = np.log(1 + 10**8 * scipy.signal.convolve((self.pupil_function), np.flip(self.pupil_function).conjugate(), mode='same'))
         # plt.imshow(var1[:, :, 50].real, cmap='gray')
         # plt.show()
-        plt.imshow((var2[50, :, :].transpose()).real, cmap='gray')
-        plt.show()
+        # plt.imshow((var3[50, :, :].transpose()).real, cmap='gray')
+        # plt.imshow((self.pupil_function[50, :, :].transpose()).real, cmap='gray')
+        # plt.show()
 
+  
+
+class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
+    dimensionality = 2
+    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
+        super().__init__(optical_system, illumination)
+
+    def _compute_ideal_transfer_functions(self, **kwargs):
         ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1, 0)
         ideal_pupil_function_ft = wrappers.wrapped_fftn(ideal_pupil_function)
+        
+        grid = self._optical_system.x_grid
+        for Mr in range(self._illumination.Mr):
+            for plane_wave in self._illumination.electric_field_plane_waves:
+                wavevector = np.copy(plane_wave.wavevector)
+                wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
+                
+                wavevector = np.array([wavevector[0], wavevector[1]])
+                phase_modulated = ideal_pupil_function_ft * np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))            
+                phase_shifted = wrappers.wrapped_ifftn(phase_modulated).real
+                phase_shifted /= np.amax(phase_shifted)
+                # phase_shifted = np.where(phase_shifted > 10**-1, 1, 0)
+                ideal_pupil_function[phase_shifted >  10**-1 * np.amax(self.pupil_function)] = 1
+
+        self._ideal_ctf = ideal_pupil_function
+        self._ideal_otf = np.flip(scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same'))
+        self._ideal_psf = wrappers.wrapped_ifftn(self._ideal_otf).real
+        self._ideal_psf /= np.sum(self._ideal_psf)
+    
+
+class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
+    dimensionality = 3
+    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
+        super().__init__(optical_system, illumination)
+    
+    def _compute_ideal_transfer_functions(self, **kwargs):
+        widefield_coherent_psf = wrappers.wrapped_fftn(self.pupil_function)
+        ideal_sim_coherent_psf = np.copy(widefield_coherent_psf)
 
         grid = self._optical_system.x_grid
         for Mr in range(self._illumination.Mr):
@@ -141,22 +185,22 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield):
                 wavevector = np.copy(plane_wave.wavevector)
                 wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
                 
-                if len(self._illumination.dimensions) == 2:
-                    wavevector = np.array([wavevector[0], wavevector[1]])
-                    phase_modulated = ideal_pupil_function_ft * np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))            
-                    phase_shifted = wrappers.wrapped_fftn(phase_modulated).real
-                    phase_shifted /= np.amax(phase_shifted)
-                    # phase_shifted = np.where(phase_shifted > 10**-1, 1, 0)
-
-                elif len(self._illumination.dimensions) == 3:
-                    phase_modulated = np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)).real
-                    phase_shifted = wrappers.wrapped_fftn(phase_modulated).real
-                    phase_shifted /= np.amax(phase_shifted)
-                    phase_shifted = np.where(phase_shifted > 10**-1, 1, 0)
-
-
-                ideal_pupil_function[phase_shifted >  10**-1 * np.amax(self.pupil_function)] = 1
+                if not np.isclose(wavevector, 0).all(): 
+                    phase_modulated = widefield_coherent_psf * np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2))
+                    ideal_sim_coherent_psf += phase_modulated
+                    phase_modulated_ft = wrappers.wrapped_ifftn(phase_modulated).real
+                    # plt.imshow(phase_modulated_ft[:, 50, :], cmap='gray')
+                    # plt.show()
+        ideal_pupil_function = np.abs(wrappers.wrapped_ifftn(ideal_sim_coherent_psf))
+        # plt.imshow(ideal_pupil_function[:, 50, :], cmap='gray')
+        # plt.show()
+        ideal_pupil_function /= np.amax(ideal_pupil_function)
+        ideal_pupil_function = np.where(ideal_pupil_function > 10**-1, 1., 0)
+        # plt.imshow(ideal_pupil_function[:, 50, :], cmap='gray')
+        # plt.show()
         self._ideal_ctf = ideal_pupil_function
-        self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
+        self._ideal_otf = np.flip(scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same'))
+        self._ideal_otf /= np.amax(self._ideal_otf)
         self._ideal_psf = wrappers.wrapped_ifftn(self._ideal_otf).real
-    
+        self._ideal_psf /= np.sum(self._ideal_psf)
+

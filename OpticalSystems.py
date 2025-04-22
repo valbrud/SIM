@@ -50,7 +50,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     #: Linear interpolation is available with the "interpolate_OTF" method if needed.
     supported_interpolation_methods = ["linear", "Fourier"]
 
-    def __init__(self, interpolation_method: str):
+    def __init__(self, interpolation_method: str, normalize_otf = 'True'):
         self.psf = None
         self.otf = None
         self._x_grid = None
@@ -60,6 +60,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         self._psf_coordinates = None
         self._interpolation_method = None
         self.interpolation_method = interpolation_method
+        self.normalize_otf = True
 
 
     @property
@@ -117,7 +118,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         """
         pass
 
-    def _compute_q_grid(self) -> ndarray[tuple[int, ..., 3], np.float64]:
+    def _compute_q_grid(self) -> ndarray[tuple[int], np.float64]:
         """
         Compute the q-grid for the OTF.
 
@@ -126,7 +127,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         """
         self._q_grid= np.stack(np.meshgrid(*self.otf_frequencies), axis=-1)
 
-    def _compute_x_grid(self) -> ndarray[tuple[int, ..., 3], np.float64]:
+    def _compute_x_grid(self) -> ndarray[tuple[int], np.float64]:
         """
         Compute the x-grid for the PSF.
 
@@ -231,8 +232,8 @@ class OpticalSystem2D(OpticalSystem):
 
     dimensionality = 2
 
-    def __init__(self, interpolation_method):
-        super().__init__(interpolation_method)
+    def __init__(self, interpolation_method, normalize_otf=True):
+        super().__init__(interpolation_method, normalize_otf)
 
     def compute_psf_and_otf_cordinates(self, psf_size: tuple[float], N: int):
         x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
@@ -280,8 +281,8 @@ class OpticalSystem3D(OpticalSystem):
 
     dimensionality = 3
 
-    def __init__(self, interpolation_method):
-        super().__init__(interpolation_method)
+    def __init__(self, interpolation_method, normalize_otf = True):
+        super().__init__(interpolation_method, normalize_otf)
 
     def compute_psf_and_otf_cordinates(self, psf_size, N):
         x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
@@ -327,8 +328,13 @@ class OpticalSystem3D(OpticalSystem):
 
 
 class System4f2DCoherent(OpticalSystem2D): 
-    def __init__(self, alpha=np.pi / 4, refractive_index=1, interpolation_method="linear"):
-        super().__init__(interpolation_method)
+    def __init__(self,
+                 alpha=np.pi / 4,
+                 refractive_index=1,
+                 interpolation_method="linear", 
+                 normalize_otf = False):
+        
+        super().__init__(interpolation_method, normalize_otf)
         self.n = refractive_index
         self.alpha = alpha
         self.NA = self.n * np.sin(self.alpha)
@@ -362,14 +368,20 @@ class System4f2DCoherent(OpticalSystem2D):
             psf = self._PSF_from_pupil_function(pupil_function)
 
         self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
-        self.otf /= np.amax(self.otf)
+        self.otf = self.otf / np.amax(self.otf) if self.normalize_otf else self.otf
         self._prepare_interpolator()
         return self.psf, self.otf
 
 
 class System4f3DCoherent(OpticalSystem3D):
-    def __init__(self, alpha=np.pi / 4, refractive_index_sample=1, refractive_index_medium=1, interpolation_method="linear"):
-        super().__init__(interpolation_method)
+    def __init__(self,
+                 alpha=np.pi / 4, 
+                 refractive_index_sample=1, 
+                 refractive_index_medium=1, 
+                 interpolation_method="linear", 
+                 normalize_otf = False):
+        
+        super().__init__(interpolation_method, normalize_otf)
         self.ns = refractive_index_sample
         self.nm = refractive_index_medium
         self.alpha = alpha
@@ -530,20 +542,33 @@ class System4f3DCoherent(OpticalSystem3D):
                         pupil_function=pupil_function, 
                         integrate_rho=integrate_rho,
                         zernieke=zernieke)
-        self.psf = psf / np.sum(psf)
+        
         self.otf = wrappers.wrapped_ifftn(self.psf)
-        self.otf /= np.amax(self.otf)
+        if self.normalize_otf:
+            self.otf /= np.amax(self.otf)
+            self.psf = psf / np.sum(psf)
+
         self._prepare_interpolator()
         return self.psf, self.otf
 
 
 class System4f2D(System4f2DCoherent):
+    def __init__(self,
+                 alpha=np.pi / 4,
+                 refractive_index=1,
+                 interpolation_method="linear", 
+                 normalize_otf=True):
+        
+        super().__init__(alpha,
+                 refractive_index,
+                 interpolation_method, 
+                 normalize_otf)
 
     def _PSF(self, grid, save_pupil_function=False):
         E = super()._PSF(grid)
         if save_pupil_function:
-            self.__dict__['pupil_function'] = wrappers.wrapped_ifftn(E)
-        
+            pupil_function = np.where(self.q_grid[:, :, 0] ** 2 + self.q_grid[:, :, 1] ** 2 < self.NA ** 2, 1, 0)
+            self.__dict__['pupil_function'] = pupil_function
         I = np.abs(E) ** 2
         I /= np.sum(I)
         return I
@@ -587,6 +612,21 @@ class System4f2D(System4f2DCoherent):
 
 
 class System4f3D(System4f3DCoherent):
+    def __init__(self,
+                 alpha=np.pi / 4, 
+                 refractive_index_sample=1, 
+                 refractive_index_medium=1, 
+                 interpolation_method="linear", 
+                 normalize_otf = True):
+        
+        super().__init__(alpha, 
+                 refractive_index_sample, 
+                 refractive_index_medium, 
+                 interpolation_method, 
+                 normalize_otf)
+
+
+
     def _PSF(self, grid,
              high_NA=False,
              pupil_function=lambda rho: 1,
@@ -634,3 +674,74 @@ class System4f3D(System4f3DCoherent):
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
         return self.psf, self.otf
+
+
+class PointScanningImagingSystem(OpticalSystem):
+    """
+    Base class for a point-scanning microscopy.
+    """
+
+    def __init__(self,
+                 optical_system_excitation,
+                 optical_system_detection, 
+                 aperture = None, 
+                 interpolation_method = "linear",
+                 normalize_otf = True):
+        
+        if not isinstance(optical_system_excitation, OpticalSystem):
+            raise TypeError("optical_system_excitation must be an instance of OpticalSystem")
+        if not isinstance(optical_system_detection, OpticalSystem):
+            raise TypeError("optical_system_detection must be an instance of OpticalSystem")
+        if not optical_system_excitation.dimensionality == optical_system_detection.dimensionality:
+            raise ValueError("Excitation and detection systems must have the same dimensionality")
+        
+        super().__init__(interpolation_method, normalize_otf)
+
+        #The case here must be handled if the systems have different psf coordinates.
+        #For now it is assmed that they are the same.
+        if not np.array_equal(optical_system_excitation.psf_coordinates, optical_system_detection.psf_coordinates):
+            raise ValueError("Excitation and detection systems must have the same psf coordinates")
+        
+        self.optical_system_excitation = optical_system_excitation
+        self.optical_system_detection = optical_system_detection
+
+
+
+class Confocal(PointScanningImagingSystem):
+    """
+    Class for simulating a confocal microscope system.
+    """
+
+    def compute_psf_and_otf(self):
+        """
+        Compute the PSF and OTF for the confocal system.
+        """
+        if not self.optical_system_excitation.psf:
+            psf_excitation, otf_excitation = self.optical_system_excitation.compute_psf_and_otf()
+        if not self.optical_system_detection.psf:
+            psf_detection, otf_detection = self.optical_system_detection.compute_psf_and_otf()
+
+        
+        # Compute final PSF and OTF including aperture
+        self.psf = psf_excitation * psf_detection
+        self.otf = wrappers.wrapped_ifftn(self.psf)
+        if self.normalize_otf:
+            self.otf /= np.amax(self.otf)
+        self.psf /= np.sum(self.psf)
+
+
+class RCM(PointScanningImagingSystem):
+    ...
+
+class ISM(PointScanningImagingSystem):
+    ...
+
+
+class Confocal2D(Confocal): ...
+class Confocal3D(Confocal): ... 
+
+class RCM2D(RCM): ...
+class RCM3D(RCM): ...
+
+class ISM2D(ISM): ...
+class ISM3D(ISM): ...

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>SSNRCalculator module &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -41,233 +41,280 @@
 <p>This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)
 for a given system optical system and illumination.</p>
 <p>Mathematical details will be provided in the later documentation versions and in the corresponding papers.</p>
-<div class="graphviz"><img src="../_images/inheritance-baf6f463b1339ecd8db34777704d146121f3d89b.png" alt="Inheritance diagram of SSNRCalculator" usemap="#inheritance5d1c128560" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-6223b4f0774904141cb5b32bacab33b724816fc1.png" alt="Inheritance diagram of SSNRCalculator" usemap="#inheritance5d1c128560" class="inheritance graphviz" /></div>
 <map id="inheritance5d1c128560" name="inheritance5d1c128560">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,84,94,112"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRPointScanning" target="_top" title="SSNRPointScanning" alt="" coords="142,57,290,85"/>
+<area shape="rect" id="node5" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="176,109,256,137"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRPointScanning2D" target="_top" title="SSNRPointScanning2D" alt="" coords="338,5,504,33"/>
+<area shape="rect" id="node4" href="#SSNRCalculator.SSNRPointScanning3D" target="_top" title="SSNRPointScanning3D" alt="" coords="338,57,504,85"/>
+<area shape="rect" id="node6" href="#SSNRCalculator.SSNRSIM2D" target="_top" title="SSNRSIM2D" alt="" coords="372,109,470,137"/>
+<area shape="rect" id="node7" href="#SSNRCalculator.SSNRSIM3D" target="_top" title="SSNRSIM3D" alt="" coords="372,161,470,189"/>
 </map><dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR2dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR2dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR2dSIM" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRCalculator" title="SSNRCalculator.SSNRCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRCalculator</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-6b0fea62a434e5cac9d408ae58eb56524f0f8066.png" alt="Inheritance diagram of SSNRCalculator.SSNR2dSIM" usemap="#inheritance7d1e771244" class="inheritance graphviz" /></div>
-<map id="inheritance7d1e771244" name="inheritance7d1e771244">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNR2dSIM" target="_top" title="SSNR2dSIM" alt="" coords="324,5,421,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map><dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIM.ring_average_ssnr">
-<span class="sig-name descname"><span class="pre">ring_average_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR2dSIM.ring_average_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR2dSIM.ring_average_ssnr" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIMFiniteKernel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR2dSIMFiniteKernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR2dSIMFiniteKernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR2dSIMFiniteKernel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNR2dSIM" title="SSNRCalculator.SSNR2dSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNR2dSIM</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-06d75f85548a300dfcecb66a09fe8d14df20d1b5.png" alt="Inheritance diagram of SSNRCalculator.SSNR2dSIMFiniteKernel" usemap="#inheritance049c3c4d35" class="inheritance graphviz" /></div>
-<map id="inheritance049c3c4d35" name="inheritance049c3c4d35">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNR2dSIM" target="_top" title="SSNR2dSIM" alt="" coords="324,5,421,32"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNR2dSIMFiniteKernel" target="_top" title="SSNR2dSIMFiniteKernel" alt="" coords="469,5,636,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node4" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map><dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIMFiniteKernel.illumination">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">illumination</span></span><a class="headerlink" href="#SSNRCalculator.SSNR2dSIMFiniteKernel.illumination" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIMFiniteKernel.kernel">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#SSNRCalculator.SSNR2dSIMFiniteKernel.kernel" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR2dSIMFiniteKernel.plot_effective_kernel_and_otf">
-<span class="sig-name descname"><span class="pre">plot_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR2dSIMFiniteKernel.plot_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR2dSIMFiniteKernel.plot_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM2dShifts">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR3dSIM2dShifts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR3dSIM2dShifts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM2dShifts" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNR3dSIMBase" title="SSNRCalculator.SSNR3dSIMBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNR3dSIMBase</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-97199be3fd5f8ecf0e234a7806445909aed4d2fd.png" alt="Inheritance diagram of SSNRCalculator.SSNR3dSIM2dShifts" usemap="#inheritancea1ff9164c6" class="inheritance graphviz" /></div>
-<map id="inheritancea1ff9164c6" name="inheritancea1ff9164c6">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNR3dSIM2dShifts" target="_top" title="SSNR3dSIM2dShifts" alt="" coords="528,5,674,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNR3dSIMBase" target="_top" title="SSNR3dSIMBase" alt="" coords="324,5,480,32"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node4" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR3dSIM2dShiftsFiniteKernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR3dSIM2dShiftsFiniteKernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNR3dSIM2dShifts" title="SSNRCalculator.SSNR3dSIM2dShifts"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNR3dSIM2dShifts</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-f3d97b3f3c58ea702e8612cac1910ff87461992a.png" alt="Inheritance diagram of SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel" usemap="#inheritance53fe8c5a3d" class="inheritance graphviz" /></div>
-<map id="inheritance53fe8c5a3d" name="inheritance53fe8c5a3d">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNR3dSIM2dShifts" target="_top" title="SSNR3dSIM2dShifts" alt="" coords="431,4,550,26"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel" target="_top" title="SSNR3dSIM2dShiftsFiniteKernel" alt="" coords="589,4,764,26"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNR3dSIMBase" target="_top" title="SSNR3dSIMBase" alt="" coords="264,4,392,26"/>
-<area shape="rect" id="node4" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="129,4,225,26"/>
-<area shape="rect" id="node5" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="4,4,89,26"/>
-</map><dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.illumination">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">illumination</span></span><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.illumination" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.kernel">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.kernel" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.plot_effective_kernel_and_otf">
-<span class="sig-name descname"><span class="pre">plot_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR3dSIM2dShiftsFiniteKernel.plot_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM2dShiftsFiniteKernel.plot_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIM3dShifts">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR3dSIM3dShifts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR3dSIM3dShifts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR3dSIM3dShifts" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNR3dSIMBase" title="SSNRCalculator.SSNR3dSIMBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNR3dSIMBase</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-94115dfc14ce70297f6988e76edab97c3d4fb12e.png" alt="Inheritance diagram of SSNRCalculator.SSNR3dSIM3dShifts" usemap="#inheritance9d218be569" class="inheritance graphviz" /></div>
-<map id="inheritance9d218be569" name="inheritance9d218be569">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNR3dSIM3dShifts" target="_top" title="SSNR3dSIM3dShifts" alt="" coords="528,5,674,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNR3dSIMBase" target="_top" title="SSNR3dSIMBase" alt="" coords="324,5,480,32"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node4" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRCalculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRBase" title="SSNRCalculator.SSNRBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRBase</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-2cf6216e4f4123e1e29cf7dc6b02df2c1921bfd2.png" alt="Inheritance diagram of SSNRCalculator.SSNRCalculator" usemap="#inheritancecbe5a9c30d" class="inheritance graphviz" /></div>
-<map id="inheritancecbe5a9c30d" name="inheritancecbe5a9c30d">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map><dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_analytic_ssnr_volume">
-<span class="sig-name descname"><span class="pre">compute_analytic_ssnr_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_analytic_ssnr_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_analytic_ssnr_volume" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_analytic_total_ssnr">
-<span class="sig-name descname"><span class="pre">compute_analytic_total_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_analytic_total_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_analytic_total_ssnr" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_maximum_resolved_lateral">
-<span class="sig-name descname"><span class="pre">compute_maximum_resolved_lateral</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_maximum_resolved_lateral"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_maximum_resolved_lateral" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_ssnr">
-<span class="sig-name descname"><span class="pre">compute_ssnr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_ssnr" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_ssnr_waterline_measure">
-<span class="sig-name descname"><span class="pre">compute_ssnr_waterline_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_ssnr_waterline_measure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_ssnr_waterline_measure" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.compute_total_ssnr">
-<span class="sig-name descname"><span class="pre">compute_total_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRCalculator.compute_total_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.compute_total_ssnr" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.illumination">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">illumination</span></span><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.illumination" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRCalculator.optical_system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRCalculator.optical_system" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNR3dSIMBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNR3dSIMBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNR3dSIMBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNR3dSIMBase" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRCalculator" title="SSNRCalculator.SSNRCalculator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRCalculator</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-010ba758e0304bd3025573a65fe8b6438b3f3f5a.png" alt="Inheritance diagram of SSNRCalculator.SSNR3dSIMBase" usemap="#inheritancef0813fa84c" class="inheritance graphviz" /></div>
-<map id="inheritancef0813fa84c" name="inheritancef0813fa84c">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRCalculator" target="_top" title="SSNRCalculator" alt="" coords="158,5,276,32"/>
-<area shape="rect" id="node3" href="#SSNRCalculator.SSNR3dSIMBase" target="_top" title="SSNR3dSIMBase" alt="" coords="324,5,480,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRConfocal">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRConfocal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRConfocal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRConfocal" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRBase" title="SSNRCalculator.SSNRBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRBase</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-97b0310060e66807a078dbf78d0c7f6642451383.png" alt="Inheritance diagram of SSNRCalculator.SSNRConfocal" usemap="#inheritance06c7c63516" class="inheritance graphviz" /></div>
-<map id="inheritance06c7c63516" name="inheritance06c7c63516">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRConfocal" target="_top" title="SSNRConfocal" alt="" coords="158,5,269,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-</map><dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRConfocal.compute_ssnr">
-<span class="sig-name descname"><span class="pre">compute_ssnr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRConfocal.compute_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRConfocal.compute_ssnr" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<div class="graphviz"><img src="../_images/inheritance-44a395f62a1f14443ba79df54f21dbb58f05337d.png" alt="Inheritance diagram of SSNRCalculator.SSNRBase" usemap="#inheritance73f91d116e" class="inheritance graphviz" /></div>
-<map id="inheritance73f91d116e" name="inheritance73f91d116e">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
+<p>Base class for SSNR calculators.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.optical_system">
+<span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRBase.optical_system" title="Link to this definition">¶</a></dt>
+<dd><p>OpticalSystem object, the optical system used in the experiment.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.ssnri">
+<span class="sig-name descname"><span class="pre">ssnri</span></span><a class="headerlink" href="#SSNRCalculator.SSNRBase.ssnri" title="Link to this definition">¶</a></dt>
+<dd><p>numpy.ndarray, the spectral signal-to-noise ratio (SSNR) image.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.ring_average_ssnri">
+<span class="sig-name descname"><span class="pre">ring_average_ssnri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.ring_average_ssnri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.ring_average_ssnri" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the ring-averaged SSNR.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_ssnri_volume">
+<span class="sig-name descname"><span class="pre">compute_ssnri_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnri_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_ssnri_volume" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the SSNR volume.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_ssnri_entropy">
+<span class="sig-name descname"><span class="pre">compute_ssnri_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnri_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_ssnri_entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the SSNR entropy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_radial_ssnri_entropy">
+<span class="sig-name descname"><span class="pre">compute_radial_ssnri_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_radial_ssnri_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_radial_ssnri_entropy" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the radial SSNR entropy.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_full_ssnr">
+<span class="sig-name descname"><span class="pre">compute_full_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_ft</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_full_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_full_ssnr" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the full SSNR for a given object Fourier transform.</p>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-1f0c40933723ce2611fcb34e4d6ac1e5ad88af8d.png" alt="Inheritance diagram of SSNRCalculator.SSNRBase" usemap="#inheritance38c2cd2b72" class="inheritance graphviz" /></div>
+<map id="inheritance38c2cd2b72" name="inheritance38c2cd2b72">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
 </map><dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_radial_ssnr_entropy">
-<span class="sig-name descname"><span class="pre">compute_radial_ssnr_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_radial_ssnr_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_radial_ssnr_entropy" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_full_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_ft</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_full_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_ssnr">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_ssnr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_ssnr" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">compute_radial_ssnri_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_radial_ssnri_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_ssnr_volume">
-<span class="sig-name descname"><span class="pre">compute_ssnr_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnr_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_ssnr_volume" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">compute_ssnri_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnri_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.compute_true_ssnr_entropy">
-<span class="sig-name descname"><span class="pre">compute_true_ssnr_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_true_ssnr_entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.compute_true_ssnr_entropy" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">compute_ssnri_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnri_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.optical_system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRBase.optical_system" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id4">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.ring_average_ssnr">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ring_average_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.ring_average_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.ring_average_ssnr" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">ring_average_ssnri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.ring_average_ssnri"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id6">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ssnri</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRConfocal2D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRConfocal2D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRConfocal2D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning2D" title="SSNRCalculator.SSNRPointScanning2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning2D</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRConfocal3D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRConfocal3D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRConfocal3D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning3D" title="SSNRCalculator.SSNRPointScanning3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning3D</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRPointScanning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRPointScanning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRBase" title="SSNRCalculator.SSNRBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRBase</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-e2e8796a35021ebd22e45b07f7a653fd5576afaa.png" alt="Inheritance diagram of SSNRCalculator.SSNRPointScanning" usemap="#inheritance36fabd9ba0" class="inheritance graphviz" /></div>
+<map id="inheritance36fabd9ba0" name="inheritance36fabd9ba0">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRPointScanning" target="_top" title="SSNRPointScanning" alt="" coords="142,5,290,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning.compute_full_ssnr">
+<span class="sig-name descname"><span class="pre">compute_full_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_ft</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRPointScanning.compute_full_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning.compute_full_ssnr" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRWidefield">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRWidefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRWidefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRWidefield" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRBase" title="SSNRCalculator.SSNRBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRBase</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-f8d5621f632feb13526769ec01ec08f2f6171371.png" alt="Inheritance diagram of SSNRCalculator.SSNRWidefield" usemap="#inheritance0a8856f9a5" class="inheritance graphviz" /></div>
-<map id="inheritance0a8856f9a5" name="inheritance0a8856f9a5">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="SSNRBase" alt="" coords="5,5,110,32"/>
-<area shape="rect" id="node2" href="#SSNRCalculator.SSNRWidefield" target="_top" title="SSNRWidefield" alt="" coords="158,5,270,32"/>
-</map><dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRWidefield.compute_ssnr">
-<span class="sig-name descname"><span class="pre">compute_ssnr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRWidefield.compute_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRWidefield.compute_ssnr" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRPointScanning2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRPointScanning2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning" title="SSNRCalculator.SSNRPointScanning"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-40abf0a000f4f1d089fb02dbed947036365a1637.png" alt="Inheritance diagram of SSNRCalculator.SSNRPointScanning2D" usemap="#inheritancedbd3bf4161" class="inheritance graphviz" /></div>
+<map id="inheritancedbd3bf4161" name="inheritancedbd3bf4161">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRPointScanning" target="_top" title="SSNRPointScanning" alt="" coords="142,5,290,33"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRPointScanning2D" target="_top" title="SSNRPointScanning2D" alt="" coords="338,5,504,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning2D.dimensionality" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRPointScanning3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRPointScanning3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning" title="SSNRCalculator.SSNRPointScanning"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-27b928563578d43e00ecd4fea84562bf03c9c00e.png" alt="Inheritance diagram of SSNRCalculator.SSNRPointScanning3D" usemap="#inheritance5f67e59a14" class="inheritance graphviz" /></div>
+<map id="inheritance5f67e59a14" name="inheritance5f67e59a14">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRPointScanning" target="_top" title="SSNRPointScanning" alt="" coords="142,5,290,33"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRPointScanning3D" target="_top" title="SSNRPointScanning3D" alt="" coords="338,5,504,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRPointScanning3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SSNRCalculator.SSNRPointScanning3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRRCM2D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRRCM2D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRRCM2D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning2D" title="SSNRCalculator.SSNRPointScanning2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning2D</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRRCM3D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRRCM3D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRRCM3D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning3D" title="SSNRCalculator.SSNRPointScanning3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning3D</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRBase" title="SSNRCalculator.SSNRBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRBase</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-8d500797ae5f076c811820086509dd218eed3fdd.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIM" usemap="#inheritance0b168382e6" class="inheritance graphviz" /></div>
+<map id="inheritance0b168382e6" name="inheritance0b168382e6">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,5,222,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_analytic_ssnri_volume">
+<span class="sig-name descname"><span class="pre">compute_analytic_ssnri_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_analytic_ssnri_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_analytic_ssnri_volume" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_full_ssnr">
+<span class="sig-name descname"><span class="pre">compute_full_ssnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_ft</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_full_ssnr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_full_ssnr" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_maximum_resolved_lateral">
+<span class="sig-name descname"><span class="pre">compute_maximum_resolved_lateral</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_maximum_resolved_lateral"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_maximum_resolved_lateral" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_ssnr_waterline_measure">
+<span class="sig-name descname"><span class="pre">compute_ssnr_waterline_measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_ssnr_waterline_measure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_ssnr_waterline_measure" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_total_analytic_signal_to_noise">
+<span class="sig-name descname"><span class="pre">compute_total_analytic_signal_to_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_total_analytic_signal_to_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_total_analytic_signal_to_noise" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.compute_total_signal_to_noise">
+<span class="sig-name descname"><span class="pre">compute_total_signal_to_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.compute_total_signal_to_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.compute_total_signal_to_noise" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.illumination">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">illumination</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.illumination" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.kernel">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.kernel" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.optical_system">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.optical_system" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIM2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRSIM" title="SSNRCalculator.SSNRSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-9825b9249fa3ec9477785e70061db2cb034f96de.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIM2D" usemap="#inheritance32cc3c62b3" class="inheritance graphviz" /></div>
+<map id="inheritance32cc3c62b3" name="inheritance32cc3c62b3">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,5,222,33"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRSIM2D" target="_top" title="SSNRSIM2D" alt="" coords="270,5,368,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf">
+<span class="sig-name descname"><span class="pre">imshow_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.imshow_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.plot_effective_kernel_and_otf">
+<span class="sig-name descname"><span class="pre">plot_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.plot_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.plot_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIM3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRSIM" title="SSNRCalculator.SSNRSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-9669711a804f5a15fab15c8d7d226995291ccd38.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIM3D" usemap="#inheritance441b554d2e" class="inheritance graphviz" /></div>
+<map id="inheritance441b554d2e" name="inheritance441b554d2e">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,5,222,33"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRSIM3D" target="_top" title="SSNRSIM3D" alt="" coords="270,5,368,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRWidefield2D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRWidefield2D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRWidefield2D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning2D" title="SSNRCalculator.SSNRPointScanning2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning2D</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRWidefield3D">
+<span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRWidefield3D</span></span><a class="headerlink" href="#SSNRCalculator.SSNRWidefield3D" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#SSNRCalculator.SSNRPointScanning3D" title="SSNRCalculator.SSNRPointScanning3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRPointScanning3D</span></code></a></p>
 </dd></dl>
 
 </section>
@@ -288,7 +335,7 @@ for a given system optical system and illumination.</p>
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

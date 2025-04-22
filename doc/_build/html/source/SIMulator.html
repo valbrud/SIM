@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>SIMulator module &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -14,8 +14,8 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="SSNRBasedFiltering module" href="SSNRBasedFiltering.html" />
-    <link rel="prev" title="ProcessorSIM module" href="ProcessorSIM.html" /> 
+    <link rel="next" title="Sources module" href="Sources.html" />
+    <link rel="prev" title="ShiftsFinder module" href="ShiftsFinder.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>SIMSSNR 1.0.0 documentation</span></a></h1>
@@ -24,11 +24,11 @@
       <div class="topnav" role="navigation" aria-label="Top">
       
         <p>
-        «&#160;&#160;<a href="ProcessorSIM.html">ProcessorSIM module</a>
+        «&#160;&#160;<a href="ShiftsFinder.html">ShiftsFinder module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="SSNRBasedFiltering.html">SSNRBasedFiltering module</a>&#160;&#160;»
+        <a href="Sources.html">Sources module</a>&#160;&#160;»
         </p>
 
       </div>
@@ -42,53 +42,99 @@
 structured illumination microscopy (SIM) images and/or reconstructing
 the super resolution images from the raw SIM images.</p>
 <p>This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.</p>
-<div class="graphviz"><img src="../_images/inheritance-034236b588650cd0cd6bc3e76c2bdbe8f02ed668.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-a71db212537af959e40ac0000f4817c85bdf1883.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
 <map id="inheritancee5414e1b2a" name="inheritancee5414e1b2a">
-<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="This class represents a simulation volume where fields and intensities are computed." alt="" coords="5,5,77,32"/>
-<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="This class is an extension of the class Box that supports SIM specific operations," alt="" coords="125,5,197,32"/>
-<area shape="rect" id="node3" href="#SIMulator.SIMulator" target="_top" title="SIMulator" alt="" coords="245,5,323,32"/>
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="SIMulator.SIMulator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optical_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">readout_noise_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="Box.html#Box.BoxSIM" title="Box.BoxSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoxSIM</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-eaaf1651e37a5e18fb289447d1711ba3575bb15e.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
-<map id="inheritanceeb6ffd21f5" name="inheritanceeb6ffd21f5">
-<area shape="rect" id="node1" href="Box.html#Box.Box" target="_top" title="This class represents a simulation volume where fields and intensities are computed." alt="" coords="5,5,77,32"/>
-<area shape="rect" id="node2" href="Box.html#Box.BoxSIM" target="_top" title="This class is an extension of the class Box that supports SIM specific operations," alt="" coords="125,5,197,32"/>
-<area shape="rect" id="node3" href="#SIMulator.SIMulator" target="_top" title="SIMulator" alt="" coords="245,5,323,32"/>
-</map><dl class="py method">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>SIMulator class for simulating raw structured illumination microscopy (SIM) images.
+The base class implements all the functionality but cannot be implemented.
+Use dimensional children classes instead.</p>
+<dl class="simple">
+<dt>Atrubtes:</dt><dd><p>illumination: PlaneWavesSIM object, the illumination configuration for the SIM experiment.
+optical_system: OpticalSystem object, the optical system used in the experiment.
+camera: Camera object, optional, the camera used to capture images.
+readout_noise_variance: float, optional, the variance of readout noise.
+effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simulation.</p>
+</dd>
+</dl>
+<dl class="py method">
 <dt class="sig sig-object py" id="SIMulator.SIMulator.generate_sim_images">
-<span class="sig-name descname"><span class="pre">generate_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_sim_images" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">generate_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_sim_images" title="Link to this definition">¶</a></dt>
+<dd><p>Generates simulated images based on the ground truth image.</p>
+</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_sim_images2d">
-<span class="sig-name descname"><span class="pre">generate_sim_images2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_sim_images2d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="SIMulator.SIMulator.add_noise">
+<span class="sig-name descname"><span class="pre">add_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.add_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.add_noise" title="Link to this definition">¶</a></dt>
+<dd><p>Adds noise to the simulated images based on the camera settings or readout noise variance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_noisy_images">
+<span class="sig-name descname"><span class="pre">generate_noisy_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noisy_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_noisy_images" title="Link to this definition">¶</a></dt>
+<dd><p>Generates noisy images from the simulated images.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="SIMulator.SIMulator.generate_widefield">
-<span class="sig-name descname"><span class="pre">generate_widefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_widefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_widefield" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">generate_widefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_widefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_widefield" title="Link to this definition">¶</a></dt>
+<dd><p>Generates a widefield image from the input image using the optical system’s PSF.</p>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-b9351be13e5573c9bdcddd6a2d7c748eff7fb49c.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
+<map id="inheritanceeb6ffd21f5" name="inheritanceeb6ffd21f5">
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">add_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.add_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.reconstruct_Fourier2d_finite_kernel">
-<span class="sig-name descname"><span class="pre">reconstruct_Fourier2d_finite_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifted_kernels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.reconstruct_Fourier2d_finite_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.reconstruct_Fourier2d_finite_kernel" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">generate_noisy_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noisy_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.reconstruct_Fourier_space">
-<span class="sig-name descname"><span class="pre">reconstruct_Fourier_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.reconstruct_Fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.reconstruct_Fourier_space" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">generate_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.reconstruct_real2d_finite_kernel">
-<span class="sig-name descname"><span class="pre">reconstruct_real2d_finite_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'same'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.reconstruct_real2d_finite_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.reconstruct_real2d_finite_kernel" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">generate_widefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_widefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.reconstruct_real_space">
-<span class="sig-name descname"><span class="pre">reconstruct_real_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'same'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.reconstruct_real_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.reconstruct_real_space" title="Link to this definition">¶</a></dt>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SIMulator.SIMulator2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SIMulator.SIMulator" title="SIMulator.SIMulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SIMulator</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-8ef490f58d111ccbd23dd9475f6353a124ee4424.png" alt="Inheritance diagram of SIMulator.SIMulator2D" usemap="#inheritance9247388bd6" class="inheritance graphviz" /></div>
+<map id="inheritance9247388bd6" name="inheritance9247388bd6">
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+<area shape="rect" id="node2" href="#SIMulator.SIMulator2D" target="_top" title="SIMulator2D" alt="" coords="137,5,238,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SIMulator.SIMulator2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SIMulator.SIMulator3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SIMulator.SIMulator" title="SIMulator.SIMulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SIMulator</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-3ef198d0f37c02834b09888b407931d86709271a.png" alt="Inheritance diagram of SIMulator.SIMulator3D" usemap="#inheritance915b5bed5c" class="inheritance graphviz" /></div>
+<map id="inheritance915b5bed5c" name="inheritance915b5bed5c">
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+<area shape="rect" id="node2" href="#SIMulator.SIMulator3D" target="_top" title="SIMulator3D" alt="" coords="137,5,238,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#SIMulator.SIMulator3D.dimensionality" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -100,18 +146,18 @@ the super resolution images from the raw SIM images.</p>
       <div class="bottomnav" role="navigation" aria-label="Bottom">
       
         <p>
-        «&#160;&#160;<a href="ProcessorSIM.html">ProcessorSIM module</a>
+        «&#160;&#160;<a href="ShiftsFinder.html">ShiftsFinder module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="SSNRBasedFiltering.html">SSNRBasedFiltering module</a>&#160;&#160;»
+        <a href="Sources.html">Sources module</a>&#160;&#160;»
         </p>
 
       </div>
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

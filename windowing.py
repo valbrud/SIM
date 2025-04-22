@@ -1,4 +1,6 @@
 """
+widnosing.py
+
 This module provides functions to modify the image near the edges for different purposes.
 """
 

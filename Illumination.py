@@ -465,11 +465,14 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             illumination.electric_field_plane_waves = plane_waves
         return illumination
     
+
     def normalize_spatial_waves(self):
         if not (0, 0, 0) in self.waves.keys():
             return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
         norm = self.waves[0, 0, 0].amplitude * self.Mt * self.Mr
         for spatial_wave in self.waves.values():
+            spatial_wave.amplitude = spatial_wave.amplitude * np.exp(1j * spatial_wave.phase)
+            spatial_wave.phase = 0
             spatial_wave.amplitude /= norm
 
     @staticmethod

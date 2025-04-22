@@ -4,25 +4,28 @@ SIM
 .. toctree::
    :maxdepth: 4
 
+   Apodization
    Box
+   Camera
+   deconvolution
+   Dimensions
+   globvar
    GUI
    GUIInitializationWidgets
    GUIWidgets
    Illumination
-   OpticalSystems
-   ProcessorSIM
-   SIMulator
-   SSNRBasedFiltering
-   SSNRCalculator
-   ShapesGenerator
-   Sources
-   VectorOperations
-   Windowing
-   compute_optimal_lattices
-   confocal_ssnr
-   globvar
    input_parser
    kernels
-   stattools
+   OpticalSystems
+   ProcessorSIM
+   Reconstructor
+   ShapesGenerator
+   ShiftsFinder
+   SIMulator
+   ShapesGenerator
+   Sources
+   SSNRCalculator
+   VectorOperations
    web_interface
+   windowing
    wrappers

@@ -175,12 +175,14 @@ class BFPConfiguration:
         #
         #     (0, 0, 0)  : Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0)))
         # }
-
-        circular_intensity_waves =  IlluminationPlaneWaves3D.find_ipw_from_pw(circular_plane_waves)
-        illumination =  IlluminationPlaneWaves3D.init_from_list(circular_intensity_waves, (k1, k1, k2))
+        base_vectors = (k1, k1, k2)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(circular_plane_waves,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
 
     def get_6_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1):

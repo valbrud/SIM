@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Illumination module &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -14,7 +14,7 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="OpticalSystems module" href="OpticalSystems.html" />
+    <link rel="next" title="input_parser module" href="input_parser.html" />
     <link rel="prev" title="GUIWidgets module" href="GUIWidgets.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
@@ -28,7 +28,7 @@
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="OpticalSystems.html">OpticalSystems module</a>&#160;&#160;»
+        <a href="input_parser.html">input_parser module</a>&#160;&#160;»
         </p>
 
       </div>
@@ -43,157 +43,152 @@
 <dt>Classes:</dt><dd><p>Illumination: Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts.</p>
 </dd>
 </dl>
-<div class="graphviz"><img src="../_images/inheritance-9875fb2d74c47dc08c31185ec518eac784f663f1.png" alt="Inheritance diagram of Illumination" usemap="#inheritance7039d6c934" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-a664535e15c613f0643da6fbd859371ced143ffd.png" alt="Inheritance diagram of Illumination" usemap="#inheritance7039d6c934" class="inheritance graphviz" /></div>
 <map id="inheritance7039d6c934" name="inheritance7039d6c934">
-<area shape="rect" id="node1" href="#Illumination.Illumination" target="_top" title="Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts." alt="" coords="5,5,93,32"/>
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="125,5,225,33"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="Illumination.Illumination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">Illumination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_plane_waves_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave" title="Sources.IntensityPlaneWave"><span class="pre">IntensityPlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.angles">
-<span class="sig-name descname"><span class="pre">angles</span></span><a class="headerlink" href="#Illumination.Illumination.angles" title="Link to this definition">¶</a></dt>
-<dd><p>Array of rotation angles.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination._spatial_shifts">
-<span class="sig-name descname"><span class="pre">_spatial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination._spatial_shifts" title="Link to this definition">¶</a></dt>
-<dd><p>List of spatial shifts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination._Mr">
-<span class="sig-name descname"><span class="pre">_Mr</span></span><a class="headerlink" href="#Illumination.Illumination._Mr" title="Link to this definition">¶</a></dt>
-<dd><p>Number of rotations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.Mt">
-<span class="sig-name descname"><span class="pre">Mt</span></span><a class="headerlink" href="#Illumination.Illumination.Mt" title="Link to this definition">¶</a></dt>
-<dd><p>Number of spatial shifts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.waves">
-<span class="sig-name descname"><span class="pre">waves</span></span><a class="headerlink" href="#Illumination.Illumination.waves" title="Link to this definition">¶</a></dt>
-<dd><p>Dictionary of intensity plane waves.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.wavevectors2d">
-<span class="sig-name descname"><span class="pre">wavevectors2d</span></span><a class="headerlink" href="#Illumination.Illumination.wavevectors2d" title="Link to this definition">¶</a></dt>
-<dd><p>List of 2D wavevectors.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.indices2d">
-<span class="sig-name descname"><span class="pre">indices2d</span></span><a class="headerlink" href="#Illumination.Illumination.indices2d" title="Link to this definition">¶</a></dt>
-<dd><p>List of 2D indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.wavevectors3d">
-<span class="sig-name descname"><span class="pre">wavevectors3d</span></span><a class="headerlink" href="#Illumination.Illumination.wavevectors3d" title="Link to this definition">¶</a></dt>
-<dd><p>List of 3D wavevectors.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.indices3d">
-<span class="sig-name descname"><span class="pre">indices3d</span></span><a class="headerlink" href="#Illumination.Illumination.indices3d" title="Link to this definition">¶</a></dt>
-<dd><p>List of 3D indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.rearranged_indices">
-<span class="sig-name descname"><span class="pre">rearranged_indices</span></span><a class="headerlink" href="#Illumination.Illumination.rearranged_indices" title="Link to this definition">¶</a></dt>
-<dd><p>Dictionary of rearranged indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.xy_fourier_peaks">
-<span class="sig-name descname"><span class="pre">xy_fourier_peaks</span></span><a class="headerlink" href="#Illumination.Illumination.xy_fourier_peaks" title="Link to this definition">¶</a></dt>
-<dd><p>Set of 2D Fourier peaks.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>set</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="Illumination.Illumination.phase_matrix">
-<span class="sig-name descname"><span class="pre">phase_matrix</span></span><a class="headerlink" href="#Illumination.Illumination.phase_matrix" title="Link to this definition">¶</a></dt>
-<dd><p>Dictionary of all phase the relevant phase shifts.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<div class="graphviz"><img src="../_images/inheritance-be7386ba3602de563ce5b39fbad6505714e179ac.png" alt="Inheritance diagram of Illumination.Illumination" usemap="#inheritance40fee132df" class="inheritance graphviz" /></div>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">Illumination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract class for managing illumination patterns.</p>
+<div class="graphviz"><img src="../_images/inheritance-2b0b1a9c0c352f4f3219214bb1db0f7279f95b9c.png" alt="Inheritance diagram of Illumination.Illumination" usemap="#inheritance40fee132df" class="inheritance graphviz" /></div>
 <map id="inheritance40fee132df" name="inheritance40fee132df">
-<area shape="rect" id="node1" href="#Illumination.Illumination" target="_top" title="Manages the properties and behavior of illumination patterns, including wavevectors and spatial shifts." alt="" coords="5,5,93,32"/>
-</map><dl class="py property">
-<dt class="sig sig-object py" id="Illumination.Illumination.Mr">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mr</span></span><a class="headerlink" href="#Illumination.Illumination.Mr" title="Link to this definition">¶</a></dt>
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="125,5,225,33"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.Illumination.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#Illumination.Illumination.dimensionality" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.compute_expanded_lattice2d">
-<span class="sig-name descname"><span class="pre">compute_expanded_lattice2d</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.compute_expanded_lattice2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.compute_expanded_lattice2d" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.Illumination.get_illumination_density">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_illumination_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.get_illumination_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.get_illumination_density" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationArray2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationArray2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationArray2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationArray2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PeriodicStructure" title="Illumination.PeriodicStructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">PeriodicStructure</span></code></a>, <a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Illumination</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-261ca79fb03dc9d66ce067e96dec37555141cac7.png" alt="Inheritance diagram of Illumination.IlluminationArray2D" usemap="#inheritancedda31dc924" class="inheritance graphviz" /></div>
+<map id="inheritancedda31dc924" name="inheritancedda31dc924">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationArray2D" target="_top" title="IlluminationArray2D" alt="" coords="306,32,458,60"/>
+<area shape="rect" id="node4" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationArray2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#Illumination.IlluminationArray2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationArray3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationArray3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationArray3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationArray3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PeriodicStructure" title="Illumination.PeriodicStructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">PeriodicStructure</span></code></a>, <a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Illumination</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-826bea45f19758f72ce429955d4fa96d9a92e8c3.png" alt="Inheritance diagram of Illumination.IlluminationArray3D" usemap="#inheritancee85f2ffe2a" class="inheritance graphviz" /></div>
+<map id="inheritancee85f2ffe2a" name="inheritancee85f2ffe2a">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationArray3D" target="_top" title="IlluminationArray3D" alt="" coords="306,32,458,60"/>
+<area shape="rect" id="node4" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationArray3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#Illumination.IlluminationArray3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationNPhotonSIM2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationNPhotonSIM2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationNPhotonSIM2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationNPhotonSIM2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.IlluminationNonLinearSIM2D" title="Illumination.IlluminationNonLinearSIM2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">IlluminationNonLinearSIM2D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-0abddc910610af875049ded1a4435a52f11823c4.png" alt="Inheritance diagram of Illumination.IlluminationNPhotonSIM2D" usemap="#inheritancee53412c6fe" class="inheritance graphviz" /></div>
+<map id="inheritancee53412c6fe" name="inheritancee53412c6fe">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="92,3,157,21"/>
+<area shape="rect" id="node7" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="199,21,280,39"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationNPhotonSIM2D" target="_top" title="IlluminationNPhotonSIM2D" alt="" coords="637,21,765,39"/>
+<area shape="rect" id="node4" href="#Illumination.IlluminationNonLinearSIM2D" target="_top" title="IlluminationNonLinearSIM2D" alt="" coords="470,21,605,39"/>
+<area shape="rect" id="node5" href="#Illumination.PlaneWavesSIMNonlinear" target="_top" title="PlaneWavesSIMNonlinear" alt="" coords="314,3,436,21"/>
+<area shape="rect" id="node6" href="#Illumination.IlluminationPlaneWaves2D" target="_top" title="IlluminationPlaneWaves2D" alt="" coords="311,37,439,55"/>
+<area shape="rect" id="node8" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="82,37,168,55"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationNPhotonSIM2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#Illumination.IlluminationNPhotonSIM2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationNPhotonSIM3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationNPhotonSIM3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationNPhotonSIM3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationNPhotonSIM3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.IlluminationNonLinearSIM3D" title="Illumination.IlluminationNonLinearSIM3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">IlluminationNonLinearSIM3D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-7415523d1e2a03976d3ad24a1e946dd9df8fbdf2.png" alt="Inheritance diagram of Illumination.IlluminationNPhotonSIM3D" usemap="#inheritance3b04b27c09" class="inheritance graphviz" /></div>
+<map id="inheritance3b04b27c09" name="inheritance3b04b27c09">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="92,3,157,21"/>
+<area shape="rect" id="node7" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="199,21,280,39"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationNPhotonSIM3D" target="_top" title="IlluminationNPhotonSIM3D" alt="" coords="637,21,765,39"/>
+<area shape="rect" id="node4" href="#Illumination.IlluminationNonLinearSIM3D" target="_top" title="IlluminationNonLinearSIM3D" alt="" coords="470,21,605,39"/>
+<area shape="rect" id="node5" href="#Illumination.PlaneWavesSIMNonlinear" target="_top" title="PlaneWavesSIMNonlinear" alt="" coords="314,3,436,21"/>
+<area shape="rect" id="node6" href="#Illumination.IlluminationPlaneWaves3D" target="_top" title="IlluminationPlaneWaves3D" alt="" coords="311,37,439,55"/>
+<area shape="rect" id="node8" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="82,37,168,55"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationNPhotonSIM3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#Illumination.IlluminationNPhotonSIM3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationNonLinearSIM2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationNonLinearSIM2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationNonLinearSIM2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationNonLinearSIM2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PlaneWavesSIMNonlinear" title="Illumination.PlaneWavesSIMNonlinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlaneWavesSIMNonlinear</span></code></a>, <a class="reference internal" href="#Illumination.IlluminationPlaneWaves2D" title="Illumination.IlluminationPlaneWaves2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">IlluminationPlaneWaves2D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-8452334fd27edb0a2e7f870bd6f35dafafaaff80.png" alt="Inheritance diagram of Illumination.IlluminationNonLinearSIM2D" usemap="#inheritance3e99f9437d" class="inheritance graphviz" /></div>
+<map id="inheritance3e99f9437d" name="inheritance3e99f9437d">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="117,4,198,27"/>
+<area shape="rect" id="node6" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="251,26,353,49"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationNonLinearSIM2D" target="_top" title="IlluminationNonLinearSIM2D" alt="" coords="593,26,764,49"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIMNonlinear" target="_top" title="PlaneWavesSIMNonlinear" alt="" coords="396,4,550,27"/>
+<area shape="rect" id="node5" href="#Illumination.IlluminationPlaneWaves2D" target="_top" title="IlluminationPlaneWaves2D" alt="" coords="393,47,554,70"/>
+<area shape="rect" id="node7" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="103,47,212,70"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationNonLinearSIM2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#Illumination.IlluminationNonLinearSIM2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationNonLinearSIM3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationNonLinearSIM3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationNonLinearSIM3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationNonLinearSIM3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PlaneWavesSIMNonlinear" title="Illumination.PlaneWavesSIMNonlinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlaneWavesSIMNonlinear</span></code></a>, <a class="reference internal" href="#Illumination.IlluminationPlaneWaves3D" title="Illumination.IlluminationPlaneWaves3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">IlluminationPlaneWaves3D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-d2a98dc70482688729315f12720c44faf666ee10.png" alt="Inheritance diagram of Illumination.IlluminationNonLinearSIM3D" usemap="#inheritancea4c8aba314" class="inheritance graphviz" /></div>
+<map id="inheritancea4c8aba314" name="inheritancea4c8aba314">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="117,4,198,27"/>
+<area shape="rect" id="node6" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="251,26,353,49"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationNonLinearSIM3D" target="_top" title="IlluminationNonLinearSIM3D" alt="" coords="593,26,764,49"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIMNonlinear" target="_top" title="PlaneWavesSIMNonlinear" alt="" coords="396,4,550,27"/>
+<area shape="rect" id="node5" href="#Illumination.IlluminationPlaneWaves3D" target="_top" title="IlluminationPlaneWaves3D" alt="" coords="393,47,554,70"/>
+<area shape="rect" id="node7" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="103,47,212,70"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationNonLinearSIM3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#Illumination.IlluminationNonLinearSIM3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationPlaneWaves2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PlaneWavesSIM" title="Illumination.PlaneWavesSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlaneWavesSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-85f1abef064de1aca02be5b259a92af3c5252237.png" alt="Inheritance diagram of Illumination.IlluminationPlaneWaves2D" usemap="#inheritanced390f341ba" class="inheritance graphviz" /></div>
+<map id="inheritanced390f341ba" name="inheritanced390f341ba">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="306,32,430,60"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationPlaneWaves2D" target="_top" title="IlluminationPlaneWaves2D" alt="" coords="478,32,674,60"/>
+<area shape="rect" id="node5" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.compute_expanded_lattice">
+<span class="sig-name descname"><span class="pre">compute_expanded_lattice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.compute_expanded_lattice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.compute_expanded_lattice" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Compute the expanded 2D lattice of Fourier peaks</dt><dd><p>(autoconvoluiton of Fourier transform of the illumination pattern).</p>
 </dd>
@@ -208,9 +203,103 @@
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.compute_expanded_lattice3d">
-<span class="sig-name descname"><span class="pre">compute_expanded_lattice3d</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.compute_expanded_lattice3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.compute_expanded_lattice3d" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.get_elementary_cell">
+<span class="sig-name descname"><span class="pre">get_elementary_cell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.get_elementary_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.get_elementary_cell" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.get_illumination_density">
+<span class="sig-name descname"><span class="pre">get_illumination_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.get_illumination_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.get_illumination_density" title="Link to this definition">¶</a></dt>
+<dd><p>Get the illumination density for a given grid or coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>np.ndarray</em>) – Grid of coordinates.</p></li>
+<li><p><strong>coordinates</strong> (<em>tuple</em>) – Coordinates.</p></li>
+<li><p><strong>depth</strong> (<em>float</em>) – Depth of the illumination.</p></li>
+<li><p><strong>r</strong> (<em>int</em>) – Rotation index.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Spatial shift index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Illumination density.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.index_frequencies">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waves_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic2D" title="Sources.IntensityHarmonic2D"><span class="pre">IntensityHarmonic2D</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic2D" title="Sources.IntensityHarmonic2D"><span class="pre">IntensityHarmonic2D</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.index_frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.index_frequencies" title="Link to this definition">¶</a></dt>
+<dd><p>Index the frequencies of the intensity harmonics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>waves_list</strong> (<em>list</em>) – List of intensity harmonics.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of indexed intensity harmonics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.init_from_3D">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination_3d</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Illumination.IlluminationPlaneWaves3D" title="Illumination.IlluminationPlaneWaves3D"><span class="pre">IlluminationPlaneWaves3D</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.init_from_3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.init_from_3D" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.normalize_spatial_waves">
+<span class="sig-name descname"><span class="pre">normalize_spatial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.normalize_spatial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.normalize_spatial_waves" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize the spatial waves on zero peak (i.e., a0 = 1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AttributeError</strong> – If zero wavevector is not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves2D.set_spatial_shifts_diagonally">
+<span class="sig-name descname"><span class="pre">set_spatial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves2D.set_spatial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves2D.set_spatial_shifts_diagonally" title="Link to this definition">¶</a></dt>
+<dd><p>Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same line).
+This is the most common use in practice.
+Appropriate shifts for a given illumination pattern can be computed in the module ‘ShiftsFinder.py’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>number</strong> (<em>int</em>) – Number of shifts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">IlluminationPlaneWaves3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PlaneWavesSIM" title="Illumination.PlaneWavesSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlaneWavesSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-9f093107b6e13a6ff330e1dfd44a7e51896f89cd.png" alt="Inheritance diagram of Illumination.IlluminationPlaneWaves3D" usemap="#inheritance9193301800" class="inheritance graphviz" /></div>
+<map id="inheritance9193301800" name="inheritance9193301800">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="306,32,430,60"/>
+<area shape="rect" id="node3" href="#Illumination.IlluminationPlaneWaves3D" target="_top" title="IlluminationPlaneWaves3D" alt="" coords="478,32,674,60"/>
+<area shape="rect" id="node5" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.compute_expanded_lattice">
+<span class="sig-name descname"><span class="pre">compute_expanded_lattice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.compute_expanded_lattice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.compute_expanded_lattice" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Compute the expanded 3D lattice of Fourier peaks</dt><dd><p>(autoconvoluiton of Fourier transform of the illumination pattern).</p>
 </dd>
@@ -225,18 +314,14 @@
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.compute_phase_matrix">
-<span class="sig-name descname"><span class="pre">compute_phase_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.compute_phase_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.compute_phase_matrix" title="Link to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Compute the dictionary of all the relevant phase shifts</dt><dd><p>(products of spatial shifts and illumination pattern spatial frequencies).</p>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.find_ipw_from_pw">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_ipw_from_pw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane_waves</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave" title="Sources.IntensityPlaneWave"><span class="pre">IntensityPlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.find_ipw_from_pw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.find_ipw_from_pw" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.find_ipw_from_pw">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_ipw_from_pw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane_waves</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">values</span></span></span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.find_ipw_from_pw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.find_ipw_from_pw" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Static method to find intensity plane waves</dt><dd><p>(i.e. Fourier transform of the illumination pattern) from plane waves.</p>
 </dd>
@@ -255,8 +340,334 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.get_all_wavevectors">
-<span class="sig-name descname"><span class="pre">get_all_wavevectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.get_all_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.get_all_wavevectors" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.get_elementary_cell">
+<span class="sig-name descname"><span class="pre">get_elementary_cell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.get_elementary_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.get_elementary_cell" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.get_illumination_density">
+<span class="sig-name descname"><span class="pre">get_illumination_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.get_illumination_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.get_illumination_density" title="Link to this definition">¶</a></dt>
+<dd><p>Get the illumination density for a given grid or coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>np.ndarray</em>) – Grid of coordinates.</p></li>
+<li><p><strong>coordinates</strong> (<em>tuple</em>) – Coordinates.</p></li>
+<li><p><strong>depth</strong> (<em>float</em>) – Depth of the illumination.</p></li>
+<li><p><strong>r</strong> (<em>int</em>) – Rotation index.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Spatial shift index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Illumination density.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.index_frequencies">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waves_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic3D" title="Sources.IntensityHarmonic3D"><span class="pre">IntensityHarmonic3D</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic3D" title="Sources.IntensityHarmonic3D"><span class="pre">IntensityHarmonic3D</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.index_frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.index_frequencies" title="Link to this definition">¶</a></dt>
+<dd><p>Index the frequencies of the intensity harmonics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>waves_list</strong> (<em>list</em>) – List of intensity harmonics.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of indexed intensity harmonics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.init_from_list">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_harmonics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic3D" title="Sources.IntensityHarmonic3D"><span class="pre">IntensityHarmonic3D</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spatial_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0,</span> <span class="pre">0,</span> <span class="pre">0]])</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.init_from_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.init_from_list" title="Link to this definition">¶</a></dt>
+<dd><p>Class method to initialize Illumination from a list of intensity plane waves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>intensity_harmonics_list</strong> (<em>list</em>) – List of intensity plane waves.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
+<li><p><strong>dimensions</strong> (<em>tuple</em>) – Indicates which SIM dimensions are projective(0) and true(1). In this notation</p></li>
+<li><p><strong>example</strong> (<em>'true' means that illumination shifts are necessary for disentanglement in this direction. For</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param :
+:param standard 3D SIM has dimensions:
+:type standard 3D SIM has dimensions: 1, 1, 0
+:param Mr: Number of rotations.
+:type Mr: int
+:param spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initialized Illumination object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination">Illumination</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.init_from_plane_waves">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_plane_waves</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane_waves</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.PlaneWave" title="Sources.PlaneWave"><span class="pre">PlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spatial_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[0,</span> <span class="pre">0,</span> <span class="pre">0]])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_plane_waves</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.init_from_plane_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.init_from_plane_waves" title="Link to this definition">¶</a></dt>
+<dd><p>Class method to initialize Illumination from a list of plane waves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plane_waves_list</strong> (<em>list</em>) – List of plane waves.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
+<li><p><strong>dimensions</strong> (<em>tuple</em>) – Indicates which SIM dimensions are projective(0) and true(1). In this notation</p></li>
+<li><p><strong>example</strong> (<em>'true' means that illumination shifts are necessary for disentanglement in this direction. For</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param :
+:param standard 3D SIM has dimensions:
+:type standard 3D SIM has dimensions: 1, 1, 0
+:param Mr: Number of rotations.
+:type Mr: int
+:param spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initialized Illumination object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination">Illumination</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.normalize_spatial_waves">
+<span class="sig-name descname"><span class="pre">normalize_spatial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.normalize_spatial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.normalize_spatial_waves" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize the spatial waves on zero peak (i.e., a0 = 1).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AttributeError</strong> – If zero wavevector is not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.IlluminationPlaneWaves3D.set_spatial_shifts_diagonally">
+<span class="sig-name descname"><span class="pre">set_spatial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#IlluminationPlaneWaves3D.set_spatial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.IlluminationPlaneWaves3D.set_spatial_shifts_diagonally" title="Link to this definition">¶</a></dt>
+<dd><p>Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same line).
+This is the most common use in practice.
+Appropriate shifts for a given illumination pattern can be computed in the module ‘ShiftsFinder.py’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>number</strong> (<em>int</em>) – Number of shifts.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.PeriodicStructure">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">PeriodicStructure</span></span><a class="reference internal" href="../_modules/Illumination.html#PeriodicStructure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PeriodicStructure" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="graphviz"><img src="../_images/inheritance-5d0b783b39cbd3956de323c82c742ebd50aa40ef.png" alt="Inheritance diagram of Illumination.PeriodicStructure" usemap="#inheritanceb33fb70052" class="inheritance graphviz" /></div>
+<map id="inheritanceb33fb70052" name="inheritanceb33fb70052">
+<area shape="rect" id="node1" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="5,5,138,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PeriodicStructure.get_elementary_cell">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_elementary_cell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PeriodicStructure.get_elementary_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PeriodicStructure.get_elementary_cell" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">PlaneWavesSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination"><code class="xref py py-class docutils literal notranslate"><span class="pre">Illumination</span></code></a>, <a class="reference internal" href="#Illumination.PeriodicStructure" title="Illumination.PeriodicStructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">PeriodicStructure</span></code></a></p>
+<p>Manages the properties and behavior of illumination patterns in SIM
+with a finite number of plane waves interfering.
+The base class implements all the functionality but cannot be implemented.
+Use dimensional children classes instead.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.angles">
+<span class="sig-name descname"><span class="pre">angles</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.angles" title="Link to this definition">¶</a></dt>
+<dd><p>Array of rotation angles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM._spatial_shifts">
+<span class="sig-name descname"><span class="pre">_spatial_shifts</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM._spatial_shifts" title="Link to this definition">¶</a></dt>
+<dd><p>List of spatial shifts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM._Mr">
+<span class="sig-name descname"><span class="pre">_Mr</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM._Mr" title="Link to this definition">¶</a></dt>
+<dd><p>Number of rotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.Mt">
+<span class="sig-name descname"><span class="pre">Mt</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.Mt" title="Link to this definition">¶</a></dt>
+<dd><p>Number of spatial shifts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.waves">
+<span class="sig-name descname"><span class="pre">waves</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.waves" title="Link to this definition">¶</a></dt>
+<dd><p>Dictionary of intensity plane waves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.phase_matrix">
+<span class="sig-name descname"><span class="pre">phase_matrix</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.phase_matrix" title="Link to this definition">¶</a></dt>
+<dd><p>Dictionary of all phase the relevant phase shifts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.init_from_list">
+<span class="sig-name descname"><span class="pre">init_from_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.init_from_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.init_from_list" title="Link to this definition">¶</a></dt>
+<dd><p>Class method to initialize Illumination from a list of intensity plane waves.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.index_frequencies">
+<span class="sig-name descname"><span class="pre">index_frequencies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.index_frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.index_frequencies" title="Link to this definition">¶</a></dt>
+<dd><p>Index the frequencies of the intensity harmonics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.glue_indices">
+<span class="sig-name descname"><span class="pre">glue_indices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.glue_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.glue_indices" title="Link to this definition">¶</a></dt>
+<dd><p>Glue the indices of the SIM and projected indices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_wavevectors">
+<span class="sig-name descname"><span class="pre">get_wavevectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_wavevectors" title="Link to this definition">¶</a></dt>
+<dd><p>Get the wavevectors for a given rotation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_all_wavevectors">
+<span class="sig-name descname"><span class="pre">get_all_wavevectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_all_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_all_wavevectors" title="Link to this definition">¶</a></dt>
+<dd><p>Get all wavevectors for all rotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_wavevectors_projected">
+<span class="sig-name descname"><span class="pre">get_wavevectors_projected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_wavevectors_projected" title="Link to this definition">¶</a></dt>
+<dd><p>Get the projected wavevectors for a given rotation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_all_wavevectors_projected">
+<span class="sig-name descname"><span class="pre">get_all_wavevectors_projected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_all_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_all_wavevectors_projected" title="Link to this definition">¶</a></dt>
+<dd><p>Get all projected wavevectors for all rotations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_base_vectors">
+<span class="sig-name descname"><span class="pre">get_base_vectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_base_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_base_vectors" title="Link to this definition">¶</a></dt>
+<dd><p>Get the base vectors of the illumination Fourier space Bravais lattice.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.compute_effective_kernels">
+<span class="sig-name descname"><span class="pre">compute_effective_kernels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.compute_effective_kernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.compute_effective_kernels" title="Link to this definition">¶</a></dt>
+<dd><p>Compute effective kernels for SIM computations.</p>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-3acb581be62e69714ebbac17c99ba1d47c5ddb93.png" alt="Inheritance diagram of Illumination.PlaneWavesSIM" usemap="#inheritance159448adb0" class="inheritance graphviz" /></div>
+<map id="inheritance159448adb0" name="inheritance159448adb0">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="306,32,430,60"/>
+<area shape="rect" id="node3" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+</map><dl class="py property">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.Mr">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Mr</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.Mr" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">compute_effective_kernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.compute_effective_kernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd><p>Compute effective kernels for SIM computations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel</strong> (<em>np.ndarray</em>) – SIM reconstruction kernel, e.g., OTF.</p></li>
+<li><p><strong>coordinates</strong> (<em>tuple</em>) – coordinates</p></li>
+<li><p><strong>plane</strong> (<em>and which are fixed w.r.t. focal</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Effective kernels and their Fourier transform.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.compute_expanded_lattice">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_expanded_lattice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.compute_expanded_lattice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.compute_expanded_lattice" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.compute_phase_matrix">
+<span class="sig-name descname"><span class="pre">compute_phase_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.compute_phase_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.compute_phase_matrix" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Compute the dictionary of all the relevant phase shifts</dt><dd><p>(products of spatial shifts and illumination pattern spatial frequencies).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#Illumination.PlaneWavesSIM.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">get_all_wavevectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_all_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd><p>Get all wavevectors for all rotations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -269,8 +680,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.get_all_wavevectors_projected">
-<span class="sig-name descname"><span class="pre">get_all_wavevectors_projected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.get_all_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.get_all_wavevectors_projected" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">get_all_wavevectors_projected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_all_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd><p>Get all projected wavevectors for all rotations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -283,8 +694,69 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.get_wavevectors">
-<span class="sig-name descname"><span class="pre">get_wavevectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.get_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.get_wavevectors" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_amplitudes">
+<span class="sig-name descname"><span class="pre">get_amplitudes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">complex</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_amplitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_amplitudes" title="Link to this definition">¶</a></dt>
+<dd><p>Get the amplitudes and indices of the harmonics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of amplitudes and list of indices.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">get_base_vectors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_base_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd><p>Get the base vectors of the illumination Fourier space Bravais lattice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Base vectors of the illumination Fourier space Bravais lattice.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_elementary_cell">
+<span class="sig-name descname"><span class="pre">get_elementary_cell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_elementary_cell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_elementary_cell" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_illumination_density">
+<span class="sig-name descname"><span class="pre">get_illumination_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_illumination_density"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_illumination_density" title="Link to this definition">¶</a></dt>
+<dd><p>Get the illumination density for a given grid or coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<em>np.ndarray</em>) – Grid of coordinates.</p></li>
+<li><p><strong>coordinates</strong> (<em>tuple</em>) – Coordinates.</p></li>
+<li><p><strong>depth</strong> (<em>float</em>) – Depth of the illumination.</p></li>
+<li><p><strong>r</strong> (<em>int</em>) – Rotation index.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Spatial shift index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Illumination density.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.get_phase_modulation_patterns">
+<span class="sig-name descname"><span class="pre">get_phase_modulation_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_phase_modulation_patterns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.get_phase_modulation_patterns" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">get_wavevectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_wavevectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd><p>Get the wavevectors and indices for a given rotation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -300,8 +772,8 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.get_wavevectors_projected">
-<span class="sig-name descname"><span class="pre">get_wavevectors_projected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.get_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.get_wavevectors_projected" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">get_wavevectors_projected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.get_wavevectors_projected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd><p>Get the projected wavevectors and indices for a given rotation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -317,18 +789,23 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.index_frequencies">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waves_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave" title="Sources.IntensityPlaneWave"><span class="pre">IntensityPlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave" title="Sources.IntensityPlaneWave"><span class="pre">IntensityPlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#Illumination.index_frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.index_frequencies" title="Link to this definition">¶</a></dt>
-<dd><p>Static method to automatically index intensity plane waves given corresponding base vector lengths.</p>
+<dt class="sig sig-object py" id="id6">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">glue_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projected_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.glue_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_frequencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waves_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic" title="Sources.IntensityHarmonic"><span class="pre">IntensityHarmonic</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic" title="Sources.IntensityHarmonic"><span class="pre">IntensityHarmonic</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.index_frequencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd><p>Index the frequencies of the intensity harmonics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>waves_list</strong> (<em>list</em>) – List of plane waves.</p></li>
-<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths.</p></li>
+<li><p><strong>waves_list</strong> (<em>list</em>) – List of intensity harmonics.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Dictionary of indexed frequencies.</p>
+<dd class="field-even"><p>Dictionary of indexed intensity harmonics.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
@@ -337,29 +814,38 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.init_from_list">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_plane_waves_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="Sources.html#Sources.IntensityPlaneWave" title="Sources.IntensityPlaneWave"><span class="pre">IntensityPlaneWave</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.init_from_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.init_from_list" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id8">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_harmonics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic" title="Sources.IntensityHarmonic"><span class="pre">IntensityHarmonic</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spatial_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.init_from_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
 <dd><p>Class method to initialize Illumination from a list of intensity plane waves.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>intensity_plane_waves_list</strong> (<em>list</em>) – List of intensity plane waves.</p></li>
+<li><p><strong>intensity_harmonics_list</strong> (<em>list</em>) – List of intensity plane waves.</p></li>
 <li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
-<li><p><strong>Mr</strong> (<em>int</em>) – Number of rotations.</p></li>
+<li><p><strong>dimensions</strong> (<em>tuple</em>) – Indicates which SIM dimensions are projective(0) and true(1). In this notation</p></li>
+<li><p><strong>example</strong> (<em>'true' means that illumination shifts are necessary for disentanglement in this direction. For</em>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Initialized Illumination object.</p>
+</dl>
+<p>:param :
+:param standard 3D SIM has dimensions:
+:type standard 3D SIM has dimensions: 1, 1, 0
+:param Mr: Number of rotations.
+:type Mr: int
+:param spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initialized Illumination object.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination">Illumination</a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination">Illumination</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.normalize_spatial_waves">
-<span class="sig-name descname"><span class="pre">normalize_spatial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.normalize_spatial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.normalize_spatial_waves" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.normalize_spatial_waves">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_spatial_waves</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.normalize_spatial_waves"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.normalize_spatial_waves" title="Link to this definition">¶</a></dt>
 <dd><p>Normalize the spatial waves on zero peak (i.e., a0 = 1).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
@@ -369,24 +855,98 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="Illumination.Illumination.set_spatial_shifts_diagonally">
-<span class="sig-name descname"><span class="pre">set_spatial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vectors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#Illumination.set_spatial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.Illumination.set_spatial_shifts_diagonally" title="Link to this definition">¶</a></dt>
-<dd><p>Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same lin).
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.set_spatial_shifts_diagonally">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_spatial_shifts_diagonally</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIM.set_spatial_shifts_diagonally"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIM.set_spatial_shifts_diagonally" title="Link to this definition">¶</a></dt>
+<dd><p>Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same line).
 This is the most common use in practice.
-Appropriate shifts for a given illumination pattern can be computed in the module ‘compute_optimal_lattices.py’</p>
+Appropriate shifts for a given illumination pattern can be computed in the module ‘ShiftsFinder.py’</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>number</strong> (<em>int</em>) – Number of shifts.</p></li>
-<li><p><strong>base_vectors</strong> (<em>tuple</em>) – Base vectors for the shifts.</p></li>
-</ul>
+<dd class="field-odd"><p><strong>number</strong> (<em>int</em>) – Number of shifts.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="Illumination.Illumination.spatial_shifts">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spatial_shifts</span></span><a class="headerlink" href="#Illumination.Illumination.spatial_shifts" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIM.spatial_shifts">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spatial_shifts</span></span><a class="headerlink" href="#Illumination.PlaneWavesSIM.spatial_shifts" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Illumination.</span></span><span class="sig-name descname"><span class="pre">PlaneWavesSIMNonlinear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#Illumination.PlaneWavesSIM" title="Illumination.PlaneWavesSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlaneWavesSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-d9cdcb6e7dc90f8dcf957da8bd057839013c9031.png" alt="Inheritance diagram of Illumination.PlaneWavesSIMNonlinear" usemap="#inheritancec1e2d839ec" class="inheritance graphviz" /></div>
+<map id="inheritancec1e2d839ec" name="inheritancec1e2d839ec">
+<area shape="rect" id="node2" href="#Illumination.Illumination" target="_top" title="Abstract class for managing illumination patterns." alt="" coords="142,5,241,33"/>
+<area shape="rect" id="node4" href="#Illumination.PlaneWavesSIM" target="_top" title="Manages the properties and behavior of illumination patterns in SIM " alt="" coords="306,32,430,60"/>
+<area shape="rect" id="node3" href="#Illumination.PeriodicStructure" target="_top" title="PeriodicStructure" alt="" coords="125,57,258,85"/>
+<area shape="rect" id="node5" href="#Illumination.PlaneWavesSIMNonlinear" target="_top" title="PlaneWavesSIMNonlinear" alt="" coords="478,32,665,60"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.add_harmonics">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_harmonics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">harmonics_dict1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonics_dict2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.add_harmonics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.add_harmonics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.convolve_harmonics_expansions">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">convolve_harmonics_expansions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">harmonics_dict1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harmonics_dict2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.convolve_harmonics_expansions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.convolve_harmonics_expansions" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.get_intensity_harmonics_nonlinear">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_intensity_harmonics_nonlinear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_harmonics_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinearity_expansion_coefficients</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.get_intensity_harmonics_nonlinear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.get_intensity_harmonics_nonlinear" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.harmonics_to_the_power">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">harmonics_to_the_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">harmonics_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.harmonics_to_the_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.harmonics_to_the_power" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.init_from_linear_illumination">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_linear_illumination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#Illumination.PlaneWavesSIM" title="Illumination.PlaneWavesSIM"><span class="pre">PlaneWavesSIM</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_expansion_coefficients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.init_from_linear_illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.init_from_linear_illumination" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.init_from_linear_illumination_no_taylor">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_linear_illumination_no_taylor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination:</span> <span class="pre">~Illumination.PlaneWavesSIM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_dependence:</span> <span class="pre">~Illumination.PlaneWavesSIMNonlinear.&lt;lambda&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.init_from_linear_illumination_no_taylor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.init_from_linear_illumination_no_taylor" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.init_from_list">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity_harmonics_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic" title="Sources.IntensityHarmonic"><span class="pre">IntensityHarmonic</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_vector_lengths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spatial_shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlinear_expansion_coefficients</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.init_from_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.init_from_list" title="Link to this definition">¶</a></dt>
+<dd><p>Class method to initialize Illumination from a list of intensity plane waves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>intensity_harmonics_list</strong> (<em>list</em>) – List of intensity plane waves.</p></li>
+<li><p><strong>base_vector_lengths</strong> (<em>tuple</em>) – Base vector lengths of the illumination Fourier space Bravais lattice.</p></li>
+<li><p><strong>dimensions</strong> (<em>tuple</em>) – Indicates which SIM dimensions are projective(0) and true(1). In this notation</p></li>
+<li><p><strong>example</strong> (<em>'true' means that illumination shifts are necessary for disentanglement in this direction. For</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<p>:param :
+:param standard 3D SIM has dimensions:
+:type standard 3D SIM has dimensions: 1, 1, 0
+:param Mr: Number of rotations.
+:type Mr: int
+:param spatial_shifts np.ndarray: Spatial shifts for the illumination pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Initialized Illumination object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#Illumination.Illumination" title="Illumination.Illumination">Illumination</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Illumination.PlaneWavesSIMNonlinear.scale_harmonics">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scale_harmonics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">harmonics_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/Illumination.html#PlaneWavesSIMNonlinear.scale_harmonics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Illumination.PlaneWavesSIMNonlinear.scale_harmonics" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -402,14 +962,14 @@ Appropriate shifts for a given illumination pattern can be computed in the modul
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="OpticalSystems.html">OpticalSystems module</a>&#160;&#160;»
+        <a href="input_parser.html">input_parser module</a>&#160;&#160;»
         </p>
 
       </div>
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

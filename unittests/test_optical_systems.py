@@ -306,6 +306,7 @@ class TestOpticalSystems2D(unittest.TestCase):
             ax.plot(sizes, percentage, label = config)
         ax.legend(fontsize=20)
         plt.show()
+        
     def test_shifted_otf(self):
         theta = np.pi / 4
         alpha = np.pi / 4

@@ -360,7 +360,7 @@ class SSNRSIM(SSNRBase):
         return fR + fI
 
     def compute_ssnr_waterline_measure(self, factor=10):
-        ssnr_widefield = SSNRWidefield(self.optical_system).ssnr
+        ssnr_widefield = SSNRPointScanning(self.optical_system).ssnr
         diff = np.sum(self.ssnri - ssnr_widefield).real
         upper_estimate = np.abs(np.amax(self.ssnri - ssnr_widefield))
         noise_level = 10 ** -10 * np.abs(np.amax(self.ssnri))

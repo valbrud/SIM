@@ -8,6 +8,7 @@ SIMSSNR documentation
 Welcome to SIM Documentation
 ============================
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -21,12 +22,17 @@ API Reference
    :maxdepth: 2
    :caption: Modules:
 
-   ./source/Sources
+   ./source/Apodization
    ./source/Box
-   ./source/SIMulator
+   ./source/Camera
    ./source/Illumination
    ./source/OpticalSystems
+   ./source/SIMulator
+   ./source/ProcessorSIM
+   ./source/Reconstructor
+   ./source/ShiftsFinder
+   ./source/Sources
    ./source/SSNRCalculator
-   ./source/SSNRBasedFiltering
    ./source/ShapesGenerator
    ./source/VectorOperations
+   ./source/WienerFiltering

@@ -3,5 +3,5 @@ Sources module
 
 .. automodule:: Sources
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

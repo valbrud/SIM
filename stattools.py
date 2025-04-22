@@ -344,7 +344,7 @@ def gaussian_maxima_fitting(array, axes, maxima_indices, size=5):
     return np.array(maxima_fitted), np.array(std)
 
 
-def downsample_circular_function_vectorized(dense_function, small_size):
+def downsample_circular_function(dense_function, small_size):
     """
     Downsample a circularly symmetric function from a large grid to a smaller grid using a vectorized approach.
 

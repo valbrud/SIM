@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>OpticalSystems module &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="ProcessorSIM module" href="ProcessorSIM.html" />
-    <link rel="prev" title="Illumination module" href="Illumination.html" /> 
+    <link rel="prev" title="kernels module" href="kernels.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>SIMSSNR 1.0.0 documentation</span></a></h1>
@@ -24,7 +24,7 @@
       <div class="topnav" role="navigation" aria-label="Top">
       
         <p>
-        «&#160;&#160;<a href="Illumination.html">Illumination module</a>
+        «&#160;&#160;<a href="kernels.html">kernels module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -41,18 +41,22 @@
 <p>This module contains classes for simulating and analyzing optical systems.</p>
 <p>Note: More reasonable interface for accessing and calculating of the PSF and OTF is expected in the future.
 For this reason the detailed documentation on the computations is not provided yet.</p>
-<div class="graphviz"><img src="../_images/inheritance-f5373bb33d4a6094a578c7d173dad31537612580.png" alt="Inheritance diagram of OpticalSystems" usemap="#inheritanced1f7d7fd4a" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-ed62c966350b38e4d51a03208cfcac91030eac5b.png" alt="Inheritance diagram of OpticalSystems" usemap="#inheritanced1f7d7fd4a" class="inheritance graphviz" /></div>
 <map id="inheritanced1f7d7fd4a" name="inheritanced1f7d7fd4a">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,31,113,57"/>
-<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="161,5,285,32"/>
-<area shape="rect" id="node3" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="161,56,285,83"/>
-<area shape="rect" id="node4" href="#OpticalSystems.System4f2D" target="_top" title="System4f2D" alt="" coords="333,5,427,32"/>
-<area shape="rect" id="node5" href="#OpticalSystems.System4f3D" target="_top" title="System4f3D" alt="" coords="333,56,427,83"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,32,122,60"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="170,5,304,33"/>
+<area shape="rect" id="node3" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="170,57,304,85"/>
+<area shape="rect" id="node5" href="#OpticalSystems.System4f2DCoherent" target="_top" title="System4f2DCoherent" alt="" coords="352,5,512,33"/>
+<area shape="rect" id="node7" href="#OpticalSystems.System4f3DCoherent" target="_top" title="System4f3DCoherent" alt="" coords="352,57,512,85"/>
+<area shape="rect" id="node4" href="#OpticalSystems.System4f2D" target="_top" title="System4f2D" alt="" coords="560,5,662,33"/>
+<area shape="rect" id="node6" href="#OpticalSystems.System4f3D" target="_top" title="System4f3D" alt="" coords="560,57,662,85"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolation_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Base class for optical systems, providing common functionality.</p>
+<p>Base class for optical systems, providing common functionality.
+The base class implements all the functionality but cannot be implemented.
+Use dimensional children classes instead.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.supported_interpolation_methods">
 <span class="sig-name descname"><span class="pre">supported_interpolation_methods</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.supported_interpolation_methods" title="Link to this definition">¶</a></dt>
@@ -130,18 +134,27 @@ For this reason the detailed documentation on the computations is not provided y
 </dl>
 </dd></dl>
 
-<div class="graphviz"><img src="../_images/inheritance-214052703d56eda141c6129d86dadd861b60a53c.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem" usemap="#inheritancebfdcba2149" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-1480e3488022467faba49800323f72f49fdb3f47.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem" usemap="#inheritancebfdcba2149" class="inheritance graphviz" /></div>
 <map id="inheritancebfdcba2149" name="inheritancebfdcba2149">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
 </map><dl class="py method">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.azimuthal_zernike">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">azimuthal_zernike</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.azimuthal_zernike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.azimuthal_zernike" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the azimuthal part for Zernike polynomial Z_n^m.
+- if m &gt;= 0: cos(m * phi)
+- if m &lt;  0: sin(<a href="#id1"><span class="problematic" id="id2">|m|</span></a> * phi)</p>
+<p><cite>phi</cite> is a 1D array of angles.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.compute_psf_and_otf">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.compute_psf_and_otf_cordinates">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_psf_and_otf_cordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_psf_and_otf_cordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_psf_and_otf_cordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_psf_and_otf_cordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">psf_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_psf_and_otf_cordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_psf_and_otf_cordinates" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF coordinate axes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -154,32 +167,31 @@ For this reason the detailed documentation on the computations is not provided y
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.compute_q_grid">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_q_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_q_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_q_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the q-grid for the OTF.</p>
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.compute_pupil_plane_abberations">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_pupil_plane_abberations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zernieke_polynomials</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_pupil_plane_abberations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_pupil_plane_abberations" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a 2D pupil-plane aberration by summing Zernike modes using HCIPy’s zernike().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed q-grid.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zernieke_polynomials</strong> (<em>dict</em>) – Dictionary with keys = (n, m) and values = amplitudes.
+Example: {(2, 2): 0.1, (3, 1): -0.05, (4, -2): 0.07, …}</p></li>
+<li><p><strong>rho</strong> (<em>ndarray</em>) – 1D array of radial coordinates (0 &lt;= rho &lt;= 1 typically).</p></li>
+<li><p><strong>phi</strong> (<em>ndarray</em>) – 1D array of azimuthal coordinates (in radians, e.g. -π to +π or 0 to 2π).</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>aberration</strong> – The resulting 2D aberration (same shape as rho, phi).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.compute_x_grid">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_x_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.compute_x_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.compute_x_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the x-grid for the PSF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed x-grid.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#OpticalSystems.OpticalSystem.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.interpolate_otf">
@@ -200,18 +212,30 @@ For this reason the detailed documentation on the computations is not provided y
 
 <dl class="py property">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.interpolation_method">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interpolation_method</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.interpolation_method" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">interpolation_method</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.interpolation_method" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.otf_frequencies">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">otf_frequencies</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.otf_frequencies" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">otf_frequencies</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.otf_frequencies" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.psf_coordinates">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.psf_coordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.psf_coordinates" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.q_grid">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">q_grid</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.q_grid" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.radial_zernike">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">radial_zernike</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem.radial_zernike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem.radial_zernike" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the radial part R_{n,|m|}(r) of the Zernike polynomial
+for each r in the 1D array <cite>r</cite>.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="id0">
@@ -224,35 +248,22 @@ Fourier is interpolation is used for SIM by default.
 Linear interpolation is available with the “interpolate_OTF” method if needed.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem.x_grid">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">x_grid</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem.x_grid" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolation_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem" title="OpticalSystems.OpticalSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-1f05732e1e5fa089a594ef27dead5d18be008e81.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem2D" usemap="#inheritanced6f571f8a6" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-29f41b36203575e63d8f629d7f98ad997ee1f7aa.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem2D" usemap="#inheritanced6f571f8a6" class="inheritance graphviz" /></div>
 <map id="inheritanced6f571f8a6" name="inheritanced6f571f8a6">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
-<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="161,5,285,32"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="170,5,304,33"/>
 </map><dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.compute_effective_otfs_2dSIM">
-<span class="sig-name descname"><span class="pre">compute_effective_otfs_2dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Illumination.html#Illumination.Illumination" title="Illumination.Illumination"><span class="pre">Illumination</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D.compute_effective_otfs_2dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.compute_effective_otfs_2dSIM" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the effective OTFs for 2D SIM illumination
-(in the case of 2D SIM they are just shifted).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>illumination</strong> – Illumination object containing wave information.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Effective OTFs.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.compute_psf_and_otf">
 <span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF.</p>
@@ -272,33 +283,10 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.compute_q_grid">
-<span class="sig-name descname"><span class="pre">compute_q_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D.compute_q_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.compute_q_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the q-grid for the OTF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed q-grid.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.compute_x_grid">
-<span class="sig-name descname"><span class="pre">compute_x_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem2D.compute_x_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.compute_x_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the x-grid for the PSF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed x-grid.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.interpolate_otf">
@@ -319,57 +307,22 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 
 <dl class="py property">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem2D.psf_coordinates">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.psf_coordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem2D.psf_coordinates" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interpolation_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">OpticalSystem3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem" title="OpticalSystems.OpticalSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-80b6e517b5733f2f09a085a565e6ecfa9c0c4e10.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem3D" usemap="#inheritancea2088d2614" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-021b5a41a9eb395b9c2d54f2f50c9cf8f263871d.png" alt="Inheritance diagram of OpticalSystems.OpticalSystem3D" usemap="#inheritancea2088d2614" class="inheritance graphviz" /></div>
 <map id="inheritancea2088d2614" name="inheritancea2088d2614">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
-<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="161,5,285,32"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="170,5,304,33"/>
 </map><dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.compute_effective_otfs_projective_3dSIM">
-<span class="sig-name descname"><span class="pre">compute_effective_otfs_projective_3dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Illumination.html#Illumination.Illumination" title="Illumination.Illumination"><span class="pre">Illumination</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_effective_otfs_projective_3dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_effective_otfs_projective_3dSIM" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the effective OTFs for projective 3D SIM illumination.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>illumination</strong> – Illumination object containing wave information.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Effective OTFs.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.compute_effective_otfs_true_3dSIM">
-<span class="sig-name descname"><span class="pre">compute_effective_otfs_true_3dSIM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">illumination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Illumination.html#Illumination.Illumination" title="Illumination.Illumination"><span class="pre">Illumination</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_effective_otfs_true_3dSIM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_effective_otfs_true_3dSIM" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the effective OTFs for true 3D SIM
-(in the case of true 3D SIM, they are just shifted).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>illumination</strong> – Illumination object containing wave information.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Effective PSFs and OTFs.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.compute_psf_and_otf">
-<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF.</p>
 </dd></dl>
 
@@ -387,37 +340,14 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.compute_q_grid">
-<span class="sig-name descname"><span class="pre">compute_q_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_q_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_q_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the q-grid for the OTF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed q-grid.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.compute_x_grid">
-<span class="sig-name descname"><span class="pre">compute_x_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.compute_x_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.compute_x_grid" title="Link to this definition">¶</a></dt>
-<dd><p>Compute the x-grid for the PSF.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Computed x-grid.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>np.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.interpolate_otf">
-<span class="sig-name descname"><span class="pre">interpolate_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_shift</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float64</span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.interpolate_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.interpolate_otf" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">interpolate_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_shift</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#OpticalSystem3D.interpolate_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.interpolate_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Interpolate the OTF with a given shift.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -434,23 +364,41 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 
 <dl class="py property">
 <dt class="sig sig-object py" id="OpticalSystems.OpticalSystem3D.psf_coordinates">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.psf_coordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">psf_coordinates</span></span><a class="headerlink" href="#OpticalSystems.OpticalSystem3D.psf_coordinates" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="OpticalSystems.System4f2D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7853981633974483</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refractive_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2D" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem2D" title="OpticalSystems.OpticalSystem2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem2D</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-2d78ef37b84b80befe72cca1f30b64268d8e15ff.png" alt="Inheritance diagram of OpticalSystems.System4f2D" usemap="#inheritance4a38d23d11" class="inheritance graphviz" /></div>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.System4f2DCoherent" title="OpticalSystems.System4f2DCoherent"><code class="xref py py-class docutils literal notranslate"><span class="pre">System4f2DCoherent</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-d0a05399d28b9b500ea0733bd7c45800c8657ff4.png" alt="Inheritance diagram of OpticalSystems.System4f2D" usemap="#inheritance4a38d23d11" class="inheritance graphviz" /></div>
 <map id="inheritance4a38d23d11" name="inheritance4a38d23d11">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
-<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="161,5,285,32"/>
-<area shape="rect" id="node3" href="#OpticalSystems.System4f2D" target="_top" title="System4f2D" alt="" coords="333,5,427,32"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="170,5,304,33"/>
+<area shape="rect" id="node4" href="#OpticalSystems.System4f2DCoherent" target="_top" title="System4f2DCoherent" alt="" coords="352,5,512,33"/>
+<area shape="rect" id="node3" href="#OpticalSystems.System4f2D" target="_top" title="System4f2D" alt="" coords="560,5,662,33"/>
 </map><dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.System4f2D.compute_psf_and_otf">
-<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_pupil_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the PSF and OTF.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="OpticalSystems.System4f2DCoherent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f2DCoherent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2DCoherent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2DCoherent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem2D" title="OpticalSystems.OpticalSystem2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem2D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-be117add783581266086b5bd8821af932f93cae3.png" alt="Inheritance diagram of OpticalSystems.System4f2DCoherent" usemap="#inheritance0f0c1d40ab" class="inheritance graphviz" /></div>
+<map id="inheritance0f0c1d40ab" name="inheritance0f0c1d40ab">
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem2D" target="_top" title="OpticalSystem2D" alt="" coords="170,5,304,33"/>
+<area shape="rect" id="node3" href="#OpticalSystems.System4f2DCoherent" target="_top" title="System4f2DCoherent" alt="" coords="352,5,512,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="OpticalSystems.System4f2DCoherent.compute_psf_and_otf">
+<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f2DCoherent.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f2DCoherent.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF.</p>
 </dd></dl>
 
@@ -458,16 +406,34 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 
 <dl class="py class">
 <dt class="sig sig-object py" id="OpticalSystems.System4f3D">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7853981633974483</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refractive_index_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refractive_index_medium</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularization_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolation_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3D" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem3D" title="OpticalSystems.OpticalSystem3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem3D</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-c1bd6b73bc922d1e08f93c2e58d1bc0faf43bb3d.png" alt="Inheritance diagram of OpticalSystems.System4f3D" usemap="#inheritance33426058fa" class="inheritance graphviz" /></div>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.System4f3DCoherent" title="OpticalSystems.System4f3DCoherent"><code class="xref py py-class docutils literal notranslate"><span class="pre">System4f3DCoherent</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-1a17319b6578e3e1df3fdaa08da30449b3d4fbf1.png" alt="Inheritance diagram of OpticalSystems.System4f3D" usemap="#inheritance33426058fa" class="inheritance graphviz" /></div>
 <map id="inheritance33426058fa" name="inheritance33426058fa">
-<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,113,32"/>
-<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="161,5,285,32"/>
-<area shape="rect" id="node3" href="#OpticalSystems.System4f3D" target="_top" title="System4f3D" alt="" coords="333,5,427,32"/>
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="170,5,304,33"/>
+<area shape="rect" id="node4" href="#OpticalSystems.System4f3DCoherent" target="_top" title="System4f3DCoherent" alt="" coords="352,5,512,33"/>
+<area shape="rect" id="node3" href="#OpticalSystems.System4f3D" target="_top" title="System4f3D" alt="" coords="560,5,662,33"/>
 </map><dl class="py method">
 <dt class="sig sig-object py" id="OpticalSystems.System4f3D.compute_psf_and_otf">
-<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_NA=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apodization_function='Sine'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function=&lt;function</span> <span class="pre">System4f3D.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_NA=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function=&lt;function</span> <span class="pre">System4f3D.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrate_rho=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zernieke={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_pupil_function=False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3D.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3D.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the PSF and OTF.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="OpticalSystems.System4f3DCoherent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">OpticalSystems.</span></span><span class="sig-name descname"><span class="pre">System4f3DCoherent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3DCoherent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3DCoherent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#OpticalSystems.OpticalSystem3D" title="OpticalSystems.OpticalSystem3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">OpticalSystem3D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-5eabee460e0736dd25475ae380ffc5d62a0348c1.png" alt="Inheritance diagram of OpticalSystems.System4f3DCoherent" usemap="#inheritancec9a6780cb9" class="inheritance graphviz" /></div>
+<map id="inheritancec9a6780cb9" name="inheritancec9a6780cb9">
+<area shape="rect" id="node1" href="#OpticalSystems.OpticalSystem" target="_top" title="Base class for optical systems, providing common functionality." alt="" coords="5,5,122,33"/>
+<area shape="rect" id="node2" href="#OpticalSystems.OpticalSystem3D" target="_top" title="OpticalSystem3D" alt="" coords="170,5,304,33"/>
+<area shape="rect" id="node3" href="#OpticalSystems.System4f3DCoherent" target="_top" title="System4f3DCoherent" alt="" coords="352,5,512,33"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="OpticalSystems.System4f3DCoherent.compute_psf_and_otf">
+<span class="sig-name descname"><span class="pre">compute_psf_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_NA=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pupil_function=&lt;function</span> <span class="pre">System4f3DCoherent.&lt;lambda&gt;&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrate_rho=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zernieke={}</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/OpticalSystems.html#System4f3DCoherent.compute_psf_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#OpticalSystems.System4f3DCoherent.compute_psf_and_otf" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PSF and OTF.</p>
 </dd></dl>
 
@@ -480,7 +446,7 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
       <div class="bottomnav" role="navigation" aria-label="Bottom">
       
         <p>
-        «&#160;&#160;<a href="Illumination.html">Illumination module</a>
+        «&#160;&#160;<a href="kernels.html">kernels module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -491,7 +457,7 @@ Linear interpolation is available with the “interpolate_OTF” method if neede
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

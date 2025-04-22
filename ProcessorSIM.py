@@ -6,6 +6,7 @@ A top-level class, combining the whole SIM functionality.
 Classes:
     ProcessorSIM: Base class for SIM processors.
 """
+
 import os.path
 import sys
 print(__file__)
@@ -214,7 +215,7 @@ class ProcessorSIM:
         deconvolved_image = image
         match self.deconvolution_method:
             case 'Wiener':
-                image_ft = wrappers.wrapped_fftn(image) if self.spatial_domain else image
+                image_ft = wrappers.wrapped_ifftn(image) if self.spatial_domain else image
                 match self.regularization_method:
                     case 'TrueWiener':
                         deconvolved_image, w = WienerFiltering.WienerFilterTrue(
@@ -245,7 +246,7 @@ class ProcessorSIM:
                 deconvolved_image = richardson_lucy_skimage(image, self.optical_system.psf)
 
             case 'Bayesian':
-                image_ft = wrappers.wrapped_fftn(image) if self.spatial_domain else image
+                image_ft = wrappers.wrapped_ifftn(image) if self.spatial_domain else image
                 average_rings = stattools.average_rings2d if self.sim_dimension == 2 else stattools.average_ring_averages3d
                 expand_rings = stattools.expand_ring_averages2d if self.sim_dimension == 3 else stattools.expand_ring_averages3d
                 averages = average_rings(image_ft, self.optical_system.otf_frequencies)
@@ -256,7 +257,7 @@ class ProcessorSIM:
                 deconvolved_image = bayesian_gaussian_frequency_estimate(image_ft, noise_power, averages_expanded, self.ssnr_calculator.otf_sim)
 
             case 'MutualInformation':
-                image_ft = wrappers.wrapped_fftn(image) if self.spatial_domain else np.copy(image)
+                image_ft = wrappers.wrapped_ifftn(image) if self.spatial_domain else np.copy(image)
                 average_rings = stattools.average_rings2d if self.sim_dimension == 2 else stattools.average_ring_averages3d
                 expand_rings = stattools.expand_ring_averages2d if self.sim_dimension == 3 else stattools.expand_ring_averages3d
                 averages = average_rings(image_ft, self.optical_system.otf_frequencies)

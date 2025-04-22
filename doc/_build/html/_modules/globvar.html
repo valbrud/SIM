@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>globvar &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -40,14 +40,14 @@
 <span class="sd">    SI: Class containing various physical constants and units.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="n">path_to_figures</span> <span class="o">=</span> <span class="s2">&quot;/home/valerii/Documents/projects/OPTICS/SSNR_article_1/Figures/&quot;</span>
 <span class="n">path_to_animations</span> <span class="o">=</span> <span class="s2">&quot;/home/valerii/Documents/projects/OPTICS/SSNR_article_1/Animations/&quot;</span>
 
 <div class="viewcode-block" id="Pauli">
 <a class="viewcode-back" href="../source/globvar.html#globvar.Pauli">[docs]</a>
-<span class="k">class</span> <span class="nc">Pauli</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Pauli</span><span class="p">:</span>
     <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
                   <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
 
@@ -64,10 +64,10 @@
 
 <div class="viewcode-block" id="SI">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI">[docs]</a>
-<span class="k">class</span> <span class="nc">SI</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SI</span><span class="p">:</span>
 <div class="viewcode-block" id="SI.Constants">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Constants">[docs]</a>
-    <span class="k">class</span> <span class="nc">Constants</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Constants</span><span class="p">:</span>
         <span class="n">dnuCs</span> <span class="o">=</span> <span class="mi">9192631770</span>
         <span class="n">c</span> <span class="o">=</span> <span class="mi">299792458</span>
         <span class="n">h</span> <span class="o">=</span> <span class="mf">6.62607015</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">34</span><span class="p">)</span>
@@ -79,7 +79,7 @@
 
 <div class="viewcode-block" id="SI.Length">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Length">[docs]</a>
-    <span class="k">class</span> <span class="nc">Length</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Length</span><span class="p">:</span>
         <span class="n">km</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span>
         <span class="n">m</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">mm</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
@@ -91,7 +91,7 @@
 
 <div class="viewcode-block" id="SI.Time">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Time">[docs]</a>
-    <span class="k">class</span> <span class="nc">Time</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Time</span><span class="p">:</span>
         <span class="n">s</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">ms</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span>
         <span class="n">mcs</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">6</span><span class="p">)</span>
@@ -103,7 +103,7 @@
 
 <div class="viewcode-block" id="SI.Frequency">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Frequency">[docs]</a>
-    <span class="k">class</span> <span class="nc">Frequency</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Frequency</span><span class="p">:</span>
         <span class="n">EHz</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">18</span>
         <span class="n">PHz</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">15</span>
         <span class="n">THz</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">12</span>
@@ -115,7 +115,7 @@
 
 <div class="viewcode-block" id="SI.Force">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Force">[docs]</a>
-    <span class="k">class</span> <span class="nc">Force</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Force</span><span class="p">:</span>
         <span class="n">GN</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
         <span class="n">MN</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">6</span>
         <span class="n">kN</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span>
@@ -129,7 +129,7 @@
 
 <div class="viewcode-block" id="SI.Energy">
 <a class="viewcode-back" href="../source/globvar.html#globvar.SI.Energy">[docs]</a>
-    <span class="k">class</span> <span class="nc">Energy</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Energy</span><span class="p">:</span>
         <span class="n">GJ</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span>
         <span class="n">MJ</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">6</span>
         <span class="n">kJ</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span>
@@ -156,7 +156,7 @@
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

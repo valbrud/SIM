@@ -6,5 +6,8 @@
 .idea/
 env/
 .venv/
+doc/
+papers/local_ssnr_filtering/
 __pycache__/
 other_projects/
+*.doctree

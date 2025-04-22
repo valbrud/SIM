@@ -1,3 +1,15 @@
+''' 
+shiftsFinder.py
+
+This module contains classes that allow to find optimal diagonal shifts for 2D and 3D
+illumination lattices.
+
+Classes:
+    ShiftsFinder: Base class for finding shifts in lattices.
+    ShiftsFinder2d: Class for finding shifts in 2D lattices.
+    ShiftsFinder3d: Class for finding shifts in 3D lattices.
+'''
+
 import numpy as np
 from math import gcd
 from abc import abstractmethod
