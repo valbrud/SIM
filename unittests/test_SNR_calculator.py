@@ -1642,7 +1642,7 @@ class TestSSNRFromImage(unittest.TestCase):
         self.optical_system.compute_psf_and_otf((psf_size, N))
 
         self.simulator = SIMulator2D(illumination, self.optical_system)
-        image = generate_random_lines(psf_size, N, 0.3, 100, 10000)
+        image = generate_random_lines(psf_size, N, 0.3, 100, 100)
         images = self.simulator.generate_sim_images(image)
         noisy_images = self.simulator.generate_noisy_images(images)
 
@@ -1656,8 +1656,8 @@ class TestSSNRFromImage(unittest.TestCase):
         get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
         ssnr_map = get_ssnr(stack, n_iter=100, radial=False)
         ssnr_map[ssnr_map < 0] = 0
-        plt.imshow(np.log1p(1e4 * ssnr_map))
-        plt.plot(two_NA_fx[N//2:], np.log1p(1e4 * ssnr_map[N//2, N//2:]))
+        # plt.imshow(np.log1p(1e4 * ssnr_map))
+        plt.plot(two_NA_fx[N//2:], np.log1p(ssnr_map[N//2, N//2:]))
         plt.show()
 
     def test_sim3d_ssnr(self):
