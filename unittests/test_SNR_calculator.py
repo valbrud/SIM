@@ -1,4 +1,11 @@
+import os
 import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import Box
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -9,16 +16,16 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import IlluminationPlaneWaves3D
-from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield, SSNRConfocal
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase
 from OpticalSystems import System4f3D, System4f2D
 import stattools
 from Sources import IntensityHarmonic3D
 import tqdm
-sys.path.append('../')
+import wrappers
 
 
 configurations = BFPConfiguration(refraction_index=1)
-class Testssnr(unittest.TestCase):
+class TestSSNRSIM(unittest.TestCase):
     def test_ssnr_interpolations(self):
         max_r = 6
         max_z = 6
@@ -1558,3 +1565,125 @@ class TestApproximations(unittest.TestCase):
             ax.plot(fx[fx >= 0], np.log(1 + 10**8 * nom_and_denom_separated_approximation[:, N//2]), label="<nom>/<denom>")
             ax.legend()
         plt.show()
+
+
+class TestSSNRFromImage(unittest.TestCase):
+    """Unit‑tests for the Poisson half‑split SSNR estimator."""
+
+    @classmethod
+    def setUp(self):
+        """Create a synthetic Poisson‑limited image stack once for all tests."""
+        rng = np.random.default_rng(42)
+
+        self.Ny = self.Nx = 64      # modest size keeps tests fast
+        M = 20                    # number of statistically independent frames
+
+        # ---- build a smooth ground‑truth photon‑flux image -----------------
+        y, x = np.indices((self.Ny, self.Nx))
+        sigma = self.Nx / 8
+        truth = np.exp(-((x - self.Nx/2)**2 + (y - self.Ny/2)**2) / (2 * sigma**2))
+        truth *= 100.0            # scale → mean photon counts per pixel
+
+        # ---- draw independent Poisson realisations ------------------------
+        self.stack = rng.poisson(truth, size=(M, self.Ny, self.Nx))
+        self.single = self.stack[0]  # convenience reference
+        # plt.imshow(self.single)
+        # plt.show()
+
+    def test_stack_returns_2d_map(self):
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = get_ssnr(self.stack, n_iter=3, radial=False)
+        self.assertEqual(ssnr_map.shape, (self.Ny, self.Nx))
+
+    def test_single_image_supported(self):
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = get_ssnr(self.single, n_iter=3, radial=False)
+        self.assertEqual(ssnr_map.shape, (self.Ny, self.Nx))
+
+    def test_radial_profile_shape(self):
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        profile, freq = get_ssnr(self.stack, n_iter=3, radial=True, return_freq=True)
+        self.assertEqual(profile.shape, freq.shape)
+        self.assertEqual(profile.ndim, 1)
+
+    # ------------------------------------------------------------------
+    #                       statistical sanity check                    
+    # ------------------------------------------------------------------
+    def test_signal_is_positive_somewhere(self):
+        """SSNR should be positive in low‑frequency region (near DC)."""
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = self.get_ssnr(self.stack, n_iter=5)
+        self.assertGreater(np.nanmax(ssnr_map), 0.0)
+
+    def test_bad_dim_raises(self):
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        with self.assertRaises(ValueError):
+            get_ssnr(np.zeros((2, 3, 4, 5)))
+
+    def test_plot_ssnr(self):
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = get_ssnr(self.single, 100)
+        fig = plt.figure(figsize=(4, 4))
+        ax = fig.add_subplot(111)
+        img = ax.imshow(np.log1p(1e8 * ssnr_map))
+        plt.show()
+
+    def test_sim2d_ssnr(self):
+        illumination3d = configurations.get_4_oblique_s_waves_and_circular_normal(np.pi/3, 1, 0, Mt=1)
+        illumination = IlluminationPlaneWaves2D.init_from_3D(illumination3d, dimensions=(1, 1))
+        illumination.set_spatial_shifts_diagonally()
+        from config.SIM_N100_NA15 import dx, alpha, max_r, psf_size, two_NA_fx
+        from SIMulator import SIMulator2D
+        from ShapesGenerator import generate_random_lines
+        N = 101                                  
+        max_r = N // 2 * dx
+        psf_size = 2 * np.array((2 * max_r, 2 * max_r))
+        self.optical_system = System4f2D(alpha=alpha)
+        self.optical_system.compute_psf_and_otf((psf_size, N))
+
+        self.simulator = SIMulator2D(illumination, self.optical_system)
+        image = generate_random_lines(psf_size, N, 0.3, 100, 10000)
+        images = self.simulator.generate_sim_images(image)
+        noisy_images = self.simulator.generate_noisy_images(images)
+
+        stack = noisy_images[0, ...]
+        plt.imshow(stack[0])
+        plt.show()
+        im_ft = wrappers.wrapped_ifftn(stack[0])
+        plt.imshow(np.log1p(np.abs(10**4*im_ft)))
+        plt.show()
+
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = get_ssnr(stack, n_iter=100, radial=False)
+        ssnr_map[ssnr_map < 0] = 0
+        plt.imshow(np.log1p(1e4 * ssnr_map))
+        plt.plot(two_NA_fx[N//2:], np.log1p(1e4 * ssnr_map[N//2, N//2:]))
+        plt.show()
+
+    def test_sim3d_ssnr(self):
+        illumination = configurations.get_4_oblique_s_waves_and_circular_normal(np.pi/3, 1, 1, Mt=1)
+        illumination.set_spatial_shifts_diagonally()
+        from config.SIM_N100_NA15 import dx, alpha, psf_size, N, two_NA_fx
+        from SIMulator import SIMulator3D
+        from ShapesGenerator import generate_random_lines
+        self.optical_system = System4f3D(alpha=alpha, refractive_index_medium=1.5, refractive_index_sample=1.5)
+        self.optical_system.compute_psf_and_otf((psf_size, N))
+
+        self.simulator = SIMulator3D(illumination, self.optical_system)
+        image = generate_random_lines(psf_size, N, 0.3, 100, 100000)
+        images = self.simulator.generate_sim_images(image)
+        noisy_images = self.simulator.generate_noisy_images(images)
+        stack = noisy_images[0, ...].reshape(-1, N, N)
+        plt.imshow(stack[0, :, :])
+        plt.show()
+
+        get_ssnr = SSNRBase.estimate_ssnr_from_image_binomial_splitting
+        ssnr_map = get_ssnr(stack, n_iter=3, radial=False)
+        ssnr_map[ssnr_map < 0] = 0
+        # plt.imshow(np.log1p(1e4 * ssnr_map))
+        plt.plot(two_NA_fx[N//2:], np.log1p(1e4 * ssnr_map[N//2, N//2:]))
+        plt.show()
+
+
+if __name__ == "__main__":
+    unittest.main()

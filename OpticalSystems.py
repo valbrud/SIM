@@ -125,7 +125,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         Returns:
             np.ndarray: Computed q-grid.
         """
-        self._q_grid= np.stack(np.meshgrid(*self.otf_frequencies), axis=-1)
+        self._q_grid= np.stack(np.meshgrid(*self.otf_frequencies, indexing='ij'), axis=-1)
 
     def _compute_x_grid(self) -> ndarray[tuple[int], np.float64]:
         """
@@ -134,7 +134,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         Returns:
             np.ndarray: Computed x-grid.
         """
-        self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
+        self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates, indexing='ij'), axis=-1)
 
     def _prepare_interpolator(self):
         """

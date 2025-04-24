@@ -8,6 +8,7 @@ env/
 .venv/
 doc/
 papers/local_ssnr_filtering/
+Figures/
 __pycache__/
 other_projects/
 *.doctree

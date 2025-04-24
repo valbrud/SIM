@@ -79,60 +79,102 @@ def generate_sphere_slices(image_size: tuple[int, int, int], point_number: int, 
     return array
 
 
-def generate_random_lines(image_size: tuple[int, int], point_number: int, line_width: float, num_lines: int, intensity: float) -> np.ndarray:
+from itertools import product
+from typing import Sequence, Tuple
+
+
+def generate_random_lines(
+    image_size: Sequence[float],
+    point_number: int | Tuple[int, ...],
+    line_width: float | Sequence[float],
+    num_lines: int,
+    intensity: float,
+    rng: np.random.Generator | None = None,
+) -> np.ndarray:
     """
-    Generate an image with randomly oriented lines.
+    Generate an n-D image (2-D or 3-D) filled with randomly oriented line segments.
 
-    :param point_number: Number of points defining the size of the image grid (image will be point_number x point_number).
-    :param image_size: Tuple of (psf_x_size, psf_y_size) defining scaling in x and y directions.
-    :param line_width: Width of the lines.
-    :param num_lines: Number of lines to generate.
-    :param intensity: Total intensity of each line.
-    :return: Generated image with lines.
+    Parameters
+    ----------
+    image_size : (Dx, Dy) or (Dx, Dy, Dz)
+        Physical size of the PSF support along each axis.
+    point_number : int or (Ny, Nx) or (Nz, Ny, Nx)
+        Number of pixels/voxels along each axis of the output grid.
+        • If a single int is given it is used for *every* dimension.
+    line_width : float or (σx, σy[, σz])
+        Standard deviation (in pixels) of the Gaussian blur that widens the
+        infinitely thin lines.  A scalar is replicated to all axes.
+    num_lines : int
+        How many line segments to draw.
+    intensity : float
+        Total integrated intensity of *each* line segment.
+    rng : np.random.Generator, optional
+        RNG for reproducibility.
+
+    Returns
+    -------
+    img : ndarray
+        • shape (Ny, Nx)               if `image_size` has length 2  
+        • shape (Nz, Ny, Nx)           if `image_size` has length 3
     """
-    # np.random.seed(1234)
+    rng = np.random.default_rng() if rng is None else rng
+    dim = len(image_size)
+    if dim not in (2, 3):
+        raise ValueError("Only 2-D and 3-D images are supported.")
 
-    # Calculate the grid spacing based on psf_size and point_number
-    dx = image_size[0] / point_number
-    dy = image_size[1] / point_number
+    # ------------- grid shape & spacing -------------------------------------
+    if isinstance(point_number, int):
+        shape = (point_number,) * dim
+    else:
+        if len(point_number) != dim:
+            raise ValueError("`point_number` dimensionality "
+                             "does not match `image_size`.")
+        shape = tuple(point_number)
 
-    # Create an empty image of size (point_number, point_number)
-    image = np.zeros((point_number, point_number), dtype=np.float32)
+    spacings = tuple(s / n for s, n in zip(image_size, shape))   # dx, dy[, dz]
+    sigmas = (line_width,) * dim if np.isscalar(line_width) else tuple(line_width)
 
+    img = np.zeros(shape, dtype=np.float32)
+
+    # ------------- helper for n-D linear interpolation ----------------------
+    def add_intensity(indices_f: np.ndarray):
+        """
+        Distribute intensity at fractional index position `indices_f`
+        to the 2**dim neighbouring voxels/pixels.
+        """
+        lows = np.floor(indices_f).astype(int)
+        fracs = indices_f - lows
+        highs = np.minimum(lows + 1, np.array(shape) - 1)
+
+        # iterate over all 2**dim vertex combinations: (low/high, low/high, …)
+        for corner in product((0, 1), repeat=dim):
+            idx = tuple(highs[d] if corner[d] else lows[d] for d in range(dim))
+            w = 1.0
+            for d, c in enumerate(corner):
+                w *= fracs[d] if c else (1.0 - fracs[d])
+            img[idx] += intensity * w
+
+    # ------------- draw random line segments --------------------------------
     for _ in range(num_lines):
-        # Randomly generate start and end points for the line within the scaled grid
-        x1, y1 = np.random.uniform(0, point_number * dx), np.random.uniform(0, point_number * dy)
-        x2, y2 = np.random.uniform(0, point_number * dx), np.random.uniform(0, point_number * dy)
+        # start & end points in physical coordinates
+        p0 = rng.uniform([0]*dim, image_size)
+        p1 = rng.uniform([0]*dim, image_size)
 
-        # Calculate line points using interpolation between start and end points
-        num_points = int(max(abs(x2 - x1) / dx, abs(y2 - y1) / dy)) + 1
-        x_coords = np.linspace(x1, x2, num_points)
-        y_coords = np.linspace(y1, y2, num_points)
+        # number of sampled points along the segment
+        steps = int(
+            max(abs((p1 - p0) / spacings).max(), 1)
+        ) + 1
+        t_vals = np.linspace(0.0, 1.0, steps)
 
-        # Convert floating points to image grid indices using bilinear intensity distribution
-        for x, y in zip(x_coords, y_coords):
-            x_idx = x / dx
-            y_idx = y / dy
+        for t in t_vals:
+            pos_physical = p0 + t * (p1 - p0)
+            idx_frac = pos_physical / spacings
+            add_intensity(idx_frac)
 
-            x_low = int(np.floor(x_idx))
-            y_low = int(np.floor(y_idx))
-            x_high = min(x_low + 1, point_number - 1)
-            y_high = min(y_low + 1, point_number - 1)
+    # ------------- Gaussian blur to obtain finite width ---------------------
+    img = gaussian_filter(img, sigma=sigmas)
 
-            # Bilinear interpolation to distribute intensity between neighboring pixels
-            image[x_low, y_low] += intensity  * (x_high - x_idx) * (y_high - y_idx)
-            image[x_high, y_low] += intensity  * (x_idx - x_low) * (y_high - y_idx)
-            image[x_low, y_high] += intensity  * (x_high - x_idx) * (y_idx - y_low)
-            image[x_high, y_high] += intensity  * (x_idx - x_low) * (y_idx - y_low)
-
-    # Apply Gaussian smoothing to create smooth line edges
-    smoothed_image = gaussian_filter(image, sigma=(line_width, line_width))
-
-    # Normalize intensity so that each line has the specified total intensity
-    # if np.amax(smoothed_image) > 0:
-    #     smoothed_image = (smoothed_image / np.sum(smoothed_image)) * intensity * num_lines
-
-    return smoothed_image
+    return img
 
 def generate_line_grid_2d(
         image_size: tuple[int, int],

@@ -314,19 +314,21 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             wavevectors2d.extend(wavevectors2d_r)
         return wavevectors2d
 
-    def get_base_vectors(self):
+    def get_base_vectors(self) -> tuple[float, ...]:
         """
         Get the base vectors of the illumination Fourier space Bravais lattice.
 
         Returns:
             tuple: Base vectors of the illumination Fourier space Bravais lattice.
         """
-        base_vectors = np.zeros(len(self.dimensions)) + np.inf
+        base_vectors = np.zeros(len(self.dimensions))
         for i in range(len(self.dimensions)):
             for wave in self.waves.keys():
                 if wave[i] != 0:
                     base_vectors[i] = self.waves[wave].wavevector[i] / wave[i]
-                    break
+                else :
+                    base_vectors[i] = 0
+        
         return tuple(base_vectors)
 
     @abstractmethod
@@ -357,7 +359,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         waves = self.waves
         effective_kernels = {}
         effective_kernels_ft = {}
-        grid = np.stack(np.meshgrid(*coordinates), -1)
+        grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), -1)
         for r in range(self.Mr):
             angle = self.angles[r]
             indices = self._rearrange_indices(self.dimensions)
@@ -383,9 +385,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
     def get_phase_modulation_patterns(self, coordinates):
         phase_modulation_patterns = {}
-        grid = np.stack(np.meshgrid(*coordinates), axis=-1)
+        grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), axis=-1)
         for r in range(self.Mr):
-            test_image = np.zeros(grid.shape[:2], dtype=np.complex128)
             for sim_index in self.rearranged_indices:
                 projective_index = self.rearranged_indices[sim_index][0]
                 index = self.glue_indices(sim_index, projective_index, self.dimensions)
@@ -394,7 +395,6 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 wavevector[np.bool(1 - np.array(self.dimensions))] = 0
                 if len(self.dimensions) == 2:
                     phase_modulation = np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))
-                    test_image += phase_modulation
                 elif len(self.dimensions) == 3:
                     phase_modulation = np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
                 else:
@@ -547,8 +547,8 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         shift_ratios = ShiftsFinder3d.get_shift_ratios(expanded_lattice)
         bases = sorted(list(shift_ratios.keys()))
         base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
-        base_vectors = self.get_base_vectors()
-        shifts = 2 * np.pi / np.array(base_vectors) * ratios / base
+        base_vectors = np.array(self.get_base_vectors())
+        shifts = 2 * np.pi / np.where(base_vectors, base_vectors, np.inf) * ratios / base
         self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
     def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
@@ -626,8 +626,8 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         shift_ratios = ShiftsFinder2d.get_shift_ratios(expanded_lattice)
         bases = sorted(list(shift_ratios.keys()))
         base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
-        base_vectors = self.get_base_vectors()
-        shifts = 2 * np.pi / np.array(base_vectors) * ratios / base
+        base_vectors = np.array(self.get_base_vectors())
+        shifts = 2 * np.pi / np.where(base_vectors, base_vectors, np.inf) * ratios / base
         self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
     def normalize_spatial_waves(self):
@@ -643,7 +643,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         if not grid and coordinates:
             if not len(coordinates) == 2:
                 raise ValueError("Coordinates must be 2D for 2D illumination!")
-            X, Y = np.meshgrid(*coordinates)
+            X, Y = np.meshgrid(*coordinates, indexing='ij')
             grid = np.stack((X, Y), axis=-1)
 
         else:

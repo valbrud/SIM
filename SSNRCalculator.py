@@ -89,6 +89,80 @@ class SSNRBase(metaclass=DimensionMeta):
         S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor
 
+    @staticmethod
+    def estimate_ssnr_from_image_binomial_splitting(
+        data: np.ndarray,
+        n_iter: int = 1,
+        radial: bool = False,
+        return_freq: bool = False,
+        rng: np.random.Generator | None = None,
+    ):
+        """
+        Spectral Signal-to-Noise Ratio (SSNR) based on ½–½ binomial pixel splitting.
+
+        * Single Poisson image  → pixels are split once per iteration
+        * Stack of images      → **each frame** is split independently and the
+                                resulting SSNR maps are averaged.
+        """
+        rng = np.random.default_rng() if rng is None else rng
+        if data.ndim not in (2, 3):
+            raise ValueError("`data` must be 2-D or 3-D (stack).")
+
+        Ny, Nx = data.shape[-2:]
+        ssnr_accum = np.zeros((Ny, Nx), float)
+
+        # Fourier-space radius grid for optional radial averaging
+        if radial:
+            u = np.fft.fftfreq(Nx) * Nx
+            v = np.fft.fftfreq(Ny) * Ny
+            R = np.hypot(*np.meshgrid(u, v))
+            r_int = R.astype(int)
+            r_max = r_int.max()
+            radial_counts = np.bincount(r_int.ravel())
+
+        n_frames = 1 if data.ndim == 2 else data.shape[0]
+
+        # ------------------------------------------------------------------------
+        for _ in range(n_iter):
+            # ---- SINGLE IMAGE ---------------------------------------------------
+            if data.ndim == 2:
+                frames = [data]
+            # ---- IMAGE STACK ----------------------------------------------------
+            else:
+                frames = data                                 # iterate over frames
+
+            for frame in frames:
+                nA = rng.binomial(frame.astype(int), 0.5)
+                nB = frame - nA
+
+                # your wrappers for centred FFT / IFFT
+                e1 = wrappers.wrapped_fftn(nA, axes=(-2, -1))
+                e2 = wrappers.wrapped_fftn(nB, axes=(-2, -1))
+
+                num = np.abs(e1 + e2) ** 2        # |ê₁+ê₂|²
+                den = np.abs(e1 - e2) ** 2        # |ê₁–ê₂|²
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    ssnr_map = num / den - 1.0
+                ssnr_map[np.isnan(ssnr_map) | np.isinf(ssnr_map)] = 0.0
+                # plt.imshow(np.log1p(10**4 * ssnr_map), cmap='gray')
+                # plt.show()
+                ssnr_accum += ssnr_map
+
+        # average over (iterations × frames)
+        ssnr_mean = ssnr_accum / (n_iter * n_frames)
+
+        # ---------------- optional radial average -------------------------------
+        if not radial:
+            return ssnr_mean
+
+        radial_accum = np.bincount(r_int.ravel(), weights=ssnr_mean.ravel())
+        radial_profile = radial_accum / radial_counts
+        radial_profile[np.isnan(radial_profile)] = 0.0
+
+        if return_freq:
+            return radial_profile, np.arange(r_max + 1) / max(Nx, Ny)
+        return radial_profile
+
     @abstractmethod
     def _compute_ssnri(self):
         ...
