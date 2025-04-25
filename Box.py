@@ -189,7 +189,7 @@ class Box:
             self.numerically_approximated_intensity += field.field
         self.numerically_approximated_intensity = self.numerically_approximated_intensity.real
         self.numerically_approximated_intensity_fourier_space = (
-                wrappers.wrapped_ifftn(self.numerically_approximated_intensity) * self.box_volume)
+                wrappers.wrapped_fftn(self.numerically_approximated_intensity) * self.box_volume)
 
     def compute_intensity_fourier_space(self):
         self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) *

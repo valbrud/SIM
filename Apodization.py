@@ -149,7 +149,7 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
 
     def _compute_ideal_transfer_functions(self, **kwargs):
         ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1, 0)
-        ideal_pupil_function_ft = wrappers.wrapped_fftn(ideal_pupil_function)
+        ideal_pupil_function_ift = wrappers.wrapped_ifftn(ideal_pupil_function)
         
         grid = self._optical_system.x_grid
         for Mr in range(self._illumination.Mr):
@@ -158,8 +158,8 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
                 wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
                 
                 wavevector = np.array([wavevector[0], wavevector[1]])
-                phase_modulated = ideal_pupil_function_ft * np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))            
-                phase_shifted = wrappers.wrapped_ifftn(phase_modulated).real
+                phase_modulated = ideal_pupil_function_ift * np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))            
+                phase_shifted = wrappers.wrapped_fftn(phase_modulated).real
                 phase_shifted /= np.amax(phase_shifted)
                 # phase_shifted = np.where(phase_shifted > 10**-1, 1, 0)
                 ideal_pupil_function[phase_shifted >  10**-1 * np.amax(self.pupil_function)] = 1

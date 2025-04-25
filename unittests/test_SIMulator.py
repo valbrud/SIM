@@ -22,10 +22,12 @@ from SIMulator import SIMulator2D, SIMulator3D
 from Camera import Camera
 # from simulations.mutual_information_filtering import psf_size
 from config.SIM_N100_NA15 import *
+import wrappers
 
 class TestSIMImages(unittest.TestCase):
     def test_generate_images2d(self):
-        N = 511
+        
+        N = 101
         max_r = N // 2 * dx
 
         psf_size = 2 * np.array((2 * max_r, 2 * max_r))
@@ -33,9 +35,9 @@ class TestSIMImages(unittest.TestCase):
         y = np.copy(x)
         dimensions = (1, 1)
         X, Y = np.meshgrid(x, y)
-        image = ShapesGenerator.generate_random_lines(psf_size, N, line_width=0.25, num_lines=150, intensity=100)
+        image = ShapesGenerator.generate_random_lines(psf_size, N, line_width=0.25, num_lines=150, intensity=10000)
 
-        optical_system = System4f2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N), )
         # plt.imshow(optical_system.psf)
         # plt.show()
@@ -52,7 +54,7 @@ class TestSIMImages(unittest.TestCase):
         noisy_widefield = simulator.add_noise(widefield)
         # plt.imshow(widefield)
         # plt.show()
-
+        # image = np.ones((N, N)) * 1000
         images = simulator.generate_sim_images(image)
         noisy_images = simulator.generate_noisy_images(images)
 
@@ -74,6 +76,11 @@ class TestSIMImages(unittest.TestCase):
 
         im1 = ax1.imshow(noisy_images[0, 0], vmin=0)
         im2 = ax2.imshow(noisy_widefield, vmin=0)
+        plt.show()
+
+        ax1.imshow(np.abs(np.log1p(wrappers.wrapped_fftn(noisy_images[0, 0]))), vmin=0)
+        ax2.imshow(np.abs(np.log1p(wrappers.wrapped_fftn(noisy_widefield))), vmin=0)
+
         plt.show()
 
     def test_generate_images2d_with_camera(self):

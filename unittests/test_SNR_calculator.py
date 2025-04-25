@@ -1649,7 +1649,7 @@ class TestSSNRFromImage(unittest.TestCase):
         stack = noisy_images[0, ...]
         plt.imshow(stack[0])
         plt.show()
-        im_ft = wrappers.wrapped_ifftn(stack[0])
+        im_ft = wrappers.wrapped_fftn(stack[0])
         plt.imshow(np.log1p(np.abs(10**4*im_ft)))
         plt.show()
 

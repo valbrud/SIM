@@ -16,6 +16,9 @@ import pyfftw.interfaces.numpy_fft as fftw
 
 pyfftw.interfaces.cache.enable()
 # Wrappers to avoid shifting the arrays every time DFT is used
+# Numpy defines E(k) = sum (E(x) e^(-ikx), and E(x) = 1/N sum(E(k) e^(ikx))
+# In the imaging community (C. Smith, 2021) the convention is also to define E(x) = 1/N sum(E(k) e^(ikx))
+# Thus, transform x -> k is performed corresponds to the DIRECT FT
 def wrapper_ft(ft):
     """
     Wrapper for the Fourier transform functions to make shifts automatically.

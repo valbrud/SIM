@@ -95,11 +95,11 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         """
         self.angles = np.arange(0, np.pi, np.pi / Mr)
         self._Mr = Mr
+        self.waves = {key: intensity_harmonics_dict[key] for key in intensity_harmonics_dict.keys() if not np.isclose(intensity_harmonics_dict[key].amplitude, 0)}
 
         self._spatial_shifts = spatial_shifts
         self.Mt = len(self.spatial_shifts)
 
-        self.waves = {key: intensity_harmonics_dict[key] for key in intensity_harmonics_dict.keys() if not np.isclose(intensity_harmonics_dict[key].amplitude, 0)}
         self.dimensions = dimensions
         self.rearranged_indices = self._rearrange_indices(dimensions)
 
@@ -262,7 +262,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             wavevector = np.copy(self.waves[index].wavevector)
             wavevector = VectorOperations.rotate_vector2d(wavevector[:2], angle)
             wavevectors.append(wavevector)
-        return wavevectors, indices
+        return np.array(wavevectors), tuple(indices)
 
     def get_all_wavevectors(self) -> list[np.ndarray]:
         """
@@ -275,7 +275,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         for r in range(self.Mr):
             wavevectors_r, _ = self.get_wavevectors(r)
             wavevectors.extend(wavevectors_r)
-        return wavevectors
+        return np.array(wavevectors)
 
     def get_wavevectors_projected(self, r: int) -> tuple[list[np.ndarray], list[tuple[int, ...]]]:
         """
@@ -299,7 +299,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.waves[index].wavevector[:2], angle)
             wavevectors_projected.append(wavevector[np.bool(self.dimensions)])
             sim_indices.append(sim_index)
-        return wavevectors_projected, sim_indices
+        return np.array(wavevectors_projected), tuple(sim_indices)
 
     def get_all_wavevectors_projected(self):
         """
@@ -312,7 +312,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         for r in range(self.Mr):
             wavevectors2d_r, _ = self.get_wavevectors_projected(r)
             wavevectors2d.extend(wavevectors2d_r)
-        return wavevectors2d
+        return np.array(wavevectors2d)
 
     def get_base_vectors(self) -> tuple[float, ...]:
         """
@@ -400,7 +400,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 else:
                     raise ValueError("The number of dimensions is meaningless in the context of microscopy!")
                 phase_modulation_patterns[r, sim_index] = phase_modulation
-            # plt.imshow(np.real(test_image))
+            # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
             # plt.show()
         return phase_modulation_patterns
 
@@ -552,9 +552,9 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         self.spatial_shifts = np.array([shifts * i for i in range(base)])
 
     def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
-        if not grid and not coordinates:
+        if grid is None and coordinates is None:
             raise ValueError("Either grid or coordinates must be provided!")
-        if not grid and coordinates:
+        if grid is None and not coordinates is None:
             X, Y, Z = np.meshgrid(*coordinates)
             grid = np.stack((X, Y, Z), axis=-1)
         if depth:
@@ -638,9 +638,9 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
             spatial_wave.amplitude /= norm
 
     def get_illumination_density(self, grid=None, coordinates=None, r=0, n=0):
-        if not grid and not coordinates:
+        if grid is None and coordinates is None:
             raise ValueError("Either grid or coordinates must be provided!")
-        if not grid and coordinates:
+        if grid is None and not  coordinates is None:
             if not len(coordinates) == 2:
                 raise ValueError("Coordinates must be 2D for 2D illumination!")
             X, Y = np.meshgrid(*coordinates, indexing='ij')

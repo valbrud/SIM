@@ -107,11 +107,12 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
                 stop = center + half_span + 1
                 slices.append(slice(start, stop))
             q_grid = q_grid[tuple(slices)]
-    
+
             wavevectors, indices = self.illumination.get_wavevectors_projected(r)
             initial_guess = {}
             for index, wavevector in zip(indices, wavevectors):
                 initial_guess[index] = wavevector
+
             estimated_modualtion_patterns = self._phase_modulation_patterns(initial_guess)
             correlation_matrix = self._cross_correlation_matrix(stack, r, estimated_modualtion_patterns, q_grid)
             merit_function = self._merit_function(correlation_matrix)
@@ -203,10 +204,10 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
                             noise_function = (images[r, n1] *  estimated_modualtion_patterns[m]).flatten()
                             Cmn1n2[(m, n1, n2)] -= fourier_exponents @ noise_function
                         Cmn1n2[(m, n1, n2)] = Cmn1n2[(m, n1, n2)].reshape(fine_q_grid.shape[:-1])
-                        plt.imshow(np.abs(Cmn1n2[(m, n1, n2)]), cmap='gray',
-                                    extent=(np.amin(fine_q_grid[..., 0]), np.amax(fine_q_grid[..., 0]), np.amin(fine_q_grid[..., 1]), np.amax(fine_q_grid[..., 1])))
-                        plt.title(f"m: {m}, n1: {n1}, n2: {n2}")
-                        plt.show()
+                        # plt.imshow(np.abs(Cmn1n2[(m, n1, n2)]), cmap='gray',
+                                    # extent=(np.amin(fine_q_grid[..., 0]), np.amax(fine_q_grid[..., 0]), np.amin(fine_q_grid[..., 1]), np.amax(fine_q_grid[..., 1])))
+                        # plt.title(f"m: {m}, n1: {n1}, n2: {n2}")
+                        # plt.show()
         return Cmn1n2
     
     def _refine_base_vectors(self, base_vectors: np.ndarray,  Cmn1n2: Dict[Tuple[Tuple[int, ...], int, int], np.ndarray], fine_q_grid) -> np.ndarray:
@@ -353,12 +354,18 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
 
 
 from SSNRCalculator import SSNRBase
-class PatternEstimatorSSNR(IlluminationPatternEstimator):
-    def estimate_patterns_using_SSNR(self,
+class PatternEstimatorInterpolation(IlluminationPatternEstimator):
+    def estimate_illumination_parameters(self,
                                      stack: np.ndarray,
-                                     peak_neighborhood_size: int = 5, 
+                                     return_as_illumination_object: bool = False, 
                                      interpolation_factor: int = 100,  
-                                     ssnr_estimation_iters: int = 10) -> np.ndarray:
+                                     peak_search_area_size: int = 31,
+                                     peak_interpolation_area_size: int = 5,
+                                     iteration_number: int = 3,
+                                     ssnr_estimation_iters: int = 10, 
+                                     real_space_images = True, 
+                                     deconvolve_stacks = True,
+                                     correct_peak_position = False) -> np.ndarray:
         """
         Estimate the illumination patterns using the SSNR method.
 
@@ -375,13 +382,45 @@ class PatternEstimatorSSNR(IlluminationPatternEstimator):
             The estimated illumination patterns.
         """
 
-        # ssnr_from_stack = self._compute_ssnr(stack, ssnr_estimation_iters)
-        peak_interpolation_areas = self._localize_peaks(peak_neighborhood_size)
-        interpolated_grids = self._get_fine_grids(peak_interpolation_areas)
-        off_grid_ft_averaged = self._off_grid_ft_averaged(stack, interpolated_grids)
-        averaged_maxima = self._find_maxima(off_grid_ft_averaged)
+        if deconvolve_stacks and correct_peak_position:
+            raise ValueError("Deconvolution and peak position are mutually exclusive ways to increase peak precision." \
+                             "Choose one of them to be false.")
+        
+        wavevectors, indices = self.illumination.get_wavevectors_projected(0)
+        peak_guesses = {index: wavevector / (2 * np.pi) for index, wavevector in zip(indices, wavevectors)}
+        peak_search_areas  = self._crop_peaks(stack, peak_guesses, peak_search_area_size, peak_interpolation_area_size)
+        stacks_ft = self._crop_stacks(stack, peak_search_areas)
+        cropped_otfs = self._crop_otf(peak_search_areas)
+        grids = self._crop_grids(peak_search_areas)
+        stacks_ft_averaged = self._average_image_stacks(stacks_ft)
+        averaged_maxima = self._find_maxima(stacks_ft_averaged, grids)
+        for i in range(1, iteration_number):
+            coarse_peak_grids = self._get_coarse_grids(stacks_ft_averaged, grids, peak_interpolation_area_size)
+            interpolated_grids = self._get_fine_grids(coarse_peak_grids, interpolation_factor)
+            off_grid_ft_stacks, off_grid_otfs = self._off_grid_ft_stacks(stack, interpolated_grids, compute_otf=correct_peak_position)
+            off_grid_ft_averaged = self._average_image_stacks(off_grid_ft_stacks)
+            # plt.imshow(np.log1p(off_grid_ft_averaged[(2, 0)]), cmap='gray')
+            # plt.show()
+            # plt.imshow(np.log1p(off_grid_otfs[(2, 0)]), cmap='gray')
+            # plt.show()
+            grids = interpolated_grids
+            if deconvolve_stacks and interpolation_factor**i > 10:
+                off_grid_ft_averaged = self._deconvolve_stacks(off_grid_ft_averaged, off_grid_otfs)
+            # plt.imshow(np.log1p(off_grid_ft_averaged[(2, 0)]), cmap='gray')
+            # plt.show()
+            stacks_ft_averaged = off_grid_ft_averaged
+            averaged_maxima = self._find_maxima(off_grid_ft_averaged, grids)
+            print('iteration', i, 'averaged_maxima', averaged_maxima)
+
+        
+        if correct_peak_position:
+            print('before correction', averaged_maxima[(2, 0)] / 2)
+            averaged_maxima=self._correct_peak_position(averaged_maxima, stack)
+            print('corrected maxima', averaged_maxima)
+
         refined_base_vectors = self._refine_base_vectors(averaged_maxima)
         refined_wavevectors = self._refine_wavevectors(refined_base_vectors)
+
         return refined_base_vectors
     
     @abstractmethod
@@ -403,6 +442,143 @@ class PatternEstimatorSSNR(IlluminationPatternEstimator):
         """
         pass
     
+    def _stack_ft(self, stack: np.ndarray) -> np.ndarray:
+        """
+        Compute the Fourier transform of the raw image stack.
+
+        Parameters
+        ----------
+        stack : np.ndarray
+            The raw image stack.
+
+        Returns
+        -------
+        np.ndarray
+            The Fourier transformed stack.
+        """
+        return np.array([wrapped_fftn(image) for image in stack])
+    
+    def _crop_peaks(self, stack:np.ndarray, approximate_peaks: dict[tuple[int], float], peak_search_area: int, peak_interpolation_area: int) -> np.ndarray:
+        peak_search_areas = {}
+        for peak in approximate_peaks.keys():
+            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
+                continue
+            if peak[0] >= 0:
+                grid = self.optical_system.q_grid
+                dq = grid[*([1]*self.dimensionality)] - grid[*([0]*self.dimensionality)]
+                approximate_peak = approximate_peaks[peak]
+                labeling_array = (np.abs((grid - approximate_peak[None, None, :])) <= peak_search_area * dq[None, None, :]).all(axis=-1)
+                peak_search_areas[peak] = labeling_array
+                # plt.imshow(labeling_array, cmap='gray')
+                # plt.show()
+        return peak_search_areas
+    
+    def _crop_stacks(self, stack: np.ndarray, peak_search_areas: np.ndarray) -> np.ndarray:
+        """
+        Crop the stacks around the peaks.
+
+        Parameters
+        ----------
+        stacks : np.ndarray
+            The raw image stack.
+        grids : dict[np.ndarray]
+            The grids for each peak.
+        approximate_peaks : dict[tuple[int], float]
+            The approximate peaks.
+
+        Returns
+        -------
+        np.ndarray
+            The cropped stacks.
+        """
+        cropped_stacks = {}
+        stack_ft = np.array([wrapped_fftn(image) for image in stack])
+        for peak in peak_search_areas.keys():
+            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
+                continue
+            if peak[0] >= 0:
+                area = peak_search_areas[peak]
+                cropped_stacks[peak] = np.array([image_ft * area for image_ft in stack_ft])
+                # plt.imshow(np.abs(cropped_stacks[peak][0]), cmap='gray')
+                # plt.show()
+        return cropped_stacks
+    
+    def _crop_grids(self, peak_search_areas: np.ndarray) -> np.ndarray:
+        """
+        Crop the grids around the peaks.
+
+        Parameters
+        ----------
+        stacks : np.ndarray
+            The raw image stack.
+        grids : dict[np.ndarray]
+            The grids for each peak.
+        approximate_peaks : dict[tuple[int], float]
+            The approximate peaks.
+
+        Returns
+        -------
+        np.ndarray
+            The cropped grids.
+        """
+        cropped_grids = {}
+        for peak in peak_search_areas.keys():
+            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
+                continue
+            if peak[0] >= 0:
+                grid = self.optical_system.q_grid
+                grid *= peak_search_areas[peak][..., None]
+                cropped_grids[peak] = grid
+        return cropped_grids
+    
+    def _crop_otf(self, peak_search_areas: np.ndarray) -> np.ndarray:
+        """
+        Crop the OTF around the peaks.
+
+        Parameters
+        ----------
+        stacks : np.ndarray
+            The raw image stack.
+        grids : dict[np.ndarray]
+            The grids for each peak.
+        approximate_peaks : dict[tuple[int], float]
+            The approximate peaks.
+
+        Returns
+        -------
+        np.ndarray
+            The cropped OTF.
+        """
+        cropped_otfs = {}
+        for peak in peak_search_areas.keys():
+            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
+                continue
+            if peak[0] >= 0:
+                otf = self.optical_system.otf
+                otf *= peak_search_areas[peak][...]
+                cropped_otfs[peak] = np.abs(otf)
+        return cropped_otfs
+    
+    def _get_coarse_grids(self, stack_ft_averages: np.ndarray, grids: dict[np.ndarray], peak_interpolation_area_size: int) -> np.ndarray:
+        coarse_grids = {}
+        for peak in grids.keys():
+            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
+                continue
+            if peak[0] >= 0:
+                stack = stack_ft_averages[peak]
+                grid = grids[peak]
+                max_index = np.unravel_index(np.argmax(stack), stack.shape)
+                print('max_index', max_index)
+                refined_peak = grid[max_index]
+                print('refined peak', refined_peak)
+                print('peak_value', stack[max_index])
+                slices = tuple([slice(max_index[dim] - peak_interpolation_area_size // 2, max_index[dim] + peak_interpolation_area_size // 2 + 1) for dim in range(len(max_index))])
+                coarse_grids[peak] = grid[slices + (slice(None),)]
+                # plt.imshow(np.abs(stack), cmap='gray')
+                # plt.plot(max_index[1], max_index[0], 'rx')
+                # plt.show()
+        return coarse_grids
+
     def _get_fine_grids(self, peak_interpolation_areas, interpolation_factor: int) -> np.ndarray:
         """
         Interpolate the peaks in the raw image stack.
@@ -423,33 +599,15 @@ class PatternEstimatorSSNR(IlluminationPatternEstimator):
         for peak in peak_interpolation_areas.keys():
             fine_grid = self._get_fine_grid(peak_interpolation_areas[peak], interpolation_factor)
             interpolated_grids[peak] = fine_grid
-
-    def _get_fine_grid(coarse_grid: np.ndarray, interpolation_factor: int) -> np.ndarray:
+        return interpolated_grids
+    
+    def _get_fine_grid(self, coarse_grid: np.ndarray, interpolation_factor: int) -> np.ndarray:
         fine_q_coordinates = []
-        for dim in range (len(coarse_grid)-1):
+        for dim in range (len(coarse_grid.shape)-1):
             q_max, q_min = coarse_grid[..., dim].max(), coarse_grid[..., dim].min()
-            fine_q_coordinates.append(np.linspace(q_min, q_max, coarse_grid.shape[dim] * interpolation_factor))
+            fine_q_coordinates.append(np.linspace(q_min, q_max, (coarse_grid.shape[dim] - 1) * interpolation_factor + 1))
         fine_q_grid = np.stack(np.meshgrid(*tuple(fine_q_coordinates), indexing='ij'), axis=-1)
         return fine_q_grid
-
-    @abstractmethod
-    def _localize_peaks(self, peak_neighborhood_size: int) -> np.ndarray:
-        """
-        Localize the peaks in the raw image stack.
-
-        Parameters
-        ----------
-        stack : np.ndarray
-            The raw image stack.
-        peak_neighborhood_size : int
-            The size of the neighborhood around the peak to consider.
-
-        Returns
-        -------
-        np.ndarray
-            The localized peaks.
-        """
-        pass
     
     def _refine_base_vectors(self, averaged_maxima: dict):
         """
@@ -469,18 +627,68 @@ class PatternEstimatorSSNR(IlluminationPatternEstimator):
         base_vectors = np.zeros(self.optical_system.dimensionality, dtype=np.float64)
         index_sum  = np.zeros(self.optical_system.dimensionality, dtype=np.int16)
         for index in averaged_maxima.keys():
-            base_vectors += averaged_maxima[index] * np.array(index)
+            base_vectors += averaged_maxima[index]
             index_sum += np.array(index)
-            
+
         refined_base_vectors = base_vectors / np.where(index_sum, index_sum, np.inf)
         return refined_base_vectors
-    @abstractmethod
-    def _off_grid_ft_averaged(self, stack: np.ndarray, fine_grid: np.ndarray) -> np.ndarray: ... 
+    
+    def _off_grid_ft(self, array: np.ndarray, x_grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
+        x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
+        q_grid_flat = q_values.reshape(-1, self.optical_system.dimensionality)
+        phase_matrix = q_grid_flat @ x_grid_flat.T
+        fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
+        array_ft_values = fourier_exponents @ array.flatten()
+        return array_ft_values.reshape(q_values.shape[:-1])
+    
+    def _off_grid_ft_stacks(self, stack: np.ndarray, fine_q_grids: np.ndarray, compute_otf=True) -> np.ndarray:
+        x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
+        images_ft_dict = {}
+        otfs_dict = {}
+        for index in fine_q_grids.keys():
+            fine_q_grid = fine_q_grids[index]
+            q_grid_flat = fine_q_grid.reshape(-1, self.optical_system.dimensionality)
+            phase_matrix = q_grid_flat @ x_grid_flat.T
+            fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
+            new_stack = []
+            for image in stack:
+                image = image.flatten()
+                image_ft = fourier_exponents @ image
+                new_stack.append(image_ft.reshape(fine_q_grid.shape[:-1]))
+            images_ft_dict[index] = np.array(new_stack)
+            if compute_otf:
+                psf = self.optical_system.psf.flatten()
+                otf = fourier_exponents @ psf
+                otfs_dict[index] = np.abs(otf.reshape(fine_q_grid.shape[:-1]))
+        return images_ft_dict, otfs_dict
+    
+    def _average_image_stacks(self, images_ft_dict: dict[np.ndarray]) -> np.ndarray:
+        averaged_images_ft_dict = {}
+        for index in images_ft_dict.keys():
+            stack = images_ft_dict[index]
+            averaged_images_ft_dict[index] = np.mean(np.abs(stack), axis=0)
+        return averaged_images_ft_dict
+    
+    def _deconvolve_raw_stack(self, stack: np.ndarray, ssnr: np.ndarray) -> np.ndarray:
+        deconvolved_stack = np.zeros_like(stack, dtype=np.complex128)
+        for i in range(stack.shape[0]):
+            image_ft = wrapped_fftn(stack[i])
+            image_filtered = image_ft /np.where(self.optical_system.otf > 10**-10, self.optical_system.otf, np.inf) / (1 + ssnr)
+            deconvolved_stack[i] =  wrapped_ifftn(image_filtered)
+        return deconvolved_stack
 
-
-    def _find_maxima(self, image_dict: dict[np.ndarray]) -> np.ndarray:
+    def _deconvolve_stacks(self, stacks_ft_averaged: dict[np.ndarray], otfs_dict: dict[np.ndarray]) -> np.ndarray:
+        deconvolved_stacks = {}
+        for index in stacks_ft_averaged.keys():
+            image = stacks_ft_averaged[index]
+            otf = np.abs(otfs_dict[index])
+            deconvolved_stack = image / otf
+            deconvolved_stacks[index] = deconvolved_stack
+        return deconvolved_stacks
+    
+    def _find_maxima(self, image_dict: dict[np.ndarray], fine_q_grids: dict[np.ndarray]) -> np.ndarray:
         """
-        Find the maxima in the raw image stack.
+        Find the maxima in the image stack.
 
         Parameters
         ----------
@@ -494,11 +702,62 @@ class PatternEstimatorSSNR(IlluminationPatternEstimator):
         """
         max_dict = {}
         for index in image_dict.keys():
+            grid = fine_q_grids[index]
             image = image_dict[index]
+            # plt.imshow(image, cmap='gray')
+            # plt.show()
             max_index = np.unravel_index(np.argmax(image), image.shape)
-            max_dict = index[max_index]
+            max_dict[index] = grid[max_index]
         return max_dict
         
+    def _correct_peak_position(self, estimated_peaks: dict[np.ndarray[3, np.float64]], stack: np.ndarray, dk: float = 10**-4) -> np.ndarray:
+        """
+        Account for the non-uniform OTF to correct the peaks position assuming it is not far from actual illumination wavevectros. 
+        """
+        x_grid = self.optical_system.x_grid
+
+        otf_dict = {}
+        otf_grad_dict = {}
+        for key in estimated_peaks.keys():
+            peak = estimated_peaks[key]
+            psf = self.optical_system.psf
+            q_values = np.array([peak, peak - np.array((dk, 0)), peak + np.array((dk, 0)), peak - np.array((0, dk)), peak + np.array((0, dk))])
+
+            otf_values = self._off_grid_ft(psf, x_grid, q_values)
+            otf_values = np.abs(otf_values)
+            otf_dict[key] = otf_values[0]
+
+            otf_grad = np.array([otf_values[2] - otf_values[1], otf_values[4] - otf_values[3]]) / (2 * dk)
+            otf_grad_dict[key] = otf_grad
+
+        q_grid_dict = {(0, 0): np.array([np.array((0, 0)),
+                                         np.array((-dk, 0)), np.array((dk, 0)),
+                                         np.array((0, -dk)), np.array((0, dk)),
+                                         np.array((-dk, -dk)), np.array((-dk, dk)),
+                                         np.array((dk, -dk)), np.array((dk, dk))])}
+        
+        I_values, otf_values = self._off_grid_ft_stacks(stack, q_grid_dict)
+        I_values = self._average_image_stacks(I_values)
+        f_values = I_values[(0, 0)] / np.abs(otf_values[(0, 0)])
+        f_grad = np.array([f_values[2] - f_values[1], f_values[4] - f_values[3]]) / (2 * dk)
+
+        f_hessian = np.array((
+                             np.array([f_values[2] - 2 * f_values[0] + f_values[2],
+                                       (f_values[8] - f_values[7] - f_values[6] + f_values[5])/2]),
+                             np.array([(f_values[8] - f_values[7] - f_values[6] + f_values[5])/2, 
+                                      f_values[4] - 2 * f_values[0] + f_values[3]]),        
+                             )) / (dk**2)
+        
+        corrected_peaks = {}
+        for key in otf_grad_dict.keys():
+            otf = otf_dict[key]
+            otf_grad = otf_grad_dict[key]
+            # S = 1 if not second_order else 
+            delta_k = f_values[0] / otf * (1  + f_values[0]/(2 * otf **2) * otf_grad.T @ np.linalg.inv(f_hessian) @ otf_grad) * np.linalg.inv(f_hessian) @ otf_grad 
+            print('correction ', delta_k)
+            corrected_peaks[key] = estimated_peaks[key] + delta_k
+
+        return corrected_peaks
     
 class PatternEstimatorCrossCorrelation2D(PatternEstimatorCrossCorrelation):
     dimensionality = 2
@@ -513,48 +772,26 @@ class PatternEstimatorCrossCorrelation3D(PatternEstimatorCrossCorrelation):
     def __init__(self, illumination: IlluminationPlaneWaves3D, optical_system: OpticalSystem3D):
         super().__init__(illumination, optical_system)
 
-class PatternEstimatorSSNR2D(PatternEstimatorSSNR):
+class PatternEstimatorInterpolation2D(PatternEstimatorInterpolation):
     dimensionality = 2
 
     def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system: OpticalSystem2D):
         super().__init__(illumination, optical_system)
 
-    def _compute_ssnr(self, stack: np.ndarray, interpolation_factor: int) -> np.ndarray:
-        ssnr_estimated = SSNRBase.estimate_ssnr_from_image_binomial_splitting(stack, n_iter=100, radial=False)
+    def _compute_ssnr(self, stack: np.ndarray, iterations: int) -> np.ndarray:
+        ssnr_estimated = SSNRBase.estimate_ssnr_from_image_binomial_splitting(stack, n_iter=iterations, radial=False)
         ssnr_estimated[ssnr_estimated < 0] = 0
+        plt.imshow(np.log1p(ssnr_estimated), cmap='gray')
+        plt.show()
+        plt.plot(self.optical_system.otf_frequencies[0], ssnr_estimated[:, 50], label='ssnr_estimated')
+        plt.ylim(0, 100)
+        plt.plot(2.45, 0, 'cx')
+        plt.show()
+        print('ssnr_estimated', ssnr_estimated[50, 50])
+        # exit()
         return ssnr_estimated
     
-    def _localize_peaks(self, peak_neighborhood_size: int) -> np.ndarray:
-        waves = self.illumination.waves
-        grid = self.optical_system.q_grid
-        dq = np.amin(grid[1, 1] - grid[0, 0])
-        peak_interpolation_areas = {}
-        for peak in waves.keys():
-            if np.isclose(np.sum(np.abs(np.array(peak))), 0):
-                continue
-            if peak[0] >= 0:
-                peak_approximate = waves[peak].wavevector / (2 * np.pi)
-                labeling_array = np.array(self.optical_system.psf.shape, dtype=np.bool)
-                labeling_array[np.sum((grid - peak_approximate[None, None, :])**2)**0.5 < peak_neighborhood_size * dq]= True
-                peak_grid = grid[labeling_array, :]
-                peak_interpolation_areas[peak] = peak_grid
-        return peak_interpolation_areas
 
-    def _off_grid_ft_averaged(self, stack: np.ndarray, fine_q_grids: np.ndarray) -> np.ndarray:
-        x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
-        averaged_images_dict = {}
-        for index in fine_q_grids.keys():
-            fine_q_grid = fine_q_grids[index]
-            q_grid_flat = fine_q_grid.reshape(-1, self.optical_system.dimensionality)
-            phase_matrix = q_grid_flat @ x_grid_flat.T
-            fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
-            image_avg = np.zeros(fine_q_grid.shape[:-1], dtype=np.float64)
-            for image in stack:
-                image = image.flatten()
-                image_ft = fourier_exponents @ image
-                image_avg += np.abs(image_ft.reshape(fine_q_grid.shape[:-1]))
-            averaged_images_dict[index] = image_avg.reshape() / stack.shape[0]
-        return averaged_images_dict
 
             
         

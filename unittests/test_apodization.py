@@ -55,7 +55,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
         pupil_function = np.zeros((self.N, self.N), dtype=np.float64)
         Fx, Fy = np.meshgrid(self.fx, self.fy)
         pupil_function[(Fx**2 + Fy**2) * 2 * np.pi < k1**2] = 1
-        ctf = wrappers.wrapped_ifftn(pupil_function)
+        ctf = wrappers.wrapped_fftn(pupil_function)
         plt.imshow(pupil_function, cmap='gray')
         plt.title('Pupil Function')
         plt.show()
@@ -107,7 +107,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
             sim_otf += np.abs(otf)
         sim_otf /= np.amax(sim_otf)
 
-        sim_psf = np.real(wrappers.wrapped_fftn(sim_otf))
+        sim_psf = np.real(wrappers.wrapped_ifftn(sim_otf))
         sim_psf /= np.sum(sim_psf)
         apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, square)
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))

@@ -138,14 +138,14 @@ class TestOpticalSystems3D(unittest.TestCase):
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         psf = optical_system.psf
         # otf = optical_system.otf
-        otf = wrappers.wrapped_ifftn(psf)
+        otf = wrappers.wrapped_fftn(psf)
         otf/= np.amax(otf)
         # plt.plot(fx, otf[N//2, N//2, :], label='Full')
         psf_cut = np.zeros(psf.shape)
         size = 11
         psf_cut[N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1] \
             = psf[N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1]
-        otf_cut = wrappers.wrapped_ifftn(psf_cut)
+        otf_cut = wrappers.wrapped_fftn(psf_cut)
         otf_cut /= np.amax(otf_cut)
 
         fig, ax = plt.subplots(figsize=(6, 6))
@@ -208,7 +208,7 @@ class TestOpticalSystems3D(unittest.TestCase):
             otf_sim = np.zeros(optical_system.otf.shape, dtype=np.complex128)
             for otf in effective_otfs:
                 otf_sim += effective_otfs[otf]
-            psf_sim = np.abs(wrappers.wrapped_fftn(otf_sim))
+            psf_sim = np.abs(wrappers.wrapped_ifftn(otf_sim))
             psf_sim /= np.sum(psf_sim)
             # plt.imshow(psf_sim[:, :, N//2])
             # plt.show()
@@ -289,7 +289,7 @@ class TestOpticalSystems2D(unittest.TestCase):
             otf_sim = np.zeros(optical_system.otf.shape, dtype = np.complex128)
             for otf in effective_otfs:
                 otf_sim += effective_otfs[otf]
-            psf_sim = np.abs(wrappers.wrapped_fftn(otf_sim))
+            psf_sim = np.abs(wrappers.wrapped_ifftn(otf_sim))
             psf_sim /= np.sum(psf_sim)
             # plt.imshow(psf_sim[:, :, N//2])
             # plt.show()
@@ -318,26 +318,23 @@ class TestOpticalSystems2D(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
 
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spatial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spatial_shifts = spatial_shifts_conventional2d
+        illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=(1, 1))
+        illumination.set_spatial_shifts_diagonally()
 
         optical_system = System4f2D()
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
         otf_sum = np.zeros((N, N), dtype=np.complex128)
-        effective_otfs = optical_system.compute_effective_otfs_2dSIM(illumination)
+        _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
         for otf in effective_otfs:
             otf_sum += effective_otfs[otf]
         print(optical_system)
-        fig = plt.figure()
         otf_sum /= np.amax(otf_sum)
         print(optical_system)
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(fy, np.abs(otf_sum[ :, N // 2]))
+        ax.plot(fy / 2 / np.sin(theta), np.abs(otf_sum[ :, N // 2]))
         ax.set_title("SIM OTF")
         ax.set_ylim(bottom=0)
-
         plt.show()
 
 

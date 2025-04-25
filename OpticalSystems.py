@@ -348,7 +348,7 @@ class System4f2DCoherent(OpticalSystem2D):
         return E
 
     def _PSF_from_pupil_function(self, pupil_function):
-        E = wrappers.wrapped_fftn(pupil_function)
+        E = wrappers.wrapped_ifftn(pupil_function)
         return E
 
     def compute_psf_and_otf(self, parameters=None, pupil_function =None)\
@@ -367,7 +367,7 @@ class System4f2DCoherent(OpticalSystem2D):
         else:
             psf = self._PSF_from_pupil_function(pupil_function)
 
-        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf = np.abs(wrappers.wrapped_fftn(self.psf)).astype(complex)
         self.otf = self.otf / np.amax(self.otf) if self.normalize_otf else self.otf
         self._prepare_interpolator()
         return self.psf, self.otf
@@ -543,7 +543,7 @@ class System4f3DCoherent(OpticalSystem3D):
                         integrate_rho=integrate_rho,
                         zernieke=zernieke)
         
-        self.otf = wrappers.wrapped_ifftn(self.psf)
+        self.otf = wrappers.wrapped_fftn(self.psf)
         if self.normalize_otf:
             self.otf /= np.amax(self.otf)
             self.psf = psf / np.sum(psf)
@@ -604,7 +604,7 @@ class System4f2D(System4f2DCoherent):
             psf = self._PSF_from_pupil_function(pupil_function, save_pupil_function=save_pupil_function)
                     
         self.psf = psf / np.sum(psf)
-        self.otf = np.abs(wrappers.wrapped_ifftn(self.psf)).astype(complex)
+        self.otf = np.abs(wrappers.wrapped_fftn(self.psf)).astype(complex)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
 
@@ -643,7 +643,7 @@ class System4f3D(System4f3DCoherent):
                         **kwargs)
         
         if save_pupil_function:
-            self.__dict__['pupil_function'] = wrappers.wrapped_ifftn(E)
+            self.__dict__['pupil_function'] = wrappers.wrapped_fftn(E)
         
         I = (E * E.conjugate()).real
         return I
@@ -670,7 +670,7 @@ class System4f3D(System4f3DCoherent):
                         zernieke=zernieke,
                         save_pupil_function=save_pupil_function)
         self.psf = psf / np.sum(psf)
-        self.otf = wrappers.wrapped_ifftn(self.psf)
+        self.otf = wrappers.wrapped_fftn(self.psf)
         self.otf /= np.amax(self.otf)
         self._prepare_interpolator()
         return self.psf, self.otf
@@ -724,7 +724,7 @@ class Confocal(PointScanningImagingSystem):
         
         # Compute final PSF and OTF including aperture
         self.psf = psf_excitation * psf_detection
-        self.otf = wrappers.wrapped_ifftn(self.psf)
+        self.otf = wrappers.wrapped_fftn(self.psf)
         if self.normalize_otf:
             self.otf /= np.amax(self.otf)
         self.psf /= np.sum(self.psf)

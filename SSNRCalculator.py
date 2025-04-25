@@ -135,7 +135,7 @@ class SSNRBase(metaclass=DimensionMeta):
                 nA = rng.binomial(frame.astype(int), 0.5)
                 nB = frame - nA
 
-                # your wrappers for centred FFT / IFFT
+                # wrappers for centred FFT / IFFT
                 e1 = wrappers.wrapped_fftn(nA, axes=(-2, -1))
                 e2 = wrappers.wrapped_fftn(nB, axes=(-2, -1))
 

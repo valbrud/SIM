@@ -89,7 +89,6 @@ def generate_random_lines(
     line_width: float | Sequence[float],
     num_lines: int,
     intensity: float,
-    rng: np.random.Generator | None = None,
 ) -> np.ndarray:
     """
     Generate an n-D image (2-D or 3-D) filled with randomly oriented line segments.
@@ -108,16 +107,13 @@ def generate_random_lines(
         How many line segments to draw.
     intensity : float
         Total integrated intensity of *each* line segment.
-    rng : np.random.Generator, optional
-        RNG for reproducibility.
-
     Returns
     -------
     img : ndarray
         • shape (Ny, Nx)               if `image_size` has length 2  
         • shape (Nz, Ny, Nx)           if `image_size` has length 3
     """
-    rng = np.random.default_rng() if rng is None else rng
+    rng = np.random.default_rng(1234)
     dim = len(image_size)
     if dim not in (2, 3):
         raise ValueError("Only 2-D and 3-D images are supported.")
