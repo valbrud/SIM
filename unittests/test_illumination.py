@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import stattools
 import sys
 
-from Illumination import *
+from Illumination_experimental import *
 from config.SIM_N100_NA15 import *
 
 class TestInitialization(unittest.TestCase):
@@ -36,6 +36,7 @@ class TestInitialization(unittest.TestCase):
         }
         self.spatial_shifts_2D = np.array(((0., 0.),))
         self.spatial_shifts_3D = np.array(((0., 0., 0.), ))
+
     def test_cannot_instantiate_PlaneWavesSIM(self):
         # PlaneWavesSIM is abstract so instantiation should raise an error.
         with self.assertRaises(TypeError):
@@ -64,19 +65,29 @@ class TestInitialization(unittest.TestCase):
 
 class TestIllumination(unittest.TestCase):
     def test_index_waves(self):
+        theta = np.pi / 4
+        b = 1
+        k = 2 * np.pi
+        k1 = k * np.sin(theta)
+        k2 = k * (1 - np.cos(theta))
+        a0 = 1 + 2 * b**2
+
         sources = [
-            Sources.IntensityHarmonic3D(a0 / norm, 0, np.array((0, 0, 0))),
+            Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0))),
 
-            Sources.IntensityHarmonic3D(b ** 2 / norm, 0, np.array((2 * k1, 0, 0))),
-            Sources.IntensityHarmonic3D(b ** 2 / norm, 0, np.array((-2 * k1, 0, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((2 * k1, 0, 0))),
+            Sources.IntensityHarmonic3D(b ** 2, 0, np.array((-2 * k1, 0, 0))),
 
-            Sources.IntensityHarmonic3D(b / norm, 0, np.array((k1, 0, k2))),
-            Sources.IntensityHarmonic3D(b / norm, 0, np.array((-k1, 0, k2))),
-            Sources.IntensityHarmonic3D(b / norm, 0, np.array((k1, 0, -k2))),
-            Sources.IntensityHarmonic3D(b / norm, 0, np.array((-k1, 0, -k2))),
+            Sources.IntensityHarmonic3D(b, 0, np.array((k1, 0, k2))),
+            Sources.IntensityHarmonic3D(b, 0, np.array((-k1, 0, k2))),
+            Sources.IntensityHarmonic3D(b, 0, np.array((k1, 0, -k2))),
+            Sources.IntensityHarmonic3D(b, 0, np.array((-k1, 0, -k2))),
         ]
         three_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, (k1, k1, k2))
-        assert (three_waves_dict.keys() == three_waves_illumination.keys())
+        test_illumination = BFPConfiguration().get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 1, Mt=1)
+        indexed_three = set(three_waves_dict.keys())
+        test_indices = set([key[1] for key in test_illumination.harmonics.keys() if key[0] == 0])
+        assert (indexed_three == test_indices)
 
         sources = [
             Sources.IntensityHarmonic3D(2 + 4 * b ** 2, 0, np.array((0, 0, 0))),
@@ -94,52 +105,16 @@ class TestIllumination(unittest.TestCase):
             Sources.IntensityHarmonic3D(-1 * b, 0, np.array((0, -k1, -k2))),
         ]
         five_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, base_vector_lengths=(k1, k1, k2))
-        assert (five_waves_dict.keys() == s_polarized_waves.keys())
+        test_illumination = BFPConfiguration().get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
+        indexed_five = set(five_waves_dict.keys())
+        test_indices = set([key[1] for key in test_illumination.harmonics.keys() if key[0] == 0])
+        assert (indexed_five == test_indices)
 
     def test_expanded_lattice(self):
         illumination = BFPConfiguration().get_6_oblique_s_waves_and_circular_normal(np.pi/4, 1)
-        illumination.compute_expanded_lattice()
-
-    def test_numerical_peaks_search(self):
-        theta = np.pi / 4
-        b = 1
-        k = 2 * np.pi
-        k1 = k * np.sin(theta)
-        k2 = k * (np.cos(theta) - 1)
-        vec_x = np.array((k/2 * np.sin(theta), 0, k * np.cos(theta)))
-        vec_mx = np.array((-k * np.sin(theta), 0, k * np.cos(theta)))
-        ax_z = np.array((0, 0, 1))
-
-        sources = [
-
-            PlaneWave(0, b, 0, 0, vec_x),
-            PlaneWave(0, b, 0, 0, vec_mx),
-            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z,  2 * np.pi/3)),
-            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z,  2 * np.pi/3)),
-            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi / 3)),
-            PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi / 3)),
-
-            PlaneWave(1, 1j * 1, 0, 0, np.array((0, 0, k))),
-        ]
-        box = Box(sources, 15, 100)
-        axes = (box.grid[:, 0, 0, 0], box.grid[0, :, 0, 1], box.grid[0, 0, :, 2])
-        box.compute_electric_field()
-        box.compute_intensity_from_electric_field()
-        box.compute_intensity_fourier_space()
-        fourier_peaks, amplitudes = stattools.estimate_localized_peaks(box.intensity_fourier_space, axes)
-        print(len(fourier_peaks))
-        intensity_sources_discrete = []
-        for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
-            intensity_sources_discrete.append(IntensityHarmonic3D(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))
-            print(fourier_peak*np.pi * 2)
-        res = stattools.find_optimal_base_vectors(fourier_peaks)
-        print(fourier_peaks[:10])
-        print(res)
-        box2 = Box(intensity_sources_discrete, (20, 20, 80), 100)
-        box2.compute_intensity_from_spatial_waves()
-        box2.compute_intensity_fourier_space()
-        # plt.imshow(np.abs(box2.intensity_fourier_space[:, :, 20]))
-        # plt.show()
+        expanded_lattice = illumination.compute_expanded_lattice()
+        print('number of peaks in expanded lattice is', len(expanded_lattice))
+        assert(len(expanded_lattice) == 61)
 
     def test_non_linear_polynomial_illumination(self):
         configurations = BFPConfiguration(refraction_index=1.5)
@@ -163,16 +138,16 @@ class TestIllumination(unittest.TestCase):
         illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
         illumination_3waves2d = IlluminationPlaneWaves2D.init_from_3D(illumination_3waves3d, dimensions)
 
-        p = 10
+        p = 2
         nonlinear_expansion_coefficients = [0, ]
         n=1
-        while(p**n / factorial(n)) > 10**-2:
+        while(p**n / factorial(n)) > 10**-7:
             nonlinear_expansion_coefficients.append(p**n / factorial(n) * (-1)**(n+1))
             n += 1
 
         illumination_3waves_non_linear = IlluminationNonLinearSIM2D.init_from_linear_illumination(illumination_3waves2d, tuple(nonlinear_expansion_coefficients))
-        for wave in illumination_3waves_non_linear.waves:
-            print(wave, illumination_3waves_non_linear.waves[wave].wavevector, illumination_3waves_non_linear.waves[wave].amplitude)
+        for harmonic in illumination_3waves_non_linear.harmonics:
+            print(harmonic, illumination_3waves_non_linear.harmonics[harmonic].wavevector, illumination_3waves_non_linear.harmonics[harmonic].amplitude)
         illumination_density = illumination_3waves2d.get_illumination_density(coordinates=(x, y))
         emission_density = illumination_3waves_non_linear.get_illumination_density(coordinates=(x, y))
 
@@ -197,5 +172,5 @@ class TestIllumination(unittest.TestCase):
         im2 = ax2.imshow(emission_density, vmin=0)
         plt.show()
 
-        plt.plot(emission_density[127, :])
+        plt.plot(emission_density[:, 127])
         plt.show()

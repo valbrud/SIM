@@ -42,7 +42,7 @@ from config.SIM_N100_NA15 import (
 def build_experimental_illumination():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        alpha-0.3 , 1, 0, Mr=1, Mt=1
+        alpha-0.1 , 1, 0, Mr=1, Mt=1
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -53,7 +53,7 @@ def build_experimental_illumination():
 def build_theoretical_illumination():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        alpha-0.4, 1, 0, Mr=1, Mt=1
+        alpha-0.15, 1, 0, Mr=1, Mt=1
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -147,7 +147,7 @@ class TestPatternEstimator2D(unittest.TestCase):
             raw_stack[0, ...],
             return_as_illumination_object=False, 
             interpolation_factor= 2,
-            peak_search_area_size=9,
+            peak_search_area_size=11,
             peak_interpolation_area_size=3, 
             iteration_number=10, 
             deconvolve_stacks=False,

@@ -16,7 +16,7 @@ import sys
 from OpticalSystems import System4f2D
 from SIMulator import SIMulator2D
 from config.IlluminationConfigurations import BFPConfiguration
-from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
+from Illumination_experimental import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from kernels import sinc_kernel, psf_kernel2d
@@ -60,7 +60,7 @@ class TestReconstruction(unittest.TestCase):
         # plt.title("Widefield image")
         # plt.imshow(self.widefield)
         # plt.show()
-        #
+        
         configurations = BFPConfiguration(refraction_index=1.5)
         illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(
             self.theta, 1, 0, 3, Mt=1
@@ -93,8 +93,11 @@ class TestReconstruction(unittest.TestCase):
             optical_system=self.optical_system
         )
         reconstructed_image = reconstructor.get_widefield(self.sim_images)
-        plt.title("Reconstructed widefield")
-        plt.imshow(reconstructed_image)
+        fig, axes = plt.subplots(1, 2)
+        axes[0].imshow(self.widefield)
+        axes[0].set_title("Widefield")
+        axes[1].imshow(reconstructed_image)
+        axes[1].set_title("Reconstructed Widefield")
         plt.show()
 
     def test_fourier_reconstruction(self):
@@ -168,7 +171,10 @@ class TestReconstruction(unittest.TestCase):
 
         fig, axes = plt.subplots(1, 4)
         fig.suptitle("Spatial-domain reconstruction with finite kernels")
-
+        axes[0].set_title("Kernel size 1")
+        axes[1].set_title("Kernel size 3")  
+        axes[2].set_title("Kernel size 5")
+        axes[3].set_title("Kernel size 7")
         axes[0].imshow(reconstructed_image1)
         axes[1].imshow(reconstructed_image3)
         axes[2].imshow(reconstructed_image5)

@@ -61,15 +61,10 @@ class SIMulator(metaclass=DimensionMetaAbstract):
     def generate_sim_images(self, ground_truth):
         sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
         # sim_images_ft = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
-        for r in range(self.illumination.Mr):
-            for sim_index in self.illumination.rearranged_indices:
-                projective_index = self.illumination.rearranged_indices[sim_index][0] if self.illumination.rearranged_indices[sim_index] else ()
-                index = self.illumination.glue_indices(sim_index, projective_index, self.illumination.dimensions)
-                wavevector = np.copy(self.illumination.waves[index].wavevector)
-                wavevector[np.bool(1 - np.array(self.illumination.dimensions))] = 0
-                for n in range(self.illumination.Mt):
-                    total_phase_modulation = self.phase_modulation_patterns[r, sim_index] * self.illumination.phase_matrix[(n, sim_index)]
-                    sim_images[r, n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[r, sim_index].conjugate() * self.effective_psfs[r, sim_index], mode='same')
+        for sim_index in self.illumination.rearranged_indices:
+            for n in range(self.illumination.Mt):
+                total_phase_modulation = self.phase_modulation_patterns[sim_index] * self.illumination.phase_matrix[(sim_index[0], n, sim_index[1])]
+                sim_images[sim_index[0], n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[sim_index].conjugate() * self.effective_psfs[sim_index], mode='same')
                     
         sim_images = np.real(sim_images) + 10**-10
         return sim_images

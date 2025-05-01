@@ -35,7 +35,6 @@ class SSNRBase(metaclass=DimensionMeta):
         compute_radial_ssnri_entropy(factor=100): Computes the radial SSNR entropy.
         compute_full_ssnr(object_ft): Computes the full SSNR for a given object Fourier transform.        
     """
-
     def __init__(self, optical_system):
         self._optical_system = optical_system
         self._ssnri = None

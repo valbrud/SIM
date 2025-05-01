@@ -6,7 +6,7 @@ from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 import Sources
 import wrappers
 from Box import BoxSIM, Field
-from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
+from Illumination_experimental import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
@@ -61,8 +61,8 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
             for image in rotation:
                 widefield_image += image
                 test += image
-            # plt.imshow(test)
-            # plt.show()
+                # plt.imshow(image)
+                # plt.show()
         return widefield_image
 
 
@@ -103,11 +103,12 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
             image1rotation_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
-            for _, m in zip(*self.illumination.get_wavevectors_projected(r)):
+            for _, sim_index in zip(*self.illumination.get_wavevectors_projected(r)):
+                m = sim_index[1]
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
-                    sum_shifts += self.illumination.phase_matrix[(n, m)].conjugate() * image_shifted_ft
+                    sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * image_shifted_ft
                 sum_shifts *= self.effective_kernels[(r, m)]
                 image1rotation_ft += sum_shifts
             reconstructed_image_ft += image1rotation_ft
@@ -165,18 +166,17 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                 kernel = kernel_expanded
 
         self.kernel = kernel
+        if phase_modulation_patterns is None:
+            self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
-        self.illumination_patterns = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.float64)
+        self.illumination_patterns = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        for n in range(self.illumination.Mt):
+            for harmonic in self.illumination.harmonics:
+                r = harmonic[0]
+                m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
+                self.illumination_patterns[r, n] += (self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic]).conjugate()
 
-        for r in range(self.illumination.Mr):
-            # illumination_pattern_one_rotation = np.zeros(self.optical_system.psf.shape, dtype=np.complex128)
-            for n in range(self.illumination.Mt):
-                illumination_pattern = np.zeros(self.optical_system.psf.shape, dtype=np.complex128)
-                for wave in self.illumination.waves:
-                    m = tuple([wave[dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
-                    illumination_pattern += (self.illumination.phase_matrix[(n, m)] * self.illumination.waves[wave].get_intensity(self.optical_system.x_grid, -self.illumination.angles[r])).conjugate()
-                self.illumination_patterns[r, n] = illumination_pattern.real
-            # plt.show()
+        self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
     def reconstruct(self, sim_images):
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)

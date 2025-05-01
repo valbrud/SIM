@@ -92,8 +92,8 @@ class TestSIMImages(unittest.TestCase):
         dimensions = (1, 1)
         X, Y = np.meshgrid(x, y)
         image = ShapesGenerator.generate_random_lines(psf_size, N, line_width=0.4, num_lines=100, intensity=10 ** 4)
-
-        optical_system = System4f2D(alpha=alpha)
+        image = np.ones((N, N)) * 1000
+        optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N), )
         plt.imshow(optical_system.psf)
 

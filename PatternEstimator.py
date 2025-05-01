@@ -499,8 +499,9 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
             if peak[0] >= 0:
                 area = peak_search_areas[peak]
                 cropped_stacks[peak] = np.array([image_ft * area for image_ft in stack_ft])
-                # plt.imshow(np.abs(cropped_stacks[peak][0]), cmap='gray')
-                # plt.show()
+                plt.imshow(np.abs(cropped_stacks[peak][0]), cmap='gray')
+                # plt.plot((approximate_peak[1], approximate_peak[0], 'cx'))
+                plt.show()
         return cropped_stacks
     
     def _crop_grids(self, peak_search_areas: np.ndarray) -> np.ndarray:
@@ -574,9 +575,9 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
                 print('peak_value', stack[max_index])
                 slices = tuple([slice(max_index[dim] - peak_interpolation_area_size // 2, max_index[dim] + peak_interpolation_area_size // 2 + 1) for dim in range(len(max_index))])
                 coarse_grids[peak] = grid[slices + (slice(None),)]
-                # plt.imshow(np.abs(stack), cmap='gray')
-                # plt.plot(max_index[1], max_index[0], 'rx')
-                # plt.show()
+                plt.imshow(np.abs(stack), cmap='gray')
+                plt.plot(max_index[1], max_index[0], 'rx')
+                plt.show()
         return coarse_grids
 
     def _get_fine_grids(self, peak_interpolation_areas, interpolation_factor: int) -> np.ndarray:
