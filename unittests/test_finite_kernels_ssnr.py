@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import SIMulator
 import stattools
 import wrappers
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import unittest
 from matplotlib.widgets import Slider
 import SSNRCalculator

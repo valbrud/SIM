@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 from matplotlib.widgets import Slider
 import SSNRCalculator
 from OpticalSystems import System4f3D

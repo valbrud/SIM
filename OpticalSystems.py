@@ -100,7 +100,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         return self._q_grid
 
     @abstractmethod
-    def compute_psf_and_otf_cordinates(self, psf_size: tuple[int], N: int):
+    def compute_psf_and_otf_cordinates(self, psf_size: tuple[int], N: int, account_for_pixel_size: bool = False) -> None:
         """
         Compute the PSF and OTF coordinate axes.
 
@@ -135,6 +135,14 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             np.ndarray: Computed x-grid.
         """
         self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates, indexing='ij'), axis=-1)
+    
+    def _account_for_pixel_size(self):
+        x_grid = self.x_grid
+        dx = x_grid[*([1] * self.dimensionality)] - x_grid[*([0]*self.dimensionality)]
+        q_grid = self.q_grid
+        q_grid_flat = q_grid.reshape(-1, self.dimensionality)
+        otf_pixel = np.prod(np.sinc(q_grid_flat * dx[None, :]), axis=1)
+        self.otf = self.otf * otf_pixel.reshape(*self.otf.shape)
 
     def _prepare_interpolator(self):
         """
@@ -272,7 +280,7 @@ class OpticalSystem2D(OpticalSystem):
             otf_interpolated = otf_interpolated.reshape(self.otf_frequencies[0].size, self.otf_frequencies[1].size)
             return otf_interpolated
 
-    def compute_psf_and_otf(self) -> tuple[np.float64, np.float64]:
+    def compute_psf_and_otf(self, account_for_pixel_size: bool = False) -> tuple[np.float64, np.float64]:
 
         ...
 
@@ -323,7 +331,7 @@ class OpticalSystem3D(OpticalSystem):
                                                         self.otf_frequencies[2].size)
             return otf_interpolated
 
-    def compute_psf_and_otf(self) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+    def compute_psf_and_otf(self, account_for_pixel_size: bool = False) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                            np.ndarray[tuple[int, int, int], np.float64]]: ...
 
 
@@ -351,7 +359,7 @@ class System4f2DCoherent(OpticalSystem2D):
         E = wrappers.wrapped_ifftn(pupil_function)
         return E
 
-    def compute_psf_and_otf(self, parameters=None, pupil_function =None)\
+    def compute_psf_and_otf(self, parameters=None, pupil_function =None, account_for_pixel_size: bool = False)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
@@ -527,6 +535,7 @@ class System4f3DCoherent(OpticalSystem3D):
     def compute_psf_and_otf(self, parameters=None,
                             high_NA=False,
                             pupil_function=lambda rho: 1,
+                            account_for_pixel_size: bool = False,
                             integrate_rho=False,
                             zernieke={}) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
     np.ndarray[tuple[int, int, int], np.float64]]:
@@ -585,7 +594,8 @@ class System4f2D(System4f2DCoherent):
     def compute_psf_and_otf(self,
                             parameters=None,
                             pupil_function =None, 
-                            save_pupil_function=False)\
+                            save_pupil_function=False, 
+                            account_for_pixel_size: bool = False)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -606,6 +616,8 @@ class System4f2D(System4f2DCoherent):
         self.psf = psf / np.sum(psf)
         self.otf = np.abs(wrappers.wrapped_fftn(self.psf)).astype(complex)
         self.otf /= np.amax(self.otf)
+        if account_for_pixel_size:
+            self._account_for_pixel_size()
         self._prepare_interpolator()
 
         return self.psf, self.otf
@@ -651,6 +663,7 @@ class System4f3D(System4f3DCoherent):
     def compute_psf_and_otf(self, parameters=None,
                             high_NA=False,
                             pupil_function=lambda rho: 1,
+                            account_for_pixel_size: bool = False,
                             integrate_rho=False,
                             zernieke={}, 
                             save_pupil_function=False,
@@ -672,6 +685,8 @@ class System4f3D(System4f3DCoherent):
         self.psf = psf / np.sum(psf)
         self.otf = wrappers.wrapped_fftn(self.psf)
         self.otf /= np.amax(self.otf)
+        if account_for_pixel_size:
+            self._account_for_pixel_size()
         self._prepare_interpolator()
         return self.psf, self.otf
 

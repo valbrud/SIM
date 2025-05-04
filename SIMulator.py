@@ -15,7 +15,6 @@ from OpticalSystems import OpticalSystem
 from abc import abstractmethod
 import Sources
 import wrappers
-from Box import BoxSIM, Field
 from Illumination import PlaneWavesSIM
 from Camera import Camera
 from VectorOperations import VectorOperations

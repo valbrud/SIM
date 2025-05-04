@@ -6,7 +6,7 @@ project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
 
-from IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 import numpy as np
 
 configurations = BFPConfiguration(refraction_index=1.5)

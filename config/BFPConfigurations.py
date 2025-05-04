@@ -20,7 +20,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mr=3, Mt=1):
+    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mr=3, Mt=1, angles=None):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -45,6 +45,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = Mr, 
+                                                                      angles=angles,
                                                                       store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()

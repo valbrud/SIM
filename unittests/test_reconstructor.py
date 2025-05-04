@@ -15,7 +15,7 @@ import sys
 # --- Imports from your simulation modules ---
 from OpticalSystems import System4f2D
 from SIMulator import SIMulator2D
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 from Illumination_experimental import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
@@ -232,9 +232,9 @@ class TestNonlinearReconstruction(unittest.TestCase):
         self.simulator_linear = SIMulator2D(self.illumination_linear, self.optical_system)
         self.sim_images = self.simulator_linear.generate_sim_images(self.image)
 
-        self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
+        # self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
 
-        self.linear_reconstructor = ReconstructorFourierDomain2D(
+        self.linear_reconstructor = ReconstructorSpatialDomain2D(
             illumination=self.illumination_linear,
             optical_system=self.optical_system,
         )
@@ -243,24 +243,23 @@ class TestNonlinearReconstruction(unittest.TestCase):
 
 
     def test_exponential_intensity_dependence(self):
-        p = 10
+        p = 4
         nonlinear_expansion_coefficients = [0, ]
-        n = 5
+        n = 1
         from scipy.special import factorial
-        while (p ** n / factorial(n)) > 10 ** -2:
+        while (p ** n / factorial(n)) > 10 ** -14:
             nonlinear_expansion_coefficients.append(p ** n / factorial(n) * (-1) ** (n + 1))
             n += 1
 
         illumination_non_linear = IlluminationNonLinearSIM2D.init_from_linear_illumination(self.illumination_linear, tuple(nonlinear_expansion_coefficients))
         illumination_non_linear.set_spatial_shifts_diagonally()
-        # for wave in illumination_non_linear.waves:
-        #     illumination_non_linear.waves[wave].amplitude *= illumination_non_linear.spatial_shifts.shape[0]
+
         plt.imshow(illumination_non_linear.get_illumination_density(coordinates=(self.x, self.x)))
         plt.show()
 
         simulator_non_linear = SIMulator2D(illumination_non_linear, self.optical_system)
         sim_images_non_linear = simulator_non_linear.generate_sim_images(self.image)
-        nonlinear_reconstructor = ReconstructorFourierDomain2D(
+        nonlinear_reconstructor = ReconstructorSpatialDomain2D(
             illumination=illumination_non_linear,
             optical_system=self.optical_system
         )

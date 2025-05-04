@@ -103,7 +103,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             Mr (int): Number of rotations.
         """
         self._Mr = Mr
-        self.angles = angles if angles is not None else np.arange(0, np.pi, np.pi / Mr)
+        self.angles = np.array(angles) * np.pi / 180 if angles is not None else np.arange(0, np.pi, np.pi / Mr)
 
         key = list(intensity_harmonics_dict.keys())[0]
         if type(key[0]) is int and  type(key[1]) is tuple:
@@ -115,7 +115,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.harmonics = self._compute_harmonics_for_all_rotations(intensity_harmonics_dict)
 
         self._spatial_shifts = spatial_shifts if not spatial_shifts is None else self._get_zero_shifts()
-        self.Mt = len(self.spatial_shifts[1])
+        self.Mt = self.spatial_shifts.shape[1]
 
         self.dimensions = dimensions
         self.rearranged_indices = self._rearrange_indices(dimensions)
@@ -197,7 +197,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             raise ValueError(f"Spatial shifts must be of shape (Mr, Mt, {self.dimensionality}) or (Mt, {self.dimensionality})!")
         
         if len(new_spatial_shifts.shape) == 3:
-            self.Mt = len(new_spatial_shifts[1])
+            self.Mt = new_spatial_shifts.shape[1]
             if not new_spatial_shifts.shape[0] == self.Mr:
                 raise ValueError(f"Spatial shifts Mr dimension should either be equal to the illumination.Mr one or be absent)!")
             self._spatial_shifts = new_spatial_shifts
@@ -657,7 +657,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         intensity_harmonics_dict = {(harmonic[0], tuple(harmonic[1][:2])): Sources.IntensityHarmonic2D.init_from_3D(illumination_3d.harmonics[harmonic])
                                     for harmonic in illumination_3d.harmonics}
         spatial_shifts = illumination_3d.spatial_shifts[:, :, :2]
-        illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts)
+        illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts, angles=illumination_3d.angles)
         if illumination_3d.electric_field_plane_waves:
             illumination.electric_field_plane_waves = illumination_3d.electric_field_plane_waves
         return illumination
@@ -676,7 +676,9 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
 
     def set_spatial_shifts_diagonally(self, number: int = 0):
         expanded_lattice = self.compute_expanded_lattice()
-        shift_ratios = ShiftsFinder2d.get_shift_ratios(expanded_lattice)
+        shift_ratios = ShiftsFinder2d.get_shift_ratios(expanded_lattice, len(expanded_lattice) + 5)
+        if len(shift_ratios) == 0:
+            raise ValueError("No shift ratios found!")
         bases = sorted(list(shift_ratios.keys()))
         base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
         spatial_shifts = np.zeros((self.Mr, base, 2))

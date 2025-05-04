@@ -10,7 +10,7 @@ import numpy as np
 import OpticalSystems 
 import unittest
 
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import wrappers
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 import scipy

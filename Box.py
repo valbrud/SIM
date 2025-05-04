@@ -10,7 +10,7 @@ from matplotlib.widgets import Slider
 import Sources
 import wrappers
 import stattools
-import config.IlluminationConfigurations as confs
+import config.BFPConfigurations as confs
 from Illumination import Illumination
 from VectorOperations import VectorOperations
 

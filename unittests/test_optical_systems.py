@@ -7,11 +7,11 @@ from matplotlib import colors
 
 import OpticalSystems
 import wrappers
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 from OpticalSystems import System4f3D, System4f2D
 from matplotlib.widgets import Slider
 sys.path.append('../')
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
     def test_OTF(self):
@@ -46,8 +46,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         plt.legend()
         plt.show()
 
-    def test_sim_otf(self):
-        theta = np.pi / 4
+    def test_pixel_correction(self):
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
         dy = dx
@@ -57,26 +56,20 @@ class TestOpticalSystems3D(unittest.TestCase):
         max_z = N // 2 * dz
         x = np.linspace(-max_r, max_r, N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-
-        illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spatial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spatial_shifts = spatial_shifts_conventional2d
-
-        optical_system = System4f3D()
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
-        otf_sum = np.zeros((N, N, N), dtype=np.complex128)
-        effective_otfs = optical_system.compute_effective_otfs_projective_3dSIM(illumination)
-        for otf in effective_otfs:
-            otf_sum += effective_otfs[otf]
-        otf_sum /= np.amax(otf_sum)
-        print(optical_system)
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(fy, np.abs(otf_sum[N//2, :, N//2]))
-        ax.set_title("SIM OTF")
-        ax.set_ylim(bottom=0)
+        psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
+        optical_system = System4f2D(alpha=alpha)
+        optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_correction=False)
+        otf_no_corr = np.copy(optical_system.otf)
+        optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_correction=True)
+        otf_corr = np.copy(optical_system.otf)
+        fig, axes = plt.subplots(1, 2)
+        axes[0].imshow(np.abs(otf_no_corr), cmap='gray')
+        axes[0].set_title("OTF without pixel correction")
+        axes[1].imshow(np.abs(otf_corr), cmap='gray')
+        axes[1].set_title("OTF with pixel correction")
         plt.show()
+
+
 
     def test_confocal_SSNRv(self):
         max_r = 4

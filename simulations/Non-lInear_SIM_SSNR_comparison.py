@@ -1,4 +1,4 @@
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 import numpy as np
 from Illumination import IlluminationNonLinearSIM2D, IlluminationPlaneWaves2D
 from scipy.special import factorial

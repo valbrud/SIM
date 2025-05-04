@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, send_file
 import matplotlib.pyplot as plt
 import numpy as np
 import io
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 from OpticalSystems import System4f3D
 from Box import Box
 

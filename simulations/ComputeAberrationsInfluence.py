@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import csv
 
 import numpy as np
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield
 from OpticalSystems import System4f3D, System4f2D
 sys.path.append('../')

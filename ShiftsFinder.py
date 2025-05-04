@@ -117,7 +117,7 @@ class ShiftsFinder3d(ShiftsFinder):
 
 # Example Usage
 if __name__ == "__main__":
-    from config.IlluminationConfigurations import *
+    from config.BFPConfigurations import *
     illumination = BFPConfiguration().get_4_circular_oblique_waves_and_circular_normal(np.pi / 4, 1)
     expanded_lattice = illumination.compute_expanded_lattice()
 

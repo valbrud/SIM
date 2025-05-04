@@ -12,7 +12,7 @@ import pandas as pd
 from mpl_toolkits.mplot3d import axes3d
 
 import Box
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import unittest
 import time
 from matplotlib.widgets import Slider

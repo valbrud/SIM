@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import axes3d
 
 import WienerFiltering
 import wrappers
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import unittest
 import time
 import skimage

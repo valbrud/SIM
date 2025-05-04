@@ -9,7 +9,7 @@ sys.path.append(current_dir)
 import Box
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import unittest
 import time
 from matplotlib.widgets import Slider

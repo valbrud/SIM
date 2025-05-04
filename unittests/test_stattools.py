@@ -4,7 +4,7 @@ import stattools
 import unittest
 import sys
 from OpticalSystems import System4f3D
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 from SSNRCalculator import SSNRWidefield
 sys.path.append('../')
 

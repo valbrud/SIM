@@ -1,4 +1,4 @@
-from config.IlluminationConfigurations import BFPConfiguration
+from config.BFPConfigurations import BFPConfiguration
 import csv
 import numpy as np
 from SSNRCalculator import SSNRSIM3D

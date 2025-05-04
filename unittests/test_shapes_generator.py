@@ -1,5 +1,5 @@
 import sys
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 import unittest
 from ShapesGenerator import generate_random_spherical_particles, generate_sphere_slices
 import matplotlib.pyplot as plt

@@ -11,7 +11,7 @@ import unittest
 
 from scipy.special import factorial
 
-from config.IlluminationConfigurations import *
+from config.BFPConfigurations import *
 from Box import Box
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 from VectorOperations import VectorOperations
