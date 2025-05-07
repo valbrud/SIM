@@ -30,12 +30,15 @@ from VectorOperations import VectorOperations
 from wrappers import wrapped_fftn, wrapped_ifftn
 from Dimensions import DimensionMetaAbstract
 from abc import abstractmethod
+from stattools import off_grid_ft
 
 from Illumination import (
     PlaneWavesSIM,
     IlluminationPlaneWaves2D,
     IlluminationPlaneWaves3D,
 )
+
+from Sources import IntensityHarmonic
 from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 
 class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
@@ -56,7 +59,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
     @abstractmethod
     def estimate_illumination_parameters(self,
                                          stack,
-                                        return_as_illumination_object: bool = False,
+                                         estimate_modulation_coefficients: bool = True,
                                         **kwargs): 
         pass
     
@@ -135,6 +138,31 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             refined_wavevectors[sim_index] = VectorOperations.rotate_vector2d(wavevector_aligned, angles[r])
         return refined_wavevectors
 
+    def _compose_harmonics_dict(self, refined_wavevectors: dict) -> Dict[int, IntensityHarmonic]:
+        """
+        Compose the harmonics dictionary from the refined wavevectors and base vectors.
+
+        Parameters
+        ----------
+        refined_wavevectors : dict
+            The refined wavevectors.
+
+        Returns
+        -------
+        dict
+            The harmonics dictionary.
+        """
+        harmonic_class = type(next(iter(self.illumination.harmonics.values())))
+        harmonics_dict = {}
+        for index in refined_wavevectors.keys():
+            wavevector = np.copy(refined_wavevectors[index])
+            harmonics_dict[index] = harmonic_class(
+                amplitude=self.illumination.harmonics[index].amplitude,
+                phase=0,
+                wavevector=wavevector,
+            )
+        return harmonics_dict
+    
 class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
     """Cross‑correlation estimator for 2D and 3D SIM."""
 
@@ -144,7 +172,8 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
     def estimate_illumination_parameters(
         self,
         stack: np.ndarray,
-        return_as_illumination_object: bool = False,
+        estimate_modulation_coefficients: bool = True,
+        method_for_modulation_coefficients='least_squares',
         peak_neighborhood_size: int = 11,
         zooming_factor: int = 3, 
         max_iterations: int = 20,
@@ -212,14 +241,37 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
                 # diff = np.sum((refined_base_vectors - base_vectors)**2)
 
 
-            peaks.update(peaks_approximated)
+            peaks.update({key:peaks_approximated[key] / (2 * np.pi) for key in peaks_approximated.keys() if key[0] == r})
 
         rotation_angles = self._estimate_rotation_angles(peaks)
         refined_base_vectors = self._refine_base_vectors(peaks, rotation_angles)
         refined_wavevectors = self._refine_wavevectors(refined_base_vectors, rotation_angles)
+        print(refined_wavevectors, rotation_angles)
+        estimated_modualtion_patterns = self._phase_modulation_patterns(refined_wavevectors)
+        correlation_matrix = self._cross_correlation_matrix(stack, 0, estimated_modualtion_patterns, grid)
+        # for n in range(Mt):
+            # fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+            # axes[0].imshow(np.abs(correlation_matrix[((0, (2, 0)), n, n)]), cmap='gray')
+            # axes[1].imshow(np.angle(correlation_matrix[((0, (2, 0)), n, n)]), cmap='gray')
+            # plt.show()
         phase_matrix = self._compute_phase_matrix(stack, refined_wavevectors)
-    
-        return refined_base_vectors, rotation_angles
+        
+        new_illum_class = type(self.illumination)
+        harmonics_dict = self._compose_harmonics_dict(refined_wavevectors)
+        illumination_estimated = new_illum_class(
+                 intensity_harmonics_dict = harmonics_dict,
+                 dimensions= self.illumination.dimensions,
+                 Mr=self.illumination.Mr,
+                 spatial_shifts=None,
+                 angles=rotation_angles,
+                 )
+        illumination_estimated.phase_matrix = phase_matrix
+        if estimate_modulation_coefficients:
+            illumination_estimated.estimate_modulation_coefficients(stack, self.optical_system.psf, self.optical_system.x_grid, 
+                                                                    method = method_for_modulation_coefficients, update=True) 
+
+
+        return illumination_estimated
 
 
     def _fine_q_grid(self, q_grid, zooming_factor) -> np.ndarray:
@@ -280,10 +332,11 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
                             noise_function = (images[r, n1] *  estimated_modualtion_patterns[m]).flatten()
                             Cmn1n2[(m, n1, n2)] -= fourier_exponents @ noise_function
                         Cmn1n2[(m, n1, n2)] = Cmn1n2[(m, n1, n2)].reshape(fine_q_grid.shape[:-1])
-                        # plt.imshow(np.abs(Cmn1n2[(m, n1, n2)]), cmap='gray',
-                                    # extent=(np.amin(fine_q_grid[..., 0]), np.amax(fine_q_grid[..., 0]), np.amin(fine_q_grid[..., 1]), np.amax(fine_q_grid[..., 1])))
-                        # plt.title(f"m: {m}, n1: {n1}, n2: {n2}")
-                        # plt.show()
+                        # if n1== n2:
+                            # plt.imshow(np.abs(Cmn1n2[(m, n1, n2)]), cmap='gray',
+                            #             extent=(np.amin(fine_q_grid[..., 0]), np.amax(fine_q_grid[..., 0]), np.amin(fine_q_grid[..., 1]), np.amax(fine_q_grid[..., 1])))
+                            # plt.title(f"m: {m}, n1: {n1}, n2: {n2}")
+                            # plt.show()
         return Cmn1n2
     
     def _find_maxima(self, Cmat: Dict[int, np.ndarray], grid: np.ndarray) -> dict:
@@ -303,6 +356,7 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
         maxima = {}
         for index in Cmat.keys():
             max_index = np.unravel_index(np.argmax(np.abs(Cmat[index])), Cmat[index].shape)
+            # print(index, round(np.abs(Cmat[index][max_index])), round(np.angle(Cmat[index][max_index])* 180/np.pi, 1), grid[max_index])
             q = grid[max_index]
             maxima[index] = q
         return maxima
@@ -335,7 +389,7 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
     def _refine_peaks(self, peaks, averaged_maxima: dict) -> dict:
         refined_peaks = {}
         for index in averaged_maxima.keys():
-            refined_peaks[index] = peaks[index] - averaged_maxima[index]
+            refined_peaks[index] = peaks[index] - 2 * np.pi * averaged_maxima[index]
 
         return refined_peaks
     
@@ -384,15 +438,21 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
         phase_matrix = {}
         for r in range(self.illumination.Mr):
             wavevectors = {index: refined_wavevectors[index] for index in refined_wavevectors.keys() if index[0] == r}
-            estimated_modualtion_patterns = self._phase_modulation_patterns(refined_wavevectors)
+            estimated_modualtion_patterns = self._phase_modulation_patterns(wavevectors)
             correlation_matrix = self._cross_correlation_matrix(stack, r, estimated_modualtion_patterns, grid)
+            Cmat = correlation_matrix
             for n in range(self.illumination.Mt):
+                phase_matrix[(r, n, (0, 0))] = 1. + 0.j
                 for m in wavevectors.keys():
                     if m[1] != tuple([0] * self.dimensionality):
                         if m[1][0] >= 0:
                             phase = np.angle(correlation_matrix[(m, n, n)])
-                            print(r, n, m, 'phase', phase / np.pi * 180, 'degrees')
-                            phase_matrix[(r, n, m)] = np.exp(1j * phase)
+                            index = (m, n, n)
+                            max_index = np.unravel_index(np.argmax(np.abs(Cmat[index])), Cmat[index].shape)
+                            print(index, round(np.abs(Cmat[index][max_index])), round(np.angle(Cmat[index][max_index])* 180/np.pi, 1))
+                            phase_matrix[(r, n, m[1])] = np.exp(1j * phase[0, 0])
+                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(-1j * phase[0, 0])
+
         return phase_matrix
          
 
@@ -409,13 +469,13 @@ from SSNRCalculator import SSNRBase
 class PatternEstimatorInterpolation(IlluminationPatternEstimator):
     def estimate_illumination_parameters(self,
                                      stack: np.ndarray,
-                                     return_as_illumination_object: bool = False, 
+                                     estimate_modulation_coefficients: bool = True,
+                                     method_for_modulation_coefficients='peak_height_ratio',
                                      interpolation_factor: int = 100,  
                                      peak_search_area_size: int = 31,
                                      peak_interpolation_area_size: int = 5,
                                      iteration_number: int = 3,
                                      ssnr_estimation_iters: int = 10, 
-                                     real_space_images = True, 
                                      deconvolve_stacks = True,
                                      correct_peak_position = False) -> np.ndarray:
         """
@@ -474,9 +534,23 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
         refined_base_vectors = self._refine_base_vectors(averaged_maxima, rotation_angles)
         refined_wavevectors = self._refine_wavevectors(refined_base_vectors, rotation_angles)
         phase_matrix = self._compute_phase_matrix(stack, refined_wavevectors)
-        # modulation_depths = self._compute_modulation_depths(stack_ft, phase_matrix)
+        new_illum_class = type(self.illumination)
 
-        return refined_base_vectors, rotation_angles, phase_matrix
+        harmonics_dict = self._compose_harmonics_dict(refined_wavevectors)
+        illumination_estimated = new_illum_class(
+                 intensity_harmonics_dict = harmonics_dict,
+                 dimensions= self.illumination.dimensions,
+                 Mr=self.illumination.Mr,
+                 spatial_shifts=None,
+                 angles=rotation_angles,
+                 )
+        illumination_estimated.phase_matrix = phase_matrix
+        if estimate_modulation_coefficients:
+            illumination_estimated.estimate_modulation_coefficients(stack, self.optical_system.psf, self.optical_system.x_grid, 
+                                                                    method = method_for_modulation_coefficients, update=True) 
+
+
+        return illumination_estimated
     
     @abstractmethod
     def _compute_ssnr(self, stack: np.ndarray, peak_neighborhood_size: int) -> np.ndarray:
@@ -653,14 +727,6 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
         fine_q_grid = np.stack(np.meshgrid(*tuple(fine_q_coordinates), indexing='ij'), axis=-1)
         return fine_q_grid
     
-    def _off_grid_ft(self, array: np.ndarray, q_values: np.ndarray) -> np.ndarray:
-        x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
-        q_grid_flat = q_values.reshape(-1, self.optical_system.dimensionality)
-        phase_matrix = q_grid_flat @ x_grid_flat.T
-        fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
-        array_ft_values = fourier_exponents @ array.flatten()
-        return array_ft_values.reshape(q_values.shape[:-1])
-    
     def _off_grid_ft_stacks(self, stack: np.ndarray, fine_q_grids: np.ndarray, compute_otf=True, account_for_pixel_size=True) -> np.ndarray:
         x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
         images_ft_dict = {}
@@ -742,12 +808,13 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
         """
         otf_dict = {}
         otf_grad_dict = {}
+        grid = self.optical_system.x_grid
         for key in estimated_peaks.keys():
             peak = estimated_peaks[key]
             psf = self.optical_system.psf
             q_values = np.array([peak, peak - np.array((dk, 0)), peak + np.array((dk, 0)), peak - np.array((0, dk)), peak + np.array((0, dk))])
 
-            otf_values = self._off_grid_ft(psf, q_values)
+            otf_values = off_grid_ft(psf, grid, q_values)
             otf_values = np.abs(otf_values)
             otf_dict[key] = otf_values[0]
 
@@ -800,24 +867,21 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
             The estimated phase shifts.
         """
         phase_matrix = {}
+        grid = self.optical_system.x_grid
         for n in range(stack.shape[1]):
             for index in refined_wavevectors.keys():
                 r = index[0]
                 m = index[1]
                 wavevector = refined_wavevectors[index] / (2 * np.pi)
-                ft = self._off_grid_ft(stack[r, n], np.array((wavevector, )))
-                # plt.imshow(stack[r, n], cmap='gray')
-                # plt.show()
-                # plt.imshow(np.angle(wrapped_fftn(stack[r, n])))
-                # plt.show()
-                # test = self._off_grid_ft(stack[2, n], np.array((-7.1245 / (2 * np.pi), -12.34602 / (2 * np.pi))))
-                # print(n, np.angle(test) / np.pi * 180)
+                ft = off_grid_ft(stack[r, n], grid, np.array((wavevector, )))
+                otf = off_grid_ft(self.optical_system.psf, grid, np.array((wavevector, )))
+                ft0 = off_grid_ft(stack[r, n], grid, np.array(([0] * self.dimensionality )))
                 phase = np.angle(ft)
                 print('r', r, 'm', m, 'n', n, 'k', wavevector, 'ft', np.abs(ft),  'angle', phase / np.pi * 180)
                 phase_matrix[(r, n, m)] = np.exp(1j * phase)
 
         return phase_matrix
-    
+
     def _compute_spatial_shifts(self, phase_matrix, refined_wavevectors: np.ndarray) -> np.ndarray:
         """
         Compute the spatial shifts from the phase matrix.
@@ -863,45 +927,52 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
             The computed modulation depths.
         """
 
-        fourier_orders = {}
-        for index in self.illumination.rearranged_indices.keys():
-            r, m = index[0], index[1]
-            fourier_order = np.zeros((stack_ft.shape[2:]), dtype=np.complex128)
-            for n in range(stack_ft[r].shape[1]):
-                    fourier_order += stack_ft[r, n] * phase_matrix[r, n, m].conjugate()
-            fourier_orders[index] = fourier_order
+        # fourier_orders = {}
+        # for index in self.illumination.rearranged_indices.keys():
+        #     r, m = index[0], index[1]
+        #     fourier_order = np.zeros((stack_ft.shape[2:]), dtype=np.complex128)
+        #     for n in range(stack_ft[r].shape[1]):
+        #             fourier_order += stack_ft[r, n] * phase_matrix[r, n, m].conjugate()
+        #     fourier_orders[index] = fourier_order
 
         modulation_depths = {}
-        for r in range(self.illumination.Mr):
-            modulation_depths[r, (0, 0)] = {1. + 0j}
+        # for r in range(self.illumination.Mr):
+        #     modulation_depths[r, (0, 0)] = {1. + 0j}
 
-        for index in fourier_orders.keys():
-            ...
+        # for index in fourier_orders.keys():
+        #     ...
+        # grid = self.optical_system.x_grid
+        # for n in range(stack.shape[1]):
+        #     for index in refined_wavevectors.keys():
+        #         r = index[0]
+        #         m = index[1]
+        #         wavevector = refined_wavevectors[index] / (2 * np.pi)
+        #         ft = off_grid_ft(stack[r, n], grid, np.array((wavevector, )))
 
         return modulation_depths
 
-    def _modualation_depth_loss_function(self, fourier_orders: dict[np.ndarray]) -> dict[complex]:
-        """
-        Compute the modulation depth loss function.
+    # def _modualation_depth_loss_function(self, fourier_orders: dict[np.ndarray]) -> dict[complex]:
+    #     """
+    #     Compute the modulation depth loss function.
 
-        Parameters
-        ----------
-        fourier_orders : dict
-            The Fourier orders.
+    #     Parameters
+    #     ----------
+    #     fourier_orders : dict
+    #         The Fourier orders.
 
-        Returns
-        -------
-        np.ndarray
-            The computed modulation depths.
-        """
-        loss_function = {}
-        for index in fourier_orders.keys():
-            r, m = index[0], index[1]
-            if m == (0, 0):
-                continue
-            fourier_order = fourier_orders[index]
-            loss_function[index] = np.abs(fourier_order) ** 2
-        return loss_function
+    #     Returns
+    #     -------
+    #     np.ndarray
+    #         The computed modulation depths.
+    #     """
+    #     loss_function = {}
+    #     for index in fourier_orders.keys():
+    #         r, m = index[0], index[1]
+    #         if m == (0, 0):
+    #             continue
+    #         fourier_order = fourier_orders[index]
+    #         loss_function[index] = np.abs(fourier_order) ** 2
+    #     return loss_function
     
 class PatternEstimatorCrossCorrelation2D(PatternEstimatorCrossCorrelation):
     dimensionality = 2

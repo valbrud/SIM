@@ -1259,7 +1259,7 @@ class TestSSNRSIM(unittest.TestCase):
         box = Box.Box(sources, size, N)
         box.compute_intensity_and_spatial_waves_numerically()
         iwaves = box.get_approximated_intensity_sources()
-        il =  IlluminationPlaneWaves3D.index_frequencies(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
+        il =  IlluminationPlaneWaves3D.index_harmonics(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
         illumination_3w = IlluminationPlaneWaves3D(il, Mr=5)
         illumination_3w.Mt = 1
         illumination_3w.normalize_spatial_waves()

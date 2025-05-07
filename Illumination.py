@@ -74,7 +74,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
     methods:
         init_from_list: Class method to initialize Illumination from a list of intensity plane waves.
-        index_frequencies: Index the frequencies of the intensity harmonics.
+        index_harmonics: Index the frequencies of the intensity harmonics.
         glue_indices: Glue the indices of the SIM and projected indices.
         get_wavevectors: Get the wavevectors for a given rotation.
         get_all_wavevectors: Get all wavevectors for all rotations.
@@ -131,7 +131,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         Returns:
             Illumination: Initialized Illumination object.
         """
-        intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
+        intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
         return cls(intensity_harmonics_dict, dimensions, Mr=Mr)
     
     @property
@@ -175,7 +175,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
     @staticmethod
     @abstractmethod
-    def index_frequencies(waves_list: list[Sources.IntensityHarmonic], base_vector_lengths: tuple[float, ...]) -> dict[tuple[int, ...], Sources.IntensityHarmonic]:
+    def index_harmonics(waves_list: list[Sources.IntensityHarmonic], base_vector_lengths: tuple[float, ...]) -> dict[tuple[int, ...], Sources.IntensityHarmonic]:
         """
         Index the frequencies of the intensity harmonics.
 
@@ -461,7 +461,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             Illumination: Initialized Illumination object.
         """
         intensity_harmonics_list = IlluminationPlaneWaves3D.find_ipw_from_pw(plane_waves)
-        intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
+        intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
         illumination = cls(intensity_harmonics_dict, dimensions, Mr=Mr)
         if store_plane_waves:
             illumination.electric_field_plane_waves = plane_waves
@@ -478,7 +478,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             spatial_wave.amplitude /= norm
 
     @staticmethod
-    def index_frequencies(waves_list: list[Sources.IntensityHarmonic3D], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int],
+    def index_harmonics(waves_list: list[Sources.IntensityHarmonic3D], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int],
     Sources.IntensityHarmonic3D]:
         intensity_harmonics_dict = {}
         for wave in waves_list:
@@ -596,7 +596,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         return illumination
     
     @staticmethod
-    def index_frequencies(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int], Sources.IntensityHarmonic2D]:
+    def index_harmonics(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int], Sources.IntensityHarmonic2D]:
         intensity_harmonics_dict = {}
         for wave in waves_list:
             wavevector = wave.wavevector
@@ -744,7 +744,7 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
                        spatial_shifts=[],
                        nonlinear_expansion_coefficients: tuple[float, ...] = (0, 1),
                        ):
-        intensity_harmonics_dict = cls.index_frequencies(intensity_harmonics_list, base_vector_lengths)
+        intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
         return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr=Mr)
 
     @classmethod

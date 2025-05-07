@@ -10,6 +10,15 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import scipy
 
+    
+def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
+    x_grid_flat = grid.reshape(-1, len(array.shape))
+    q_grid_flat = q_values.reshape(-1, len(array.shape))
+    phase_matrix = q_grid_flat @ x_grid_flat.T
+    fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
+    array_ft_values = fourier_exponents @ array.flatten()
+    return array_ft_values.reshape(q_values.shape[:-1])
+
 
 def find_decreasing_surface_levels3d(array: np.ndarray[tuple[int, int, int], np.float64], axes=None, direction=None) -> np.ndarray[tuple[int, int, int], np.int32]:
     """

@@ -83,7 +83,7 @@ class TestIllumination(unittest.TestCase):
             Sources.IntensityHarmonic3D(b, 0, np.array((k1, 0, -k2))),
             Sources.IntensityHarmonic3D(b, 0, np.array((-k1, 0, -k2))),
         ]
-        three_waves_dict =  IlluminationPlaneWaves3D.index_frequencies(sources, (k1, k1, k2))
+        three_waves_dict =  IlluminationPlaneWaves3D.index_harmonics(sources, (k1, k1, k2))
         test_illumination = BFPConfiguration().get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 1, Mt=1)
         indexed_three = set(three_waves_dict.keys())
         test_indices = set([key[1] for key in test_illumination.harmonics.keys() if key[0] == 0])
