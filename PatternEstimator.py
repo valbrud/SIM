@@ -186,10 +186,10 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
         Mr, Mt = self.illumination.Mr, self.illumination.Mt
         if stack.shape[0] != Mr:
             raise ValueError(
-                f"Stack rotations={stack.shape[0]} differ from illumination.Mr={Mr}")
+                f"Stack rotations={stack.shape[0]} differ from Illumination.Mr={Mr}")
         if stack.shape[1] != Mt:
             raise ValueError(
-                f"Stack translations={stack.shape[1]} differ from illumination.Mt={Mt}")
+                f"Stack translations={stack.shape[1]} differ from Illumination.Mt={Mt}")
 
         if effective_otfs is None:
             _, effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
@@ -544,12 +544,18 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
                  spatial_shifts=None,
                  angles=rotation_angles,
                  )
+        illumination_estimated.Mt = self.illumination.Mt
         illumination_estimated.phase_matrix = phase_matrix
         if estimate_modulation_coefficients:
             illumination_estimated.estimate_modulation_coefficients(stack, self.optical_system.psf, self.optical_system.x_grid, 
                                                                     method = method_for_modulation_coefficients, update=True) 
 
-
+        illumination_estimated.electric_field_plane_waves = self.illumination.electric_field_plane_waves
+        illumination_estimated.normalize_spatial_waves()
+        for plane_wave in illumination_estimated.electric_field_plane_waves:
+            scaling_factor = np.sum(self.illumination.get_base_vectors(0)**2)**0.5 / np.sum(illumination_estimated.get_base_vectors(0)**2)**0.5
+            print('scaling factor', scaling_factor)
+            plane_wave.wavevector *= scaling_factor
         return illumination_estimated
     
     @abstractmethod
@@ -612,10 +618,10 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
             top_left = coords.min(axis=0)
             bottom_right = coords.max(axis=0) + 1  # slice end is exclusive
             cropped_stacks[peak] = np.array([image_ft[top_left[0]:bottom_right[0], top_left[1]:bottom_right[1]] for image_ft in stack_ft[r]])
-            # plt.imshow(np.abs(stack_ft[0, 0] * mask), cmap='gray')
-            qx, qy = self.optical_system.otf_frequencies
-            approximate_peak = self.illumination.harmonics[(0, (2, 0))].wavevector / (2 * np.pi)
-            # plt.plot(approximate_peak[1]/qx[-1] * 50 + 50, approximate_peak[0]/qx[-1] * 50 + 50, 'rx')
+            # plt.imshow((np.abs(stack_ft[r, 0] * mask)).T, cmap='gray', origin='lower')
+            # qx, qy = self.optical_system.otf_frequencies
+            # approximate_peak = self.illumination.harmonics[peak].wavevector / (2 * np.pi)
+            # plt.plot(approximate_peak[0]/qx[-1] * 128 + 128, approximate_peak[1]/qx[-1] * 128 + 128, 'rx')
             # plt.show()
         return cropped_stacks
     
@@ -874,10 +880,9 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
                 m = index[1]
                 wavevector = refined_wavevectors[index] / (2 * np.pi)
                 ft = off_grid_ft(stack[r, n], grid, np.array((wavevector, )))
-                otf = off_grid_ft(self.optical_system.psf, grid, np.array((wavevector, )))
-                ft0 = off_grid_ft(stack[r, n], grid, np.array(([0] * self.dimensionality )))
                 phase = np.angle(ft)
-                print('r', r, 'm', m, 'n', n, 'k', wavevector, 'ft', np.abs(ft),  'angle', phase / np.pi * 180)
+                if r == 0 and m == (2, 0):
+                    print('r', r, 'm', m, 'n', n, 'k', wavevector, 'ft', np.abs(ft),  'angle', phase / np.pi * 180)
                 phase_matrix[(r, n, m)] = np.exp(1j * phase)
 
         return phase_matrix

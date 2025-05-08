@@ -23,7 +23,7 @@ from wrappers import wrapped_fftn, wrapped_ifftn
 from PatternEstimator import *
 from OpticalSystems import System4f2D
 from SIMulator import SIMulator2D
-from Illumination_experimental import IlluminationPlaneWaves2D
+from Illumination import IlluminationPlaneWaves2D
 from Sources import IntensityHarmonic2D
 import unittest
 import numpy as np
@@ -44,7 +44,7 @@ def build_experimental_illumination():
     print('ratio to lens semi-oepning', np.sin(theta) / np.sin(alpha))
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 0, Mr=3, angles=(-0 / 180 * np.pi, 60 / 180 * np.pi, 120 / 180 * np.pi),
+        theta, 1, 0, Mr=3, angles=(-0 / 180 * np.pi, 58 / 180 * np.pi, 115 / 180 * np.pi),
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -71,7 +71,7 @@ class TestPatternEstimator2D(unittest.TestCase):
         # ---------- optics --------------------------------------------------
         N = 101                                   # keep small for speed
         max_r = N // 2 * dx
-        psf_size = 2 * np.array((2 * max_r, 2 * max_r))
+        psf_size = 2 * np.array((max_r, max_r))
         self.optical_system = System4f2D(alpha=alpha-0.2, refractive_index=nmedium)
         self.optical_system.compute_psf_and_otf((psf_size, N))
         # plt.imshow(self.optical_system.otf.real, cmap='gray',)
@@ -98,8 +98,12 @@ class TestPatternEstimator2D(unittest.TestCase):
         """Estimator recovers phases and modulation depth on clean data."""
         raw_stack = self.simulator.generate_sim_images(self.sample)
         raw_stack = self.simulator.add_noise(raw_stack)  # (3, 3, N, N)
-        plt.imshow(raw_stack[0, 0], cmap='gray')
-        # plt.show()
+        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[0, 0]))).T, cmap='gray', origin='lower')
+        plt.show()
+        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[1, 0]))).T, cmap='gray', origin='lower')
+        plt.show()
+        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[2, 0]))).T, cmap='gray', origin='lower')
+        plt.show()
 
         base_vectors = np.array(self.theoretical_illumination.get_base_vectors(0))/(2 * np.pi)
         true_vectors = np.array(self.experimenatal_illumination.get_base_vectors(0)) / (2  * np.pi)
@@ -112,7 +116,6 @@ class TestPatternEstimator2D(unittest.TestCase):
 
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
-            return_as_illumination_object=False, 
             zooming_factor=1.3,
             peak_neighborhood_size=7, 
             max_iterations=10,             

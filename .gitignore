@@ -12,3 +12,4 @@ Figures/
 __pycache__/
 other_projects/
 *.doctree
+data/

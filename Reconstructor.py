@@ -6,7 +6,7 @@ from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 import Sources
 import wrappers
 from Box import BoxSIM, Field
-from Illumination_experimental import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
+from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract

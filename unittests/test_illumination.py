@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import stattools
 import sys
 
-from Illumination_experimental import *
+from Illumination import *
 from config.SIM_N100_NA15 import *
 
 class TestInitialization(unittest.TestCase):

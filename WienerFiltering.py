@@ -25,7 +25,7 @@ import numpy as np
 import stattools
 import wrappers
 
-def WienerFilterConstant(image_ft, otf, w):
+def filter_constant(image_ft, otf, w):
     """
     Applies a Wiener filtering (deconvolution) procedure with a regularization filter 
     set up to be a constant (standard procedure). The constant can be given or estimated from the image. 
@@ -43,7 +43,7 @@ def WienerFilterConstant(image_ft, otf, w):
     
     return filtered, w
 
-def WienerFilterFlat(image_ft, otf, ssnr_calculator): 
+def filter_flat_noise(image_ft, otf, ssnr_calculator): 
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the flat noise. 
@@ -63,7 +63,7 @@ def WienerFilterFlat(image_ft, otf, ssnr_calculator):
     filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
     return filtered, w
 
-def WienerFilterTrue(image_ft,
+def filter_true_wiener(image_ft,
                     otf,
                     ssnr_calculator,
                     vja = None, 
@@ -115,11 +115,11 @@ def WienerFilterTrue(image_ft,
             vjra = average_rings(np.copy(ssnr_calculator.vj), ssnr_calculator.optical_system.otf_frequencies)
             dja = expand_ring_averages(djra, ssnr_calculator.optical_system.otf_frequencies)
             vja = expand_ring_averages(vjra, ssnr_calculator.optical_system.otf_frequencies)
-    
-    else: 
-        ssnr = ((obj2a - vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja) /
-                        (vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja)).real
-        ssnr = np.nan_to_num(ssnr)
+
+
+    ssnr = ((obj2a - vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja) /
+                    (vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja)).real
+    ssnr = np.nan_to_num(ssnr)
 
     w = (dja + 10**3 * numeric_noise)/(ssnr + numeric_noise)
     filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)

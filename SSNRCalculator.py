@@ -212,8 +212,8 @@ class SSNRSIM(SSNRBase):
                  optical_system:OpticalSystems.OpticalSystem,
                  kernel: np.ndarray=None,
                  readout_noise_variance:float=0,
-                 effective_otfs=None,
-                 effective_kernels_ft=None,
+                 effective_otfs={},
+                 effective_kernels_ft={},
                  save_memory=False
                  ):
         if not isinstance(illumination, PlaneWavesSIM):
@@ -223,12 +223,12 @@ class SSNRSIM(SSNRBase):
         self.vj = None
         self.dj = None
 
-        self.effective_otfs = {} if effective_otfs is None else effective_otfs
+        self.effective_otfs = {} if not effective_otfs else effective_otfs
         self.otf_sim = None
-        if not self.effective_otfs is None:
-            self._computte_otf_sim()
+        if self.effective_otfs:
+            self._compute_otf_sim()
 
-        self.effective_kernels_ft = {} if effective_kernels_ft is None else effective_kernels_ft
+        self.effective_kernels_ft = {} if not effective_kernels_ft else effective_kernels_ft
         self._kernel = None
         self._kernel_ft = None
 
@@ -238,11 +238,11 @@ class SSNRSIM(SSNRBase):
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
 
-        if self.effective_otfs is None:
+        if not self.effective_otfs:
             self._compute_effective_otfs()
 
-        if self.effective_kernels_ft is None:
-            if kernel:
+        if not self.effective_kernels_ft:
+            if not kernel is None:
                 self.kernel = kernel
 
         self._compute_ssnri()
@@ -350,12 +350,13 @@ class SSNRSIM(SSNRBase):
             for idx2 in self.effective_otfs.keys():
                 if idx1[0] != idx2[0]:
                     continue
+                r = idx1[0]
                 m1 = idx1[1]
                 m2 = idx2[1]
                 m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
-                if m21 not in self.illumination.rearranged_indices:
+                if (r, m21) not in self.illumination.rearranged_indices:
                     continue
-                idx_diff = (idx1[0], m21)
+                idx_diff = (r, m21)
                 otf1 = effective_kernels_ft[idx1]
                 otf2 = effective_kernels_ft[idx2]
                 otf3 = self.effective_otfs[idx_diff][*center]
@@ -369,7 +370,7 @@ class SSNRSIM(SSNRBase):
 
     def _compute_ssnri(self):
         # Only needed if effective kernels/otfs were deleted in a memory efficient mode
-        if self.effective_otfs is None:
+        if not self.effective_otfs:
             self._compute_effective_otfs()
 
         self.dj = self._compute_Dj()
@@ -448,7 +449,7 @@ class SSNRSIM2D(SSNRSIM):
     def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise AttributeError("Illumination data is not of the valid dimension!")
-        if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
+        if not isinstance(optical_system, OpticalSystems.OpticalSystem2D):
             raise AttributeError("Optical system data is not of the valid dimension!")
         super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory)
 

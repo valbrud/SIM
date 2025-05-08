@@ -16,7 +16,7 @@ import sys
 from OpticalSystems import System4f2D
 from SIMulator import SIMulator2D
 from config.BFPConfigurations import BFPConfiguration
-from Illumination_experimental import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
+from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from kernels import sinc_kernel, psf_kernel2d

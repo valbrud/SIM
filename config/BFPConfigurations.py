@@ -1,6 +1,6 @@
 import numpy as np
 import Sources
-from Illumination_experimental import IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
+from Illumination import IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
 from fractions import Fraction
 
