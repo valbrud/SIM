@@ -68,9 +68,9 @@ multiplier = 10 ** 5
 ylim = 10 ** 2
 
 optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
-conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
-
 optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
+
+conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)
 hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
@@ -340,7 +340,7 @@ class TestArticlePlots(unittest.TestCase):
             ax.set_xlim(0, (2 * NA + 2 * nmedium * np.sin(theta)) / (2 * NA))
             ax.set_ylim(1, 10 ** 2)
             plt.show()
-            fig.savefig(f'{path_to_figures}sim_anisotropy-{phase}')
+            # fig.savefig(f'{path_to_figures}sim_anisotropy-{phase}')
 
 
         # ax1.plot(two_NA_fx[N // 2:], 1 + scaling_factor * ssnr0[:, N // 2, N // 2 + z_shift][N // 2:], label="$k_x$")
@@ -444,7 +444,7 @@ class TestArticlePlots(unittest.TestCase):
         ax2.set_yscale('log')
         ax1.plot(ssnrD0scaled[N//2 + 20, :, N//2])
         ax1.plot(ssnrD1scaled[N//2 + 20, :, N//2])
-        fig.savefig(f'{path_to_figures}sim_anisotropy')
+        # fig.savefig(f'{path_to_figures}sim_anisotropy')
         plt.show()
 
     def test_sim_modalities_comparison(self):

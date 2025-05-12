@@ -18,7 +18,7 @@ so far the required libraries are downloaded.
 # To reproduce the results from the article
 ## Go to the directory `papers/ssnr_comparison` and run the corresponding test in the file `generate_plots.py` in your IDE or with
 ```bash
-python -m unittest papers.comparison_ssnr.generate_plots.TestArticlePlots.test_ring_averaged_ssnr 
+python -m unittest papers.ssnr_comparison.generate_plots.TestArticlePlots.test_ring_averaged_ssnr 
 ```
 If you want to run other unittests from the unittests folder, you may need to change paths defined in the file globvar.py
 

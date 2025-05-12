@@ -214,12 +214,13 @@ class SSNRSIM(SSNRBase):
                  readout_noise_variance:float=0,
                  effective_otfs={},
                  effective_kernels_ft={},
-                 save_memory=False
+                 save_memory=False, 
+                 illumination_reconstruction=None
                  ):
-        if not isinstance(illumination, PlaneWavesSIM):
-            raise AttributeError("Illumination data is not of SIM type!")
+        
         super().__init__(optical_system)
         self._illumination = illumination
+        self._illumination_reconstruction = illumination_reconstruction if not illumination_reconstruction is None else illumination
         self.vj = None
         self.dj = None
 
@@ -244,6 +245,8 @@ class SSNRSIM(SSNRBase):
         if not self.effective_kernels_ft:
             if not kernel is None:
                 self.kernel = kernel
+            else:
+                self.kernel = self.optical_system.psf
 
         self._compute_ssnri()
 
@@ -264,11 +267,25 @@ class SSNRSIM(SSNRBase):
 
     @illumination.setter
     def illumination(self, new_illumination):
+        if self._illumination is self._illumination_reconstruction:
+            self._illumination_reconstruction = None 
         self._illumination = new_illumination
         self.effective_otfs = {}
         self._compute_effective_otfs()
-        if self.kernel:
-            self._compute_effective_kernels_ft()
+        if self.illumination_reconstruction is None:
+            self.illumination_reconstruction = new_illumination
+        else:
+            self._compute_ssnri()
+
+    @property 
+    def illumination_reconstruction(self):
+        return self._illumination_reconstruction
+    
+    @illumination_reconstruction.setter
+    def illumination_reconstruction(self, new_illumination_reconstruction):
+        self._illumination_reconstruction = new_illumination_reconstruction
+        self.effective_kernels_ft = {}
+        self._compute_effective_kernels_ft()
         self._compute_ssnri()
 
     @property
@@ -280,8 +297,8 @@ class SSNRSIM(SSNRBase):
         shape = np.array(kernel_new.shape, dtype=np.int32)
         otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
 
-        if ((shape % 2) == 0).any():
-            raise ValueError("Size of the kernel must be odd!")
+        # if ((shape % 2) == 0).any():
+        #     raise ValueError("Size of the kernel must be odd!")
 
         if (shape > otf_shape).any():
             raise ValueError("Size of the kernel is bigger than of the PSF!")
@@ -320,17 +337,15 @@ class SSNRSIM(SSNRBase):
             self.otf_sim += np.abs(self.effective_otfs[m])
 
     def _compute_effective_kernels_ft(self):
-        _, self.effective_kernels_ft = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
+        if np.isclose(self.kernel, self.optical_system.psf).all() and self.illumination_reconstruction is self.illumination:
+            self.effective_kernels_ft = self.effective_otfs
+        else:
+            _, self.effective_kernels_ft = self.illumination_reconstruction.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
 
     def _compute_Dj(self):
-        if not self.effective_kernels_ft:
-            effective_kernels_ft = self.effective_otfs
-        else:
-            effective_kernels_ft = self.effective_kernels_ft
-
         d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
         for m in self.effective_otfs.keys():
-            d_j += self.effective_otfs[m] * effective_kernels_ft[m].conjugate()
+            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()
         d_j *= self.illumination.Mt
         # plt.title("Dj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
@@ -338,11 +353,6 @@ class SSNRSIM(SSNRBase):
         return np.abs(d_j)
 
     def _compute_Vj(self):
-        if not self.effective_kernels_ft:
-            effective_kernels_ft = self.effective_otfs
-        else:
-            effective_kernels_ft = self.effective_kernels_ft
-
         center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
         v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
 
@@ -357,8 +367,8 @@ class SSNRSIM(SSNRBase):
                 if (r, m21) not in self.illumination.rearranged_indices:
                     continue
                 idx_diff = (r, m21)
-                otf1 = effective_kernels_ft[idx1]
-                otf2 = effective_kernels_ft[idx2]
+                otf1 = self.effective_kernels_ft[idx1]
+                otf2 = self.effective_kernels_ft[idx2]
                 otf3 = self.effective_otfs[idx_diff][*center]
                 term = otf1 * otf2.conjugate() * otf3
                 v_j += term
@@ -390,7 +400,7 @@ class SSNRSIM(SSNRBase):
     def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
         g0 = np.abs(np.amax(self.optical_system.otf))
-        weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
+        weights = np.array([harmonic.amplitude for harmonic in self.illumination.harmonics.values()])
         weighted2sum = np.sum(weights * weights.conjugate()).real
         volume = ((self.illumination.Mt * self.illumination.Mr) ** 2 * weighted2sum * g2 /
                   g0 * volume_element * factor)
@@ -406,7 +416,7 @@ class SSNRSIM(SSNRBase):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
         g4 = np.sum(self.optical_system.otf ** 2 * self.optical_system.otf.conjugate() ** 2).real
         g0 = np.abs(np.amax(self.optical_system.otf))
-        weights = np.array([wave.amplitude for wave in self.illumination.waves.values()])
+        weights = np.array([harmonic.amplitude for harmonic in self.illumination.harmonics.values()])
         weighted2sum = np.sum(weights * weights.conjugate()).real
         weighted4sum = np.sum(weights ** 2 * weights.conjugate() ** 2).real
         total = ((self.illumination.Mt * self.illumination.Mr) ** 2 * weighted4sum * g4 /
@@ -434,7 +444,8 @@ class SSNRSIM(SSNRBase):
         return fR + fI
 
     def compute_ssnr_waterline_measure(self, factor=10):
-        ssnr_widefield = SSNRPointScanning(self.optical_system).ssnr
+        Widefield = SSNRWidefield2D if self.dimensionality == 2 else SSNRWidefield3D
+        ssnr_widefield = Widefield(self.optical_system).ssnri
         diff = np.sum(self.ssnri - ssnr_widefield).real
         upper_estimate = np.abs(np.amax(self.ssnri - ssnr_widefield))
         noise_level = 10 ** -10 * np.abs(np.amax(self.ssnri))
@@ -446,12 +457,21 @@ class SSNRSIM(SSNRBase):
 
 class SSNRSIM2D(SSNRSIM):
     dimensionality = 2
-    def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
+    def __init__(self,
+                 illumination: IlluminationPlaneWaves2D,
+                 optical_system,
+                 kernel=None,
+                 readout_noise_variance=0,
+                 save_memory=False,
+                 illumination_reconstruction=None):
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise AttributeError("Illumination data is not of the valid dimension!")
         if not isinstance(optical_system, OpticalSystems.OpticalSystem2D):
             raise AttributeError("Optical system data is not of the valid dimension!")
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory)
+        if not isinstance(illumination_reconstruction, IlluminationPlaneWaves2D) and not illumination_reconstruction is None:
+            raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
+        
+        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
 
     def plot_effective_kernel_and_otf(self):
         Nx, Ny = self.optical_system.otf.shape
@@ -480,9 +500,17 @@ class SSNRSIM2D(SSNRSIM):
 
 class SSNRSIM3D(SSNRSIM):
     dimensionality = 3
-    def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False):
+    def __init__(self,
+                 illumination,
+                 optical_system,
+                 kernel=None,
+                 readout_noise_variance=0,
+                 save_memory=False, 
+                 illumination_reconstruction=None):
         if not isinstance(illumination, IlluminationPlaneWaves3D):
             raise AttributeError("Illumination data is not of the valid dimension!")
         if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
             raise AttributeError("Optical system data is not of the valid dimension!")
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory)
+        if not isinstance(illumination_reconstruction, IlluminationPlaneWaves3D) and not illumination_reconstruction is None:
+            raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
+        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)

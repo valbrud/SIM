@@ -43,7 +43,7 @@ def filter_constant(image_ft, otf, w):
     
     return filtered, w
 
-def filter_flat_noise(image_ft, otf, ssnr_calculator): 
+def filter_flat_noise(image_ft, ssnr_calculator): 
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the flat noise. 
@@ -60,16 +60,16 @@ def filter_flat_noise(image_ft, otf, ssnr_calculator):
         raise ValueError("The image and SSNR calculator dimensions do not match.")
     
     w = ssnr_calculator.vj ** 0.5 - ssnr_calculator.dj
-    filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
+    # filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
+    filtered = image_ft * ssnr_calculator.dj.conjugate() / (ssnr_calculator.dj * ssnr_calculator.dj.conjugate() + w)
     return filtered, w
 
 def filter_true_wiener(image_ft,
-                    otf,
                     ssnr_calculator,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-12):    
+                    numeric_noise=10**-4):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -120,9 +120,12 @@ def filter_true_wiener(image_ft,
     ssnr = ((obj2a - vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja) /
                     (vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja)).real
     ssnr = np.nan_to_num(ssnr)
-
+    # plt.imshow(np.log1p(10 ** 8 * np.abs(ssnr)))
+    plt.imshow(np.log1p(10**8 * np.abs(np.where(ssnr_calculator.dj > numeric_noise, ssnr_calculator.dj, 0))))
+    plt.show()
     w = (dja + 10**3 * numeric_noise)/(ssnr + numeric_noise)
-    filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
-
-    return filtered, w
+    # filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
+    filtered = image_ft * ssnr_calculator.dj.conjugate() / (ssnr_calculator.dj * ssnr_calculator.dj.conjugate() + w)
+    filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
+    return filtered, w, ssnr
 

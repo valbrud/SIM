@@ -123,7 +123,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
         self.sim_indices, self.projected_wavevectors = self.get_wavevectors_projected(0)
 
-        self.phase_matrix = {}
+        self._phase_matrix = {}
         self.compute_phase_matrix()
 
         self.electric_field_plane_waves = []
@@ -289,14 +289,17 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         pass
 
     def normalize_spatial_waves(self):
-        zero_index =  tuple([0] * len(self.dimensions))
-        if not zero_index in self.harmonics.keys():
-            return AttributeError("Zero wavevector is not found! No constant power in the illumination!")
-        norm = self.harmonics[zero_index].amplitude * self.Mt * self.Mr
-        for spatial_wave in self.harmonics.values():
-            spatial_wave.amplitude = spatial_wave.amplitude * np.exp(1j * spatial_wave.phase)
-            spatial_wave.phase = 0
-            spatial_wave.amplitude /= norm
+        for r in range(self.Mr):
+            zero_index = (r, tuple([0] * len(self.dimensions)))
+            if not zero_index in self.harmonics.keys():
+                raise AttributeError("Zero wavevector is not found! No constant power in the illumination!")
+            norm = self.harmonics[zero_index].amplitude * self.Mt * self.Mr
+            for harmonic in self.harmonics.keys():
+                if harmonic[0] == r:
+                    spatial_wave = self.harmonics[harmonic]
+                    spatial_wave.amplitude = spatial_wave.amplitude * np.exp(1j * spatial_wave.phase)
+                    spatial_wave.phase = 0
+                    spatial_wave.amplitude /= norm
 
 
     def compute_expanded_lattice(self, r=0, ignore_projected_dimensions=True) -> set[tuple[int, int]]:
@@ -471,8 +474,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                     phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
                 effective_kernel += amplitude * phase_shifted
 
-            effective_kernels[index] = effective_kernel
-            effective_kernels_ft[index] = wrappers.wrapped_fftn(effective_kernel)
+            effective_kernels[sim_index] = effective_kernel
+            effective_kernels_ft[sim_index] = wrappers.wrapped_fftn(effective_kernel)
         return effective_kernels, effective_kernels_ft
 
     def get_phase_modulation_patterns(self, coordinates):

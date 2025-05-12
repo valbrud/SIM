@@ -508,8 +508,7 @@ class TestSSNRSIM(unittest.TestCase):
         ylim = 10**2
 
         optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
-        optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_function="Sine")
+        optical_system.compute_psf_and_otf((psf_size, N))
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)
@@ -522,9 +521,9 @@ class TestSSNRSIM(unittest.TestCase):
         ssnr_widefield = noise_estimator_widefield.ssnri
         ssnr_widefield_ra = noise_estimator_widefield.ring_average_ssnri()
 
-        noise_estimator_confocal = SSNRConfocal(optical_system)
-        ssnr_confocal = noise_estimator_confocal.ssnr
-        ssnr_confocal_ra = noise_estimator_confocal.ring_average_ssnri()
+        # noise_estimator_confocal = SSNR(optical_system)
+        # ssnr_confocal = noise_estimator_confocal.ssnr
+        # ssnr_confocal_ra = noise_estimator_confocal.ring_average_ssnri()
 
         noise_estimator = SSNRSIM3D(illumination_s_polarized, optical_system)
         # noise_estimator_true = SSNRSIM3D3dShifts(illumination_s_polarized, optical_system)
@@ -694,7 +693,7 @@ class TestSSNRSIM(unittest.TestCase):
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_seven_waves[:, int(val), int(N / 2)][fx >= 0],    label="7 waves"   )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3waves[:, int(val),  int(N / 2)][fx >= 0],      label="3 waves"    )
             ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(val), int(N / 2)][fx >= 0],   label="Widefield"  )
-            ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
+            # ax2.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_confocal[:, int(val), int(N / 2)][fx >= 0], label="Confocal")
             ax2.legend()
             ax2.set_aspect(1. / ax2.get_data_ratio())
 
@@ -993,30 +992,30 @@ class TestSSNRSIM(unittest.TestCase):
             # fig.savefig(f'{path_to_figures}'
             #          + illumination_list[illumination][1] + '_ssnr.png')
 
-            # def update1(val):
-            #     ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
-            #     ax1.set_xlabel("fz, $\lambda^{-1}$")
-            #     ax1.set_ylabel("fx, $\lambda^{-1}$")
-            #     Z = (ssnr_scaled[:, int(val), :])
-            #     mp1.set_data(Z)
-            #     mp1.set_clim(vmin=Z.min(), vmax=Z.max())
-            #     ax1.set_aspect(1. / ax1.get_data_ratio())
-            #     plt.draw()
-            #
-            #     ax2.set_title("ssnr, fz = {:.2f}, ".format(fz[int(val)]) + "$\\frac{2NA}{\\lambda}$")
-            #     ax2.set_xlabel("fz, $\lambda^{-1}$")
-            #     ax2.set_ylabel("fx, $\lambda^{-1}$")
-            #     Z = (ssnr_scaled[:, :, int(val)])
-            #     mp2.set_data(Z)
-            #     mp2.set_clim(vmin=Z.min(), vmax=Z.max())
-            #     ax2.set_aspect(1. / ax2.get_data_ratio())
-            #     plt.draw()
-            #
-            # slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-            # slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
-            # slider_ssnr.on_changed(update1)
+            def update1(val):
+                ax1.set_title("ssnr, fy = {:.2f}, ".format(fy[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+                ax1.set_xlabel("fz, $\lambda^{-1}$")
+                ax1.set_ylabel("fx, $\lambda^{-1}$")
+                Z = (ssnr_scaled[:, int(val), :])
+                mp1.set_data(Z)
+                mp1.set_clim(vmin=Z.min(), vmax=Z.max())
+                ax1.set_aspect(1. / ax1.get_data_ratio())
+                plt.draw()
+            
+                ax2.set_title("ssnr, fz = {:.2f}, ".format(fz[int(val)]) + "$\\frac{2NA}{\\lambda}$")
+                ax2.set_xlabel("fz, $\lambda^{-1}$")
+                ax2.set_ylabel("fx, $\lambda^{-1}$")
+                Z = (ssnr_scaled[:, :, int(val)])
+                mp2.set_data(Z)
+                mp2.set_clim(vmin=Z.min(), vmax=Z.max())
+                ax2.set_aspect(1. / ax2.get_data_ratio())
+                plt.draw()
+            
+            slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
+            slider_ssnr = Slider(slider_loc, 'fz', 0, N - 1)  # slider properties
+            slider_ssnr.on_changed(update1)
 
-            # plt.show()
+            plt.show()
 
     def test_alternative_visualisations(self):
         theta = np.pi / 4
@@ -1196,174 +1195,6 @@ class TestSSNRSIM(unittest.TestCase):
         # fig.savefig(f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(two_NA_fz[arg]))
         plt.show()
 
-    def testssnrFromNumericalspatialWaves(self):
-        max_r = 10
-        max_z = 40
-        N = 100
-        psf_size = 2 * np.array((max_r, max_r, max_z))
-        dx = 2 * max_r / N
-        dy = 2 * max_r / N
-        dz = 2 * max_z / N
-        dV = dx * dy * dz
-        x = np.arange(-max_r, max_r, dx)
-        y = np.copy(x)
-        z = np.arange(-max_z, max_z, dz)
-
-        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx) - 1 / (2 * max_r), N)
-        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
-        fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
-
-        arg = N // 2  # - 24
-
-        NA = np.sin(np.pi/3)
-        two_NA_fx = fx / (2 * NA)
-        two_NA_fy = fy / (2 * NA)
-        two_NA_fz = fz / (2 * NA)
-
-        optical_system = System4f3D(alpha = np.pi/3)
-        optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_function="Sine")
-
-        k = 2 * np.pi
-        theta = np.pi/3
-        vec_x = np.array((k * np.sin(np.pi/3), 0, k * np.cos(np.pi/3)))
-        vec_mx = np.array((-k * np.sin(np.arcsin(5/7 * np.sin(np.pi/3))), 0, k * np.cos(np.arcsin(5/7 * np.sin(np.pi/3)))))
-        ax_z = np.array((0, 0, 1))
-
-        sources = [
-            Sources.PlaneWave(0, 1, 0, 0, vec_x),
-            Sources.PlaneWave(0, 1, 0, 0, vec_mx),
-            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi/3)),
-            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 2 * np.pi/3)),
-            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi/3)),
-            Sources.PlaneWave(0, 1, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi/3)),
-
-            Sources.PlaneWave(1, 1j, 0, 0, np.array((0, 10**-10, 2 * np.pi))),
-        ]
-        size = (2 * max_r, 2 * max_r, 2 * max_z)
-        box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spatial_waves_numerically()
-        iwaves = box.get_approximated_intensity_sources()
-        illumination_2z =  IlluminationPlaneWaves3D.init_from_list(iwaves, (k * np.sin(theta) / 14, k * np.sin(theta) * 3**0.5/ 14, k / 14), Mr = 1)
-        illumination_2z.normalize_spatial_waves()
-        noise_estimator = SSNRSIM3D(illumination_2z, optical_system)
-        ssnr_2z = np.abs(noise_estimator.ssnri)
-        ssnr_2z_ra = noise_estimator.ring_average_ssnri()
-        volume_2z = noise_estimator.compute_ssnri_volume(ssnr_2z, dV)
-        b = 1/2**0.5
-        sources = [
-            Sources.PlaneWave(0, b, 0, 0, np.array((0, k * NA,k * np.cos(np.pi/3)))),
-            Sources.PlaneWave(0, -b, 0, 0, np.array((0, -k * NA, k * np.cos(np.pi/3)))),
-            Sources.PlaneWave(0, 1, 0, 0, np.array((0, 10 ** -10, k))),
-        ]
-        box = Box.Box(sources, size, N)
-        box.compute_intensity_and_spatial_waves_numerically()
-        iwaves = box.get_approximated_intensity_sources()
-        il =  IlluminationPlaneWaves3D.index_harmonics(iwaves, (10**10 , k * np.sin(theta), k * (1 - np.cos(theta))))
-        illumination_3w = IlluminationPlaneWaves3D(il, Mr=5)
-        illumination_3w.Mt = 1
-        illumination_3w.normalize_spatial_waves()
-        noise_estimator = SSNRSIM3D(illumination_3w, optical_system)
-        ssnr_3w = np.abs(noise_estimator.ssnri)
-        ssnr_3w_ra = noise_estimator.ring_average_ssnri()
-        volume_3w = noise_estimator.compute_ssnri_volume(ssnr_3w, dV)
-
-        widefield = IlluminationPlaneWaves3D({
-        (0, 0, 0) : Sources.IntensityHarmonic3D(1, 0, np.array((0, 0, 0)))}, Mr=1)
-        widefield.Mt = 1
-        noise_estimator.illumination = widefield
-        ssnr_widefield = np.abs(noise_estimator.ssnri)
-        ssnr_widefield_ra= noise_estimator.ring_average_ssnri()
-        volume_w = noise_estimator.compute_ssnri_volume(ssnr_widefield, dV)
-        print("volume 3 waves = ", volume_3w)
-        print("volume two triangles = ", volume_2z)
-        print("volume widefield = ", volume_w)
-        Fx, Fy = np.meshgrid(fx, fy)
-        fig = plt.figure(figsize=(12, 6), constrained_layout=True)
-        plt.subplots_adjust(left=0.1,
-                            bottom=0.1,
-                            right=0.9,
-                            top=0.9,
-                            wspace=0.4,
-                            hspace=0.4)
-        ax1 = fig.add_subplot(121)
-        ax2 = fig.add_subplot(122)
-
-        ax1.set_title("Ring averaged", fontsize=20, pad=15)
-        ax1.set_xlabel(r"$f_r$", fontsize=20)
-        ax1.set_ylabel(r"$ssnr_{ra}$", fontsize=20)
-        ax1.set_yscale("log")
-        ax1.set_ylim(1, 3 * 10 ** 2)
-        ax1.set_xlim(0, fx[-1] / (2 * NA))
-        ax1.grid(which='major')
-        ax1.grid(which='minor', linestyle='--')
-        ax1.tick_params(labelsize=15)
-
-        ax2.set_title("Slice $f_y$ = 0", fontsize=20)
-        ax2.set_xlabel(r"$f_x$", fontsize=20)
-        ax2.set_yscale("log")
-        ax2.set_ylim(1, 3 * 10 ** 2)
-        ax2.set_xlim(0, fx[-1] / (2 * NA))
-        ax2.grid(which='major')
-        ax2.grid(which='minor', linestyle='--')
-        ax2.tick_params('y', labelleft=False)
-        ax2.tick_params(labelsize=15)
-
-        multiplier = 10 ** 8
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_2z_ra[:, arg], label="2 triangles")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3w_ra[:, arg], label="3 waves")
-        ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, arg], label="widefield")
-
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_2z[:, int(N / 2), arg][fx >= 0], label="5 waves, 2 z angles")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3w[:, int(N / 2), arg][fx >= 0], label="3 waves")
-        ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), arg][fx >= 0], label="widefield")
-        ax1.set_aspect(1. / ax1.get_data_ratio())
-        ax2.set_aspect(1. / ax2.get_data_ratio())
-
-        def update1(val):
-            ax1.clear()
-            ax1.set_title("Ring averaged", fontsize=30)
-            ax1.set_xlabel(r"$f_r$",  fontsize=25)
-            ax1.set_ylabel(r"$ssnr$", fontsize=25)
-            ax1.set_yscale("log")
-            ax1.set_ylim(1, 3 * 10 ** 2)
-            ax1.set_xlim(0, fx[-1] / (2 * NA))
-            ax1.grid()
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_2z_ra[:, int(val)], label=" 5 waves, 2 z angles")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_3w_ra[:, int(val)], label=" 3 waves")
-            ax1.plot(two_NA_fx[fx >= 0], 1 + multiplier * ssnr_widefield_ra[:, int(val)], label="widefield")
-
-            ax1.legend()
-            ax1.set_aspect(1. / ax1.get_data_ratio())
-
-            ax2.clear()
-            ax2.set_title("Slice $f_y$ = 0")
-            ax2.set_xlabel(r"$f_x$")
-            # ax2.set_ylabel(r"ssnr")
-
-            ax2.set_yscale("log")
-            ax2.set_ylim(1, 3 * 10 ** 2)
-            ax2.set_xlim(0, fx[-1] / (2 * NA))
-            ax2.grid()
-
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_2z[:, int(N / 2), int(val)][fx >= 0], label="5 waves, 2z angles")
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_3w[:, int(N / 2), int(val)][fx >= 0], label="3 waves")
-            ax2.plot(two_NA_fy[fy >= 0], 1 + multiplier * ssnr_widefield[:, int(N / 2), int(val)][fx >= 0], label="widefield")
-
-            ax2.legend()
-            ax2.set_aspect(1. / ax2.get_data_ratio())
-
-        slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
-        slider_ssnr = Slider(slider_loc, 'fz', 0, 100)  # slider properties
-        slider_ssnr.on_changed(update1)
-
-        ax1.legend()
-        ax2.legend()
-        # fig.savefig(
-        #     f'{path_to_figures}fz={:.2f}_compare_ssnr_conf_version.png'.format(
-        #         fz[arg]))
-        plt.show()
-
     def testFourWavesVSFiveWaves(self):
         max_r = 10
         max_z = 20
@@ -1528,8 +1359,7 @@ class TestApproximations(unittest.TestCase):
         two_NA_fz = fz / (1 - np.cos(alpha))
 
         optical_system = System4f3D(alpha=alpha)
-        optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_function="Sine")
+        optical_system.compute_psf_and_otf((psf_size, N), high_NA=False)
 
         illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
         illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.55, 1, Mt=64)

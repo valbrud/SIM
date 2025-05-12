@@ -30,17 +30,14 @@ class BFPConfiguration:
         b = strength_oblique
         a0 = p ** 2 + 2 * b ** 2
 
-        base_vector_kx = k1
-        base_vector_ky = k1  # All ky indices should be zero for a plane illumination
-        base_vector_kz = k2  # We do not really care about a z index. Hopefully
-        base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
-
         sources = [
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
             Sources.PlaneWave(0, -b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
             Sources.PlaneWave(0, p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
 
         ]
+
+        base_vectors = (k1, k1, k2)
         illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
@@ -58,8 +55,8 @@ class BFPConfiguration:
         k2 = self.k * (np.cos(theta) - 1)
 
         base_vector_kx = k1
-        base_vector_ky = k1  # All ky indices should be zero for a plane illumination
-        base_vector_kz = k2  # We do not really care about a z index. Hopefully
+        base_vector_ky = k1 
+        base_vector_kz = k2  
         base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
         # p = strength_s_normal
         p = strength_s_normal
@@ -93,13 +90,15 @@ class BFPConfiguration:
         b = strength_oblique
         a0 = (2 * p ** 2 + 4 * b ** 2)
 
-        square_plane_waves = {
+        sources = {
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, self.k * np.cos(theta)))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((-k1, 0, self.k * np.cos(theta)))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, self.k * np.cos(theta)))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, -k1, self.k * np.cos(theta)))),
             Sources.PlaneWave(p / a0 ** 0.5 * np.exp(1j * phase_shift), 1j * p / a0 ** 0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, self.k))),
         }
+        
+        ## The commented lists are for independent check of sources in case of the necessity during debugging or analytical comparison. 
 
         # s_polarized_waves = {
         #     (0, 0, 0)  : Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0))),
@@ -120,12 +119,14 @@ class BFPConfiguration:
         #     (0, -1, -1): Sources.IntensityHarmonic3D((-1 * p * b), 0, np.array((0, -k1, -k2)))
         # }
 
-        square_intensity_waves = IlluminationPlaneWaves3D.find_ipw_from_pw(square_plane_waves)
-
-        illumination =  IlluminationPlaneWaves3D.init_from_list(square_intensity_waves, (k1, k1, k2))
+        base_vectors = (k1, k1, k2)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
 
     def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift=0):
@@ -138,13 +139,15 @@ class BFPConfiguration:
         b = strength_s_oblique
 
         a0 = (2 * p ** 2 + 8 * b ** 2)
-        circular_plane_waves = {
+        sources = {
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((k1, 0, self.k * np.cos(theta)))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((-k1, 0, self.k * np.cos(theta)))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, k1, self.k * np.cos(theta)))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, -k1, self.k * np.cos(theta)))),
             Sources.PlaneWave(p / a0 ** 0.5 * np.exp(1j * phase_shift), 1j * p / a0 ** 0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, self.k))),
         }
+
+        ## The commented lists are for independent check of sources in case of the necessity during debugging or analytical comparison. 
 
         # circular_plane_waves = {
         #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((k1, 0, k2))),
@@ -153,6 +156,7 @@ class BFPConfiguration:
         #     Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, np.array((0, -k1, k2))),
         #     Sources.PlaneWave(p/a0**0.5 * np.exp(1j * phase_shift), 1j * p/a0**0.5 * np.exp(1j * phase_shift), 0, 0, np.array((0, 0, 0))),
         # }
+
         # circular_intensity_waves = {
         #     (1, 1, 0)  : Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((k1, k1, 0))),
         #     (-1, 1, 0) : Sources.IntensityHarmonic3D(2 * b ** 2 * np.sin(theta) ** 2, 0, np.array((-k1, k1, 0))),
@@ -176,8 +180,10 @@ class BFPConfiguration:
         #
         #     (0, 0, 0)  : Sources.IntensityHarmonic3D(a0, 0, np.array((0, 0, 0)))
         # }
+
+
         base_vectors = (k1, k1, k2)
-        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(circular_plane_waves,
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
@@ -197,7 +203,7 @@ class BFPConfiguration:
 
         a0 = 2 * p ** 2 + 6 * b ** 2
 
-        seven_waves_list = [
+        sources = [
             Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((2 * k1, 0, 0))),
             Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-2 * k1, 0, 0))),
             Sources.IntensityHarmonic3D(-b ** 2, 0, np.array((-k1, 3 ** 0.5 * k1, 0))),
@@ -238,12 +244,15 @@ class BFPConfiguration:
             Sources.IntensityHarmonic3D((2 * 3 ** 0.5 + 2j) / 4 * b * p, 0, np.array((-k1 / 2, -3 ** 0.5 / 2 * k1, -k2))),
         ]
 
-        illumination =  IlluminationPlaneWaves3D.init_from_list(seven_waves_list, (k1 / 2, 3 ** 0.5 / 2 * k1, k2))
+        base_vectors = (k1 / 2, 3 ** 0.5 / 2 * k1, k2)
+        illumination = IlluminationPlaneWaves3D.init_from_list(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
-
+    
 
     def get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(self, angle1, k_ratio, strength1, strength2, strength_normal=1, Mr=3, Mt=1):
 
@@ -264,7 +273,7 @@ class BFPConfiguration:
 
         a0 = p ** 2 + 2 * b ** 2 + 2 * c ** 2
 
-        five_waves_2z_illumination = [
+        sources = [
             Sources.PlaneWave(0, b, 0, 0, vec_x),
             Sources.PlaneWave(0, c, 0, 0, vec_mx),
             Sources.PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, np.pi)),
@@ -272,11 +281,13 @@ class BFPConfiguration:
             Sources.PlaneWave(0, 1 * p, 0, 0, np.array((10 ** (-10), 0, self.k))),
         ]
 
-        five_waves_2z_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(five_waves_2z_illumination)
-        illumination =  IlluminationPlaneWaves3D.init_from_list(five_waves_2z_illumination, base_vectors, Mr)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
 
     def get_two_oblique_triangles_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
@@ -298,7 +309,7 @@ class BFPConfiguration:
         vec_mx = np.array((sign * self.k * np.sin(angle2), 0, self.k * np.cos(angle2)))
         ax_z = np.array((0, 0, 1))
 
-        ttillum = [
+        sources = [
             Sources.PlaneWave(0, b, 0, 0, vec_x),
             Sources.PlaneWave(0, c, 0, 0, vec_mx),
             Sources.PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi / 3)),
@@ -309,11 +320,13 @@ class BFPConfiguration:
             Sources.PlaneWave(p, 1j * p, 0, 0, np.array((0, 10 ** -10, self.k))),
         ]
 
-        two_triangles_illumination =  IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
-        illumination =  IlluminationPlaneWaves3D.init_from_list(two_triangles_illumination, base_vectors)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
 
     def get_two_oblique_squares_and_one_normal_wave(self, angle1, k_ratio, strength1, strength2,
@@ -338,7 +351,7 @@ class BFPConfiguration:
 
         ax_z = np.array((0, 0, 1))
 
-        ttillum = [
+        sources = [
             Sources.PlaneWave(0, b, 0, 0, vec_x),
             Sources.PlaneWave(0, c, 0, 0, vec_mx),
             Sources.PlaneWave(0, b, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, np.pi / 2)),
@@ -350,9 +363,11 @@ class BFPConfiguration:
             Sources.PlaneWave(1 * p, 1j * p, 0, 0, np.array((0, 10 ** -10, self.k))),
         ]
 
-        two_triangles_illumination = IlluminationPlaneWaves3D.find_ipw_from_pw(ttillum)
-        illumination =  IlluminationPlaneWaves3D.init_from_list(two_triangles_illumination, base_vectors)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0), 
+                                                                      Mr = 1, 
+                                                                      store_plane_waves=True)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
         return illumination
