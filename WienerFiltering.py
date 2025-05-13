@@ -69,7 +69,7 @@ def filter_true_wiener(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-4):    
+                    numeric_noise=10**-5):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -89,6 +89,8 @@ def filter_true_wiener(image_ft,
         raise ValueError("The image and SSNR calculator dimensions do not match.")
 
     center = np.array(image_ft.shape)//2
+    print(image_ft[*center])
+    print(ssnr_calculator.dj[*center])
     f0 = image_ft[*center] / ssnr_calculator.dj[*center]
     bj2 = np.abs(image_ft) ** 2
 
@@ -115,17 +117,20 @@ def filter_true_wiener(image_ft,
             vjra = average_rings(np.copy(ssnr_calculator.vj), ssnr_calculator.optical_system.otf_frequencies)
             dja = expand_ring_averages(djra, ssnr_calculator.optical_system.otf_frequencies)
             vja = expand_ring_averages(vjra, ssnr_calculator.optical_system.otf_frequencies)
-
-
+    
+    print('total_counts', f0)
     ssnr = ((obj2a - vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja) /
                     (vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja)).real
     ssnr = np.nan_to_num(ssnr)
-    # plt.imshow(np.log1p(10 ** 8 * np.abs(ssnr)))
-    plt.imshow(np.log1p(10**8 * np.abs(np.where(ssnr_calculator.dj > numeric_noise, ssnr_calculator.dj, 0))))
-    plt.show()
-    w = (dja + 10**3 * numeric_noise)/(ssnr + numeric_noise)
+    ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, 0)
+    # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-5), ssnr, 0)
+    # plt.plot(np.log1p(np.abs(ssnr))[center[0], center[1]:])
+    # plt.imshow(np.log1p(10 ** 8 * np.abs(np.where(ssnr_calculator.dj > numeric_noise, ssnr_calculator.dj, 0))))
+    # plt.show()
+    w = dja/ssnr
     # filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
     filtered = image_ft * ssnr_calculator.dj.conjugate() / (ssnr_calculator.dj * ssnr_calculator.dj.conjugate() + w)
     filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
+    
     return filtered, w, ssnr
 

@@ -162,7 +162,7 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
                 phase_shifted = wrappers.wrapped_fftn(phase_modulated).real
                 phase_shifted /= np.amax(phase_shifted)
                 # phase_shifted = np.where(phase_shifted > 10**-1, 1, 0)
-                ideal_pupil_function[phase_shifted >  10**-1 * np.amax(self.pupil_function)] = 1
+                ideal_pupil_function[phase_shifted >  0.1 * np.amax(self.pupil_function)] = 1
 
         self._ideal_ctf = ideal_pupil_function
         self._ideal_otf = np.flip(scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same'))

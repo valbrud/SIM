@@ -57,6 +57,6 @@ def psf_kernel2d(kernel_size: int, pixel_size: tuple[float, float], dense_kernel
     kernel_dense = (2 / np.pi) * (np.arccos(r / R) - (r / R) * (1 - (r / R) ** 2) ** 0.5)
     kernel_dense = np.where(np.isnan(kernel_dense), 0, kernel_dense)
     kernel = stattools.downsample_circular_function(kernel_dense, (kernel_size, kernel_size))
-    kernel /= np.amax(kernel)
+    kernel /= np.sum(kernel) 
     return kernel
 

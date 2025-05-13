@@ -18,7 +18,7 @@ import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
 from Dimensions import DimensionMeta
-
+import stattools
 
 class SSNRBase(metaclass=DimensionMeta):
     """
@@ -35,9 +35,10 @@ class SSNRBase(metaclass=DimensionMeta):
         compute_radial_ssnri_entropy(factor=100): Computes the radial SSNR entropy.
         compute_full_ssnr(object_ft): Computes the full SSNR for a given object Fourier transform.        
     """
-    def __init__(self, optical_system):
+    def __init__(self, optical_system, readout_noise_variance=0):
         self._optical_system = optical_system
         self._ssnri = None
+        self.readout_noise_variance = 0
 
     @property
     def ssnri(self):
@@ -179,7 +180,8 @@ class SSNRPointScanning(SSNRBase):
         self._ssnri = np.abs(self.optical_system.otf) ** 2 / np.amax(np.abs(self.optical_system.otf))
 
     def compute_full_ssnr(self, object_ft):
-        return np.abs(object_ft) ** 2 / np.amax(np.abs(object_ft)) * self.ssnri
+        ((np.abs(object_ft)) ** 2 /
+                (np.amax(np.abs(object_ft)) + self.optical_system.otf.size * self.readout_noise_variance))
 
 
 class SSNRPointScanning2D(SSNRPointScanning):
@@ -218,7 +220,7 @@ class SSNRSIM(SSNRBase):
                  illumination_reconstruction=None
                  ):
         
-        super().__init__(optical_system)
+        super().__init__(optical_system, readout_noise_variance)
         self._illumination = illumination
         self._illumination_reconstruction = illumination_reconstruction if not illumination_reconstruction is None else illumination
         self.vj = None
@@ -294,30 +296,7 @@ class SSNRSIM(SSNRBase):
 
     @kernel.setter
     def kernel(self, kernel_new):
-        shape = np.array(kernel_new.shape, dtype=np.int32)
-        otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
-
-        # if ((shape % 2) == 0).any():
-        #     raise ValueError("Size of the kernel must be odd!")
-
-        if (shape > otf_shape).any():
-            raise ValueError("Size of the kernel is bigger than of the PSF!")
-
-        if (shape < otf_shape).any():
-            kernel_expanded = np.zeros(otf_shape, dtype=kernel_new.dtype)
-
-            # Build slice objects for each dimension, to center `kernel_new` in `kernel_expanded`.
-            slices = []
-            for dim in range(len(shape)):
-                center = otf_shape[dim] // 2
-                half_span = shape[dim] // 2
-                start = center - half_span
-                stop = start + shape[dim]
-                slices.append(slice(start, stop))
-
-            # Assign kernel_new into the center of kernel_expanded
-            kernel_expanded[tuple(slices)] = kernel_new
-            kernel_new = kernel_expanded
+        kernel_new = stattools.expand_kernel(kernel_new, self.optical_system.psf.shape)
 
         self.kernel_ft = wrappers.wrapped_ifftn(kernel_new)
         self.kernel_ft /= np.amax(self.kernel_ft)

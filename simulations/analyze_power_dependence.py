@@ -1,9 +1,16 @@
+import os.path
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
 # Load the data from the provided CSV file
-file_path = '../simulations/ALL_b.csv'
+file_path = '../simulations/Tables/ALL_b.csv'
 data = pd.read_csv(file_path)
 print(data['Configuration'].unique())
 fig1, axes1 = plt.subplots(figsize=(12, 10))

@@ -1,5 +1,10 @@
 import os.path
 import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import matplotlib.pyplot as plt
 import csv
 
@@ -7,7 +12,6 @@ import numpy as np
 from config.BFPConfigurations import *
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRWidefield
 from OpticalSystems import System4f3D, System4f2D
-sys.path.append('../')
 
 configurations = BFPConfiguration(refraction_index=1.5)
 alpha = 2 * np.pi / 5

@@ -469,13 +469,18 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 wavevector = harmonics[index].wavevector.copy()
                 amplitude = harmonics[index].amplitude
                 if self.dimensionality == 2:
-                    phase_shifted = np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector)) * kernel
+                    phase_shifted = np.exp(-1j * np.einsum('ijl,l ->ij', grid, wavevector)) * kernel
                 elif self.dimensionality == 3:
-                    phase_shifted = np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
+                    phase_shifted = np.transpose(np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
                 effective_kernel += amplitude * phase_shifted
-
+            
+            # effective_kernel /= np.sum(np.abs(effective_kernel))
             effective_kernels[sim_index] = effective_kernel
             effective_kernels_ft[sim_index] = wrappers.wrapped_fftn(effective_kernel)
+            # effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
+            # plt.imshow(np.abs(effective_kernels_ft[sim_index]).T, cmap='gray', origin='lower')
+            # plt.title(f"Effective kernel {sim_index}")
+            # plt.show()
         return effective_kernels, effective_kernels_ft
 
     def get_phase_modulation_patterns(self, coordinates):

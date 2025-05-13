@@ -428,3 +428,28 @@ def reverse_interpolation_nearest(x_axis, y_axis, points, values):
         interpolated_grid[i + 1, j + 1] += value * wx2 * wy2  # Bottom-right
 
     return interpolated_grid
+
+def expand_kernel(kernel, target_shape):
+    shape = np.array(kernel.shape, dtype=np.int32)
+
+    if ((shape % 2) == 0).any():
+        raise ValueError("Size of the kernel must be odd!")
+
+    if (shape > target_shape).any():
+        raise ValueError("Size of the kernel is bigger than of the PSF!")
+
+    if (shape < target_shape).any():
+        kernel_expanded = np.zeros(target_shape, dtype=kernel.dtype)
+
+        # Build slice objects for each dimension, to center `kernel_new` in `kernel_expanded`.
+        slices = []
+        for dim in range(len(shape)):
+            center = target_shape[dim] // 2
+            half_span = shape[dim] // 2
+            start = center - half_span
+            stop = start + shape[dim]
+            slices.append(slice(start, stop))
+
+        kernel_expanded[tuple(slices)] = kernel
+        kernel = kernel_expanded
+    return kernel

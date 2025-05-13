@@ -451,7 +451,7 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
                             max_index = np.unravel_index(np.argmax(np.abs(Cmat[index])), Cmat[index].shape)
                             print(index, round(np.abs(Cmat[index][max_index])), round(np.angle(Cmat[index][max_index])* 180/np.pi, 1))
                             phase_matrix[(r, n, m[1])] = np.exp(1j * phase[0, 0])
-                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(-1j * phase[0, 0])
+                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(1j * phase[0, 0])
 
         return phase_matrix
          

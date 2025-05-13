@@ -10,7 +10,7 @@ from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPl
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
-
+import stattools
 
 class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     """
@@ -40,6 +40,9 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                  ):
         self.illumination = illumination
         self.optical_system = optical_system
+        if kernel is not None: 
+            kernel = stattools.expand_kernel(kernel, self.optical_system.otf.shape)
+
         self.kernel = kernel
         self.phase_modulation_patterns = phase_modulation_patterns
 
@@ -91,7 +94,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
             if kernel is None:
                 _, self.effective_kernels = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
             else:
-                _, self.effective_kernels = self.illumination.compute_effective_kernels(kernel, self.optical_system.psf_coordinates)
+                _, self.effective_kernels = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
         self.return_ft = return_ft
 
     def _compute_shifted_image_ft(self, image, r, m):
@@ -100,17 +103,25 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         return shifted_image_ft
 
     def reconstruct(self, sim_images):
+        # Notations are as in C. Smith et al., "Structured illumination microscopy with noise-controlled image reconstructions", 2021
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
             image1rotation_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
             for _, sim_index in zip(*self.illumination.get_wavevectors_projected(r)):
                 m = sim_index[1]
+                # Jrm = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
                     sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * image_shifted_ft
-                sum_shifts *= self.effective_kernels[(r, m)]
-                image1rotation_ft += sum_shifts
+                    # Jrm += self.illumination.phase_matrix[(r, n, m)].conjugate() * sim_images[r, n]
+                # Lrm = self.effective_kernels[(r, m)].conjugate() * Jrm
+                # Lrm_shifted = self._compute_shifted_image_ft(Lrm, r, m)
+                # fig, axes = plt.subplots(1, 2)
+                # axes[0].imshow(np.log1p(np.abs(sum_shifts)))
+                # axes[1].imshow(np.log1p(np.abs(self.effective_kernels[(r, m)])))
+                # print(self.effective_kernels[(r, m)][127, 127] / self.effective_kernels[(0, (0, 0))][127, 127])
+                image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)]
             reconstructed_image_ft += image1rotation_ft
         # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
         # plt.show()
@@ -140,30 +151,6 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
             kernel = np.zeros(otf_shape, dtype=np.float64)
             kernel[otf_shape[0] // 2 + 1, otf_shape[1] // 2 + 1] = 1
-        else:
-            shape = np.array(kernel.shape, dtype=np.int32)
-            otf_shape = np.array(self.optical_system.otf.shape, dtype=np.int32)
-
-            if ((shape % 2) == 0).any():
-                raise ValueError("Size of the kernel must be odd!")
-
-            if (shape > otf_shape).any():
-                raise ValueError("Size of the kernel is bigger than of the PSF!")
-
-            if (shape < otf_shape).any():
-                kernel_expanded = np.zeros(otf_shape, dtype=kernel.dtype)
-
-                # Build slice objects for each dimension, to center `kernel_new` in `kernel_expanded`.
-                slices = []
-                for dim in range(len(shape)):
-                    center = otf_shape[dim] // 2
-                    half_span = shape[dim] // 2
-                    start = center - half_span
-                    stop = start + shape[dim]
-                    slices.append(slice(start, stop))
-
-                kernel_expanded[tuple(slices)] = kernel
-                kernel = kernel_expanded
 
         self.kernel = kernel
         if phase_modulation_patterns is None:
@@ -174,7 +161,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             for harmonic in self.illumination.harmonics:
                 r = harmonic[0]
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
-                self.illumination_patterns[r, n] += (self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic]).conjugate()
+                self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic]).conjugate()
 
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
@@ -183,7 +170,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
         for r in range(sim_images.shape[0]):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
             for n in range(sim_images.shape[1]):
-                image_convolved = scipy.signal.convolve(sim_images[r, n], self.kernel, mode='same')
+                image_convolved = scipy.signal.convolve(sim_images[r, n], self.kernel, mode='same') 
                 image1rotation += self.illumination_patterns[r, n] * image_convolved
             reconstructed_image += image1rotation
         return reconstructed_image

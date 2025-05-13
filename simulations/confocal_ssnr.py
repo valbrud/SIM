@@ -4,11 +4,13 @@ confocal_ssnr.py
 This script contains test computations of the SSNR in confocal microscopy, ISM and Rescan.
 """
 
-import os, sys
+import os.path
+import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
+
 
 import numpy as np
 import matplotlib.pyplot as plt
