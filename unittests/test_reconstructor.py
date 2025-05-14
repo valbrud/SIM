@@ -20,7 +20,9 @@ from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from kernels import sinc_kernel, psf_kernel2d
-
+from WienerFiltering import filter_true_wiener
+import wrappers
+import SSNRCalculator
 
 class TestReconstruction(unittest.TestCase):
 
@@ -34,7 +36,7 @@ class TestReconstruction(unittest.TestCase):
         self.theta = np.arcsin(0.9 * np.sin(self.alpha))
         self.dimensions = (1, 1)
         NA = self.nmedium * np.sin(self.alpha)
-        self.dx = 1 / (64 * NA)
+        self.dx = 1 / (8 * NA)
         self.max_r = self.N // 2 * self.dx
 
         self.psf_size = np.array((2 * self.max_r, 2 * self.max_r))
@@ -44,9 +46,9 @@ class TestReconstruction(unittest.TestCase):
         self.image = ShapesGenerator.generate_random_lines(
             image_size=self.psf_size,
             point_number=self.N,
-            line_width=0.25,
-            num_lines=150,
-            intensity=100
+            line_width=0.1,
+            num_lines=100,
+            intensity=10**3
         )
         # plt.title("Ground truth")
         # plt.imshow(self.image)
@@ -86,6 +88,7 @@ class TestReconstruction(unittest.TestCase):
         #         plt.imshow(image)
         #         plt.show()
 
+        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images)
 
     def test_widefield_reconstruction(self):
         reconstructor = ReconstructorFourierDomain2D(
@@ -99,6 +102,9 @@ class TestReconstruction(unittest.TestCase):
         axes[1].imshow(reconstructed_image)
         axes[1].set_title("Reconstructed Widefield")
         plt.show()
+        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.title("Reconstructed Widefield FFT")
+        plt.show()
 
     def test_fourier_reconstruction(self):
         # self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
@@ -110,11 +116,20 @@ class TestReconstruction(unittest.TestCase):
             # apodization_filter =
         )
         # Reconstruct the image.
-        reconstructed_image = fourier_reconstructor.reconstruct(self.sim_images)
-        fig, axes = plt.subplots(1, 2)
-        axes[0].imshow(self.widefield)
-        axes[1].imshow(reconstructed_image)
+        reconstructed_image = fourier_reconstructor.reconstruct(self.noisy_images)
+        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.title("Reconstructed FT")
         plt.show()
+        # fig, axes = plt.subplots(1, 2)
+        # axes[0].imshow(self.widefield)
+        # axes[1].imshow(reconstructed_image)
+        # plt.show()
+        calc = SSNRCalculator.SSNRSIM2D(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            readout_noise_variance=0.1,
+        )            
+        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
 
     def test_spatial_reconstruction(self):
         spatial_reconstructor = ReconstructorSpatialDomain2D(
@@ -122,23 +137,39 @@ class TestReconstruction(unittest.TestCase):
             optical_system=self.optical_system,
         )
         # Reconstruct the image.
-        reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images)
+        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images)
+        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
         fig, axes = plt.subplots(1, 2)
         axes[0].imshow(self.widefield)
         axes[1].imshow(reconstructed_image)
         plt.show()
+        calc = SSNRCalculator.SSNRSIM2D(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            readout_noise_variance=0.1,
+            kernel = psf_kernel2d(1, (self.dx, self.dx))
+        )            
+        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
 
     def test_spatial_reconstruction_finite_kernel(self):
         spatial_reconstructor = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
-            kernel=psf_kernel2d(5, (self.dx, self.dx))
+            kernel=psf_kernel2d(9, (self.dx, self.dx))
         )
         # Reconstruct the image.
         plt.title("Spatial-domain reconstruction with finite kernel")
-        reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images)
-        plt.imshow(reconstructed_image)
+        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images)
+        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
         plt.show()
+        calc = SSNRCalculator.SSNRSIM2D(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            readout_noise_variance=0.1,
+            kernel = psf_kernel2d(9, (self.dx, self.dx))
+        )            
+        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+ 
 
     def test_compare_kernel_size_effect(self):
         spatial_reconstructor1 = ReconstructorSpatialDomain2D(
@@ -160,7 +191,7 @@ class TestReconstruction(unittest.TestCase):
         spatial_reconstructor7 = ReconstructorSpatialDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
-            kernel=psf_kernel2d(5, (self.dx, self.dx))
+            kernel=psf_kernel2d(7, (self.dx, self.dx))
         )
 
         self.sim_images += np.random.normal(0, 2, self.sim_images.shape)

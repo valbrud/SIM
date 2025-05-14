@@ -9,6 +9,7 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import scipy
+import wrappers
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
@@ -453,3 +454,11 @@ def expand_kernel(kernel, target_shape):
         kernel_expanded[tuple(slices)] = kernel
         kernel = kernel_expanded
     return kernel
+
+def upsample_image(image, factor):
+    shape = np.array(image.shape, dtype=np.int32)
+    pad = round(shape * factor) // 2
+    upsampled = np.zeros(shape + 2 * pad, dtype=image.dtype)
+    image_ft = wrappers.wrapped_fftn(image)
+    for dim in shape:
+        ...

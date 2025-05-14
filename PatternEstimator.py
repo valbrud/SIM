@@ -393,46 +393,6 @@ class PatternEstimatorCrossCorrelation(IlluminationPatternEstimator):
 
         return refined_peaks
     
-    # def _refine_base_vectors(self, base_vectors: np.ndarray, r: int, Cmn1n2: Dict[Tuple[Tuple[int, ...], int, int], np.ndarray], fine_q_grid) -> np.ndarray:
-    #     """
-    #     Refine the base vectors using the correlation matrix Cmn1n2.
-
-    #     Parameters
-    #     ----------
-    #     Cmn1n2 : dict[tuple(int, ...), int, int], np.ndarray]
-    #         The correlation matrix.
-
-    #     Returns
-    #     -------
-    #     np.ndarray
-    #         The refined base vectors.
-    #     """
-    #     nominator = np.zeros((self.optical_system.dimensionality), dtype=np.float64)
-    #     denominator = np.zeros((self.optical_system.dimensionality), dtype=np.float64)
-    #     qs = {}
-    #     weights = {}
-    #     otf_shape = np.copy(np.array(self.optical_system.otf.shape))
-    #     for index in Cmn1n2.keys():
-    #         max_index = np.unravel_index(np.argmax(np.abs(Cmn1n2[index])), Cmn1n2[index].shape)
-    #         q = fine_q_grid[max_index]
-    #         # print(index, max_index, q)
-    #         sim_index = index[0]
-    #         if not sim_index in weights.keys():
-    #             effective_otf = self.effective_otfs[(r, sim_index)]
-    #             weights[sim_index] = np.abs(effective_otf[*otf_shape//2])
-    #         qs[index] = q
-
-    #     for index in qs.keys():
-    #         component_weights = weights[sim_index] * np.abs(np.array(sim_index))
-    #         dk_estimate = qs[index] / np.where(sim_index, sim_index, np.inf)
-    #         # print(dk_estimate)
-    #         nominator += dk_estimate * component_weights
-    #         denominator += component_weights
-    #     # print('weighted shigt', nominator / np.where(denominator, denominator, np.inf) )
-    #     refined_base_vectors = base_vectors - nominator / np.where(denominator, denominator, np.inf)
-    #     return refined_base_vectors
-    
-    
     def _compute_phase_matrix(self, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
         grid = np.zeros((1, 1, self.optical_system.dimensionality), dtype=np.float64)
         phase_matrix = {}

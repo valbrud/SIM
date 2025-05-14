@@ -489,9 +489,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         wavevectors, indices = self.get_all_wavevectors_projected()
         for sim_index, wavevector in zip(indices, wavevectors):
             if self.dimensionality == 2:
-                phase_modulation = np.exp(1j * np.einsum('ijl,l ->ij', grid, wavevector))
+                phase_modulation = np.exp(-1j * np.einsum('ijl,l ->ij', grid, wavevector))
             elif self.dimensionality == 3:
-                phase_modulation = np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
+                phase_modulation = np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
             phase_modulation_patterns[sim_index] = phase_modulation
         # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
         # plt.show()

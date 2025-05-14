@@ -69,7 +69,7 @@ def filter_true_wiener(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-5):    
+                    numeric_noise=10**-16):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -119,14 +119,20 @@ def filter_true_wiener(image_ft,
             vja = expand_ring_averages(vjra, ssnr_calculator.optical_system.otf_frequencies)
     
     print('total_counts', f0)
-    ssnr = ((obj2a - vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja) /
-                    (vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja)).real
+    noise_power_ra = vjra * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
+    noise_power = vja * f0 - image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
+    ssnr = ((obj2a - noise_power ) /
+                 noise_power).real
     ssnr = np.nan_to_num(ssnr)
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, 0)
     # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-5), ssnr, 0)
-    # plt.plot(np.log1p(np.abs(ssnr))[center[0], center[1]:])
-    # plt.imshow(np.log1p(10 ** 8 * np.abs(np.where(ssnr_calculator.dj > numeric_noise, ssnr_calculator.dj, 0))))
-    # plt.show()
+    plt.plot(np.log(1 + (obj2ra - noise_power_ra).real), label='signal')
+    plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
+    plt.plot(np.log(1 + (np.abs(ssnr))[center[0], center[1]:]), label = 'ssnr')
+
+    plt.legend()
+    plt.show()
+
     w = dja/ssnr
     # filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
     filtered = image_ft * ssnr_calculator.dj.conjugate() / (ssnr_calculator.dj * ssnr_calculator.dj.conjugate() + w)

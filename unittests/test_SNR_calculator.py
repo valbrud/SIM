@@ -505,7 +505,7 @@ class TestSSNRSIM(unittest.TestCase):
         scaled_fz = fz / fz_max_diff
 
         multiplier = 10 ** 3
-        ylim = 10**2
+        ylim = 10**4
 
         optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
         optical_system.compute_psf_and_otf((psf_size, N))

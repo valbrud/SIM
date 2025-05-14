@@ -98,7 +98,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         self.return_ft = return_ft
 
     def _compute_shifted_image_ft(self, image, r, m):
-        phase_shifted = image * self.phase_modulation_patterns[r, m].conjugate()
+        phase_shifted = image * self.phase_modulation_patterns[r, m]
         shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
         return shifted_image_ft
 
@@ -113,15 +113,8 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
-                    sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * image_shifted_ft
-                    # Jrm += self.illumination.phase_matrix[(r, n, m)].conjugate() * sim_images[r, n]
-                # Lrm = self.effective_kernels[(r, m)].conjugate() * Jrm
-                # Lrm_shifted = self._compute_shifted_image_ft(Lrm, r, m)
-                # fig, axes = plt.subplots(1, 2)
-                # axes[0].imshow(np.log1p(np.abs(sum_shifts)))
-                # axes[1].imshow(np.log1p(np.abs(self.effective_kernels[(r, m)])))
-                # print(self.effective_kernels[(r, m)][127, 127] / self.effective_kernels[(0, (0, 0))][127, 127])
-                image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)]
+                    sum_shifts += self.illumination.phase_matrix[(r, n, m)] * image_shifted_ft
+                image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)].conjugate()
             reconstructed_image_ft += image1rotation_ft
         # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
         # plt.show()
@@ -161,7 +154,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             for harmonic in self.illumination.harmonics:
                 r = harmonic[0]
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
-                self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic]).conjugate()
+                self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic])
 
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
