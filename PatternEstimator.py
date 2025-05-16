@@ -843,7 +843,7 @@ class PatternEstimatorInterpolation(IlluminationPatternEstimator):
                 phase = np.angle(ft)
                 if r == 0 and m == (2, 0):
                     print('r', r, 'm', m, 'n', n, 'k', wavevector, 'ft', np.abs(ft),  'angle', phase / np.pi * 180)
-                phase_matrix[(r, n, m)] = np.exp(1j * phase)
+                phase_matrix[(r, n, m)] = np.exp(-1j * phase)
 
         return phase_matrix
 

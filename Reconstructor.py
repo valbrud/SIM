@@ -11,7 +11,7 @@ from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
 import stattools
-
+from windowing import make_mask_cosine_edge2d
 class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     """
     Base class for reconstructing images from structured illumination microscopy (SIM) data.
@@ -40,8 +40,6 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                  ):
         self.illumination = illumination
         self.optical_system = optical_system
-        if kernel is not None: 
-            kernel = stattools.expand_kernel(kernel, self.optical_system.otf.shape)
 
         self.kernel = kernel
         self.phase_modulation_patterns = phase_modulation_patterns
@@ -86,6 +84,9 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                          kernel=kernel,
                          phase_modulation_patterns=phase_modulation_patterns)
         
+        if kernel is not None: 
+            self.kernel = stattools.expand_kernel(kernel, self.optical_system.otf.shape)
+
         if effective_kernels:
             self.effective_kernels = effective_kernels
         else:
@@ -114,6 +115,10 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
                     sum_shifts += self.illumination.phase_matrix[(r, n, m)] * image_shifted_ft
+                # plt.imshow(np.log(1 + 10**8 * np.abs(sum_shifts)))
+                # plt.show()
+                # plt.imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)])))
+                # plt.show()
                 image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)].conjugate()
             reconstructed_image_ft += image1rotation_ft
         # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
@@ -163,9 +168,14 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
         for r in range(sim_images.shape[0]):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
             for n in range(sim_images.shape[1]):
-                image_convolved = scipy.signal.convolve(sim_images[r, n], self.kernel, mode='same') 
+
+                image_convolved = scipy.signal.convolve(sim_images[r, n], self.kernel, mode='same', method='direct')
                 image1rotation += self.illumination_patterns[r, n] * image_convolved
+            # plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(image1rotation))))
+            # plt.show() 
             reconstructed_image += image1rotation
+        # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)
+        # reconstructed_image *= mask
         return reconstructed_image
 
 class ReconstructorFourierDomain2D(ReconstructorFourierDomain):

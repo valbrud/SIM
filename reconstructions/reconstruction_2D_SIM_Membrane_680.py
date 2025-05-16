@@ -85,12 +85,12 @@ data = tifffile.imread('data/OMX_LSEC_Membrane_680nm.tiff')
 print(data.shape)
 
 stack = data.reshape((3, -1, 5, 512, 512))
-offset = 92
-gain = 2.1
+offset = 182
+gain = 6
 # Offset and gain correction
 stack = (stack - offset) / gain
 stack = np.where(stack < 0, 1, stack)
-stack = stack[:, 4, :, :N, :N]
+stack = stack[:, 4, :, :N, :N] 
 from windowing import make_mask_cosine_edge2d
 mask = make_mask_cosine_edge2d(stack.shape[2:], 20)
 stack = stack * mask[np.newaxis, np.newaxis, ...]
@@ -147,6 +147,11 @@ illumination_widefield = IlluminationPlaneWaves2D.init_from_3D(
     illumination_widefield, dimensions=(1, 1)
 )
 
+rng = np.random.default_rng()
+for r in range(stack.shape[0]):
+    for n in range(stack.shape[1]):
+        stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
+
 print(illumination.get_all_amplitudes())
 
 reconstructor_fourier = ReconstructorFourierDomain2D(
@@ -179,6 +184,13 @@ reconstructed_spatial = recontructor_spatial.reconstruct(stack)
 reconstructed_finite = recontructor_finite.reconstruct(stack)
 widefield  = reconstructor_fourier.get_widefield(stack)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
+
+np.save("reconstructions/images/reconstructed_fourier2.npy", reconstructed_fourier)
+np.save("reconstructions/images/reconstructed_spatial2.npy", reconstructed_spatial)
+np.save("reconstructions/images/reconstructed_finite2.npy", reconstructed_finite)
+np.save("reconstructions/images/reconstructed_widefield2.npy", reconstructed_widefield)
+
+print("Reconstructed images saved successfully.")
 
 # frc_fourier, freq = frc_one_image(
 #     reconstructed_fourier, 

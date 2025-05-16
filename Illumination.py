@@ -553,8 +553,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                     ft = off_grid_ft(stack[r, n], grid, np.array(wavevectors / (2 * np.pi)))
                     amr = np.abs(ft)
 
-            amr /= np.abs((otfs * self.Mt))
-            amr /= np.amax(np.abs(amr))
+            amr /= np.abs((otfs))
+            amr /= np.amax(np.abs(amr)) 
+            amr /= (self.Mt * self.Mr)
             for i in range(len(harmonics)):
                 am[(r, tuple(harmonics.keys())[i])] = amr[i]
 

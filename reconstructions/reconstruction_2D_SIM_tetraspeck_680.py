@@ -47,7 +47,7 @@ N = 255
 wavelength = 680e-9
 px_scaled = 80e-9
 dx = px_scaled / wavelength
-NA = 1.4
+NA = 1.2
 nmedium = 1.518
 alpha = np.arcsin(NA / nmedium)
 max_r = dx * N // 2
@@ -87,9 +87,24 @@ print(data.shape)
 
 stack = data.reshape((3, -1, 5, 512, 512))
 stack = stack[:, 3, :, N//2+1:-N//2-1, N//2+1:-N//2-1]
+image = stack[0, 0, ...]
+image_ft = wrapped_fftn(stack[0, 0, ...])
+noise = stattools.average_rings2d(image_ft**2, optical_system.psf_coordinates)
+pure_noise_region = image_ft[otf < 10**-3]
+# plt.plot(np.log1p(np.abs(noise)))
+# plt.show()
+average_noise = np.mean(np.abs(pure_noise_region)**2)
+print('average_noise', average_noise)
+print('total_noise', np.sum(np.abs(pure_noise_region)**2))
+
+total_counts = np.sum(stack[0, 0, ...])
+print('total_counts', total_counts)
+
+# exit()
+
 offset = 92
-gain = 2.1
-stack = (stack - offset) / gain
+gain = 6
+stack = (stack - offset) // gain
 stack[stack < 0] = 1
 from windowing import make_mask_cosine_edge2d
 mask = make_mask_cosine_edge2d(stack.shape[2:], 20)
@@ -152,7 +167,7 @@ print(illumination.get_all_amplitudes())
 reconstructor_fourier = ReconstructorFourierDomain2D(
     illumination=illumination,
     optical_system=optical_system,
-    # kernel=kernels.psf_kernel2d(7, (dx, dx))
+    kernel=kernels.psf_kernel2d(7, (dx, dx))
 
 )
 
@@ -173,12 +188,22 @@ reconstructor_widefield = ReconstructorFourierDomain2D(
     optical_system=optical_system,
 )
 
+rng = np.random.default_rng()
+for r in range(stack.shape[0]):
+    for n in range(stack.shape[1]):
+        stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
 
 reconstructed_fourier = reconstructor_fourier.reconstruct(stack)
 reconstructed_spatial = recontructor_spatial.reconstruct(stack)
 reconstructed_finite = recontructor_finite.reconstruct(stack)
 widefield  = reconstructor_fourier.get_widefield(stack)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
+np.save("reconstructions/images/reconstructed_fourier1.npy", reconstructed_fourier)
+np.save("reconstructions/images/reconstructed_spatial1.npy", reconstructed_spatial)
+np.save("reconstructions/images/reconstructed_finite1.npy", reconstructed_finite)
+np.save("reconstructions/images/reconstructed_widefield1.npy", reconstructed_widefield)
+
+print("Reconstructed images saved successfully.")
 
 # frc_fourier, freq = frc_one_image(
 #     reconstructed_fourier, 
@@ -245,28 +270,28 @@ plt.show()
 ssnr_fourier = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    # kernel=kernels.psf_kernel2d(7, (dx, dx)),
-    readout_noise_variance=10,
+    kernel=kernels.psf_kernel2d(7, (dx, dx)),
+    readout_noise_variance=1.4,
 )
 
 ssnr_spatial = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
     kernel=kernels.sinc_kernel(1)[..., 0]
 )
 
 ssnr_finite = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
     kernel=kernels.psf_kernel2d(7, (dx, dx))
 )
 
 ssnr_widefield = SSNRSIM2D(
     illumination=illumination_widefield,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
 )
 
 fig, ax = plt.subplots(2, 3, figsize=(15, 5))

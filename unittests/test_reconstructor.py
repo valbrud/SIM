@@ -20,7 +20,7 @@ from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from kernels import sinc_kernel, psf_kernel2d
-from WienerFiltering import filter_true_wiener
+from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
 import wrappers
 import SSNRCalculator
 
@@ -46,9 +46,9 @@ class TestReconstruction(unittest.TestCase):
         self.image = ShapesGenerator.generate_random_lines(
             image_size=self.psf_size,
             point_number=self.N,
-            line_width=0.1,
-            num_lines=100,
-            intensity=10**3
+            line_width=0.4,
+            num_lines=500,
+            intensity=10**2
         )
         # plt.title("Ground truth")
         # plt.imshow(self.image)
@@ -79,7 +79,7 @@ class TestReconstruction(unittest.TestCase):
         # plt.show()
 
         # Create the simulator and generate simulated images.
-        self.simulator = SIMulator2D(self.illumination, self.optical_system)
+        self.simulator = SIMulator2D(self.illumination, self.optical_system, readout_noise_variance=1)
         self.sim_images = self.simulator.generate_sim_images(self.image)
         # for r in range(self.illumination.Mr):
         #     for n in range(self.illumination.Mt):
@@ -112,14 +112,13 @@ class TestReconstruction(unittest.TestCase):
         fourier_reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
+            kernel=psf_kernel2d(7, (self.dx, self.dx)),
             # regularization_filter=self.optical_system.otf**2 + 0.01
             # apodization_filter =
         )
         # Reconstruct the image.
         reconstructed_image = fourier_reconstructor.reconstruct(self.noisy_images)
-        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
-        plt.title("Reconstructed FT")
-        plt.show()
+
         # fig, axes = plt.subplots(1, 2)
         # axes[0].imshow(self.widefield)
         # axes[1].imshow(reconstructed_image)
@@ -127,9 +126,23 @@ class TestReconstruction(unittest.TestCase):
         calc = SSNRCalculator.SSNRSIM2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
-            readout_noise_variance=0.1,
+            readout_noise_variance=1,
+            kernel = psf_kernel2d(7, (self.dx, self.dx))
         )            
-        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        filtered, *_  = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        fig, axes = plt.subplots(1, 2)
+        axes[0].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        axes[0].set_title("Reconstructed FT")
+        axes[1].imshow(np.log1p(np.abs((filtered))))
+        axes[1].set_title("Filtered FT")
+        plt.show()
+        fig, axes = plt.subplots(1, 2)
+        axes[0].imshow(np.abs(reconstructed_image))
+        axes[0].set_title("Reconstructed")
+        axes[1].imshow(np.abs(wrappers.wrapped_ifftn(filtered)))
+        axes[1].set_title("Filtered")
+        plt.show()
+
 
     def test_spatial_reconstruction(self):
         spatial_reconstructor = ReconstructorSpatialDomain2D(
@@ -149,7 +162,7 @@ class TestReconstruction(unittest.TestCase):
             readout_noise_variance=0.1,
             kernel = psf_kernel2d(1, (self.dx, self.dx))
         )            
-        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        filtered= filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
 
     def test_spatial_reconstruction_finite_kernel(self):
         spatial_reconstructor = ReconstructorSpatialDomain2D(
@@ -161,6 +174,8 @@ class TestReconstruction(unittest.TestCase):
         plt.title("Spatial-domain reconstruction with finite kernel")
         reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images)
         plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.show()
+        plt.imshow(reconstructed_image)
         plt.show()
         calc = SSNRCalculator.SSNRSIM2D(
             illumination=self.illumination,
