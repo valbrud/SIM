@@ -118,10 +118,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         self._spatial_shifts = spatial_shifts if not spatial_shifts is None else self._get_zero_shifts()
         self.Mt = self.spatial_shifts.shape[1]
 
-        self.dimensions = dimensions
+        self._dimensions = dimensions
         self.rearranged_indices = self._rearrange_indices(dimensions)
-
-        self.sim_indices, self.projected_wavevectors = self.get_wavevectors_projected(0)
 
         self._phase_matrix = {}
         self.compute_phase_matrix()
@@ -213,6 +211,17 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         self.compute_phase_matrix()
     
     @property
+    def dimensions(self):
+        return self._dimensions
+    
+    @dimensions.setter
+    def dimensions(self, new_dimensions):
+        if len(new_dimensions) != self.dimensionality:
+            raise ValueError(f"Dimensions must be of length {self.dimensionality}!")
+        self._dimensions = new_dimensions
+        self.rearranged_indices = self._rearrange_indices(new_dimensions)
+
+    @property
     def phase_matrix(self):
         return self._phase_matrix
     
@@ -269,6 +278,11 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 j += 1
         return (sim_index[0], tuple(index))
 
+    # def fill_projected_dimensions_with_zeros(self, wavevectors):
+    #     wavevectors_extended = np.zeros((len(wavevectors), len(self.dimensions)))
+    #     for wavevector in wavevectors_extended:
+    #         wavevector = np.array([wavevector[i] if self.dimensions[i] else 0 for i in range(len(self.dimensions))])
+
     def get_elementary_cell(self):
         ...
     
@@ -315,7 +329,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         lattice = set()
         if ignore_projected_dimensions:
             for peak in fourier_peaks:
-                peak_projected = tuple(peak[dim] for dim in range(len(self.dimensions)) if self.dimensions[dim])
+                peak_projected = tuple(peak[dim] if self.dimensions[dim] else 0 for dim in range(len(self.dimensions)))
                 lattice.add(peak_projected)
         else:
             lattice = set(fourier_peaks)
@@ -347,10 +361,13 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
              list: List of all amplitudes.
          """
         amplitudes = []
+        indices = []
+
         for r in range(self.Mr):
-            amplitudes_r, _ = self.get_amplitudes(r)
+            amplitudes_r, indices_r = self.get_amplitudes(r)
             amplitudes.extend(amplitudes_r)
-        return np.array(amplitudes)
+            indices.extend(indices_r)
+        return np.array(amplitudes), tuple(indices)
 
     def get_wavevectors(self, r: int) -> tuple[list[np.ndarray], list[tuple[int, ...]]]:
         """
@@ -396,7 +413,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         for sim_index in sim_indices:
             index = self.glue_indices(sim_index, self.rearranged_indices[sim_index][0], self.dimensions)
             wavevector = self.harmonics[index].wavevector
-            wavevectors_projected.append(wavevector[np.bool(self.dimensions)])
+            wavevectors_projected.append(wavevector * np.array(self.dimensions))
         return np.array(wavevectors_projected), tuple(sim_indices)
         
     def get_all_wavevectors_projected(self):
@@ -426,23 +443,11 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             for index in self.harmonics.keys():
                 if index[0] == r:
                     wavevector = np.copy(self.harmonics[index].wavevector)
-                    aligned_wavevector = VectorOperations.rotate_vector2d(wavevector[:2], -self.angles[r])
+                    wavevector[:2] = VectorOperations.rotate_vector2d(wavevector[:2], -self.angles[r])
                     if index[1][i] != 0:
-                        base_vectors[i] = aligned_wavevector[i] / index[1][i]
+                        base_vectors[i] = wavevector[i] / index[1][i]
                         break
         return base_vectors
-
-    @abstractmethod
-    def set_spatial_shifts_diagonally(self, number: int = 0):
-        """
-        Set the spatial shifts diagonally (i.e., all the spatial shifts are assumed to be on the same line).
-        This is the most common use in practice.
-        Appropriate shifts for a given illumination pattern can be computed in the module 'ShiftsFinder.py'
-
-        Args:
-            number (int): Number of shifts.
-        """
-        pass
 
     def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray]) -> tuple[
         dict[tuple[int, tuple[int, ...]], np.ndarray], dict[tuple[int, tuple[int, ...]], np.ndarray]]:
@@ -496,6 +501,46 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
         # plt.show()
         return phase_modulation_patterns
+    
+    def _filter_shift_ratios(self, shift_ratios):
+        """
+        Only leave those shifts that correspond to the movement in the non-projective dimensions. 
+        I.e. (1, 2, 2) is a valid solution for conventional 3D SIM lattice, but not a valid solution, as it
+        involves the movement in the z-direction, while 3D SIM setups with epi-illumination typically support 
+        projective 3D-SIM (i.e., there are shifts in lateral directions, but not in the axial).
+        In this case self.dimensions = (1, 1, 0) and the valid shift ratios are (1, 2, 0) or (1, 0, 0) etc. 
+        """
+
+        filtered_shift_ratios = {}
+        for base_key, ratios in shift_ratios.items():
+            valid = tuple([r for r in ratios if all((r[i] == 0) for i in range(len(self.dimensions)) if self.dimensions[i] == 0 )])
+            if valid:
+                filtered_shift_ratios[base_key] = valid
+        return filtered_shift_ratios
+    
+    def set_spatial_shifts_diagonally(self, number: int = 0):
+        """ 
+        Find the spatial shifts, that satisfy the orthogonality constraint. 
+        """
+        expanded_lattice = self.compute_expanded_lattice()
+        ShiftsFinder = ShiftsFinder2d if self.dimensionality == 2 else ShiftsFinder3d
+        shift_ratios = ShiftsFinder.get_shift_ratios(expanded_lattice, len(expanded_lattice) + 5)
+        shift_ratios = self._filter_shift_ratios(shift_ratios)
+        if len(shift_ratios) == 0:
+            raise ValueError("No shift ratios found!")
+        if number == 0:
+            bases = sorted(list(shift_ratios.keys()))
+            base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
+        else:
+            base, ratios = number, list(shift_ratios[number])[0]
+        spatial_shifts = np.zeros((self.Mr, base, self.dimensionality))
+        for r in range(self.Mr):
+            base_vectors = self.get_base_vectors(r)
+            shift = 2 * np.pi / np.where(base_vectors, base_vectors, np.inf) * ratios / base
+            shift_rotated = np.copy(shift)
+            shift_rotated[:2] = VectorOperations.rotate_vector2d((np.copy(shift))[:2], self.angles[r])
+            spatial_shifts[r] = np.array([shift_rotated * i for i in range(base)])
+        self.spatial_shifts = spatial_shifts
 
     def compute_phase_matrix(self):
         """
@@ -508,8 +553,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             for n in range(self.Mt):
                 urn = self.spatial_shifts[r, n]
                 for wavevector, index in zip(wavevectors, indices):
-                    test = np.dot(urn[np.bool(np.array(self.dimensions))], wavevector)
-                    self.phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn[np.bool(np.array(self.dimensions))], wavevector))
+                    self.phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn, wavevector))
 
     def estimate_modulation_coefficients(self, stack, psf, grid, update=False, method='least_squares'): 
         """
@@ -668,19 +712,6 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                         intensity_harmonics[wavevector_new].amplitude += amplitude1 * amplitude2.conjugate()
         return intensity_harmonics.values()
 
-    def set_spatial_shifts_diagonally(self, number: int = 0):
-        expanded_lattice = self.compute_expanded_lattice()
-        shift_ratios = ShiftsFinder3d.get_shift_ratios(expanded_lattice)
-        bases = sorted(list(shift_ratios.keys()))
-        base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
-        spatial_shifts = np.zeros((self.Mr, base, 3))
-        for r in range(self.Mr):
-            base_vectors = self.get_base_vectors(r)
-            shift = 2 * np.pi / np.where(base_vectors, base_vectors, np.inf) * ratios / base
-            shift_rotated = VectorOperations.rotate_vector2d((np.copy(shift))[:2], self.angles[r])
-            spatial_shifts[r] = np.array([shift_rotated * i for i in range(base)])
-        self.spatial_shifts = spatial_shifts
-
     def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
         if grid is None and coordinates is None:
             raise ValueError("Either grid or coordinates must be provided!")
@@ -745,20 +776,6 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
                 intensity_harmonics_dict[(m1, m2)].amplitude += wave.amplitude
         return intensity_harmonics_dict
 
-    def set_spatial_shifts_diagonally(self, number: int = 0):
-        expanded_lattice = self.compute_expanded_lattice()
-        shift_ratios = ShiftsFinder2d.get_shift_ratios(expanded_lattice, len(expanded_lattice) + 5)
-        if len(shift_ratios) == 0:
-            raise ValueError("No shift ratios found!")
-        bases = sorted(list(shift_ratios.keys()))
-        base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
-        spatial_shifts = np.zeros((self.Mr, base, 2))
-        for r in range(self.Mr):
-            base_vectors = self.get_base_vectors(r)
-            shift = 2 * np.pi / np.where(base_vectors, base_vectors, np.inf) * ratios / base
-            shift_rotated = VectorOperations.rotate_vector2d((np.copy(shift))[:2], self.angles[r])
-            spatial_shifts[r] = np.array([shift_rotated * i for i in range(base)])
-        self.spatial_shifts = spatial_shifts
 
     def get_illumination_density(self, grid=None, coordinates=None, r=0, n=0):
         if grid is None and coordinates is None:

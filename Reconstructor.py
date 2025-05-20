@@ -169,12 +169,12 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
             for n in range(sim_images.shape[1]):
 
-                image_convolved = scipy.signal.convolve(sim_images[r, n], self.kernel, mode='same', method='direct')
+                image_convolved = scipy.signal.convolve2d(sim_images[r, n], self.kernel, mode='same', boundary='wrap')
                 image1rotation += self.illumination_patterns[r, n] * image_convolved
             # plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(image1rotation))))
             # plt.show() 
             reconstructed_image += image1rotation
-        # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)
+        # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)S
         # reconstructed_image *= mask
         return reconstructed_image
 

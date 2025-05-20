@@ -23,7 +23,7 @@ import re
 
 from OpticalSystems import System4f2D
 from Illumination import IlluminationPlaneWaves2D
-from PatternEstimator import PatternEstimatorInterpolation2D
+from PatternEstimator import PatternEstimatorInterpolation2D, PatternEstimatorCrossCorrelation2D
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn
@@ -85,14 +85,14 @@ data = tifffile.imread('data/OMX_LSEC_Membrane_680nm.tiff')
 print(data.shape)
 
 stack = data.reshape((3, -1, 5, 512, 512))
-offset = 182
+offset = 170
 gain = 6
 # Offset and gain correction
 stack = (stack - offset) / gain
 stack = np.where(stack < 0, 1, stack)
 stack = stack[:, 4, :, :N, :N] 
 from windowing import make_mask_cosine_edge2d
-mask = make_mask_cosine_edge2d(stack.shape[2:], 20)
+mask = make_mask_cosine_edge2d(stack.shape[2:], 50)
 stack = stack * mask[np.newaxis, np.newaxis, ...]
 print(stack.shape)
 plt.imshow(stack[1, 0, ...].T, cmap='gray', origin='lower')
@@ -118,7 +118,7 @@ illumination3d = configurations.get_2_oblique_s_waves_and_s_normal(
 illumination = IlluminationPlaneWaves2D.init_from_3D(
     illumination3d, dimensions=(1, 1)
 )
-# illumination.set_spatial_shifts_diagonally()
+illumination.set_spatial_shifts_diagonally(number=5)
 
 pattern_estimator = PatternEstimatorInterpolation2D(
     illumination=illumination,
@@ -132,11 +132,23 @@ illumination = pattern_estimator.estimate_illumination_parameters(
     estimate_modulation_coefficients=True,
     method_for_modulation_coefficients='peak_height_ratio',
     peak_interpolation_area_size=3, 
-    iteration_number=10, 
+    iteration_number=20, 
     deconvolve_stacks=False,
     correct_peak_position=True, 
     ssnr_estimation_iters=100
 )
+
+# pattern_estimator = PatternEstimatorCrossCorrelation2D(
+#     illumination=illumination,
+#     optical_system=optical_system
+# )
+
+# illumination = pattern_estimator.estimate_illumination_parameters(
+#     stack,
+#     estimate_modulation_coefficients=True,
+#     zooming_factor=2,
+#     max_iterations=10
+# )
 
 # for r in range(illumination.Mr):
 #     illumination.harmonics[(r, (2, 0))].amplitude = 1

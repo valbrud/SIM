@@ -244,8 +244,14 @@ class OpticalSystem2D(OpticalSystem):
         super().__init__(interpolation_method, normalize_otf)
 
     def compute_psf_and_otf_cordinates(self, psf_size: tuple[float], N: int):
-        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
-        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N)
+        if type(N) is int:
+            N = (N, N)
+        elif type(N) is tuple:
+            if len(N) != 2:
+                raise AttributeError("N should be integer or a tuple of two integers")
+            
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0])
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
 
         self.psf_coordinates = np.array((x, y))
 
@@ -293,9 +299,15 @@ class OpticalSystem3D(OpticalSystem):
         super().__init__(interpolation_method, normalize_otf)
 
     def compute_psf_and_otf_cordinates(self, psf_size, N):
-        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N)
-        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N)
-        z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2, N)
+        if type(N) is int:
+            N = (N, N, N)
+        elif type(N) is tuple:
+            if len(N) != 3:
+                raise AttributeError("N should be integer or a tuple of three integers")
+
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0])
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
+        z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2, N[2])
 
         self.psf_coordinates = np.array((x, y, z))
 

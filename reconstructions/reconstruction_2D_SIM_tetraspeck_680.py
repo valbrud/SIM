@@ -23,7 +23,7 @@ import re
 
 from OpticalSystems import System4f2D
 from Illumination import IlluminationPlaneWaves2D
-from PatternEstimator import PatternEstimatorInterpolation2D
+from PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn
@@ -74,10 +74,10 @@ plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='OTF_fairSIM')
 plt.legend()
 plt.show()
 
-optical_system.otf = otf
-optical_system.otf /= np.amax(np.abs(optical_system.otf))
-optical_system.psf = wrapped_ifftn(optical_system.otf) 
-optical_system.psf /= np.sum(optical_system.psf)
+# optical_system.otf = otf
+# optical_system.otf /= np.amax(np.abs(optical_system.otf))
+# optical_system.psf = wrapped_ifftn(optical_system.otf) 
+# optical_system.psf /= np.sum(optical_system.psf)
 
 plt.imshow(np.log1p(optical_system.otf.real), cmap='gray')
 plt.show()
@@ -133,24 +133,22 @@ illumination3d = configurations.get_2_oblique_s_waves_and_s_normal(
 illumination = IlluminationPlaneWaves2D.init_from_3D(
     illumination3d, dimensions=(1, 1)
 )
-# illumination.set_spatial_shifts_diagonally()
+illumination.set_spatial_shifts_diagonally(number=5)
 
-pattern_estimator = PatternEstimatorInterpolation2D(
+pattern_estimator = IlluminationPatternEstimator2D(
     illumination=illumination,
     optical_system=optical_system,
 )
 
 illumination = pattern_estimator.estimate_illumination_parameters(
     stack, 
-    interpolation_factor= 2,
-    peak_search_area_size=15,
-    estimate_modulation_coefficients=True,
-    method_for_modulation_coefficients='peak_height_ratio',
-    peak_interpolation_area_size=3, 
-    iteration_number=10, 
-    deconvolve_stacks=False,
-    correct_peak_position=True, 
-    ssnr_estimation_iters=100
+    peaks_estimation_method = 'interpolation',
+    phase_estimation_method = 'peak_phases',
+    modulation_coefficients_method = 'peak_height_ratio',
+    peak_search_area_size=11,
+    zooming_factor=3, 
+    max_iterations=10, 
+    debug_info_level=2
 )
 
 # for r in range(illumination.Mr):
@@ -167,7 +165,7 @@ print(illumination.get_all_amplitudes())
 reconstructor_fourier = ReconstructorFourierDomain2D(
     illumination=illumination,
     optical_system=optical_system,
-    kernel=kernels.psf_kernel2d(7, (dx, dx))
+    # kernel=kernels.psf_kernel2d(7, (dx, dx))
 
 )
 
@@ -270,7 +268,7 @@ plt.show()
 ssnr_fourier = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    kernel=kernels.psf_kernel2d(7, (dx, dx)),
+    # kernel=kernels.psf_kernel2d(7, (dx, dx)),
     readout_noise_variance=1.4,
 )
 
@@ -309,7 +307,7 @@ ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
 ax[1, 1].imshow(ssnr_spatial.ssnri/ssnr_fourier.ssnri, label = 'spatial', origin='lower')
-ax[1, 2].imshow(ssnr_finite.ssnri/ssnr_fourier.ssnri, label = 'spatial', origin='lower')
+ax[1, 2].imshow(ssnr_finite.ssnri/ssnr_fourier.ssnri, label = 'finite', origin='lower')
 ax[1, 2].legend()
 plt.show()
 
@@ -404,9 +402,15 @@ ax[2, 2].set_title('Finite')
 ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+
+ratio_spatial_theory = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+ratio_finite_theory = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+
 ax[2, 3].plot(ratio_spatial, label='spatial/fourier')
 ax[2, 3].plot(ratio_finite, label='finite/fourier')
-ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
+# ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
+ax[2, 3].imshow(ratio_spatial_theory, label = 'spatial/fourier, theory', origin='lower')
+ax[2, 3].imshow(ratio_finite_theory, label = 'spatial/fourier, theory', origin='lower')
 ax[2, 3].set_ylim(0, 10)
 ax[2, 3].legend()
 plt.show()
