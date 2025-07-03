@@ -1,4 +1,10 @@
+import os.path
 import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
 
 import numpy as np
 
@@ -19,7 +25,30 @@ sys.path.append('../')
 configurations = BFPConfiguration()
 import kernels
 
-class TestAgainstIdeal(unittest.TestCase):
+class TestKernels(unittest.TestCase):
+    def test_sinc_kernel(self):
+        for size in range(1, 11, 2):
+            kernel = kernels.sinc_kernel2d(size)
+            expanded = stattools.expand_kernel(kernel, (9, 9))
+            self.assertEqual(expanded.shape, (9, 9))
+            plt.imshow(expanded, cmap='gray')
+            # plt.title(f'Sinc Kernel Size {size}')
+            # plt.show()
+            plt.axis('off')
+            plt.savefig(f'simulations/Figures/sinc_kernel_size_{size}.png', bbox_inches='tight')
+
+    def test_psf_kernel2d(self):
+        for size in range(1, 11, 2):
+            kernel = kernels.psf_kernel2d(size, (0.1, 0.1))
+            expanded = stattools.expand_kernel(kernel, (9, 9))
+            self.assertEqual(expanded.shape, (9, 9))
+            plt.imshow(expanded, cmap='gray')
+            # plt.title(f'PSF Kernel Size {size}')
+            # plt.show()
+            plt.axis('off')
+            plt.savefig(f'simulations/Figures/psf_kernel_size_{size}.png', bbox_inches='tight')
+
+class TestSSNRSimulations(unittest.TestCase):
     def test_compare_ssnr(self):
         theta = np.pi / 4
         alpha = np.pi / 4
@@ -665,9 +694,9 @@ class TestAgainstIdeal(unittest.TestCase):
 
         plt.show()
 
-    def test_compare_ssnr_ratios(self):
-        theta = np.pi / 4
-        alpha = np.pi / 4
+    def test_compare_ssnr_ratios_3d(self):
+        theta =  np.pi /3
+        alpha = 2 * np.pi / 5
         dx = 1 / (8 * np.sin(alpha))
         dy = dx
         dz = 1 / (4 * (1 - np.cos(alpha)))
@@ -675,20 +704,8 @@ class TestAgainstIdeal(unittest.TestCase):
         max_r = N//2 * dx
         max_z = N//2 * dz
 
-        kernel_r_size = 5
-        kernel_z_size = 1
-        kernel = np.zeros((kernel_r_size, kernel_r_size, kernel_z_size))
-        func_r = np.zeros(kernel_r_size)
-        func_r[0:kernel_r_size // 2 + 1] = np.linspace(0, 1, (kernel_r_size + 1) // 2 + 1)[1:]
-        func_r[kernel_r_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_r_size + 1) // 2 + 1)[:-1]
-        func_z = np.zeros(kernel_z_size)
-        func_z[0:kernel_z_size // 2 + 1] = np.linspace(0, 1, (kernel_z_size + 1) // 2 + 1)[1:]
-        func_z[kernel_z_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_z_size + 1) // 2 + 1)[:-1]
-        func2d = func_r[:, None] * func_r[None, :]
-        func3d = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
-        # kernel[0, 0, 0] = 1
-        # kernel[:, :,  0] = func2d
-        kernel = func3d
+        kernel = kernels.psf_kernel2d(7, (dx, dy))
+        kernel = kernel[..., None] * kernels.sinc_kernel1d(5)[None, None, :]
 
         NA = np.sin(alpha)
         psf_size = 2 * np.array((max_r, max_r, max_z))
@@ -709,34 +726,33 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fz = fz / (1 - np.cos(alpha))
 
         optical_system = System4f3D(alpha=alpha)
-        optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_function="Sine")
+        optical_system.compute_psf_and_otf((psf_size, N))
 
-        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
-        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
-        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
+        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=32)
+        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1,1, Mt=64)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
         illumination_widefield = configurations.get_widefield()
 
-        noise_estimator_finite = SSNRCalculator.SSNRSIM3DFiniteKernel(illumination_widefield, optical_system, kernel)
-        ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
+        noise_estimator_finite = SSNRCalculator.SSNRSIM3D(illumination_widefield, optical_system, kernel)
+        ssnr_finite_widefield = noise_estimator_finite.ssnri
         ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_s_polarized
-        ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_s_polarized = noise_estimator_finite.ssnri
         ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
-        ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_seven_waves = noise_estimator_finite.ssnri
         ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
-        ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_3waves = noise_estimator_finite.ssnri
         ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
@@ -810,38 +826,45 @@ class TestAgainstIdeal(unittest.TestCase):
         ax1.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
         ax1.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
         ax1.set_title(r"Conventional", fontsize=25)
-        ax1.imshow(conventional_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', norm=matplotlib.colors.LogNorm(vmin=10**-2, vmax=1))
+        ax1.imshow(conventional_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', vmax=1, vmin=0)
 
         ax2.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
         ax2.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
         ax2.set_title(r"Square", fontsize=25)
-        ax2.imshow(square_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', norm=matplotlib.colors.LogNorm(vmin=10**-2, vmax=1))
+        ax2.imshow(square_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', vmax=1, vmin=0)
 
         ax3.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
         ax3.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
         ax3.set_title(r"Hexagonal", fontsize=25)
-        ax3.imshow(hexagonal_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', norm=matplotlib.colors.LogNorm(vmin=10**-2, vmax=1))
+        ax3.imshow(hexagonal_ratio[:, :, N//2], extent=(-2, 2, -2, 2), cmap = 'viridis', vmax=1, vmin=0)
         def update1(val):
 
             ax1.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
             ax1.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
             ax1.set_title(r"Conventional", fontsize=25)
-            ax1.imshow(conventional_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', norm=matplotlib.colors.LogNorm(vmin=10 ** -2, vmax=1))
+            ax1.imshow(conventional_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', vmax=1, vmin=0)
 
             ax2.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
             ax2.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
             ax2.set_title(r"Square", fontsize=25)
-            ax2.imshow(square_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', norm=matplotlib.colors.LogNorm(vmin=10 ** -2, vmax=1))
+            ax2.imshow(square_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', vmax=1, vmin=0)
 
             ax3.set_xlabel(r"$f_x, \frac{2NA}{\lambda}$", fontsize=25)
             ax3.set_ylabel(r"$f_y, \frac{2NA}{\lambda}$", fontsize=25)
             ax3.set_title(r"Hexagonal", fontsize=25)
-            ax3.imshow(hexagonal_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', norm=matplotlib.colors.LogNorm(vmin=10 ** -2, vmax=1))
+            ax3.imshow(hexagonal_ratio[:, :, int(val)], extent=(-2, 2, -2, 2), cmap='viridis', vmax=1, vmin=0)
 
         slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
         slider_ssnr = Slider(slider_loc, 'fz', 0, N)  # slider properties
         slider_ssnr.on_changed(update1)
+        plt.show()
 
+        fix, ax = plt.subplots(1, 3, figsize=(18, 6), constrained_layout=True)
+        radial_averages_ratio_conventional = ssnr_finite_3waves_ra / ssnr_3waves_ra
+        im = ax[0].imshow(radial_averages_ratio_conventional.T, vmin=0, vmax=1)
+        ax[1].imshow(np.log1p(1 + 10**8 * ssnr_finite_3waves_ra.T), vmin=0)
+        ax[2].imshow(np.log1p(1 + 10**8 * ssnr_3waves_ra.T), vmin=0)
+        fig.colorbar(im)
         plt.show()
 
     def test_compare_ssnr_2d(self):
@@ -849,7 +872,7 @@ class TestAgainstIdeal(unittest.TestCase):
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
         dy = dx
-        N = 51
+        N = 101
         max_r = N//2 * dx
         NA = np.sin(alpha)
         psf_size = 2 * np.array((max_r, max_r))
@@ -861,9 +884,9 @@ class TestAgainstIdeal(unittest.TestCase):
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx)  , N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy)  , N)
 
-        kernel_r_size = 5
+        kernel_r_size = 9
 
-        kernel = kernels.psf_kernel2d(kernel_r_size, (dx, dy))[:, :, 0]
+        kernel = kernels.psf_kernel2d(kernel_r_size, (dx, dy))
 
         arg = N // 2
 
@@ -871,16 +894,15 @@ class TestAgainstIdeal(unittest.TestCase):
         two_NA_fy = fy / (2 * NA)
 
         optical_system = System4f2D(alpha=alpha)
-        optical_system.compute_psf_and_otf((psf_size, N),
-                                           apodization_function="Sine")
+        optical_system.compute_psf_and_otf((psf_size, N))
 
-        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
-        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
-        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
-        illumination_widefield = configurations.get_widefield()
+        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=1, dimensionality=2)
+        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=1, dimensionality=2)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1, dimensionality=2)
+        illumination_widefield = configurations.get_widefield(dimensionality=2)
 
-        noise_estimator_finite = SSNRCalculator.SSNRSIM2DFiniteKernel(illumination_widefield, optical_system, kernel)
-        ssnr_finite_widefield = noise_estimator_finite.compute_ssnr()
+        noise_estimator_finite = SSNRCalculator.SSNRSIM2D(illumination_widefield, optical_system, kernel)
+        ssnr_finite_widefield = noise_estimator_finite.ssnri
         ssnr_finite_widefield_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_widefield = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_widefield = noise_estimator_finite.compute_ssnri_entropy()
@@ -889,19 +911,19 @@ class TestAgainstIdeal(unittest.TestCase):
         plt.show()
 
         noise_estimator_finite.illumination = illumination_s_polarized
-        ssnr_finite_s_polarized = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_s_polarized = noise_estimator_finite.ssnri
         ssnr_finite_s_polarized_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_s_polarized = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_s_polarized = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_seven_waves
-        ssnr_finite_seven_waves = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_seven_waves = noise_estimator_finite.ssnri
         ssnr_finite_seven_waves_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_seven_waves = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_seven_waves = noise_estimator_finite.compute_ssnri_entropy()
 
         noise_estimator_finite.illumination = illumination_3waves
-        ssnr_finite_3waves = np.abs(noise_estimator_finite.compute_ssnr())
+        ssnr_finite_3waves = noise_estimator_finite.ssnri
         ssnr_finite_3waves_ra = noise_estimator_finite.ring_average_ssnri()
         volume_finite_3waves = noise_estimator_finite.compute_ssnri_volume()
         entropy_finite_3waves = noise_estimator_finite.compute_ssnri_entropy()
@@ -913,19 +935,19 @@ class TestAgainstIdeal(unittest.TestCase):
         entropy_widefield = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_s_polarized
-        ssnr_s_polarized = np.abs(noise_estimator.ssnri)
+        ssnr_s_polarized = noise_estimator_finite.ssnri
         ssnr_s_polarized_ra = noise_estimator.ring_average_ssnri()
         volume_squareSP = noise_estimator.compute_ssnri_volume()
         entropy_s_polarized = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_seven_waves
-        ssnr_seven_waves = np.abs(noise_estimator.ssnri)
+        ssnr_seven_waves = noise_estimator_finite.ssnri
         ssnr_seven_waves_ra = noise_estimator.ring_average_ssnri()
         volume_hexagonal = noise_estimator.compute_ssnri_volume()
         entropy_seven_waves = noise_estimator.compute_ssnri_entropy()
 
         noise_estimator.illumination = illumination_3waves
-        ssnr_3waves = np.abs(noise_estimator.ssnri)
+        ssnr_3waves = noise_estimator_finite.ssnri
         ssnr_3waves_ra = noise_estimator.ring_average_ssnri()
         volume_conventional = noise_estimator.compute_ssnri_volume()
         entropy_3waves = noise_estimator.compute_ssnri_entropy()
@@ -1014,7 +1036,8 @@ class TestAgainstIdeal(unittest.TestCase):
         ax1.legend(fontsize=15, loc="lower left")
         ax2.legend(fontsize=15, loc="lower left")
         plt.show()
-class TestFinalFilter(unittest.TestCase):
+
+class TestLocalDeconvolution(unittest.TestCase):
     def test_finite_wiener3d(self):
         theta = np.pi / 4
         alpha = np.pi / 4

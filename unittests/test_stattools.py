@@ -1,12 +1,20 @@
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import numpy as np
 import matplotlib.pyplot as plt
 import stattools
+import wrappers
 import unittest
 import sys
 from OpticalSystems import System4f3D
 from config.BFPConfigurations import BFPConfiguration
-from SSNRCalculator import SSNRWidefield
-sys.path.append('../')
+from SSNRCalculator import SSNRWidefield2D
 
 configurations = BFPConfiguration()
 class TestRingAveraging(unittest.TestCase):
@@ -161,3 +169,39 @@ class TestSurfaceLevels(unittest.TestCase):
         plt.imshow(mask[:, :, 100])
         plt.show()
 
+
+class TestMiscellaneous(unittest.TestCase):
+    def test_upsample(self):
+        # Generate an image with a circle
+        image = np.zeros((30, 30))
+        radius = 6
+        center = (15, 15)
+        y, x = np.indices(image.shape)
+        mask = (x - center[0])**2 + (y - center[1])**2 <= radius**2
+        image[mask] = 1
+
+        # Display the original image
+        fig, axes = plt.subplots(1, 2)
+        fig.suptitle("Original Image")
+        axes[0].imshow(image, cmap='gray')
+        axes[0].axis('off')
+        axes[1].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(image))), cmap='gray')
+        axes[1].axis('off')
+        plt.show()
+        # You can also generate other features like lines (uncomment below if needed)
+        # image = np.zeros((100, 100))
+        # image[50, :] = 1  # horizontal line
+        # image[:, 50] = 1  # vertical line
+        # plt.figure()
+        # plt.title("Original Image with Lines")
+        # plt.imshow(image, cmap='gray')
+        # plt.axis('off')
+        # plt.show()
+        upsampled_image = stattools.upsample(image, factor=2)
+        fig, axes = plt.subplots(1, 2)
+        fig.suptitle("Original Image")
+        axes[0].imshow(np.abs(upsampled_image), cmap='gray')
+        axes[0].axis('off')
+        axes[1].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(upsampled_image))), cmap='gray')
+        axes[1].axis('off')
+        plt.show()

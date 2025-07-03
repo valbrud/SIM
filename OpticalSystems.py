@@ -153,11 +153,22 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         """
         if self.otf_frequencies is None or self.otf is None:
             raise AttributeError("OTF or axes are not computed yet. This method can not be called at this stage")
-        axes = 2 * np.pi * self.otf_frequencies
+        axes = [2 * np.pi * np.array(self.otf_frequencies[ax]) for ax in range(self.dimensionality)]
         otf = self.otf
         self.interpolator = scipy.interpolate.RegularGridInterpolator(axes, otf, method=self._interpolation_method,
                                                                       bounds_error=False,
                                                                       fill_value=0.)
+
+    def upsample(self, factor=2):
+        """
+        Upsample the PSF by zero-padding the OTF.
+        Coordinates are changed accordingly.
+        """
+
+        self.psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates)
+        self.compute_psf_and_otf()
+        self._x_grid = None
+        self._q_grid = None
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
         """
@@ -253,18 +264,18 @@ class OpticalSystem2D(OpticalSystem):
         x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0])
         y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
 
-        self.psf_coordinates = np.array((x, y))
+        self.psf_coordinates = (x, y)
 
     @OpticalSystem.psf_coordinates.setter
     def psf_coordinates(self, new_coordinates):
         self._psf_coordinates = new_coordinates
         x, y = new_coordinates
         Nx, Ny = x.size, y.size
-        Lx, Ly = 2 * new_coordinates[:, -1]
+        Lx, Ly = 2 * new_coordinates[0][-1], 2 * new_coordinates[1][-1]
 
         fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx)
         fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
-        self._otf_frequencies = np.array((fx, fy))
+        self._otf_frequencies = (fx, fy)
 
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
@@ -309,19 +320,19 @@ class OpticalSystem3D(OpticalSystem):
         y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
         z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2, N[2])
 
-        self.psf_coordinates = np.array((x, y, z))
+        self.psf_coordinates = (x, y, z)
 
     @OpticalSystem.psf_coordinates.setter
     def psf_coordinates(self, new_coordinates):
         self._psf_coordinates = new_coordinates
         x, y, z, = new_coordinates
         Nx, Ny, Nz = x.size, y.size, z.size
-        Lx, Ly, Lz = 2 * new_coordinates[:, -1]
+        Lx, Ly, Lz = 2 * new_coordinates[0][-1], 2 * new_coordinates[1][-1], 2 * new_coordinates[2][-1]
 
         fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx)
         fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
         fz = np.linspace(-Nz / (2 * Lz), Nz / (2 * Lz), Nz)
-        self._otf_frequencies = np.array((fx, fy, fz))
+        self._otf_frequencies = (fx, fy, fz)
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":

@@ -118,7 +118,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                 f"Unknown method of modulation coefficients estimation {modulation_coefficients_method}. Available methods are {self.modulation_coefficients_methods}"
             )
     
-        peaks, rotation_angles = self.estimate_peaks(peaks_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations)
+        peaks, rotation_angles = self.estimate_peaks(peaks_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations, debug_info_level=debug_info_level)
         
         if debug_info_level > 0:
             for r in range(Mr):
@@ -126,7 +126,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             for sim_index in peaks:
                 print('r = ', sim_index[0], 'm = ', sim_index[1], 'wavevector = ', np.round((peaks[sim_index]), 3), '1 / lambda')
 
-        phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, rotation_angles)
+        phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, debug_info_level)
 
         if debug_info_level > 0:
             for sim_index in phase_matrix:
@@ -143,6 +143,15 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             for amplitude, index in zip(amplitudes, indices):
                 print('r = ', index[0], 'm = ', index[1], 'amplitude = ', round(amplitude, 3))
         
+        if debug_info_level > 2:
+            image_ft_reference = wrapped_fftn(stack[0, 0])
+            plt.imshow(np.log1p(np.abs(image_ft_reference)).T, cmap='gray', origin='lower')
+            for peak in illumination_estimated.harmonics.keys():
+                qx, qy = self.optical_system.otf_frequencies
+                sizex, sizey = qx.size, qy.size
+                approximate_peak = illumination_estimated.harmonics[peak].wavevector / (2 * np.pi)
+                plt.plot(approximate_peak[0]/qx[-1] * sizex//2 + sizex//2, approximate_peak[1]/qx[-1] * sizey//2 + sizey//2, 'rx')
+            plt.show()
 
         return illumination_estimated
 
@@ -165,26 +174,28 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
 
         peaks_estimator = PeaksEstimator(self.illumination, self.optical_system)
         
-        if self.dimensionality == self.illumination.dimensionality:
+        if len(stack.shape[2:]) == self.dimensionality:
             peaks, rotation_angles = peaks_estimator.estimate_peaks(stack, 
                                                                 peak_search_area_size, 
                                                                 zooming_factor, 
-                                                                max_iterations)
+                                                                max_iterations, 
+                                                                debug_info_level=debug_info_level)
         else:
-            projected_dimensions = tuple([i for i in range(len(self.illumination.dimensions)) if self.illumination.dimensions[i] == 0])
-            sizes = tuple([stack.shape[i + 2] for i  in projected_dimensions])
+            averaging_dimensions = range(2 + self.dimensionality, len(stack.shape), 1)
+            sizes = [stack.shape[i] for i in averaging_dimensions]
             
             if debug_info_level > 1:
-                print('Stack split into substacks. Averaging along the axes', projected_dimensions, 'of size', sizes)
+                print('Stack split into substacks. Averaging along the axes', averaging_dimensions, 'of size', sizes)
 
             sum_peaks = {}
             for idx in np.ndindex(*sizes):
-                slicing = (slice(None), slice(None)) + idx
+                slicing = tuple([slice(None) for i in range(2 + self.dimensionality)]) + idx
                 substack = stack[slicing]
                 peaks, _ = peaks_estimator.estimate_peaks(substack, 
                                                           peak_search_area_size, 
                                                           zooming_factor, 
-                                                          max_iterations)
+                                                          max_iterations, 
+                                                          debug_info_level=debug_info_level)
                 
                 if debug_info_level > 1:
                     print('substack', idx)
@@ -210,7 +221,6 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                            phase_estimation_method: str = 'cross_correlation',
                            stack: np.ndarray = None,
                            peaks: dict = None,
-                           rotation_angles: np.ndarray = None,
                            debug_info_level=0) -> dict:
         
         """
@@ -225,18 +235,21 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             case 'cross_correlation':	
                 phase_estimation_function = PhasesEstimator.phase_matrix_cross_correlation
                 
-        if self.dimensionality == self.illumination.dimensionality:
+        if len(stack.shape[2:]) == self.dimensionality:
             phase_matrix = phase_estimation_function(self.optical_system, self.illumination, stack, peaks)
         
         else:
-            projected_dimensions = tuple([i for i in range(len(self.illumination.dimensions)) if self.illumination.dimensions[i] == 0])
-            sizes = tuple([stack.shape[i + 2] for i  in projected_dimensions])
-            
+            averaging_dimensions = range(2 + self.dimensionality, len(stack.shape), 1)
+            sizes = [stack.shape[i] for i in averaging_dimensions]
+
+            if debug_info_level > 1:
+                print('Stack split into substacks. Averaging along the axes', averaging_dimensions, 'of size', sizes)
+
             sum_phases = {}
             if debug_info_level > 1:
-                print('Stack split into substacks. Averaging along the axes', projected_dimensions, 'of size', sizes)
+                print('Stack split into substacks. Averaging along the axes', averaging_dimensions, 'of size', sizes)
             for idx in np.ndindex(*sizes):
-                slicing = (slice(None), slice(None)) + idx
+                slicing = tuple([slice(None) for i in range(2 + self.dimensionality)]) + idx
                 substack = stack[slicing]
                 phases = phase_estimation_function(self.optical_system, self.illumination,  substack, peaks)
                 if debug_info_level > 1:
@@ -313,12 +326,12 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
 
         ssnr_estimated = SSNRBase.estimate_ssnr_from_image_binomial_splitting(stack, n_iter=iterations, radial=False)
         ssnr_estimated[ssnr_estimated < 0] = 0
-        plt.imshow(np.log1p(ssnr_estimated), cmap='gray')
-        plt.show()
-        plt.plot(self.optical_system.otf_frequencies[0], ssnr_estimated[:, 50], label='ssnr_estimated')
-        plt.ylim(0, 100)
-        plt.plot(2.45, 0, 'cx')
-        plt.show()
+        # plt.imshow(np.log1p(ssnr_estimated), cmap='gray')
+        # plt.show()
+        # plt.plot(self.optical_system.otf_frequencies[0], ssnr_estimated[:, 50], label='ssnr_estimated')
+        # plt.ylim(0, 100)
+        # plt.plot(2.45, 0, 'cx')
+        # plt.show()
         print('ssnr_estimated', ssnr_estimated[50, 50])
         # exit()
         return ssnr_estimated
@@ -389,7 +402,8 @@ class PeaksEstimator(metaclass=DimensionMetaAbstract):
                        stack, 
                        peak_search_area_size, 
                        zooming_factor, 
-                       max_iterations) -> dict:
+                       max_iterations, 
+                       debug_info_level = 0) -> dict:
         """
         Estimate the peaks of the illumination pattern from the stack.
 
@@ -419,6 +433,10 @@ class PeaksEstimator(metaclass=DimensionMetaAbstract):
         Compute the Fourier transform of the stack.
         """
         stack_ft = np.array([np.array([wrapped_fftn(image) for image in stack[r]]) for r in range(stack.shape[0])])
+        # for one_r in stack_ft:
+        #     for image in one_r:
+        #         plt.imshow(np.log1p(np.abs(image)), cmap='gray')
+        #         plt.show()
         return stack_ft
     
     def estimate_rotation_angles(self, estimated_peaks: dict) -> np.ndarray:
@@ -478,7 +496,8 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimator):
                         stack: np.ndarray,
                         peak_search_area_size: int,
                         zooming_factor: int,
-                        max_iterations: int) -> dict:
+                        max_iterations: int, 
+                        debug_info_level: int = 0) -> dict:
 
         Mr = self.illumination.Mr 
         q_grid = self.optical_system.q_grid
@@ -509,18 +528,15 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimator):
                 maxima = self._find_maxima(correlation_matrix, grid)
                 averaged_maxima = self._average_maxima(maxima)
                 peaks_approximated = self._refine_peaks(peaks_approximated, averaged_maxima)
-
+                # if debug_info_level > 3:
+                #     plt.imshow(np.log1p(np.abs(correlation_matrix[(0, 0, 0)])), cmap='gray')
+                #     plt.show()
                 print(i, 'new', peaks_approximated)
                 dq = grid[1, 1] - grid[0, 0]
                 print('dq', dq)
-                # if (np.sum((refined_base_vectors - base_vectors)**2) < 2 * dq**2).all():
                 grid = self._fine_q_grid(grid, zooming_factor)
-                # print("zooming in q_grid, new q_grid boundaries", q_grid[0, 0][0], q_grid[-1, -1][0])
-
                 # merit_function = self._merit_function(correlation_matrix)
                 # max_index = np.unravel_index(np.argmax(merit_function, axis=0), merit_function.shape)
-                # diff = np.sum((refined_base_vectors - base_vectors)**2)
-
 
             peaks.update({key:peaks_approximated[key] / (2 * np.pi) for key in peaks_approximated.keys() if key[0] == r})
 
@@ -546,7 +562,8 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimator):
     @staticmethod
     def cross_correlation_matrix(optical_system: OpticalSystem,
                                 illumination: PlaneWavesSIM,
-                                images: np.ndarray, r: int,
+                                images: np.ndarray, 
+                                r: int,
                                 estimated_modualtion_patterns: np.ndarray,
                                 fine_q_grid: np.ndarray) -> Dict[int, np.ndarray]:
         """
@@ -671,13 +688,16 @@ class PeaksEstimatorInterpolation(PeaksEstimator):
         if len(stack.shape[2:]) != self.dimensionality:
             if len(self.illumination.dimensions) != len(stack.shape[2:]):
                 raise ValueError(f"Stack dimensions {stack.shape[2:]} do not match illumination dimensions {self.illumination.dimensions}")
-            else: 
-                ...
+
         wavevectors, indices = self.illumination.get_all_wavevectors_projected()
         peak_guesses = {index: wavevector / (2 * np.pi) for index, wavevector in zip(indices, wavevectors)}
         peak_search_areas  = self._locate_peaks(peak_guesses, peak_search_area_size)
         stack_ft = self.get_stack_ft(stack)
-        stacks_ft = self._crop_stacks(stack_ft, peak_search_areas)
+        # for r in range(stack.shape[0]):
+        #     plt.imshow(np.log1p(np.abs(stack_ft[r, 0])), cmap='gray')
+        #     plt.show()
+
+        stacks_ft = self._crop_stacks(stack_ft, peak_search_areas, debug_info_level=debug_info_level)
         grids = self._crop_grids(peak_search_areas)
         stacks_ft_averaged = self._average_ft_stacks(stacks_ft)
         averaged_maxima = self._find_maxima(stacks_ft_averaged, grids)
@@ -686,13 +706,11 @@ class PeaksEstimatorInterpolation(PeaksEstimator):
             interpolated_grids = self._get_fine_grids(coarse_peak_grids, zooming_factor)
             off_grid_ft_stacks, off_grid_otfs = self._off_grid_ft_stacks(stack, interpolated_grids)
             off_grid_ft_averaged = self._average_ft_stacks(off_grid_ft_stacks)
-            # plt.imshow(np.log1p(off_grid_ft_averaged[(2, 0)]), cmap='gray')
-            # plt.show()
-            # plt.imshow(np.log1p(off_grid_otfs[(2, 0)]), cmap='gray')
-            # plt.show()
             grids = interpolated_grids
-            # plt.imshow(np.log1p(off_grid_ft_averaged[(2, 0)]), cmap='gray')
-            # plt.show()
+            if debug_info_level > 3:
+                key = next(iter(off_grid_ft_averaged.keys()))
+                plt.imshow(np.log1p(np.abs(off_grid_ft_averaged[key])), cmap='gray')
+                plt.show()
             stacks_ft_averaged = off_grid_ft_averaged
             averaged_maxima = self._find_maxima(off_grid_ft_averaged, grids)
             print('iteration', i, 'averaged_maxima', averaged_maxima)
@@ -719,33 +737,41 @@ class PeaksEstimatorInterpolation(PeaksEstimator):
         for peak in approximate_peaks.keys():
             if np.isclose(np.sum(np.abs(np.array(peak[1]))), 0):
                 continue
-            if peak[1][0] >= 0:
+            if peak[1][0] > 0 or (peak[1][0] == 0 and all(val > 0 for val in peak[1][1:])):
                 grid = self.optical_system.q_grid
                 dq = grid[*([1]*self.dimensionality)] - grid[*([0]*self.dimensionality)]
                 approximate_peak = approximate_peaks[peak]
-                labeling_array = (np.abs((grid - approximate_peak[None, None, :])) <= peak_search_area * dq[None, None, :]).all(axis=-1)
+                labeling_array = (np.abs(grid - approximate_peak[None, None, :]) <= peak_search_area * dq[None, None, :]).all(axis=-1)
                 peak_search_areas[peak] = labeling_array
-                # plt.imshow(labeling_array, cmap='gray')
-                # plt.show()
         return peak_search_areas
-    
-    def _crop_stacks(self, stack_ft: np.ndarray, peak_search_areas: np.ndarray) -> np.ndarray:
+
+    def _crop_stacks(self, stack_ft: np.ndarray, peak_search_areas: np.ndarray, debug_info_level: int = 0) -> np.ndarray:
         """
         Crop the stacks to get small regions around the peaks.
         """
         cropped_stacks = {}
+        if debug_info_level > 2:
+            masked_peaks = np.zeros((stack_ft.shape[2:]), dtype=np.complex128)
+
         for peak in peak_search_areas.keys():
             r = peak[0]
             mask = peak_search_areas[peak]
+            if debug_info_level > 2:
+                masked_peaks += mask * stack_ft[r, 0]
             coords = np.argwhere(mask)
             top_left = coords.min(axis=0)
             bottom_right = coords.max(axis=0) + 1  # slice end is exclusive
             cropped_stacks[peak] = np.array([image_ft[top_left[0]:bottom_right[0], top_left[1]:bottom_right[1]] for image_ft in stack_ft[r]])
-            # plt.imshow((np.abs(stack_ft[r, 0] * mask)).T, cmap='gray', origin='lower')
-            # qx, qy = self.optical_system.otf_frequencies
-            # approximate_peak = self.illumination.harmonics[peak].wavevector / (2 * np.pi)
-            # plt.plot(approximate_peak[0]/qx[-1] * 128 + 128, approximate_peak[1]/qx[-1] * 128 + 128, 'rx')
-            # plt.show()
+
+        if debug_info_level > 2:
+            for peak in peak_search_areas.keys():   
+                qx, qy = self.optical_system.otf_frequencies
+                sizex, sizey = qx.size, qy.size
+                approximate_peak = self.illumination.harmonics[peak].wavevector / (2 * np.pi)
+                plt.plot(approximate_peak[0]/qx[-1] * sizex//2 + sizex//2, approximate_peak[1]/qx[-1] * sizey//2 + sizey//2, 'rx')
+            plt.imshow(np.log1p(np.abs(masked_peaks)).T, cmap='gray')
+            plt.show()
+                
         return cropped_stacks
     
     def _crop_grids(self, peak_search_areas: np.ndarray) -> np.ndarray:

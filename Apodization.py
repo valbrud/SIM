@@ -187,7 +187,7 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
                 wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
                 
                 if not np.isclose(wavevector, 0).all(): 
-                    phase_modulated = widefield_coherent_psf * np.transpose(np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2))
+                    phase_modulated = widefield_coherent_psf * np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
                     ideal_sim_coherent_psf += phase_modulated
                     phase_modulated_ft = wrappers.wrapped_ifftn(phase_modulated).real
                     # plt.imshow(phase_modulated_ft[:, 50, :], cmap='gray')

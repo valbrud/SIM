@@ -1,9 +1,15 @@
+import os.path
 import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 from config.BFPConfigurations import *
 import unittest
 from ShapesGenerator import generate_random_spherical_particles, generate_sphere_slices
 import matplotlib.pyplot as plt
-sys.path.append('../')
 configurations = BFPConfiguration()
 
 class TestSpheres(unittest.TestCase):

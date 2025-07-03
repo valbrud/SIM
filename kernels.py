@@ -14,9 +14,39 @@ import stattools
 import numpy as np
 import matplotlib.pyplot as plt
 
-def sinc_kernel(kernel_r_size: int, kernel_z_size=1) -> np.ndarray:
+def sinc_kernel1d(kernel_size: int) -> np.ndarray:
     """
-    Generate a 2D/3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
+    Generate a 1D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
+
+    Args:
+        kernel_r_size: The size of the kernel in the radial direction.
+
+    Returns:
+        A 1D triangular kernel.
+    """
+    func_r = np.zeros(kernel_size)
+    func_r[0:kernel_size // 2 + 1] = np.linspace(0, 1, (kernel_size + 1) // 2 + 1)[1:]
+    func_r[kernel_size // 2: kernel_size] = np.linspace(1, 0, (kernel_size + 1) // 2 + 1)[:-1]
+    return func_r
+
+
+
+def sinc_kernel2d(kernel_size: int) -> np.ndarray:
+    """
+    Generate a 2D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
+
+    Args:
+        kernel_r_size: The size of the kernel in the radial direction.
+
+    Returns:
+        A 2D triangular kernel.
+    """
+    kernel = sinc_kernel1d(kernel_size)[:, None] * sinc_kernel1d(kernel_size)[None, :]
+    return kernel
+
+def sinc_kernel3d(kernel_r_size: int, kernel_z_size=1) -> np.ndarray:
+    """
+    Generate a 3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
 
     Args:
         kernel_r_size: The size of the kernel in the radial direction.
@@ -25,13 +55,7 @@ def sinc_kernel(kernel_r_size: int, kernel_z_size=1) -> np.ndarray:
     Returns:
         A 2D/3D triangular kernel.
     """
-    func_r = np.zeros(kernel_r_size)
-    func_r[0:kernel_r_size // 2 + 1] = np.linspace(0, 1, (kernel_r_size + 1) // 2 + 1)[1:]
-    func_r[kernel_r_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_r_size + 1) // 2 + 1)[:-1]
-    func_z = np.zeros(kernel_z_size)
-    func_z[0:kernel_z_size // 2 + 1] = np.linspace(0, 1, (kernel_z_size + 1) // 2 + 1)[1:]
-    func_z[kernel_z_size // 2: kernel_r_size] = np.linspace(1, 0, (kernel_z_size + 1) // 2 + 1)[:-1]
-    kernel = func_r[:, None, None] * func_r[None, :, None] * func_z[None, None, :]
+    kernel = sinc_kernel1d(kernel_r_size)[:, None,  None] * sinc_kernel1d(kernel_r_size)[None, :, None] * sinc_kernel1d(kernel_z_size)[None, None, :]
     return kernel
 
 def psf_kernel2d(kernel_size: int, pixel_size: tuple[float, float], dense_kernel_size=50) -> np.ndarray:

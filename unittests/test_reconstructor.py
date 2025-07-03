@@ -11,21 +11,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
 import sys
-
+import stattools
 # --- Imports from your simulation modules ---
-from OpticalSystems import System4f2D
-from SIMulator import SIMulator2D
+from OpticalSystems import System4f2D, System4f3D
+from SIMulator import SIMulator2D, SIMulator3D
 from config.BFPConfigurations import BFPConfiguration
-from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
+from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D, IlluminationPlaneWaves3D
 import ShapesGenerator
-from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
-from kernels import sinc_kernel, psf_kernel2d
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorSpatialDomain3D
+from kernels import sinc_kernel2d, psf_kernel2d
 from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
 import wrappers
 import SSNRCalculator
 
-class TestReconstruction(unittest.TestCase):
-
+class TestReconstruction2D(unittest.TestCase):
     def setUp(self):
         np.random.seed(1234)
         # Set simulation parameters similar to the provided example.
@@ -43,19 +42,33 @@ class TestReconstruction(unittest.TestCase):
         self.x = np.linspace(-self.max_r, self.max_r, self.N)
         y = np.copy(self.x)
 
-        self.image = ShapesGenerator.generate_random_lines(
-            image_size=self.psf_size,
-            point_number=self.N,
-            line_width=0.4,
-            num_lines=500,
-            intensity=10**2
-        )
-        # plt.title("Ground truth")
-        # plt.imshow(self.image)
-        # plt.show()
+        # self.image = ShapesGenerator.generate_random_lines(
+        #     image_size=self.psf_size,
+        #     point_number=self.N,
+        #     line_width=0.4,
+        #     num_lines=500,
+        #     intensity=10**2
+        # )
+
+        self.image = 100 * ShapesGenerator.make_circle_grid(self.N, radius=1)
+
+        # self.image = ShapesGenerator.generate_random_spherical_particles(
+        #     image_size=self.psf_size,
+        #     point_number=self.N,
+        #     r = 0.1,
+        #     N = 10, 
+        #     I = 100
+        # )
+        # self.image = stattools.introduce_field_aberrations(self.image)
+        # self.image = stattools.introduce_field_aberrations(self.image)
+        plt.title("Ground truth")
+        plt.imshow(self.image)
+        plt.show()
         self.optical_system = System4f2D(alpha=self.alpha, refractive_index=self.nmedium)
         self.optical_system.compute_psf_and_otf((self.psf_size, self.N))
-
+        plt.imshow(self.optical_system.psf[self.N//2-10:self.N//2+10, self.N//2-10:self.N//2+10])
+        # plt.title("PSF")
+        plt.show()
         # self.image = 10**5 * np.ones(self.optical_system.psf.shape)
 
         self.widefield = scipy.signal.convolve(self.image, self.optical_system.psf, mode='same')
@@ -75,27 +88,33 @@ class TestReconstruction(unittest.TestCase):
         # spatial_shifts /= (3 * 2 * self.nmedium * np.sin(self.theta))
         # self.illumination.spatial_shifts = spatial_shifts
         self.illumination.set_spatial_shifts_diagonally()
-        # plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, y)))
-        # plt.show()
+        plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, self.x)))
+        plt.show()
 
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system, readout_noise_variance=1)
         self.sim_images = self.simulator.generate_sim_images(self.image)
-        # for r in range(self.illumination.Mr):
-        #     for n in range(self.illumination.Mt):
-        #         image = self.sim_images[r, n]
-        #         plt.title(f"Simulated image{r, n}")
-        #         plt.imshow(image)
-        #         plt.show()
+        self.sim_images_distorted = np.copy(self.sim_images)
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                image = self.sim_images[r, n]
+                image_distorted = stattools.introduce_field_aberrations(image)
+                image_distorted = stattools.introduce_field_aberrations(image_distorted)
+                self.sim_images_distorted[r, n] = image_distorted
+                self.sim_images_distorted[r, n] = stattools.radial_fade(image_distorted, 2, 0.5)
+                self.sim_images_distorted[r, n] += 10
+                # plt.title(f"Simulated image{r, n}")
+                # plt.imshow(image_distorted)
+                # plt.show()
 
-        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images)
+        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images_distorted)
 
     def test_widefield_reconstruction(self):
         reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system
         )
-        reconstructed_image = reconstructor.get_widefield(self.sim_images)
+        reconstructed_image = reconstructor.get_widefield(self.sim_images_distorted)
         fig, axes = plt.subplots(1, 2)
         axes[0].imshow(self.widefield)
         axes[0].set_title("Widefield")
@@ -112,12 +131,12 @@ class TestReconstruction(unittest.TestCase):
         fourier_reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
-            kernel=psf_kernel2d(7, (self.dx, self.dx)),
+            kernel=psf_kernel2d(9, (self.dx, self.dx)),
             # regularization_filter=self.optical_system.otf**2 + 0.01
             # apodization_filter =
         )
         # Reconstruct the image.
-        reconstructed_image = fourier_reconstructor.reconstruct(self.noisy_images)
+        reconstructed_image = fourier_reconstructor.reconstruct(self.sim_images_distorted)
 
         # fig, axes = plt.subplots(1, 2)
         # axes[0].imshow(self.widefield)
@@ -127,7 +146,7 @@ class TestReconstruction(unittest.TestCase):
             illumination=self.illumination,
             optical_system=self.optical_system,
             readout_noise_variance=1,
-            kernel = psf_kernel2d(7, (self.dx, self.dx))
+            kernel = psf_kernel2d(9, (self.dx, self.dx))
         )            
         filtered, *_  = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
         fig, axes = plt.subplots(1, 2)
@@ -137,7 +156,7 @@ class TestReconstruction(unittest.TestCase):
         axes[1].set_title("Filtered FT")
         plt.show()
         fig, axes = plt.subplots(1, 2)
-        axes[0].imshow(np.abs(reconstructed_image))
+        axes[0].imshow(np.abs(reconstructed_image[self.N//2 - 100:self.N//2 + 100, self.N//2 - 100:self.N//2 + 100]))
         axes[0].set_title("Reconstructed")
         axes[1].imshow(np.abs(wrappers.wrapped_ifftn(filtered)))
         axes[1].set_title("Filtered")
@@ -150,7 +169,7 @@ class TestReconstruction(unittest.TestCase):
             optical_system=self.optical_system,
         )
         # Reconstruct the image.
-        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images)
+        reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images_distorted)
         plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
         fig, axes = plt.subplots(1, 2)
         axes[0].imshow(self.widefield)
@@ -172,10 +191,10 @@ class TestReconstruction(unittest.TestCase):
         )
         # Reconstruct the image.
         plt.title("Spatial-domain reconstruction with finite kernel")
-        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images)
+        reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images_distorted)
         plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
         plt.show()
-        plt.imshow(reconstructed_image)
+        plt.imshow(reconstructed_image[self.N//2 - 100:self.N//2 + 100, self.N//2 - 100:self.N//2 + 100])
         plt.show()
         calc = SSNRCalculator.SSNRSIM2D(
             illumination=self.illumination,
@@ -226,6 +245,72 @@ class TestReconstruction(unittest.TestCase):
         axes[2].imshow(reconstructed_image5)
         axes[3].imshow(reconstructed_image7)
         plt.show()
+
+class TesReconstruction3D(unittest.TestCase):
+    def setUp(self):
+        np.random.seed(1234)
+        # Set simulation parameters similar to the provided example.
+        self.N = 101
+        self.alpha = 2 * np.pi / 5
+        # self.theta = 2 * np.pi / 12
+        self.nmedium = 1.5
+        self.theta = np.arcsin(0.9 * np.sin(self.alpha))
+        self.dimensions = (1, 1, 0)
+        NA = self.nmedium * np.sin(self.alpha)
+        self.dx = 1 / (8 * NA)
+        self.dz = 1 / (4 * (1 - np.cos(self.alpha)))
+        self.max_r = self.N // 2 * self.dx
+        self.max_z = self.N // 2 * self.dz
+        self.psf_size = np.array((2 * self.max_r, 2 * self.max_r, 2 * self.max_z))
+
+        self.x = np.linspace(-self.max_r, self.max_r, self.N)
+        self.z = np.linspace(-self.max_z, self.max_z, self.N)
+
+        y = np.copy(self.x)
+
+        self.image = ShapesGenerator.generate_random_lines(
+            image_size=self.psf_size,
+            point_number=self.N,
+            line_width=0.4,
+            num_lines=100,
+            intensity=10**4
+        )
+        # plt.title("Ground truth")
+        # plt.imshow(self.image)
+        # plt.show()
+        self.optical_system = System4f3D(alpha=self.alpha, refractive_index=self.nmedium)
+        self.optical_system.compute_psf_and_otf((self.psf_size, self.N))
+        # plt.imshow(self.optical_system.psf[self.N//2-10:self.N//2+10, self.N//2-10:self.N//2+10])
+        # plt.title("PSF")
+        # plt.show()
+        # self.image = 10**5 * np.ones(self.optical_system.psf.shape)
+
+        self.widefield = scipy.signal.convolve(self.image, self.optical_system.psf, mode='same')
+        # plt.title("Widefield image")
+        # plt.imshow(self.widefield)
+        # plt.show()
+        
+        configurations = BFPConfiguration(refraction_index=1.5)
+        illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(
+            self.theta, 1, 1, 3, Mt=1, dimensionality=3
+        )
+
+        self.illumination.set_spatial_shifts_diagonally()
+        plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, self.x)))
+        plt.show()
+
+        self.simulator = SIMulator3D(self.illumination, self.optical_system, readout_noise_variance=1)
+        self.sim_images = self.simulator.generate_sim_images(self.image)
+        # for r in range(self.illumination.Mr):
+        #     for n in range(self.illumination.Mt):
+        #         image = self.sim_images[r, n]
+        #         plt.title(f"Simulated image{r, n}")
+        #         plt.imshow(image)
+        #         plt.show()
+
+        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images)
+    
+
 
 
 class TestNonlinearReconstruction(unittest.TestCase):

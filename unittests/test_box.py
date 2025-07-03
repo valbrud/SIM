@@ -7,8 +7,6 @@ from Sources import PlaneWave, PointSource
 from Box import Box
 import time
 
-
-
 class TestBox(unittest.TestCase):
     def test_point_sources_initialization(self):
         source1 = PointSource((0, 0, 0), 10)

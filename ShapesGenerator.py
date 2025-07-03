@@ -229,3 +229,13 @@ def generate_line_grid_2d(
     grid[line_mask] = intensity
 
     return grid
+
+def make_circle_grid(im_size=128, spacing=16, radius=5, value=1.0):
+    img = np.zeros((im_size, im_size), dtype=np.float32)
+    yy, xx = np.indices(img.shape)
+    centres = np.arange(spacing // 2, im_size, spacing)
+    for cy in centres:
+        for cx in centres:
+            mask = (yy - cy) ** 2 + (xx - cx) ** 2 <= radius ** 2
+            img[mask] = value
+    return img

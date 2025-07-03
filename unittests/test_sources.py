@@ -1,8 +1,14 @@
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import unittest
 import numpy as np
 from Sources import PlaneWave, PointSource
-import sys
-sys.path.append('../')
 
 
 class TestPlaneWave(unittest.TestCase):

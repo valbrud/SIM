@@ -58,11 +58,11 @@ class SSNRBase(metaclass=DimensionMeta):
         self._compute_ssnri()
 
     def ring_average_ssnri(self, number_of_samples=None):
-        q_axes = 2 * np.pi * self.optical_system.otf_frequencies
+        q_axes = self.optical_system.otf_frequencies
         ssnri = np.copy(self.ssnri)
-        if q_axes.shape[0] == 2:
+        if len(q_axes) == 2:
             return average_rings2d(ssnri, q_axes, number_of_samples=number_of_samples)
-        elif q_axes.shape[0] != 3:
+        elif len(q_axes) != 3:
             raise AttributeError("PSF dimension is not equal to 2 or 3!")
 
         averaged_slices = []
@@ -375,6 +375,23 @@ class SSNRSIM(SSNRBase):
     def compute_full_ssnr(self, object_ft):
         return ((self.dj * np.abs(object_ft)) ** 2 /
                 (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
+
+    def ring_average__ssnri_approximated(self, number_of_samples=None):
+        """
+        Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
+        """
+        q_axes = self.optical_system.otf_frequencies
+        dj = np.copy(self.dj)
+        vj = np.copy(self.vj)
+        if len(q_axes) == 2:
+            return average_rings2d(dj**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj, q_axes, number_of_samples=number_of_samples)
+        elif len(q_axes) != 3:
+            raise AttributeError("PSF dimension is not equal to 2 or 3!")
+
+        averaged_slices = []
+        for i in range(dj.shape[2]):
+            averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
+        return np.array(averaged_slices).T
 
     def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real

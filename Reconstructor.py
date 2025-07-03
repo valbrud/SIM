@@ -54,7 +54,11 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     @abstractmethod
     def reconstruct(self, sim_images):
         ...
-
+    
+    def upsample(self, sim_images, factor=2):
+        upsampled = np.array([np.array([stattools.upsample(image, factor=factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
+        return upsampled
+    
     def get_widefield(self, sim_images):
         widefield_image = np.zeros(sim_images.shape[2:])
         for rotation in sim_images:
@@ -103,7 +107,9 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
         return shifted_image_ft
 
-    def reconstruct(self, sim_images):
+    def reconstruct(self, sim_images, upsample=False):
+        if upsample:
+            sim_images = self.upsample(sim_images)
         # Notations are as in C. Smith et al., "Structured illumination microscopy with noise-controlled image reconstructions", 2021
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
@@ -163,7 +169,9 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
 
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
-    def reconstruct(self, sim_images):
+    def reconstruct(self, sim_images, upsample=False):
+        if upsample:
+            sim_images = self.upsample(sim_images)
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
         for r in range(sim_images.shape[0]):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)

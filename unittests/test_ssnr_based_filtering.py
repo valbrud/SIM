@@ -1,4 +1,10 @@
+import os.path
 import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
 
 import numpy as np
 import scipy.signal
@@ -20,7 +26,6 @@ from OpticalSystems import System4f3D
 import ShapesGenerator
 import SIMulator
 from windowing import make_mask_cosine_edge3d
-sys.path.append('../')
 configurations = BFPConfiguration()
 
 

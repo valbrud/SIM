@@ -1,3 +1,11 @@
+import os.path
+import sys
+print(__file__)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import unittest
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +18,6 @@ import wrappers
 from config.BFPConfigurations import *
 from OpticalSystems import System4f3D, System4f2D
 from matplotlib.widgets import Slider
-sys.path.append('../')
 from config.BFPConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):

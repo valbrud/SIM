@@ -51,7 +51,11 @@ NA = 1.2
 nmedium = 1.518
 alpha = np.arcsin(NA / nmedium)
 max_r = dx * N // 2
+x = np.linspace(-max_r, max_r, N)
+y = np.copy(x)
 psf_size = 2 * np.array((max_r, max_r))
+fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
 xml_file = "data/OMX-OTF-683nm-2d.xml"        
 otf_cube = load_fairsim_otf(xml_file)
 otf = otf_cube[2]  
@@ -69,9 +73,12 @@ otf = np.fft.fftshift(otf)
 otf = otf[2::2, 2::2]
 optical_system = System4f2D(alpha = alpha, refractive_index=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_size=False, save_pupil_function=True)
-plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='OTF_simulated')
-plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='OTF_fairSIM')
+plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='Paraxial OTF')
+plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='FairSIM OTF')
+plt.xlabel('q, $1/\lambda$')
+plt.ylabel('Normalized value')
 plt.legend()
+plt.savefig('reconstructions/images/OTF_comparison.png')
 plt.show()
 
 # optical_system.otf = otf
@@ -102,7 +109,7 @@ print('total_counts', total_counts)
 
 # exit()
 
-offset = 92
+offset = 90
 gain = 6
 stack = (stack - offset) // gain
 stack[stack < 0] = 1
@@ -148,7 +155,7 @@ illumination = pattern_estimator.estimate_illumination_parameters(
     peak_search_area_size=11,
     zooming_factor=3, 
     max_iterations=10, 
-    debug_info_level=2
+    debug_info_level=3
 )
 
 # for r in range(illumination.Mr):
@@ -172,7 +179,7 @@ reconstructor_fourier = ReconstructorFourierDomain2D(
 recontructor_spatial = ReconstructorSpatialDomain2D(
     illumination=illumination,
     optical_system=optical_system,
-    kernel=kernels.sinc_kernel(1)[..., 0]
+    kernel=kernels.sinc_kernel2d(1)
 )
 
 recontructor_finite = ReconstructorSpatialDomain2D(
@@ -186,22 +193,22 @@ reconstructor_widefield = ReconstructorFourierDomain2D(
     optical_system=optical_system,
 )
 
-rng = np.random.default_rng()
-for r in range(stack.shape[0]):
-    for n in range(stack.shape[1]):
-        stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
+# rng = np.random.default_rng()
+# for r in range(stack.shape[0]):
+#     for n in range(stack.shape[1]):
+#         stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
 
 reconstructed_fourier = reconstructor_fourier.reconstruct(stack)
 reconstructed_spatial = recontructor_spatial.reconstruct(stack)
 reconstructed_finite = recontructor_finite.reconstruct(stack)
 widefield  = reconstructor_fourier.get_widefield(stack)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
-np.save("reconstructions/images/reconstructed_fourier1.npy", reconstructed_fourier)
-np.save("reconstructions/images/reconstructed_spatial1.npy", reconstructed_spatial)
-np.save("reconstructions/images/reconstructed_finite1.npy", reconstructed_finite)
-np.save("reconstructions/images/reconstructed_widefield1.npy", reconstructed_widefield)
+# np.save("reconstructions/images/reconstructed_fourier1.npy", reconstructed_fourier)
+# np.save("reconstructions/images/reconstructed_spatial1.npy", reconstructed_spatial)
+# np.save("reconstructions/images/reconstructed_finite1.npy", reconstructed_finite)
+# np.save("reconstructions/images/reconstructed_widefield1.npy", reconstructed_widefield)
 
-print("Reconstructed images saved successfully.")
+# print("Reconstructed images saved successfully.")
 
 # frc_fourier, freq = frc_one_image(
 #     reconstructed_fourier, 
@@ -276,7 +283,7 @@ ssnr_spatial = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
     readout_noise_variance=1.4,
-    kernel=kernels.sinc_kernel(1)[..., 0]
+    kernel=kernels.sinc_kernel2d(1)
 )
 
 ssnr_finite = SSNRSIM2D(
@@ -301,8 +308,8 @@ ax[0, 1].set_title('Spatial')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_finite.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('Finite')
 
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+ratio_spatial = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
@@ -399,21 +406,29 @@ ax[2, 1].imshow(np.log1p(ssnr_spatial_measured), cmap='gray', origin='lower')
 ax[2, 1].set_title('Spatial')
 ax[2, 2].imshow(np.log1p(ssnr_finite_measured), cmap='gray', origin='lower')
 ax[2, 2].set_title('Finite')
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-
-ratio_spatial_theory = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite_theory = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
-
-ax[2, 3].plot(ratio_spatial, label='spatial/fourier')
-ax[2, 3].plot(ratio_finite, label='finite/fourier')
+ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)
+ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)
+ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)
+ratio_spatial_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)
+ratio_finite_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)
+ax[2, 3].plot(fr, ratio_spatial, label='s/f')
+ax[2, 3].plot(fr, ratio_finite, label='f/f')
 # ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
-ax[2, 3].imshow(ratio_spatial_theory, label = 'spatial/fourier, theory', origin='lower')
-ax[2, 3].imshow(ratio_finite_theory, label = 'spatial/fourier, theory', origin='lower')
-ax[2, 3].set_ylim(0, 10)
-ax[2, 3].legend()
+ax[2, 3].plot(fr, ratio_spatial_theory, label = 's/f, t')
+ax[2, 3].plot(fr, ratio_finite_theory, label = 's/f, t')
+# ax[2, 3].legend()
 plt.show()
+
+fig, axes = plt.subplots()
+axes.plot(fr, ratio_spatial/ratio_spatial_theory, label='$K_2/ K_1$')
+axes.plot(fr, ratio_finite/ratio_finite_theory, label='$K_3/ K_1$')
+# axes.plot(fr, ratio_widefield, label='$WF / K_1$')
+axes.set_xlabel('q, $1/\lambda$')
+axes.set_ylabel('$R^E/R^A$')
+axes.set_xlim(0, 4)
+axes.set_ylim(0, 10)
+axes.legend()
+plt.show() 
 
 apodization = AutoconvolutuionApodizationSIM2D(
     optical_system=optical_system,
@@ -443,6 +458,25 @@ ax[3].set_title('Widefield')
 
 plt.show()
 
+slice_x = slice(N//2, N//2+100)
+slice_y = slice(N//2-100, N//2)
+
+reconstructions = {
+    'fourier': apodized_fourier,
+    'spatial': apodized_spatial,
+    'finite': apodized_finite,
+    'widefield': apodized_widefield
+}
+
+for name, reconstruction in reconstructions.items():
+    fig, axes = plt.subplots(figsize=(12, 8))
+    axes.imshow(reconstruction[slice_x, slice_y].T, cmap='gray', origin='lower', extent=(x[N//2 - 50], x[N//2 + 50], y[N//2 - 50], y[N//2 + 50]))
+    # axes.axis('off')
+    axes.set_xlabel('x, $\lambda$', fontsize=50)
+    if name == 'widefield': 
+        axes.set_ylabel('y, $\lambda$', fontsize=50)
+    axes.tick_params(axis='both', which='major', labelsize=50)
+    fig.savefig(f'reconstructions/images/{name}.png', bbox_inches='tight')
 
 frc_fourier, freq = frc_one_image(
     apodized_fourier, 

@@ -12,7 +12,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
-from otf_decoder import load_fairsim_otf
+
 
 import tifffile
 import numpy as np
@@ -23,7 +23,7 @@ import re
 
 from OpticalSystems import System4f2D
 from Illumination import IlluminationPlaneWaves2D
-from PatternEstimator import IlluminationPatternEstimator2D
+from PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn
@@ -32,6 +32,8 @@ from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
 import stattools 
 from ResolutionMeasures import frc_one_image
+from otf_decoder import load_fairsim_otf
+
 
 # reconstructed_fairSIM = tifffile.imread('data/OMX_Tetraspeck200_680nm_fairSIM_reco.tiff')
 # print(reconstructed_fairSIM.shape)
@@ -42,19 +44,20 @@ from ResolutionMeasures import frc_one_image
 
 
 N = 511
-wavelength = 680e-9
+wavelength = 488e-9
 px_scaled = 80e-9
 dx = px_scaled / wavelength
-NA = 1.2
+NA = 1.4
 nmedium = 1.518
 alpha = np.arcsin(NA / nmedium)
 max_r = dx * N // 2
+x = np.linspace(-max_r, max_r, N)
+y = np.copy(x)
 psf_size = 2 * np.array((max_r, max_r))
-
-xml_file = "data/OMX-OTF-683nm-2d.xml"        
-otf_cube = load_fairsim_otf(xml_file)
-otf = otf_cube[2]  
-otf = np.fft.fftshift(otf)
+# xml_file = "data/OMX-OTF-683nm-2d.xml"        
+# otf_cube = load_fairsim_otf(xml_file)
+# otf = otf_cube[2]  
+# otf = np.fft.fftshift(otf)
 # plt.plot(np.abs(otf[:, 256]), label='OTF_fairSIM')
 # plt.show()
 # psf = wrapped_ifftn(otf)
@@ -65,11 +68,11 @@ otf = np.fft.fftshift(otf)
 # otf = wrapped_fftn(psf)
 # plt.plot(otf[:, N//2], label='OTF_fairSIM')
 # plt.show()
-otf = otf[1:, 1:]
+# otf = otf[2::2, 2::2]
 optical_system = System4f2D(alpha = alpha, refractive_index=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_size=False, save_pupil_function=True)
 plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='OTF_simulated')
-plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='OTF_fairSIM')
+# plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='OTF_fairSIM')
 plt.legend()
 plt.show()
 
@@ -78,26 +81,40 @@ plt.show()
 # optical_system.psf = wrapped_ifftn(optical_system.otf) 
 # optical_system.psf /= np.sum(optical_system.psf)
 
-# plt.imshow(np.log1p(optical_system.otf.real), cmap='gray')
-# plt.show()
+plt.imshow(np.log1p(optical_system.otf.real), cmap='gray')
+plt.show()
 
-data = tifffile.imread('data/OMX_LSEC_Membrane_680nm.tiff')
+data = tifffile.imread('reconstructions/images/Actin_Ex488_TIRFSIM-1.tif')
 print(data.shape)
 
-stack = data.reshape((3, -1, 5, 512, 512))
-offset = 170
+stack = data.reshape((3, 3, 1660, 1660))
+stack = stack[:, :, 700 - N//2:700 + N//2 + 1, 700 - N//2:700 + N//2+1]
+image = stack[0, 0, ...]
+image_ft = wrapped_fftn(stack[0, 0, ...])
+# noise = stattools.average_rings2d(image_ft**2, optical_system.psf_coordinates)
+# pure_noise_region = image_ft[otf < 10**-3]
+# plt.plot(np.log1p(np.abs(noise)))
+# plt.show()
+# average_noise = np.mean(np.abs(pure_noise_region)**2)
+# print('average_noise', average_noise)
+# print('total_noise', np.sum(np.abs(pure_noise_region)**2))
+
+total_counts = np.sum(stack[0, 0, ...])
+print('total_counts', total_counts)
+
+# exit()
+
+offset = 90
 gain = 6
-# Offset and gain correction
-stack = (stack - offset) / gain
-stack = np.where(stack < 0, 1, stack)
-stack = stack[:, 4, :, :N, :N] 
+stack = (stack - offset) // gain
+stack[stack < 0] = 1
 from windowing import make_mask_cosine_edge2d
-mask = make_mask_cosine_edge2d(stack.shape[2:], 50)
+mask = make_mask_cosine_edge2d(stack.shape[2:], 20)
 stack = stack * mask[np.newaxis, np.newaxis, ...]
 print(stack.shape)
-plt.imshow(stack[1, 0, ...].T, cmap='gray', origin='lower')
+plt.imshow(stack[0, 0, ...].T, cmap='gray', origin='lower')
 plt.show()
-plt.imshow(np.log1p(10 ** 8 * np.abs(wrapped_fftn(stack[1, 0, ...]))).T, cmap='gray', origin='lower')
+plt.imshow(np.log1p(10 ** 8 * np.abs(wrapped_fftn(stack[0, 0, ...]))).T, cmap='gray', origin='lower')
 plt.show()
 # plt.imshow(np.log1p(np.abs(wrapped_fftn(stack[1, 0, ...]))).T, cmap='gray', origin='lower')
 # plt.show()
@@ -107,18 +124,16 @@ plt.show()
 
 configurations = BFPConfiguration(refraction_index=nmedium)
 
-illumination3d = configurations.get_2_oblique_s_waves_and_s_normal(
-    alpha-0.2, 
+illumination = configurations.get_2_oblique_s_waves_and_s_normal(
+    alpha, 
     1, 0,
     Mr=3,
-    Mt=5, 
-    angles=(45 / 180 * np.pi , 165 / 180 * np.pi, 105 / 180 * np.pi),
-) 
-
-illumination = IlluminationPlaneWaves2D.init_from_3D(
-    illumination3d, dimensions=(1, 1)
+    Mt=3, 
+    dimensionality=2
 )
-illumination.set_spatial_shifts_diagonally(number=5)
+
+
+illumination.set_spatial_shifts_diagonally()
 
 pattern_estimator = IlluminationPatternEstimator2D(
     illumination=illumination,
@@ -127,26 +142,14 @@ pattern_estimator = IlluminationPatternEstimator2D(
 
 illumination = pattern_estimator.estimate_illumination_parameters(
     stack, 
-    peaks_estimation_method = 'interpolation',
+    peaks_estimation_method = 'cross_correlation',
     phase_estimation_method = 'autocorrelation',
-    modulation_coefficients_method = 'peak_height_ratio',
-    peak_search_area_size=11,
-    zooming_factor=2, 
-    max_iterations=15, 
-    debug_info_level=2
+    modulation_coefficients_method = 'least_squares',
+    peak_search_area_size=31,
+    zooming_factor=3, 
+    max_iterations=10, 
+    debug_info_level=3
 )
-
-# pattern_estimator = PatternEstimatorCrossCorrelation2D(
-#     illumination=illumination,
-#     optical_system=optical_system
-# )
-
-# illumination = pattern_estimator.estimate_illumination_parameters(
-#     stack,
-#     estimate_modulation_coefficients=True,
-#     zooming_factor=2,
-#     max_iterations=10
-# )
 
 # for r in range(illumination.Mr):
 #     illumination.harmonics[(r, (2, 0))].amplitude = 1
@@ -157,12 +160,9 @@ illumination_widefield = IlluminationPlaneWaves2D.init_from_3D(
     illumination_widefield, dimensions=(1, 1)
 )
 
-rng = np.random.default_rng()
-for r in range(stack.shape[0]):
-    for n in range(stack.shape[1]):
-        stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
-
 print(illumination.get_all_amplitudes())
+
+optical_system.upsample()
 
 reconstructor_fourier = ReconstructorFourierDomain2D(
     illumination=illumination,
@@ -174,7 +174,7 @@ reconstructor_fourier = ReconstructorFourierDomain2D(
 recontructor_spatial = ReconstructorSpatialDomain2D(
     illumination=illumination,
     optical_system=optical_system,
-    kernel=kernels.sinc_kernel2d(1)[..., 0]
+    kernel=kernels.sinc_kernel2d(1)
 )
 
 recontructor_finite = ReconstructorSpatialDomain2D(
@@ -188,19 +188,22 @@ reconstructor_widefield = ReconstructorFourierDomain2D(
     optical_system=optical_system,
 )
 
+# rng = np.random.default_rng()
+# for r in range(stack.shape[0]):
+#     for n in range(stack.shape[1]):
+#         stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
 
-reconstructed_fourier = reconstructor_fourier.reconstruct(stack)
-reconstructed_spatial = recontructor_spatial.reconstruct(stack)
-reconstructed_finite = recontructor_finite.reconstruct(stack)
-widefield  = reconstructor_fourier.get_widefield(stack)
+reconstructed_fourier = reconstructor_fourier.reconstruct(stack, upsample=True)
+reconstructed_spatial = recontructor_spatial.reconstruct(stack, upsample=True)
+reconstructed_finite = recontructor_finite.reconstruct(stack, upsample=True)
+widefield  = reconstructor_fourier.get_widefield(stack, upsample=True)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
+# np.save("reconstructions/images/reconstructed_fourier1.npy", reconstructed_fourier)
+# np.save("reconstructions/images/reconstructed_spatial1.npy", reconstructed_spatial)
+# np.save("reconstructions/images/reconstructed_finite1.npy", reconstructed_finite)
+# np.save("reconstructions/images/reconstructed_widefield1.npy", reconstructed_widefield)
 
-np.save("reconstructions/images/reconstructed_fourier2.npy", reconstructed_fourier)
-np.save("reconstructions/images/reconstructed_spatial2.npy", reconstructed_spatial)
-np.save("reconstructions/images/reconstructed_finite2.npy", reconstructed_finite)
-np.save("reconstructions/images/reconstructed_widefield2.npy", reconstructed_widefield)
-
-print("Reconstructed images saved successfully.")
+# print("Reconstructed images saved successfully.")
 
 # frc_fourier, freq = frc_one_image(
 #     reconstructed_fourier, 
@@ -268,27 +271,27 @@ ssnr_fourier = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
     # kernel=kernels.psf_kernel2d(7, (dx, dx)),
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
 )
 
 ssnr_spatial = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
     kernel=kernels.sinc_kernel2d(1)
 )
 
 ssnr_finite = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
     kernel=kernels.psf_kernel2d(7, (dx, dx))
 )
 
 ssnr_widefield = SSNRSIM2D(
     illumination=illumination_widefield,
     optical_system=optical_system,
-    readout_noise_variance=10,
+    readout_noise_variance=1.4,
 )
 
 fig, ax = plt.subplots(2, 3, figsize=(15, 5))
@@ -300,13 +303,13 @@ ax[0, 1].set_title('Spatial')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_finite.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('Finite')
 
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+ratio_spatial = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
 ax[1, 1].imshow(ssnr_spatial.ssnri/ssnr_fourier.ssnri, label = 'spatial', origin='lower')
-ax[1, 2].imshow(ssnr_finite.ssnri/ssnr_fourier.ssnri, label = 'spatial', origin='lower')
+ax[1, 2].imshow(ssnr_finite.ssnri/ssnr_fourier.ssnri, label = 'finite', origin='lower')
 ax[1, 2].legend()
 plt.show()
 
@@ -353,25 +356,25 @@ filtered_widefield, w_widefield, ssnr_widefield_measured = filter_true_wiener(
 # filtered_fourier, w_fourier = filter_constant(
 #     wrapped_fftn(reconstructed_fourier), 
 #     ssnr_fourier.dj,
-#     1e-10,
+#     1e-8,
 # )
 
 # filtered_spatial, w_spatial = filter_constant(
 #     wrapped_fftn(reconstructed_spatial), 
 #     ssnr_spatial.dj,
-#     1e-6,
+#     1e-7,
 # )
 
 # filtered_finite, w_finite = filter_constant(
 #     wrapped_fftn(reconstructed_finite), 
 #     ssnr_finite.dj,
-#     1e-9,
+#     1e-8,
 # )
 
 # filtered_widefield, w_widefield = filter_constant(
 #     wrapped_fftn(reconstructed_widefield),
 #     ssnr_widefield.dj,
-#     1e-6,
+#     1e-5,
 # ) 
     
 fig, ax = plt.subplots(3, 4, figsize=(15, 5))
@@ -394,31 +397,21 @@ ax[1, 3].imshow(np.abs(wrapped_ifftn(filtered_widefield)).T, cmap='gray', origin
 ax[1, 3].set_title('Widefield')
 ax[2, 0].imshow(np.log1p(ssnr_fourier_measured), cmap='gray', origin='lower')
 ax[2, 0].set_title('Fourier')
-average_fourier = stattools.average_rings2d(ssnr_fourier_measured)
-average_spatial = stattools.average_rings2d(ssnr_spatial_measured)
-average_finite = stattools.average_rings2d(ssnr_finite_measured)
-average_widefield = stattools.average_rings2d(ssnr_widefield_measured)
-
-ax[2, 2].plot(np.log1p(average_fourier), label='fourier')
-ax[2, 2].plot(np.log1p(average_spatial), label='spatial')
-ax[2, 2].plot(np.log1p(average_finite), label='finite')
-ax[2, 2].plot(np.log1p(average_widefield), label='widefield')
-ax[2, 2].set_ylim(0, 20)
-ax[2, 2].legend()
-
-# ax[2, 1].imshow(np.log1p(ssnr_spatial_measured), cmap='gray', origin='lower')
-# ax[2, 1].set_title('Spatial')
-# ax[2, 2].imshow(np.log1p(ssnr_finite_measured), cmap='gray', origin='lower')
-# ax[2, 2].set_title('Finite')
+ax[2, 1].imshow(np.log1p(ssnr_spatial_measured), cmap='gray', origin='lower')
+ax[2, 1].set_title('Spatial')
+ax[2, 2].imshow(np.log1p(ssnr_finite_measured), cmap='gray', origin='lower')
+ax[2, 2].set_title('Finite')
 ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-
-ax[2, 3].plot(ratio_spatial, label='spatial/fourier')
-ax[2, 3].plot(ratio_finite, label='finite/fourier')
-ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
-ax[2, 3].set_ylim(0, 10)
-ax[2, 3].legend()
+ratio_spatial_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ax[2, 3].plot(ratio_spatial, label='s/ff')
+ax[2, 3].plot(ratio_finite, label='f/f')
+# ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
+ax[2, 3].plot(ratio_spatial_theory, label = 's/f, t')
+ax[2, 3].plot(ratio_finite_theory, label = 's/f, t')
+# ax[2, 3].legend()
 plt.show()
 
 apodization = AutoconvolutuionApodizationSIM2D(
@@ -449,6 +442,24 @@ ax[3].set_title('Widefield')
 
 plt.show()
 
+slice_x = slice(N//2, N//2+100)
+slice_y = slice(N//2-100, N//2)
+
+reconstructions = {
+    'fourier': apodized_fourier,
+    'spatial': apodized_spatial,
+    'finite': apodized_finite,
+    'widefield': apodized_widefield
+}
+for name, reconstruction in reconstructions.items():
+    fig, axes = plt.subplots(figsize=(12, 8))
+    axes.imshow(reconstruction[slice_x, slice_y].T, cmap='gray', origin='lower', extent=(x[N//2 - 50], x[N//2 + 50], y[N//2 - 50], y[N//2 + 50]))
+    # axes.axis('off')
+    axes.set_xlabel('x, $\lambda$', fontsize=50)
+    if name == 'widefield': 
+        axes.set_ylabel('y, $\lambda$', fontsize=50)
+    axes.tick_params(axis='both', which='major', labelsize=50)
+    fig.savefig(f'reconstructions/images/{name}.png', bbox_inches='tight')
 
 frc_fourier, freq = frc_one_image(
     apodized_fourier, 

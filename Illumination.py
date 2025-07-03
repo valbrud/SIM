@@ -8,6 +8,7 @@ Classes:
 """
 
 import os.path
+import pickle 
 import sys
 print(__file__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -243,8 +244,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         for index in indices:
             r = index[0]
             sim_index = index[1]
-            key = (r, tuple([sim_index[dim] for dim in range(len(dimensions)) if dimensions[dim]]))
-            value = tuple([sim_index[dim] for dim in range(len(dimensions)) if not dimensions[dim]])
+            key = (r, tuple([sim_index[dim] if dimensions[dim] else 0 for dim in range(len(dimensions))]))
+            value = tuple([sim_index[dim] if not dimensions[dim] else 0 for dim in range(len(dimensions))])
             if key not in result_dict:
                 result_dict[key] = []
             result_dict[key].append(value)
@@ -268,14 +269,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
     @staticmethod
     def glue_indices(sim_index, projected_index, dimensions) -> tuple[int, ...]:
-        i, j = 0, 0
-        index = []
-        for dim in range(len(dimensions)):
-            index.append(sim_index[1][i]) if dimensions[dim] else index.append(projected_index[j])
-            if dimensions[dim]:
-                i += 1
-            else:
-                j += 1
+        index = tuple([sim_index[1][i] if dimensions[i] else projected_index[i] for i in range(len(dimensions))])
         return (sim_index[0], tuple(index))
 
     # def fill_projected_dimensions_with_zeros(self, wavevectors):
@@ -449,7 +443,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                         break
         return base_vectors
 
-    def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray]) -> tuple[
+    def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray], preserve_order_structure=True) -> tuple[
         dict[tuple[int, tuple[int, ...]], np.ndarray], dict[tuple[int, tuple[int, ...]], np.ndarray]]:
         """
         Compute effective kernels for SIM computations
@@ -457,8 +451,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         Args:
             kernel(np.ndarray): SIM reconstruction kernel, e.g., OTF.
             coordinates(tuple): coordinates
-            and which are fixed w.r.t. focal plane (0), i.e. projected
-
+            preserve_order_structure(bool): If true, computes kernels by convolution with illumination in 
+                        projected directions (1st orders in conventional SIM). If False, all the kernels have the same structure.             
         Returns:
             tuple: Effective kernels and their Fourier transform.
         """
@@ -476,7 +470,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 if self.dimensionality == 2:
                     phase_shifted = np.exp(-1j * np.einsum('ijl,l ->ij', grid, wavevector)) * kernel
                 elif self.dimensionality == 3:
-                    phase_shifted = np.transpose(np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector)), axes=(1, 0, 2)) * kernel
+                    phase_shifted = np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector)) * kernel
                 effective_kernel += amplitude * phase_shifted
             
             # effective_kernel /= np.sum(np.abs(effective_kernel))
@@ -505,7 +499,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
     def _filter_shift_ratios(self, shift_ratios):
         """
         Only leave those shifts that correspond to the movement in the non-projective dimensions. 
-        I.e. (1, 2, 2) is a valid solution for conventional 3D SIM lattice, but not a valid solution, as it
+        I.e. (1, 2, 2) is a valid solution for conventional 3D SIM, but not a valid solution for projective 3D SIM, as it
         involves the movement in the z-direction, while 3D SIM setups with epi-illumination typically support 
         projective 3D-SIM (i.e., there are shifts in lateral directions, but not in the axial).
         In this case self.dimensions = (1, 1, 0) and the valid shift ratios are (1, 2, 0) or (1, 0, 0) etc. 
@@ -712,25 +706,43 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                         intensity_harmonics[wavevector_new].amplitude += amplitude1 * amplitude2.conjugate()
         return intensity_harmonics.values()
 
-    def get_illumination_density(self, grid=None, coordinates=None, depth=None, r=0, n=0):
+    def get_illumination_density(self, grid=None, coordinates=None, depth=0., r=0, n=0):
         if grid is None and coordinates is None:
             raise ValueError("Either grid or coordinates must be provided!")
         if grid is None and not coordinates is None:
             X, Y, Z = np.meshgrid(*coordinates)
-            grid = np.stack((X, Y, Z), axis=-1)
-        if depth:
-            grid[:, :, :, 2] -= depth
+            grid = np.stack((X, Y, Z), axis=-1)   
+        grid[:, :, :, 2] -= depth
 
         illumination_density = np.zeros(grid.shape[:3], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self._phase_matrix[(r, n, indices[i][1])]
+            phase = self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))]
             amplitude = self.harmonics[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic3D(amplitude, phase, wavevector).get_intensity(grid)
 
         return illumination_density.real
 
+    def save(self, filename: str) -> None:
+        """
+        Save this instance to a file using pickle.
+        """
+        with open(filename, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @classmethod
+    def load(cls, filename: str) -> "PlaneWavesSIM":
+        """
+        Load a saved instance from a file.
+        """
+        with open(filename, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj, cls):
+            raise TypeError(f"Loaded object is not an instance of {cls}")
+        return obj
+    
     def get_elementary_cell(self):
         ...
 
@@ -793,7 +805,7 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         illumination_density = np.zeros(grid.shape[:2], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self._phase_matrix[(r, n, indices[i][1])]
+            phase = self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))]
             amplitude = self.harmonics[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic2D(amplitude, phase, wavevector).get_intensity(grid)

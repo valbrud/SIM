@@ -126,15 +126,15 @@ def filter_true_wiener(image_ft,
     ssnr = np.nan_to_num(ssnr)
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, 0)
     # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-5), ssnr, 0)
-    plt.plot(np.log(1 + (obj2ra).real), label='total')
-    plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
-    plt.plot(np.log(1 + (np.abs(ssnr))[center[0], center[1]:]), label = 'ssnr')
+    # plt.plot(np.log(1 + (obj2ra).real), label='total')
+    # plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
+    # plt.plot(np.log(1 + (np.abs(ssnr))[center[0], center[1]:]), label = 'ssnr')
     
-    plt.legend()
-    plt.show()
+    # plt.legend()
+    # plt.show()
 
     w = ssnr_calculator.dj / ssnr
-    w = np.where(ssnr < 1/2, 10**9, w)
+    w = np.where(ssnr < 1, 10**9, w)
     # w = noise_power 
     filtered = image_ft  / (ssnr_calculator.dj + w)
     filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
