@@ -19,7 +19,7 @@ from config.BFPConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D, IlluminationPlaneWaves3D
 import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorSpatialDomain3D
-from kernels import sinc_kernel2d, psf_kernel2d
+from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel
 from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
 import wrappers
 import SSNRCalculator
@@ -28,7 +28,7 @@ class TestReconstruction2D(unittest.TestCase):
     def setUp(self):
         np.random.seed(1234)
         # Set simulation parameters similar to the provided example.
-        self.N = 511
+        self.N = 101
         self.alpha = 2 * np.pi / 5
         # self.theta = 2 * np.pi / 12
         self.nmedium = 1.5
@@ -61,9 +61,13 @@ class TestReconstruction2D(unittest.TestCase):
         # )
         # self.image = stattools.introduce_field_aberrations(self.image)
         # self.image = stattools.introduce_field_aberrations(self.image)
-        plt.title("Ground truth")
-        plt.imshow(self.image)
+        # image = stattools.radial_fade(self.image, 0.5, 2)
+        # image += 100
+        image = self.image
+        plt.title("Image")
+        plt.imshow(image, vmin=0)
         plt.show()
+
         self.optical_system = System4f2D(alpha=self.alpha, refractive_index=self.nmedium)
         self.optical_system.compute_psf_and_otf((self.psf_size, self.N))
         plt.imshow(self.optical_system.psf[self.N//2-10:self.N//2+10, self.N//2-10:self.N//2+10])
@@ -95,14 +99,14 @@ class TestReconstruction2D(unittest.TestCase):
         self.simulator = SIMulator2D(self.illumination, self.optical_system, readout_noise_variance=1)
         self.sim_images = self.simulator.generate_sim_images(self.image)
         self.sim_images_distorted = np.copy(self.sim_images)
-        for r in range(self.illumination.Mr):
-            for n in range(self.illumination.Mt):
-                image = self.sim_images[r, n]
-                image_distorted = stattools.introduce_field_aberrations(image)
-                image_distorted = stattools.introduce_field_aberrations(image_distorted)
-                self.sim_images_distorted[r, n] = image_distorted
-                self.sim_images_distorted[r, n] = stattools.radial_fade(image_distorted, 2, 0.5)
-                self.sim_images_distorted[r, n] += 10
+        # for r in range(self.illumination.Mr):
+        #     for n in range(self.illumination.Mt):
+        #         image = self.sim_images[r, n]
+                # image_distorted = stattools.introduce_field_aberrations(image)
+                # image_distorted = stattools.introduce_field_aberrations(image_distorted)
+                # self.sim_images_distorted[r, n] = image_distorted
+                # self.sim_images_distorted[r, n] = stattools.radial_fade(image_distorted, 0.5, 2)
+                # self.sim_images_distorted[r, n] += 10
                 # plt.title(f"Simulated image{r, n}")
                 # plt.imshow(image_distorted)
                 # plt.show()
@@ -244,6 +248,30 @@ class TestReconstruction2D(unittest.TestCase):
         axes[1].imshow(reconstructed_image3)
         axes[2].imshow(reconstructed_image5)
         axes[3].imshow(reconstructed_image7)
+        plt.show()
+
+    def test_notch_kernel_effect(self):
+        self.sim_images += np.random.normal(0, 2, self.sim_images.shape)
+        spatial_reconstructor7 = ReconstructorSpatialDomain2D(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            kernel=psf_kernel2d(7, (self.dx, self.dx))
+        )
+
+        self.sim_images += np.random.normal(0, 2, self.sim_images.shape)
+        reconstructed_image7 = spatial_reconstructor7.reconstruct(self.sim_images)
+        plt.imshow(reconstructed_image7)
+        plt.show()
+        notch_kernel = angular_notch_kernel(11, 6, 0.25, theta0=0)
+        notch_filter = wrappers.wrapped_fftn(notch_kernel)
+        ssnr_calc = SSNRCalculator.SSNRSIM2D(self.illumination, self.optical_system, psf_kernel2d(7, (self.dx, self.dx)))
+        plt.imshow(np.log1p(1 + 10**2 * ssnr_calc.dj))
+        plt.show()
+        plt.imshow(np.log1p(1 + 10**2 * (ssnr_calc.dj*stattools.expand_kernel(notch_filter, ssnr_calc.dj.shape)).real))
+        plt.show()   
+
+        reconstructed_image7 = scipy.signal.convolve(reconstructed_image7, notch_kernel, mode='same')
+        plt.imshow(reconstructed_image7)
         plt.show()
 
 class TesReconstruction3D(unittest.TestCase):

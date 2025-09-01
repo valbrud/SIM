@@ -172,6 +172,28 @@ class IntensityHarmonic(IntensitySource):
         self.wavevector = self.wavevector + other.wavevector
         return self
 
+    def __eq__(self, other):
+        if not isinstance(other, IntensityHarmonic):
+            return False
+        if not np.allclose(self.wavevector, other.wavevector):
+            return False
+        if not np.isclose(self.amplitude * np.exp(1j * self.phase), other.amplitude * np.exp(1j * other.phase)):
+            return False
+        return True
+
+    def __repr__(self):
+        """
+        Print all key attributes of this IntensityHarmonic:
+        - wavevector: array of spatial frequencies
+        - amplitude: complex amplitude 
+        - phase: phase offset in radians
+        """
+        return (f"{self.__class__.__name__}:\n"
+                f"  wavevector: {self.wavevector} \n"
+                f"  amplitude: {self.amplitude} \n"
+                f"  phase: {self.phase} \n"
+                )
+
 
 class IntensityHarmonic3D(IntensityHarmonic):
     def get_intensity(self, grid: np.float64, rotated_frame_vector=np.array((0, 0, 1)), rotated_angle=0.):

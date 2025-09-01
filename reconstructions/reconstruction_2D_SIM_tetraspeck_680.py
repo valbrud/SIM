@@ -33,8 +33,8 @@ from Apodization import AutoconvolutuionApodizationSIM2D
 import stattools 
 from ResolutionMeasures import frc_one_image
 from otf_decoder import load_fairsim_otf
-
-
+import copy 
+import scipy 
 # reconstructed_fairSIM = tifffile.imread('data/OMX_Tetraspeck200_680nm_fairSIM_reco.tiff')
 # print(reconstructed_fairSIM.shape)
 
@@ -47,7 +47,7 @@ N = 255
 wavelength = 680e-9
 px_scaled = 80e-9
 dx = px_scaled / wavelength
-NA = 1.2
+NA = 1.15
 nmedium = 1.518
 alpha = np.arcsin(NA / nmedium)
 max_r = dx * N // 2
@@ -158,9 +158,16 @@ illumination = pattern_estimator.estimate_illumination_parameters(
     debug_info_level=3
 )
 
-# for r in range(illumination.Mr):
-#     illumination.harmonics[(r, (2, 0))].amplitude = 1
-#     illumination.harmonics[(r, (-2, 0))].amplitude = 1
+illumination_experimental = copy.deepcopy(illumination)
+
+for harmonic in illumination.harmonics:
+    wavevector, amplitude = illumination.harmonics[harmonic].wavevector, illumination.harmonics[harmonic].amplitude
+    damping_factor = 2
+    lukosz_factor = 2 * np.pi * 4 * NA / np.sqrt(np.sum(wavevector**2))
+    lucosz_amplitude = np.cos(np.pi / (1 + lukosz_factor / damping_factor))
+    print(harmonic, 'lucosz_factor=', lukosz_factor, 'lucosz_amplitude=', lucosz_amplitude)
+    scaling_factor = (lucosz_amplitude / illumination.Mt / illumination.Mr) / np.abs(amplitude) 
+    illumination.harmonics[harmonic].amplitude = scaling_factor 
 
 illumination_widefield = configurations.get_widefield()
 illumination_widefield = IlluminationPlaneWaves2D.init_from_3D(
@@ -193,14 +200,20 @@ reconstructor_widefield = ReconstructorFourierDomain2D(
     optical_system=optical_system,
 )
 
+
 # rng = np.random.default_rng()
 # for r in range(stack.shape[0]):
 #     for n in range(stack.shape[1]):
 #         stack[r, n] = rng.binomial(stack[r, n].astype(int), 0.5)
 
+notch_kernel = kernels.angular_notch_kernel(11, 6, 0.25, theta0=np.pi/4)
+
 reconstructed_fourier = reconstructor_fourier.reconstruct(stack)
 reconstructed_spatial = recontructor_spatial.reconstruct(stack)
 reconstructed_finite = recontructor_finite.reconstruct(stack)
+
+# reconstucted_finite = scipy.signal.convolve(reconstructed_finite, notch_kernel, mode='same')
+
 widefield  = reconstructor_fourier.get_widefield(stack)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
 # np.save("reconstructions/images/reconstructed_fourier1.npy", reconstructed_fourier)
@@ -273,21 +286,24 @@ plt.show()
 
 
 ssnr_fourier = SSNRSIM2D(
-    illumination=illumination,
+    illumination=illumination_experimental,
+    illumination_reconstruction=illumination,
     optical_system=optical_system,
     # kernel=kernels.psf_kernel2d(7, (dx, dx)),
     readout_noise_variance=1.4,
 )
 
 ssnr_spatial = SSNRSIM2D(
-    illumination=illumination,
+    illumination=illumination_experimental,
+    illumination_reconstruction=illumination,
     optical_system=optical_system,
     readout_noise_variance=1.4,
     kernel=kernels.sinc_kernel2d(1)
 )
 
 ssnr_finite = SSNRSIM2D(
-    illumination=illumination,
+    illumination=illumination_experimental,
+    illumination_reconstruction=illumination,
     optical_system=optical_system,
     readout_noise_variance=1.4,
     kernel=kernels.psf_kernel2d(7, (dx, dx))

@@ -174,3 +174,11 @@ class TestIllumination(unittest.TestCase):
 
         plt.plot(emission_density[:, 127])
         plt.show()
+
+
+    def test_save_load_print(self):
+        illumination = BFPConfiguration().get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
+        illumination.save('reconstructions/illumination_patterns/3D_test.illum')
+        loaded_illumination = PlaneWavesSIM.load('reconstructions/illumination_patterns/3D_test.illum')
+        assert illumination == loaded_illumination
+        print('Loaded illumination:', loaded_illumination)

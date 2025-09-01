@@ -528,9 +528,9 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimator):
                 maxima = self._find_maxima(correlation_matrix, grid)
                 averaged_maxima = self._average_maxima(maxima)
                 peaks_approximated = self._refine_peaks(peaks_approximated, averaged_maxima)
-                # if debug_info_level > 3:
-                #     plt.imshow(np.log1p(np.abs(correlation_matrix[(0, 0, 0)])), cmap='gray')
-                #     plt.show()
+                if debug_info_level > 3:
+                    plt.imshow(np.log1p(np.abs(correlation_matrix[tuple(*[0]*self.optical_system.dimensionality, 0, 0)])), cmap='gray')
+                    plt.show()
                 print(i, 'new', peaks_approximated)
                 dq = grid[1, 1] - grid[0, 0]
                 print('dq', dq)
