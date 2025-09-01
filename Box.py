@@ -394,19 +394,6 @@ class BoxSIM(Box):
                 intensity += field_rotated * np.exp(-1j * phase)
         self.illuminations_shifted[r, n] = intensity.real
 
-        #
-        # self.intensity = np.zeros(self.intensity.shape, dtype=np.complex128)
-        # for field in self.fields:
-        #     if field.field_type == "Intensity":
-        #         krm = VectorOperations.rotate_vector3d(self.illumination.spatial_shifts[m],
-        #                                                         np.array((0, 0, 1)), self.illumination.angles[r])
-        #         wavevector = VectorOperations.rotate_vector3d(field.source.wavevector,
-        #                                                         np.array((0, 0, 1)), self.illumination.angles[r])
-        #         phase = np.dot(krm, wavevector)
-        #         debug_phase = round(phase * 57.21) % 360
-        #         self.intensity += field.field * np.exp(1j * phase)
-        # self.intensity = self.intensity.real
-
     def get_intensity(self, r: int, n: int) -> np.ndarray:
         return self.illuminations_shifted[r, n]
 

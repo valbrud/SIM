@@ -601,7 +601,67 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             for harmonic in self.harmonics.keys():
                 self.harmonics[harmonic].amplitude = am[harmonic]
         return am
+    
+    def __eq__(self, other):
+        if not isinstance(other, PlaneWavesSIM):
+            return False
+        if self.Mr != other.Mr or not np.allclose(self.angles, other.angles):
+            return False
+        if self.dimensions != other.dimensions:
+            return False
+        if not np.allclose(self.spatial_shifts, other.spatial_shifts):
+            return False
+        if set(self.harmonics.keys()) != set(other.harmonics.keys()):
+            return False
+        for key in self.harmonics:
+            if self.harmonics[key] != other.harmonics[key]:
+                return False
+        return True
+    
+    def __repr__(self) -> str:
+        """
+        Print key attributes of this PlaneWavesSIM:
+        - Mr: number of rotations
+        - angles: rotation angles
+        - dimensions: projective dimensions tuple
+        - spatial_shifts: array of spatial shifts
+        - harmonics: intensity harmonics
+        """
+        harmonics_str = "\n    ".join(
+            f"{k}: {repr(h)}" for k, h in self.harmonics.items()
+        ) or "∅"                       # fallback if dict is empty
 
+        return (
+        "PlaneWavesSIM:\n"
+        f"  Mr: {self.Mr}\n"
+        f"  angles: {self.angles}\n"
+        f"  dimensions: {self.dimensions}\n"
+        f"  spatial_shifts shape: {self.spatial_shifts.shape}\n"
+        f"  spatial_shifts: {self.spatial_shifts}\n"
+        f"  harmonics ({len(self.harmonics)}):\n"
+        f"  {harmonics_str}\n"
+    )
+    
+    __str__ = __repr__
+
+    def save(self, filename: str) -> None:
+        """
+        Save this instance to a file using pickle.
+        """
+        with open(filename, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @classmethod
+    def load(cls, filename: str) -> "PlaneWavesSIM":
+        """
+        Load a saved instance from a file.
+        """
+        with open(filename, "rb") as f:
+            obj = pickle.load(f)
+        if not isinstance(obj, cls):
+            raise TypeError(f"Loaded object is not an instance of {cls}")
+        return obj
     
 class IlluminationPlaneWaves3D(PlaneWavesSIM):
     dimensionality=3
@@ -724,25 +784,6 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
 
         return illumination_density.real
 
-    def save(self, filename: str) -> None:
-        """
-        Save this instance to a file using pickle.
-        """
-        with open(filename, "wb") as f:
-            pickle.dump(self, f)
-
-
-    @classmethod
-    def load(cls, filename: str) -> "PlaneWavesSIM":
-        """
-        Load a saved instance from a file.
-        """
-        with open(filename, "rb") as f:
-            obj = pickle.load(f)
-        if not isinstance(obj, cls):
-            raise TypeError(f"Loaded object is not an instance of {cls}")
-        return obj
-    
     def get_elementary_cell(self):
         ...
 
@@ -927,6 +968,12 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
                                                 nonlinear_dependence: lambda x: float):
         ...
 
+    def __repr__(self) -> str:
+        linear = super().__repr__()
+        return (
+            f"  nonlinear_expansion_coefficients: {self.nonlinear_expansion_coefficients}\n"
+            f"{linear}\n"
+        )
 
 class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2D):
     dimensionality=2

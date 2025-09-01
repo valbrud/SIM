@@ -1,4 +1,9 @@
-- Improve GUI functionality, 
+- Fix Box class
+ - Make sure sources addition and changing works as expected
+ - Add a possibility to have a backgound object 
+- Improve GUI functionality
+  - Make two modes: for fields and for intensity
+  - Make a triple view in all projections 
   - Fix configuration/illumination inconveniences
   - Implement change source button functionality
   - Append the documentation

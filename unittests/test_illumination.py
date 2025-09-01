@@ -115,6 +115,35 @@ class TestIllumination(unittest.TestCase):
         expanded_lattice = illumination.compute_expanded_lattice()
         print('number of peaks in expanded lattice is', len(expanded_lattice))
         assert(len(expanded_lattice) == 61)
+    
+    def test_get_square_pattern(self):
+        theta = np.pi / 4
+        b = 1
+        k = 2 * np.pi
+        k1 = k * np.sin(theta)
+        k2 = k * (1 - np.cos(theta))
+
+        a0 = 2 + 3 * b**2
+        sources = [
+            PlaneWave(0, b/a0**0.5, 0, 0, np.array((k1, 0, k1))),
+            PlaneWave(0, -b/a0**0.5, 0, 0, np.array((-k1, 0, k1))),
+            PlaneWave(0, b/a0**0.5, 0, 0, np.array((0, k1, k1))),
+            PlaneWave(0, -b/a0**0.5, 0, 0, np.array((0, -k1, k1))),
+            PlaneWave(1/a0**0.5, 1/a0**0.5, 0, 0, np.array((0, 0, k))),
+        ]
+
+        x = np.linspace(-5, 5, 100)
+        y = np.copy(x)
+        z = np.copy(x)
+
+        grid = np.stack(np.meshgrid(x, y, z, indexing='ij'), axis=-1)
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources, base_vector_lengths=(k1, k1, k2), dimensions=(1, 1, 1))
+        density = illumination.get_illumination_density(grid)
+        plt.imshow(density[..., 0], vmin=0)
+        plt.show()
+
+        plt.imshow(density[:, 50, :], vmin=0)
+        plt.show()
 
     def test_non_linear_polynomial_illumination(self):
         configurations = BFPConfiguration(refraction_index=1.5)
@@ -174,3 +203,11 @@ class TestIllumination(unittest.TestCase):
 
         plt.plot(emission_density[:, 127])
         plt.show()
+
+
+    def test_save_load_print(self):
+        illumination = BFPConfiguration().get_4_oblique_s_waves_and_circular_normal(theta, 1, 1, Mt=1)
+        illumination.save('reconstructions/illumination_patterns/3D_test.illum')
+        loaded_illumination = PlaneWavesSIM.load('reconstructions/illumination_patterns/3D_test.illum')
+        assert illumination == loaded_illumination
+        print('Loaded illumination:', loaded_illumination)
