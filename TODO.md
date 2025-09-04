@@ -2,12 +2,14 @@
  - Make sure sources addition and changing works as expected
  - Add a possibility to have a backgound object 
 - Improve GUI functionality
+  - Remove extra buttons
   - Make two modes: for fields and for intensity
   - Make a triple view in all projections 
   - Fix configuration/illumination inconveniences
   - Implement change source button functionality
   - Append the documentation
   - Separate computational and rendering threads to avoid freezes
+- Update documentation
 - Write some test for numeric consistency checking (not image-based)
 - Improve OpticalSystems module 
   - Implement confocal and ISM classes. 
@@ -26,6 +28,5 @@
   - Implement bottlenecks in c++
   - Move image related operations on CUDA
   - Allow work with several images in parallel through MPI
-- Increase user-friendliness
-  - Switch user interface to web?
-  - Draw UML diagrams?
+- Implement micrscope GUI module
+- Implement stochastic SIM module

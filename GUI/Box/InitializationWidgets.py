@@ -8,6 +8,14 @@ possibly be sufficiently modified or replaced in the future. For this reason, no
 documentation is provided.
 """
 
+
+import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
                              QApplication, QMenu, QAction)
 from PyQt5.QtGui import QDoubleValidator
@@ -101,7 +109,7 @@ class PlaneWaveInitializationWidget(InitializationWidget):
 
     def on_click_ok(self):
         info_fields = [self.Ep, self.Es, self.phasep, self.phases, self.kx, self.ky, self.kz]
-        info = [field.text() for field in info_fields]
+        info = [field.text().strip().strip('()').replace(' ', '') for field in info_fields]
         for value in range(len(info)):
             if info[value] == '':
                 info[value] = '0'
@@ -171,8 +179,69 @@ class IntensityHarmonic3DInitializationWidget(InitializationWidget):
 
     def on_click_ok(self):
         info_fields = [self.A, self.phase, self.kx, self.ky, self.kz]
-        info = [field.text() for field in info_fields]
+        info = [field.text().strip().strip('()').replace(' ', '') for field in info_fields]
         for value in range(len(info)):
             if info[value] == '':
                 info[value] = '0'
         self.sendInfo.emit(info)
+
+
+class PointSourceInitializationWidget(InitializationWidget):
+    sendCoordinates = pyqtSignal(tuple)
+    sendBrightness = pyqtSignal(float)
+    non_numbers = ['', '-']
+
+    def __init__(self):
+        super().__init__()
+        self.request_data()
+
+    def request_data(self):
+        self.layout.addWidget(QLabel("Point Source"))
+
+        self.x_input = QLineEdit()
+        self.y_input = QLineEdit()
+        self.z_input = QLineEdit()
+        self.brightess_input = QLineEdit()
+        self.x_input.setValidator(QDoubleValidator())
+        self.y_input.setValidator(QDoubleValidator())
+        self.z_input.setValidator(QDoubleValidator())
+        self.brightess_input.setValidator(QDoubleValidator())
+        self.x_input.setText('0')
+        self.y_input.setText('0')
+        self.z_input.setText('0')
+        self.brightess_input.setText('1.0')
+
+        layout = QVBoxLayout()
+
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(QLabel("Brightness"))
+        hlayout.addWidget(self.brightess_input)
+        layout.addLayout(hlayout)
+
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(QLabel("Coordinates"))
+        hlayout.addWidget(self.x_input)
+        hlayout.addWidget(self.y_input)
+        hlayout.addWidget(self.z_input)
+        layout.addLayout(hlayout)
+
+        self.layout.addLayout(layout)
+        self.setLayout(layout)
+
+        self.x_input.textChanged.connect(self.send_coordinates)
+        self.y_input.textChanged.connect(self.send_coordinates)
+        self.z_input.textChanged.connect(self.send_coordinates)
+        self.brightess_input.textChanged.connect(self.send_brightness)
+
+    def send_coordinates(self):
+        if (self.x_input.text() in PointSourceInitializationWidget.non_numbers or
+                self.y_input.text() in PointSourceInitializationWidget.non_numbers or
+                self.z_input.text() in PointSourceInitializationWidget.non_numbers):
+            return
+        coordinates = (float(self.x_input.text()), float(self.y_input.text()), float(self.z_input.text()))
+        self.sendCoordinates.emit(coordinates)
+
+    def send_brightness(self):
+        if self.brightess_input.text() in PointSourceInitializationWidget.non_numbers:
+            return
+        self.sendBrightness.emit(float(self.brightess_input.text()))

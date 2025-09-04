@@ -8,14 +8,18 @@ possibly be sufficiently modified or replaced in the future. For this reason, no
 documentation is provided.
 """
 
-import sys
 import os
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '../../..'))
+sys.path.append(project_root)
+sys.path.append(current_dir)
+
 import numpy as np
 import Box
 import Sources
-from Illumination import Illumination
-import GUIWidgets
-from input_parser import ConfigParser
+import GUI.Box.Widgets as Widgets
+from GUI.Box.input_parser import ConfigParser
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
@@ -32,7 +36,9 @@ class View(Enum):
 class PlottingMode(Enum):
     linear = 0
     logarithmic = 1
-    mixed = 2
+    informational = 2
+
+
 class MainWindow(QMainWindow):
     def __init__(self, box=None):
         super().__init__()
@@ -112,14 +118,14 @@ class MainWindow(QMainWindow):
         add_spatial_frequency_button = QPushButton("Add a Spatial Frequency")
         add_spatial_frequency_button.clicked.connect(self.add_intensity_plane_wave)
 
-        find_fourier_peaks_numerically_button = QPushButton("Find Fourier peaks numerically")
-        find_fourier_peaks_numerically_button.clicked.connect(self.compute_numerically_approximated_intensities)
+        # find_fourier_peaks_numerically_button = QPushButton("Find Fourier peaks numerically")
+        # find_fourier_peaks_numerically_button.clicked.connect(self.compute_numerically_approximated_intensities)
 
         find_ipw_from_pw_button = QPushButton("Get spatial waves from plane waves")
         find_ipw_from_pw_button.clicked.connect(self.get_ipw_from_pw)
 
-        compute_total_intensity_button = QPushButton("Compute Total Intensity")
-        compute_total_intensity_button.clicked.connect(self.compute_total_intensity)
+        # compute_total_intensity_button = QPushButton("Compute Total Intensity")
+        # compute_total_intensity_button.clicked.connect(self.compute_total_intensity)
 
         self.shift_number = 0
         # self.peak_position = (0., 0.)
@@ -130,10 +136,10 @@ class MainWindow(QMainWindow):
         self.source_buttons_layout.addStretch()
         self.source_buttons_layout.addWidget(add_plane_wave_button)
         self.source_buttons_layout.addWidget(add_spatial_frequency_button)
-        self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
+        # self.source_buttons_layout.addWidget(find_fourier_peaks_numerically_button)
         self.source_buttons_layout.addWidget(find_ipw_from_pw_button)
-        self.source_buttons_layout.addWidget(compute_total_intensity_button)
-        self.source_buttons_layout.addWidget(compute_next_shift_button)
+        # self.source_buttons_layout.addWidget(compute_total_intensity_button)
+        # self.source_buttons_layout.addWidget(compute_next_shift_button)
         self.source_buttons_layout.addStretch()
 
         # Initialization layout
@@ -157,8 +163,8 @@ class MainWindow(QMainWindow):
         self.plot_layout.addWidget(plot_from_electric_fields_button, 1)
         self.plot_layout.addWidget(plot_from_frequencies_button, 1)
         self.plot_layout.addWidget(plot_fourier_space_button, 1)
-        self.plot_layout.addWidget(plot_approximate_intensity_button, 1)
-        self.plot_layout.addWidget(plot_approximate_intensity_fourier_space_button, 1)
+        # self.plot_layout.addWidget(plot_approximate_intensity_button, 1)
+        # self.plot_layout.addWidget(plot_approximate_intensity_fourier_space_button, 1)
 
         self.view_layout = QHBoxLayout()
         change_view_button = QPushButton("Change view")
@@ -194,7 +200,7 @@ class MainWindow(QMainWindow):
             print(f"Saving config to {filename}")
 
     def load_config(self):
-        GUIWidgets.SourceWidget.identifier = 0
+        Widgets.SourceWidget.identifier = 0
         filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
         filename = os.path.basename(filename)
         if filename:
@@ -212,21 +218,11 @@ class MainWindow(QMainWindow):
             raise FileExistsError("Not a valid file format")
 
     def load_illumination(self):
-        GUIWidgets.SourceWidget.identifier = 0
+        Widgets.SourceWidget.identifier = 0
         filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
         filename = os.path.basename(filename)
         if filename:
-            if filename.endswith(".conf"):
-                self.clear_layout(self.sources_layout)
-                parser = ConfigParser()
-                conf = parser.read_configuration(filename)
-
-                self.box = Box.BoxSIM(conf.illumination, conf.box_size, conf.point_number, filename + conf.info)
-                for field in self.box.fields:
-                    self.add_source(field.source)
-                self.compute_and_plot_from_intensity_sources()
-                self.plot_intensity_slices()
-
+            ...
         else:
             raise FileExistsError("Not a valid file format")
 
@@ -251,8 +247,9 @@ class MainWindow(QMainWindow):
     def remove_source(self, initializer):
         self.box.remove_source(initializer)
         print('is deleted')
+
     def add_point_source(self):
-        source = GUIWidgets.PointSourceWidget()
+        source = Widgets.PointSourceWidget()
         self.sources_layout.addWidget(source)
 
         def add_to_box(initialized):
@@ -263,13 +260,13 @@ class MainWindow(QMainWindow):
         source.isSet.connect(add_to_box)
 
     def add_plane_wave(self, ipw=None):
-        source = GUIWidgets.PlaneWaveWidget(ipw)
+        source = Widgets.PlaneWaveWidget(ipw)
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.plane_wave))
         source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
 
     def add_intensity_plane_wave(self, ipw=None):
-        source = GUIWidgets.IntensityHarmonic3DWidget(ipw)
+        source = Widgets.IntensityHarmonic3DWidget(ipw)
         self.sources_layout.addWidget(source)
         source.isSet.connect(lambda initialized: self.add_to_box(initialized, source.intensity_plane_wave))
         source.isDeleted.connect(lambda identifier: self.remove_source(identifier))
@@ -278,13 +275,14 @@ class MainWindow(QMainWindow):
         if self.plotting_mode == PlottingMode.linear:
             return Z
         elif self.plotting_mode == PlottingMode.logarithmic:
-            return np.log10(Z)
-        elif self.plotting_mode == PlottingMode.mixed:
-            return np.log10(1 + Z)
+            return np.log10(Z) 
+        elif self.plotting_mode == PlottingMode.informational:
+            return np.log10(1 + 10**4 * Z)
 
     def change_plotting_mode(self):
         modes = list(PlottingMode)
         self.plotting_mode = modes[(self.plotting_mode.value + 1) % len(modes)]
+        self.plot_intensity_slices()
 
     def choose_view3d(self, array, number):
         if self.view == View.XY:
@@ -294,9 +292,11 @@ class MainWindow(QMainWindow):
         elif self.view == View.XZ:
             Z = array[:, number, :]
         return Z
+    
     def change_view3d(self):
         views = list(View)
         self.view = views[(self.view.value + 1) % len(views)]
+        self.plot_intensity_slices()
 
     def plot_intensity_slices(self, intensity = None):
         self.canvas.figure.clear()
@@ -457,7 +457,7 @@ class MainWindow(QMainWindow):
         self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spatial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
-        for source in  IlluminationPlaneWaves3D.find_ipw_from_pw(self.box.get_plane_waves()):
+        for source in Sources.IlluminationHarmonic3D.find_ipw_from_pw(self.box.get_plane_waves()):
             self.add_source(source)
             self.box.add_source(source)
 
