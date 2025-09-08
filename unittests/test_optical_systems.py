@@ -393,7 +393,85 @@ class TestConstructPupilAberration(unittest.TestCase):
         # self.assertTrue(np.allclose(result, np.flip(result, axis=1), atol=1e-6),
         #                 "Aberration for (2,2) mode should be symmetric in phi.")
 
-    def test_OTF_aberrated(self):
+    def test_OTF_2D_aberrated(self):
+        alpha = np.pi / 4
+        n = 1.33
+        NA = n * np.sin(alpha)
+        dx = 1 / (4 * NA)
+        dy = dx
+        N = 101
+        max_r = N // 2 * dx
+        psf_size = 2 * np.array((max_r, max_r))
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
+
+        arg = N // 2
+        # print(fz[arg])
+
+        two_NA_fx = fx / (2 * NA)
+        two_NA_fy = fy / (2 * NA)
+
+        optical_system = System4f2D(alpha=alpha, refractive_index=n)
+        x = np.linspace(-max_r, max_r, N)
+        fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
+        psf_size = np.array((2 * max_r, 2 * max_r))
+
+        non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
+        aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
+                                                                          zernieke={(4, 0): 0.072})
+        aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
+                                                                          zernieke={(3, 1): 0.072})
+        aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N),
+                                                                          zernieke={(2, 2): 0.072})
+        aberrated_psfs = [aberrated_psf_spherical, aberrated_psf_comma, aberrated_psf_astigmatism]
+        aberrated_otfs = [aberrated_otf_spherical, aberrated_otf_comma, aberrated_otf_astigmatism]
+        i = 0
+        for psf in aberrated_psfs:
+            fig, axes = plt.subplots(figsize =(8, 6))
+            im = axes.imshow(psf[:, :].T, origin='lower', extent=(two_NA_fy[0], two_NA_fy[-1], two_NA_fx[0], two_NA_fy[-1]))
+            cb = plt.colorbar(im, fraction=0.046, pad=0.04)
+            cb.ax.tick_params(labelsize=30)
+            cb.set_label("$PSF$", fontsize=30)
+            axes.tick_params(labelsize=30)
+            axes.set_xlabel("$f_y \; [LCF]$", fontsize=30)
+            axes.set_ylabel("$f_x \;  [LCF]$", fontsize=30)
+            # fig.savefig(f"aberrated_psf_{i}.png", bbox_inches='tight', pad_inches=0.1)
+            i+=1
+
+        i = 0
+        for otf in aberrated_otfs:
+            fig, axes = plt.subplots(figsize=(8, 6))
+            im = axes.imshow(np.log(1 + 10*np.abs(otf[:, :].T)), origin='lower', extent=(two_NA_fy[0], two_NA_fy[-1], two_NA_fx[0], two_NA_fy[-1]), norm=colors.LogNorm())
+            cb = plt.colorbar(im, fraction=0.046, pad=0.04)
+            cb.ax.tick_params(labelsize=30)
+            axes.tick_params(labelsize=30)
+            axes.set_xlabel("$f_y \; [LCF]$", fontsize=30)
+            axes.set_ylabel("$f_x \;  [LCF]$", fontsize=30)
+            cb.set_label("$1 + 10$ MTF", fontsize=30)
+            # fig.savefig(f"aberrated_mtf_{i}.png", bbox_inches='tight', pad_inches=0.1)
+            i+=1
+
+        # axes[0, 0].imshow(non_aberrated_psf[N//2, :, :].T, origin='lower')
+        # axes[0, 1].imshow(aberrated_psf_spherical[N//2, :, :].T, origin='lower')
+        # axes[1, 0].imshow(non_aberrated_psf[:, :, N//2].T, origin='lower')
+        # axes[1, 1].imshow(aberrated_psf_comma[:, :, N//2].T, origin='lower')
+        # axes[2, 0].imshow(non_aberrated_psf[:, :, N//2].T, origin='lower')
+        # axes[2, 1].imshow(aberrated_psf_astigmatism[:, :, N//2].T, origin='lower')
+        # plt.show()
+
+        # fig, axes = plt.subplots(3, 2)
+        # axes[0, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        # axes[0, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_spherical[:, :, N//2].T)), origin='lower')
+        # axes[1, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        # axes[1, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_comma[:, :, N//2].T)), origin='lower')
+        # axes[2, 0].imshow(np.log(1 + 10**8 * np.abs(non_aberrated_otf[:, :, N//2].T)), origin='lower')
+        # axes[2, 1].imshow(np.log(1 + 10**8 * np.abs(aberrated_otf_astigmatism[:, :, N//2].T)), origin='lower')
+        #
+        plt.show()
+
+    def test_OTF_3D_aberrated(self):
         alpha = 2 * np.pi / 5
         nmedium = 1.5
         nobject = 1.5

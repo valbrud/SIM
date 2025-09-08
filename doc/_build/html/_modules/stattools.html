@@ -40,6 +40,19 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">wrappers</span>
+
+    
+<div class="viewcode-block" id="off_grid_ft">
+<a class="viewcode-back" href="../source/stattools.html#stattools.off_grid_ft">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">off_grid_ft</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">q_values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">x_grid_flat</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">q_grid_flat</span> <span class="o">=</span> <span class="n">q_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="n">phase_matrix</span> <span class="o">=</span> <span class="n">q_grid_flat</span> <span class="o">@</span> <span class="n">x_grid_flat</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">fourier_exponents</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">phase_matrix</span><span class="p">)</span>
+    <span class="n">array_ft_values</span> <span class="o">=</span> <span class="n">fourier_exponents</span> <span class="o">@</span> <span class="n">array</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">array_ft_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">q_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span></div>
+
 
 
 <div class="viewcode-block" id="find_decreasing_surface_levels3d">
@@ -485,6 +498,180 @@
         <span class="n">interpolated_grid</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">value</span> <span class="o">*</span> <span class="n">wx2</span> <span class="o">*</span> <span class="n">wy2</span>  <span class="c1"># Bottom-right</span>
 
     <span class="k">return</span> <span class="n">interpolated_grid</span></div>
+
+
+<div class="viewcode-block" id="expand_kernel">
+<a class="viewcode-back" href="../source/stattools.html#stattools.expand_kernel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">expand_kernel</span><span class="p">(</span><span class="n">kernel</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">target_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Expand a kernel to match the target shape, centering it in the new shape.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        kernel (np.ndarray): The kernel to expand.</span>
+<span class="sd">        target_shape (tuple[int]): The desired shape of the kernel.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: The expanded kernel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kernel</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">shape</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Size of the kernel must be odd!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">shape</span> <span class="o">&gt;</span> <span class="n">target_shape</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Size of the kernel is bigger than of the PSF!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">shape</span> <span class="o">&lt;</span> <span class="n">target_shape</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">kernel_expanded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">target_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">kernel</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c1"># Build slice objects for each dimension, to center `kernel_new` in `kernel_expanded`.</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)):</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">target_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">half_span</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">center</span> <span class="o">-</span> <span class="n">half_span</span>
+            <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+
+        <span class="n">kernel_expanded</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span> <span class="o">=</span> <span class="n">kernel</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel_expanded</span>
+    <span class="k">return</span> <span class="n">kernel</span></div>
+
+
+<div class="viewcode-block" id="introduce_field_aberrations">
+<a class="viewcode-back" href="../source/stattools.html#stattools.introduce_field_aberrations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">introduce_field_aberrations</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;reflect&quot;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;image must be 2‑D or 3‑D.&quot;</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">Ny</span><span class="p">,</span> <span class="n">Nx</span> <span class="o">=</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span>
+
+    <span class="c1"># Coordinate grids (centred)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">H</span><span class="p">)</span> <span class="o">-</span> <span class="n">H</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">-</span> <span class="n">W</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="n">s_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="n">Nx</span><span class="p">)</span>
+    <span class="n">s_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">Y</span> <span class="o">/</span> <span class="n">Ny</span><span class="p">)</span>
+    <span class="n">w_a</span> <span class="o">=</span> <span class="n">s_x</span> <span class="o">*</span> <span class="n">s_y</span>
+    <span class="n">w_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">s_y</span><span class="p">)</span>        <span class="c1"># absolute</span>
+    <span class="n">w_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">s_x</span><span class="p">)</span>        <span class="c1"># absolute</span>
+    <span class="n">w_0</span> <span class="o">=</span> <span class="mf">1.0</span>                <span class="c1"># scalar</span>
+
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">w_a</span> <span class="o">=</span> <span class="n">w_a</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">w_b</span> <span class="o">=</span> <span class="n">w_b</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">w_c</span> <span class="o">=</span> <span class="n">w_c</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="c1"># Denominator (kernel sum) per pixel</span>
+    <span class="n">denom</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">w_b</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">w_c</span> <span class="o">+</span> <span class="n">w_0</span>  <span class="c1"># w_a terms cancel</span>
+
+    <span class="n">pad_width</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(()</span> <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),))</span>
+    <span class="n">padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="n">TL</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">H</span><span class="p">,</span>     <span class="mi">0</span><span class="p">:</span><span class="n">W</span>    <span class="p">]</span>
+    <span class="n">TC</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">H</span><span class="p">,</span>     <span class="mi">1</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">1</span>  <span class="p">]</span>
+    <span class="n">TR</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">H</span><span class="p">,</span>     <span class="mi">2</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">2</span>  <span class="p">]</span>
+    <span class="n">CL</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>   <span class="mi">0</span><span class="p">:</span><span class="n">W</span>    <span class="p">]</span>
+    <span class="n">CC</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>   <span class="mi">1</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">1</span>  <span class="p">]</span>
+    <span class="n">CR</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>   <span class="mi">2</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">2</span>  <span class="p">]</span>
+    <span class="n">BL</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span>   <span class="mi">0</span><span class="p">:</span><span class="n">W</span>    <span class="p">]</span>
+    <span class="n">BC</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span>   <span class="mi">1</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">1</span>  <span class="p">]</span>
+    <span class="n">BR</span> <span class="o">=</span> <span class="n">padded</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="n">H</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span>   <span class="mi">2</span><span class="p">:</span><span class="n">W</span><span class="o">+</span><span class="mi">2</span>  <span class="p">]</span>
+
+    <span class="n">numer</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">w_a</span> <span class="o">*</span> <span class="n">TL</span> <span class="o">+</span> <span class="n">w_b</span> <span class="o">*</span> <span class="n">TC</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">w_a</span><span class="p">)</span> <span class="o">*</span> <span class="n">TR</span> <span class="o">+</span>
+        <span class="n">w_c</span> <span class="o">*</span> <span class="n">CL</span> <span class="o">+</span> <span class="n">w_0</span> <span class="o">*</span> <span class="n">CC</span> <span class="o">+</span> <span class="n">w_c</span> <span class="o">*</span> <span class="n">CR</span> <span class="o">+</span>
+        <span class="p">(</span><span class="o">-</span><span class="n">w_a</span><span class="p">)</span> <span class="o">*</span> <span class="n">BL</span> <span class="o">+</span> <span class="n">w_b</span> <span class="o">*</span> <span class="n">BC</span> <span class="o">+</span> <span class="n">w_a</span> <span class="o">*</span> <span class="n">BR</span>
+    <span class="p">)</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">numer</span> <span class="o">/</span> <span class="n">denom</span>        <span class="c1"># per‑pixel normalisation</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="radial_fade">
+<a class="viewcode-back" href="../source/stattools.html#stattools.radial_fade">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">radial_fade</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">fade_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">power</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply a circularly-symmetric fade (vignetting) so that</span>
+<span class="sd">    the image centre keeps full brightness (×1.0) and the extreme</span>
+<span class="sd">    corners are scaled by `fade_level`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : np.ndarray</span>
+<span class="sd">        2-D (H×W) or 3-D (H×W×C) array, any numeric dtype.</span>
+<span class="sd">    fade_level : float, optional</span>
+<span class="sd">        Factor (0 … 1) that the *corners* will be multiplied by.</span>
+<span class="sd">        • 0.75 ⇒ corners are 75 % as bright as the centre  </span>
+<span class="sd">        • 0.0  ⇒ corners fade completely to black  </span>
+<span class="sd">        • 1.0  ⇒ no fade at all</span>
+<span class="sd">    power : float, optional</span>
+<span class="sd">        Controls how fast the fall-off happens:  </span>
+<span class="sd">        1 ≈ linear, 2 ≈ quadratic (classic vignette), &gt;2 ≈ steeper.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Faded image, same shape &amp; dtype as input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">fade_level</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fade_level must be in [0, 1].&quot;</span><span class="p">)</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Radial coordinates centred at the optical axis</span>
+    <span class="n">yy</span><span class="p">,</span> <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">((</span><span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">))</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="n">yy</span> <span class="o">-</span> <span class="n">H</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">xx</span> <span class="o">-</span> <span class="n">W</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">)</span>
+    <span class="n">r_norm</span> <span class="o">=</span> <span class="n">r</span> <span class="o">/</span> <span class="n">r</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>                <span class="c1"># 0 at centre … 1 at furthest corner</span>
+
+    <span class="c1"># Smooth mask: 1 at centre → fade_level at edge</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">fade_level</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">fade_level</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">r_norm</span><span class="o">**</span><span class="n">power</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>                   <span class="c1"># broadcast over colour channels</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">out</span> <span class="o">=</span> <span class="n">img</span> <span class="o">*</span> <span class="n">mask</span>
+    <span class="c1"># Clip and cast back so dtype is preserved</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">max</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="upsample">
+<a class="viewcode-back" href="../source/stattools.html#stattools.upsample">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">upsample</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">factor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">add_shot_noize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># Compute new shape after upsampling</span>
+    <span class="n">original_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">new_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">original_shape</span> <span class="o">*</span> <span class="n">factor</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="c1"># Compute Fourier transform of the image</span>
+    <span class="n">image_ft</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="c1"># Compute padding widths for each dimension</span>
+    <span class="n">pad_width</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">orig</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">original_shape</span><span class="p">,</span> <span class="n">new_shape</span><span class="p">):</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">new</span> <span class="o">-</span> <span class="n">orig</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+        <span class="n">pad_width</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pad</span><span class="p">,</span> <span class="n">pad</span><span class="p">))</span>
+
+    <span class="c1"># Pad the Fourier coefficients with zeros</span>
+    <span class="n">ft_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">image_ft</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">add_shot_noize</span><span class="p">:</span>
+        <span class="c1"># Add shot noise to the padded Fourier coefficients</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">2</span> 
+        <span class="n">center_slices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="n">pad</span> <span class="o">+</span> <span class="n">orig</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">pad</span><span class="p">,</span> <span class="n">_</span><span class="p">),</span> <span class="n">orig</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pad_width</span><span class="p">,</span> <span class="n">original_shape</span><span class="p">))</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">variance</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ft_padded</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">variance</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ft_padded</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">noise</span><span class="p">[</span><span class="n">center_slices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ft_padded</span> <span class="o">+=</span> <span class="n">noise</span>
+
+    <span class="n">upsampled</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="n">ft_padded</span><span class="p">)</span> 
+    <span class="k">return</span> <span class="n">upsampled</span></div>
 
 </pre></div>
 

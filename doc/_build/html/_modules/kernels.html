@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>kernels &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -41,15 +41,51 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<span class="kn">import</span> <span class="nn">stattools</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">utils</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<div class="viewcode-block" id="sinc_kernel">
-<a class="viewcode-back" href="../source/kernels.html#kernels.sinc_kernel">[docs]</a>
-<span class="k">def</span> <span class="nf">sinc_kernel</span><span class="p">(</span><span class="n">kernel_r_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kernel_z_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="sinc_kernel1d">
+<a class="viewcode-back" href="../source/kernels.html#kernels.sinc_kernel1d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate a 2D/3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.</span>
+<span class="sd">    Generate a 1D triangular kernel, resulting in :math: `sinc^2` in Fourier space.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kernel_r_size: The size of the kernel in the radial direction.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A 1D triangular kernel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">func_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+    <span class="n">func_r</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">kernel_size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">func_r</span><span class="p">[</span><span class="n">kernel_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span> <span class="n">kernel_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">func_r</span></div>
+
+
+
+
+<div class="viewcode-block" id="sinc_kernel2d">
+<a class="viewcode-back" href="../source/kernels.html#kernels.sinc_kernel2d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sinc_kernel2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a 2D triangular kernel, resulting in :math: `sinc^2` in Fourier space.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        kernel_r_size: The size of the kernel in the radial direction.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A 2D triangular kernel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">kernel</span></div>
+
+
+<div class="viewcode-block" id="sinc_kernel3d">
+<a class="viewcode-back" href="../source/kernels.html#kernels.sinc_kernel3d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sinc_kernel3d</span><span class="p">(</span><span class="n">kernel_r_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kernel_z_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a 3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        kernel_r_size: The size of the kernel in the radial direction.</span>
@@ -58,19 +94,13 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        A 2D/3D triangular kernel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">func_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kernel_r_size</span><span class="p">)</span>
-    <span class="n">func_r</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">kernel_r_size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_r_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="n">func_r</span><span class="p">[</span><span class="n">kernel_r_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span> <span class="n">kernel_r_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_r_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">func_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kernel_z_size</span><span class="p">)</span>
-    <span class="n">func_z</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">kernel_z_size</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_z_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-    <span class="n">func_z</span><span class="p">[</span><span class="n">kernel_z_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span> <span class="n">kernel_r_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_z_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">kernel</span> <span class="o">=</span> <span class="n">func_r</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">func_r</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">func_z</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_r_size</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span>  <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_r_size</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">sinc_kernel1d</span><span class="p">(</span><span class="n">kernel_z_size</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
     <span class="k">return</span> <span class="n">kernel</span></div>
 
 
 <div class="viewcode-block" id="psf_kernel2d">
 <a class="viewcode-back" href="../source/kernels.html#kernels.psf_kernel2d">[docs]</a>
-<span class="k">def</span> <span class="nf">psf_kernel2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">dense_kernel_size</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">psf_kernel2d</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">dense_kernel_size</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).</span>
 
@@ -84,7 +114,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">pixel_size</span>
     <span class="n">dense_kernel_size</span> <span class="o">=</span> <span class="n">dense_kernel_size</span> <span class="o">//</span> <span class="n">kernel_size</span> <span class="o">*</span> <span class="n">kernel_size</span>
-    <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">dense_kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">dy</span> <span class="o">*</span> <span class="n">dense_kernel_size</span><span class="o">//</span><span class="mi">2</span>
+    <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="p">(</span><span class="n">dense_kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span> <span class="n">dy</span> <span class="o">*</span> <span class="p">(</span><span class="n">dense_kernel_size</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">x_max</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">dense_kernel_size</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">y_max</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">dense_kernel_size</span><span class="p">)</span>
     <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -92,12 +122,116 @@
     <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
     <span class="n">kernel_dense</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">R</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">R</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">R</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span>
     <span class="n">kernel_dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">kernel_dense</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">kernel_dense</span><span class="p">)</span>
-    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="n">kernel</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">stattools</span><span class="o">.</span><span class="n">downsample_circular_function</span><span class="p">(</span><span class="n">kernel_dense</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">))</span>
-    <span class="n">kernel</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">downsample_circular_function</span><span class="p">(</span><span class="n">kernel_dense</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">))</span>
+    <span class="n">kernel</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span> 
     <span class="k">return</span> <span class="n">kernel</span></div>
 
 
+
+<div class="viewcode-block" id="angular_notch_kernel">
+<a class="viewcode-back" href="../source/kernels.html#kernels.angular_notch_kernel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">angular_notch_kernel</span><span class="p">(</span> 
+    <span class="n">kernel_size_px</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
+    <span class="n">cn</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
+    <span class="n">f_start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> 
+    <span class="n">f_stop</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> 
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> 
+    <span class="n">fb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.45</span><span class="p">,</span> 
+    <span class="n">theta0</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> 
+    <span class="n">design_grid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> 
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Design a small real-space convolution kernel whose frequency response suppresses </span>
+<span class="sd">    m-fold (Cn) anisotropic peaks starting at a given radius. </span>
+<span class="sd">     </span>
+<span class="sd">    Parameters </span>
+<span class="sd">    ---------- </span>
+<span class="sd">    kernel_size_px : int </span>
+<span class="sd">        Odd spatial kernel size in pixels (e.g., 5, 7, 9, 11, 13). </span>
+<span class="sd">    cn : int </span>
+<span class="sd">        Rotational symmetry order (2, 3, 4, 6, ...). Uses cos(cn * theta). </span>
+<span class="sd">    f_start : float </span>
+<span class="sd">        Start radius in cycles/pixel where the angular notch begins (e.g., 0.20–0.30). </span>
+<span class="sd">        Use ~0.25 if peaks cluster near half-cutoff for Nyquist-sampled data. </span>
+<span class="sd">    f_stop : float, optional </span>
+<span class="sd">        Stop radius of the notch (default 0.5, i.e., Nyquist). The notch ramps smoothly </span>
+<span class="sd">        from f_start to f_stop using a raised-cosine. Must satisfy 0 &lt; f_start &lt; f_stop ≤ 0.5. </span>
+<span class="sd">    beta : float, optional </span>
+<span class="sd">        Notch depth (0–1 typical). Larger beta → stronger isotropization (more peak suppression). </span>
+<span class="sd">    fb : float, optional </span>
+<span class="sd">        Width of an isotropic Gaussian base exp(-(R/fb)^2) that keeps the spatial kernel compact. </span>
+<span class="sd">        Larger fb → tighter kernel (less base low-pass). </span>
+<span class="sd">    theta0 : float, optional </span>
+<span class="sd">        Angular offset in radians to align the notch with rotated peak constellations. </span>
+<span class="sd">    design_grid : int, optional </span>
+<span class="sd">        Odd size of the design grid in frequency domain (defaults to max(65, 8*N+1)). </span>
+<span class="sd">     </span>
+<span class="sd">    Returns </span>
+<span class="sd">    ------- </span>
+<span class="sd">    K : (N, N) np.ndarray </span>
+<span class="sd">        Real-valued kernel normalized to sum to 1 (DC-preserving). </span>
+<span class="sd">    &quot;&quot;&quot;</span> 
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kernel_size_px</span><span class="p">)</span> 
+    <span class="k">if</span> <span class="n">N</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;kernel_size_px must be odd.&quot;</span><span class="p">)</span> 
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">f_start</span> <span class="o">&lt;</span> <span class="n">f_stop</span> <span class="o">&lt;=</span> <span class="mf">0.5</span><span class="p">):</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Require 0 &lt; f_start &lt; f_stop ≤ 0.5 (cycles/pixel).&quot;</span><span class="p">)</span> 
+    <span class="k">if</span> <span class="n">cn</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span> 
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cn must be ≥ 2.&quot;</span><span class="p">)</span> 
+     
+    <span class="c1"># Frequency design grid (larger than spatial kernel to minimize edge effects) </span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">design_grid</span> <span class="k">if</span> <span class="n">design_grid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="mi">65</span><span class="p">,</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+    <span class="k">if</span> <span class="n">M</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span> 
+        <span class="n">M</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># enforce odd </span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftfreq</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># cycles/pixel, in [-0.5, 0.5) </span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;xy&quot;</span><span class="p">)</span> 
+    <span class="n">U2</span><span class="p">,</span> <span class="n">V2</span> <span class="o">=</span> <span class="n">U</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">U2</span> <span class="o">+</span> <span class="n">V2</span><span class="p">)</span> 
+    <span class="n">Theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> 
+     
+    <span class="c1"># Base isotropic apodization to keep the spatial kernel small </span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">R</span> <span class="o">/</span> <span class="n">fb</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> 
+     
+    <span class="c1"># Angular term with Cn symmetry </span>
+    <span class="n">angular</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">cn</span> <span class="o">*</span> <span class="p">(</span><span class="n">Theta</span> <span class="o">-</span> <span class="n">theta0</span><span class="p">))</span> 
+     
+    <span class="c1"># Smooth radial mask that ramps from f_start to f_stop (raised cosine) </span>
+    <span class="c1"># 0           for R &lt; f_start </span>
+    <span class="c1"># 0.5*(1-cos) for f_start ≤ R &lt; f_stop </span>
+    <span class="c1"># 1           for R ≥ f_stop </span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">R</span> <span class="o">-</span> <span class="n">f_start</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">f_stop</span> <span class="o">-</span> <span class="n">f_start</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> 
+    <span class="n">radial_mask</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">t</span><span class="p">))</span> 
+     
+    <span class="c1"># Frequency response of the kernel </span>
+    <span class="n">Khat</span> <span class="o">=</span> <span class="n">B</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">angular</span> <span class="o">*</span> <span class="n">radial_mask</span><span class="p">)</span> 
+     
+    <span class="c1"># Transform to spatial domain and center </span>
+    <span class="n">k_spatial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">Khat</span><span class="p">))</span><span class="o">.</span><span class="n">real</span> 
+    <span class="n">k_spatial</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftshift</span><span class="p">(</span><span class="n">k_spatial</span><span class="p">)</span> 
+     
+    <span class="c1"># Crop to N×N and normalize DC gain to 1 </span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">M</span> <span class="o">//</span> <span class="mi">2</span> 
+    <span class="n">r0</span> <span class="o">=</span> <span class="n">c</span> <span class="o">-</span> <span class="p">(</span><span class="n">N</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> 
+    <span class="n">r1</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="p">(</span><span class="n">N</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> 
+    <span class="n">K</span> <span class="o">=</span> <span class="n">k_spatial</span><span class="p">[</span><span class="n">r0</span><span class="p">:</span><span class="n">r1</span><span class="p">,</span> <span class="n">r0</span><span class="p">:</span><span class="n">r1</span><span class="p">]</span> 
+    <span class="n">K</span> <span class="o">/=</span> <span class="n">K</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> 
+    <span class="k">return</span> <span class="n">K</span> </div>
+
+ 
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span><span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">140</span><span class="p">)</span> 
+    
+    <span class="n">K_C4_9</span> <span class="o">=</span> <span class="n">angular_notch_kernel</span><span class="p">(</span><span class="n">kernel_size_px</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">cn</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">f_start</span><span class="o">=</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">f_stop</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fb</span><span class="o">=</span><span class="mf">0.45</span><span class="p">,</span> <span class="n">theta0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> 
+    <span class="n">K_C6_7</span> <span class="o">=</span> <span class="n">angular_notch_kernel</span><span class="p">(</span><span class="n">kernel_size_px</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">cn</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">f_start</span><span class="o">=</span><span class="mf">0.22</span><span class="p">,</span> <span class="n">f_stop</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">fb</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">theta0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> 
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;9×9 kernel, C4 symmetry (start 0.22 cyc/px):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">K_C4_9</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;7×7 kernel, C6 symmetry (start 0.22 cyc/px):</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">K_C6_7</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">K_C4_9</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">K_C6_7</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
       </div>
@@ -111,7 +245,7 @@
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

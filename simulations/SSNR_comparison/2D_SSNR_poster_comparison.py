@@ -1,7 +1,7 @@
 import os.path
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..'))
+project_root = os.path.abspath(os.path.join(current_dir, '../..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
 
@@ -157,8 +157,8 @@ for kernel_size in [1, 5, 9]:
         ax1.legend(fontsize=20, loc="upper right")
         ax3.legend(fontsize=20, loc="lower right")
         # ax2.legend(fontsize=15, loc="lower left")
-        # plt.show()
-        fig1.savefig(f"simulations/Figures/SSNR_finite_kernel_{kernel_size}.png", bbox_inches='tight')
-        fig2.savefig(f"simulations/Figures/SSNR_ratio_{kernel_size}_ratio.png", bbox_inches='tight')
+        plt.show()
+        # fig1.savefig(f"./SSNR_finite_kernel_{kernel_size}.png", bbox_inches='tight')
+        # fig2.savefig(f"./SSNR_ratio_{kernel_size}_ratio.png", bbox_inches='tight')
         # fig3.savefig(f"simulations/Figures/SSNR_ratio_ra{kernel_size}.png", bbox_inches='tight')
 

@@ -23,6 +23,6 @@ SIM
    globvar
    input_parser
    kernels
-   stattools
+   utils
    web_interface
    wrappers

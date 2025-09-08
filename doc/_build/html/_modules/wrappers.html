@@ -47,6 +47,9 @@
 
 <span class="n">pyfftw</span><span class="o">.</span><span class="n">interfaces</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
 <span class="c1"># Wrappers to avoid shifting the arrays every time DFT is used</span>
+<span class="c1"># Numpy defines E(k) = sum (E(x) e^(-ikx), and E(x) = 1/N sum(E(k) e^(ikx))</span>
+<span class="c1"># In the imaging community (C. Smith, 2021) the convention is also to define E(x) = 1/N sum(E(k) e^(ikx))</span>
+<span class="c1"># Thus, transform x -&gt; k is performed corresponds to the DIRECT FT</span>
 <div class="viewcode-block" id="wrapper_ft">
 <a class="viewcode-back" href="../source/wrappers.html#wrappers.wrapper_ft">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">wrapper_ft</span><span class="p">(</span><span class="n">ft</span><span class="p">):</span>

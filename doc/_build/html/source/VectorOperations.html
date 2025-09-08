@@ -56,12 +56,43 @@
 </map><dl class="py method">
 <dt class="sig sig-object py" id="VectorOperations.VectorOperations.rotate_vector2d">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rotate_vector2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector2d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/VectorOperations.html#VectorOperations.rotate_vector2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#VectorOperations.VectorOperations.rotate_vector2d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Rotate a 2D vector by a given angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vector2d</strong> (<em>np.ndarray</em>) – The 2D vector to rotate.</p></li>
+<li><p><strong>angle</strong> (<em>float</em>) – The angle of rotation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The rotated 2D vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="VectorOperations.VectorOperations.rotate_vector3d">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rotate_vector3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector3d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rot_ax_vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rot_angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/VectorOperations.html#VectorOperations.rotate_vector3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#VectorOperations.VectorOperations.rotate_vector3d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Rotate a 3D vector with a bloch matrices method around a specified axis by a given angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vector3d</strong> (<em>np.ndarray</em>) – The 3D vector to rotate.</p></li>
+<li><p><strong>rot_ax_vector</strong> (<em>np.ndarray</em>) – The axis of rotation.</p></li>
+<li><p><strong>rot_angle</strong> (<em>float</em>) – The angle of rotation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The rotated 3D vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="VectorOperations.VectorOperations.rotation_matrix">

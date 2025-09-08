@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="kernels module" href="kernels.html" />
-    <link rel="prev" title="globvar module" href="globvar.html" /> 
+    <link rel="prev" title="Illumination module" href="Illumination.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>SIMSSNR 1.0.0 documentation</span></a></h1>
@@ -24,7 +24,7 @@
       <div class="topnav" role="navigation" aria-label="Top">
       
         <p>
-        «&#160;&#160;<a href="globvar.html">globvar module</a>
+        «&#160;&#160;<a href="Illumination.html">Illumination module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
@@ -37,27 +37,58 @@
         
   <section id="module-input_parser">
 <span id="input-parser-module"></span><h1>input_parser module<a class="headerlink" href="#module-input_parser" title="Link to this heading">¶</a></h1>
-<p>This module contains a class for parsing command line arguments for the initialization of GUI</p>
-digraph inheritance79a6bc1b9d {
-bgcolor=transparent;
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;ConfigParser&quot; [URL=&quot;#input_parser.ConfigParser&quot;,fillcolor=white,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5),filled&quot;,target=&quot;_top&quot;];
-}
-<dl class="py class">
+<p>input_parser.py</p>
+<p>This module provides functionality for parsing command-line arguments and reading configuration files
+for the Structured Illumination Microscopy (SIM) GUI application.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>ConfigParser: Handles argument parsing and configuration loading.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-f3ab916d1d27302cd089497e969827c903839be9.png" alt="Inheritance diagram of input_parser" usemap="#inheritance79a6bc1b9d" class="inheritance graphviz" /></div>
+<map id="inheritance79a6bc1b9d" name="inheritance79a6bc1b9d">
+<area shape="rect" id="node1" href="#input_parser.ConfigParser" target="_top" title="Parser for command&#45;line arguments and configuration files." alt="" coords="5,5,108,33"/>
+</map><dl class="py class">
 <dt class="sig sig-object py" id="input_parser.ConfigParser">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">input_parser.</span></span><span class="sig-name descname"><span class="pre">ConfigParser</span></span><a class="reference internal" href="../_modules/input_parser.html#ConfigParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#input_parser.ConfigParser" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-digraph inheritancea5a57fb052 {
-bgcolor=transparent;
-rankdir=LR;
-size=&quot;8.0, 12.0&quot;;
-  &quot;ConfigParser&quot; [URL=&quot;#input_parser.ConfigParser&quot;,fillcolor=white,fontname=&quot;Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans&quot;,fontsize=10,height=0.25,shape=box,style=&quot;setlinewidth(0.5),filled&quot;,target=&quot;_top&quot;];
-}
-<dl class="py method">
+<p>Parser for command-line arguments and configuration files.</p>
+<p>Handles parsing of input arguments for GUI initialization and configuration loading.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="input_parser.ConfigParser.parser">
+<span class="sig-name descname"><span class="pre">parser</span></span><a class="headerlink" href="#input_parser.ConfigParser.parser" title="Link to this definition">¶</a></dt>
+<dd><p>The argument parser instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArgumentParser</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="input_parser.ConfigParser.args">
+<span class="sig-name descname"><span class="pre">args</span></span><a class="headerlink" href="#input_parser.ConfigParser.args" title="Link to this definition">¶</a></dt>
+<dd><p>Parsed command-line arguments.</p>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-d19d88489d5af37ca735e8e5554977aee1fb48a4.png" alt="Inheritance diagram of input_parser.ConfigParser" usemap="#inheritancea5a57fb052" class="inheritance graphviz" /></div>
+<map id="inheritancea5a57fb052" name="inheritancea5a57fb052">
+<area shape="rect" id="node1" href="#input_parser.ConfigParser" target="_top" title="Parser for command&#45;line arguments and configuration files." alt="" coords="5,5,108,33"/>
+</map><dl class="py method">
 <dt class="sig sig-object py" id="input_parser.ConfigParser.read_configuration">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/input_parser.html#ConfigParser.read_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#input_parser.ConfigParser.read_configuration" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Read and load a configuration file as a module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – The name of the configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loaded configuration module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>module</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -68,7 +99,7 @@ size=&quot;8.0, 12.0&quot;;
       <div class="bottomnav" role="navigation" aria-label="Bottom">
       
         <p>
-        «&#160;&#160;<a href="globvar.html">globvar module</a>
+        «&#160;&#160;<a href="Illumination.html">Illumination module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;

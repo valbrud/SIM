@@ -83,7 +83,7 @@
     <span class="c1">#: Linear interpolation is available with the &quot;interpolate_OTF&quot; method if needed.</span>
     <span class="n">supported_interpolation_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;Fourier&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">normalize_otf</span> <span class="o">=</span> <span class="s1">&#39;True&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_x_grid</span> <span class="o">=</span> <span class="kc">None</span>
@@ -93,6 +93,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf_coordinates</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interpolation_method</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolation_method</span> <span class="o">=</span> <span class="n">interpolation_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">True</span>
 
 
     <span class="nd">@property</span>
@@ -134,7 +135,7 @@
 <div class="viewcode-block" id="OpticalSystem.compute_psf_and_otf_cordinates">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem.compute_psf_and_otf_cordinates">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf_cordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf_cordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the PSF and OTF coordinate axes.</span>
 
@@ -156,23 +157,31 @@
         <span class="k">pass</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_q_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_q_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the q-grid for the OTF.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            np.ndarray: Computed q-grid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_q_grid</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q_grid</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_x_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_x_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the x-grid for the PSF.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            np.ndarray: Computed x-grid.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_x_grid</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x_grid</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_account_for_pixel_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_grid</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">x_grid</span><span class="p">[</span><span class="o">*</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)]</span> <span class="o">-</span> <span class="n">x_grid</span><span class="p">[</span><span class="o">*</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)]</span>
+        <span class="n">q_grid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_grid</span>
+        <span class="n">q_grid_flat</span> <span class="o">=</span> <span class="n">q_grid</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)</span>
+        <span class="n">otf_pixel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sinc</span><span class="p">(</span><span class="n">q_grid_flat</span> <span class="o">*</span> <span class="n">dx</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">*</span> <span class="n">otf_pixel</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_interpolator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -183,11 +192,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf_frequencies</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;OTF or axes are not computed yet. This method can not be called at this stage&quot;</span><span class="p">)</span>
-        <span class="n">axes</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf_frequencies</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">[</span><span class="n">ax</span><span class="p">])</span> <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">)]</span>
         <span class="n">otf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolator</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">interpolate</span><span class="o">.</span><span class="n">RegularGridInterpolator</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">otf</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_interpolation_method</span><span class="p">,</span>
                                                                       <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                                                       <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OpticalSystem.upsample">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem.upsample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upsample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upsample the PSF by zero-padding the OTF.</span>
+<span class="sd">        Coordinates are changed accordingly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">coord</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">factor</span> <span class="o">-</span> <span class="n">coord</span><span class="o">.</span><span class="n">size</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x_grid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q_grid</span> <span class="o">=</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="OpticalSystem.interpolate_otf">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem.interpolate_otf">[docs]</a>
@@ -245,10 +268,10 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">*</span> <span class="n">phi</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="OpticalSystem.compute_pupil_plane_abberations">
-<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem.compute_pupil_plane_abberations">[docs]</a>
+<div class="viewcode-block" id="OpticalSystem.compute_pupil_plane_aberrations">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem.compute_pupil_plane_aberrations">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_pupil_plane_abberations</span><span class="p">(</span><span class="n">zernieke_polynomials</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_pupil_plane_aberrations</span><span class="p">(</span><span class="n">zernieke_polynomials</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a 2D pupil-plane aberration by summing Zernike modes using HCIPy&#39;s zernike().</span>
 
@@ -285,16 +308,22 @@
 
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">2</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OpticalSystem2D.compute_psf_and_otf_cordinates">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_psf_and_otf_cordinates">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf_cordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;N should be integer or a tuple of two integers&quot;</span><span class="p">)</span>
+            
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
 
     <span class="nd">@OpticalSystem</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="o">.</span><span class="n">setter</span>
@@ -302,11 +331,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf_coordinates</span> <span class="o">=</span> <span class="n">new_coordinates</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">new_coordinates</span>
         <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span>
-        <span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">Nx</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">),</span> <span class="n">Nx</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">),</span> <span class="n">Nx</span><span class="p">)</span>
         <span class="n">fy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">Ny</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Ly</span><span class="p">),</span> <span class="n">Ny</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Ly</span><span class="p">),</span> <span class="n">Ny</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_otf_frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otf_frequencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="OpticalSystem2D.interpolate_otf">
@@ -333,7 +362,7 @@
 
 <div class="viewcode-block" id="OpticalSystem2D.compute_psf_and_otf">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem2D.compute_psf_and_otf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 
         <span class="o">...</span></div>
 </div>
@@ -346,17 +375,23 @@
 
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">3</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OpticalSystem3D.compute_psf_and_otf_cordinates">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_psf_and_otf_cordinates">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf_cordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;N should be integer or a tuple of three integers&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span></div>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">psf_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">psf_size</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></div>
 
 
     <span class="nd">@OpticalSystem</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="o">.</span><span class="n">setter</span>
@@ -364,12 +399,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf_coordinates</span> <span class="o">=</span> <span class="n">new_coordinates</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="o">=</span> <span class="n">new_coordinates</span>
         <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="n">Nz</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">size</span>
-        <span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Lx</span><span class="p">,</span> <span class="n">Ly</span><span class="p">,</span> <span class="n">Lz</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">new_coordinates</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="n">fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">Nx</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">),</span> <span class="n">Nx</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lx</span><span class="p">),</span> <span class="n">Nx</span><span class="p">)</span>
         <span class="n">fy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">Ny</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Ly</span><span class="p">),</span> <span class="n">Ny</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Ly</span><span class="p">),</span> <span class="n">Ny</span><span class="p">)</span>
         <span class="n">fz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">Nz</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lz</span><span class="p">),</span> <span class="n">Nz</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Lz</span><span class="p">),</span> <span class="n">Nz</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_otf_frequencies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">fz</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otf_frequencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">fx</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">fz</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OpticalSystem3D.interpolate_otf">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem3D.interpolate_otf">[docs]</a>
@@ -396,7 +431,7 @@
 
 <div class="viewcode-block" id="OpticalSystem3D.compute_psf_and_otf">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.OpticalSystem3D.compute_psf_and_otf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span></div>
 
                                            <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span> <span class="o">...</span></div>
 
@@ -405,27 +440,45 @@
 <div class="viewcode-block" id="System4f2DCoherent">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.System4f2DCoherent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">System4f2DCoherent</span><span class="p">(</span><span class="n">OpticalSystem2D</span><span class="p">):</span> 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">refractive_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+                 <span class="n">refractive_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">refractive_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">NA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_PSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_PSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">zernieke</span><span class="o">=</span><span class="p">{}):</span>
         <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
         <span class="n">v</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">NA</span>
-        <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">j1</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">v</span>
         <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
-        <span class="n">E</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">E</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">zernieke</span><span class="p">:</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">j1</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="n">v</span>
+            <span class="n">E</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">psy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">vy</span><span class="p">,</span> <span class="n">vx</span><span class="p">)</span>
+            <span class="n">dphi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">100</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">dphi</span><span class="p">)</span>
+            <span class="n">aberration_function</span> <span class="o">=</span> <span class="n">OpticalSystem</span><span class="o">.</span><span class="n">compute_pupil_plane_aberrations</span><span class="p">(</span><span class="n">zernieke</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
+            <span class="n">phase_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">aberration_function</span><span class="p">)</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">psy</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span> <span class="o">*</span> <span class="n">phase_change</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+            <span class="n">integrated_phi</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">simpson</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">phi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">simpson</span><span class="p">(</span><span class="n">integrated_phi</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">E</span> <span class="o">/=</span> <span class="n">E</span><span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">E</span> 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_PSF_from_pupil_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pupil_function</span><span class="p">):</span>
-        <span class="n">E</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">pupil_function</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="n">pupil_function</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">E</span>
 
 <div class="viewcode-block" id="System4f2DCoherent.compute_psf_and_otf">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.System4f2DCoherent.compute_psf_and_otf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_function</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span>\
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_function</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zernieke</span><span class="o">=</span><span class="p">{},</span> <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>\
             <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
                      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pupil_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -437,12 +490,12 @@
         <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">pupil_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">zernieke</span><span class="o">=</span><span class="n">zernieke</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF_from_pupil_function</span><span class="p">(</span><span class="n">pupil_function</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF_from_pupil_function</span><span class="p">(</span><span class="n">pupil_function</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_otf</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_interpolator</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span></div>
 </div>
@@ -452,8 +505,14 @@
 <div class="viewcode-block" id="System4f3DCoherent">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.System4f3DCoherent">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">System4f3DCoherent</span><span class="p">(</span><span class="n">OpticalSystem3D</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="n">refractive_index_sample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">refractive_index_medium</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> 
+                 <span class="n">refractive_index_sample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                 <span class="n">refractive_index_medium</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                 <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ns</span> <span class="o">=</span> <span class="n">refractive_index_sample</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nm</span> <span class="o">=</span> <span class="n">refractive_index_medium</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
@@ -569,7 +628,7 @@
                     <span class="n">psy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">vy</span><span class="p">,</span> <span class="n">vx</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
                     <span class="n">dphi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">100</span>
                     <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">dphi</span><span class="p">)</span>
-                    <span class="n">aberration_function</span> <span class="o">=</span> <span class="n">OpticalSystem</span><span class="o">.</span><span class="n">compute_pupil_plane_abberations</span><span class="p">(</span><span class="n">zernieke</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
+                    <span class="n">aberration_function</span> <span class="o">=</span> <span class="n">OpticalSystem</span><span class="o">.</span><span class="n">compute_pupil_plane_aberrations</span><span class="p">(</span><span class="n">zernieke</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
                     <span class="c1"># plt.plot(aberration_function[50, :])</span>
                     <span class="c1"># plt.show()</span>
                     <span class="n">phase_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nm</span> <span class="o">*</span> <span class="n">aberration_function</span><span class="p">)</span>
@@ -580,14 +639,6 @@
                         <span class="n">v_dependent_part</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">psy</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
                         <span class="k">return</span> <span class="n">apodization_part</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">u_dependent_part</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">v_dependent_part</span>
 
-                    <span class="c1"># for i in range(u.shape[2]):</span>
-                    <span class="c1">#     integrands = integrand_no_aberrations(rho, phi, i)</span>
-                    <span class="c1">#     integrands_aberrated = integrands * phase_change[None, None, :, :]</span>
-                    <span class="c1">#     integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)</span>
-                    <span class="c1">#     integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)</span>
-                    <span class="c1">#     E[:, :, i] = integrated_rho</span>
-
-                    <span class="c1"># Replace your for-loop with a parallelized version:</span>
                     <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="mi">2</span><span class="p">)(</span>
                         <span class="n">delayed</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">simpson</span><span class="p">(</span>
                             <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">integrand_no_aberrations</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">*</span> <span class="n">phase_change</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">dphi</span><span class="p">,</span>
@@ -601,6 +652,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">high_NA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">pupil_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rho</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                             <span class="n">integrate_rho</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">zernieke</span><span class="o">=</span><span class="p">{})</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
@@ -616,9 +668,12 @@
                         <span class="n">pupil_function</span><span class="o">=</span><span class="n">pupil_function</span><span class="p">,</span> 
                         <span class="n">integrate_rho</span><span class="o">=</span><span class="n">integrate_rho</span><span class="p">,</span>
                         <span class="n">zernieke</span><span class="o">=</span><span class="n">zernieke</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_otf</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_interpolator</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span></div>
 </div>
@@ -628,8 +683,19 @@
 <div class="viewcode-block" id="System4f2D">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.System4f2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">System4f2D</span><span class="p">(</span><span class="n">System4f2DCoherent</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_PSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">save_pupil_function</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="n">E</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+                 <span class="n">refractive_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span>
+                 <span class="n">refractive_index</span><span class="p">,</span>
+                 <span class="n">interpolation_method</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_PSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">zernieke</span><span class="p">,</span> <span class="n">save_pupil_function</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">zernieke</span><span class="o">=</span><span class="n">zernieke</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">save_pupil_function</span><span class="p">:</span>
             <span class="n">pupil_function</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_grid</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">NA</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;pupil_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pupil_function</span>
@@ -651,7 +717,9 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                             <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">pupil_function</span> <span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                            <span class="n">save_pupil_function</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>\
+                            <span class="n">save_pupil_function</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                            <span class="n">zernieke</span><span class="o">=</span><span class="p">{},</span>
+                            <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>\
             <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
                      <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
         
@@ -664,14 +732,16 @@
         <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">pupil_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">save_pupil_function</span><span class="o">=</span><span class="n">save_pupil_function</span><span class="p">)</span>
+            <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">zernieke</span><span class="o">=</span><span class="n">zernieke</span><span class="p">,</span> <span class="n">save_pupil_function</span><span class="o">=</span><span class="n">save_pupil_function</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PSF_from_pupil_function</span><span class="p">(</span><span class="n">pupil_function</span><span class="p">,</span> <span class="n">save_pupil_function</span><span class="o">=</span><span class="n">save_pupil_function</span><span class="p">)</span>
                     
         <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">account_for_pixel_size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_account_for_pixel_size</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_interpolator</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span></div>
@@ -682,6 +752,21 @@
 <div class="viewcode-block" id="System4f3D">
 <a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.System4f3D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">System4f3D</span><span class="p">(</span><span class="n">System4f3DCoherent</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> 
+                 <span class="n">refractive_index_sample</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                 <span class="n">refractive_index_medium</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                 <span class="n">interpolation_method</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> 
+                 <span class="n">refractive_index_sample</span><span class="p">,</span> 
+                 <span class="n">refractive_index_medium</span><span class="p">,</span> 
+                 <span class="n">interpolation_method</span><span class="p">,</span> 
+                 <span class="n">normalize_otf</span><span class="p">)</span>
+
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_PSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span>
              <span class="n">high_NA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
              <span class="n">pupil_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rho</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -698,7 +783,7 @@
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">save_pupil_function</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;pupil_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;pupil_function&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
         
         <span class="n">I</span> <span class="o">=</span> <span class="p">(</span><span class="n">E</span> <span class="o">*</span> <span class="n">E</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span><span class="o">.</span><span class="n">real</span>
         <span class="k">return</span> <span class="n">I</span>
@@ -708,6 +793,7 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">high_NA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">pupil_function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">rho</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="n">account_for_pixel_size</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                             <span class="n">integrate_rho</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">zernieke</span><span class="o">=</span><span class="p">{},</span> 
                             <span class="n">save_pupil_function</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -727,11 +813,117 @@
                         <span class="n">zernieke</span><span class="o">=</span><span class="n">zernieke</span><span class="p">,</span>
                         <span class="n">save_pupil_function</span><span class="o">=</span><span class="n">save_pupil_function</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">account_for_pixel_size</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_account_for_pixel_size</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_interpolator</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">otf</span></div>
 </div>
+
+
+
+<div class="viewcode-block" id="PointScanningImagingSystem">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.PointScanningImagingSystem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PointScanningImagingSystem</span><span class="p">(</span><span class="n">OpticalSystem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for a point-scanning microscopy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">optical_system_excitation</span><span class="p">,</span>
+                 <span class="n">optical_system_detection</span><span class="p">,</span> 
+                 <span class="n">aperture</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">interpolation_method</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+                 <span class="n">normalize_otf</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optical_system_excitation</span><span class="p">,</span> <span class="n">OpticalSystem</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;optical_system_excitation must be an instance of OpticalSystem&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optical_system_detection</span><span class="p">,</span> <span class="n">OpticalSystem</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;optical_system_detection must be an instance of OpticalSystem&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">optical_system_excitation</span><span class="o">.</span><span class="n">dimensionality</span> <span class="o">==</span> <span class="n">optical_system_detection</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Excitation and detection systems must have the same dimensionality&quot;</span><span class="p">)</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">interpolation_method</span><span class="p">,</span> <span class="n">normalize_otf</span><span class="p">)</span>
+
+        <span class="c1">#The case here must be handled if the systems have different psf coordinates.</span>
+        <span class="c1">#For now it is assmed that they are the same.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">optical_system_excitation</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">,</span> <span class="n">optical_system_detection</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Excitation and detection systems must have the same psf coordinates&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_excitation</span> <span class="o">=</span> <span class="n">optical_system_excitation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_detection</span> <span class="o">=</span> <span class="n">optical_system_detection</span></div>
+
+
+
+
+<div class="viewcode-block" id="Confocal">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.Confocal">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Confocal</span><span class="p">(</span><span class="n">PointScanningImagingSystem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for simulating a confocal microscope system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Confocal.compute_psf_and_otf">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.Confocal.compute_psf_and_otf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_psf_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the PSF and OTF for the confocal system.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_excitation</span><span class="o">.</span><span class="n">psf</span><span class="p">:</span>
+            <span class="n">psf_excitation</span><span class="p">,</span> <span class="n">otf_excitation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_excitation</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_detection</span><span class="o">.</span><span class="n">psf</span><span class="p">:</span>
+            <span class="n">psf_detection</span><span class="p">,</span> <span class="n">otf_detection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system_detection</span><span class="o">.</span><span class="n">compute_psf_and_otf</span><span class="p">()</span>
+
+        
+        <span class="c1"># Compute final PSF and OTF including aperture</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">=</span> <span class="n">psf_excitation</span> <span class="o">*</span> <span class="n">psf_detection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_otf</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">otf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">otf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RCM">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.RCM">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RCM</span><span class="p">(</span><span class="n">PointScanningImagingSystem</span><span class="p">):</span>
+    <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="ISM">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.ISM">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ISM</span><span class="p">(</span><span class="n">PointScanningImagingSystem</span><span class="p">):</span>
+    <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="Confocal2D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.Confocal2D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Confocal2D</span><span class="p">(</span><span class="n">Confocal</span><span class="p">):</span> <span class="o">...</span></div>
+
+<div class="viewcode-block" id="Confocal3D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.Confocal3D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Confocal3D</span><span class="p">(</span><span class="n">Confocal</span><span class="p">):</span> <span class="o">...</span> </div>
+
+
+<div class="viewcode-block" id="RCM2D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.RCM2D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RCM2D</span><span class="p">(</span><span class="n">RCM</span><span class="p">):</span> <span class="o">...</span></div>
+
+<div class="viewcode-block" id="RCM3D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.RCM3D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RCM3D</span><span class="p">(</span><span class="n">RCM</span><span class="p">):</span> <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="ISM2D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.ISM2D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ISM2D</span><span class="p">(</span><span class="n">ISM</span><span class="p">):</span> <span class="o">...</span></div>
+
+<div class="viewcode-block" id="ISM3D">
+<a class="viewcode-back" href="../source/OpticalSystems.html#OpticalSystems.ISM3D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ISM3D</span><span class="p">(</span><span class="n">ISM</span><span class="p">):</span> <span class="o">...</span></div>
 
 </pre></div>
 

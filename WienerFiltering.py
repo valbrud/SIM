@@ -16,13 +16,13 @@ sys.path.append(current_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import abstractmethod
-import stattools
+import utils
 from abc import abstractmethod
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-import stattools
+import utils
 import wrappers
 
 def filter_constant(image_ft, otf, w):
@@ -69,7 +69,7 @@ def filter_true_wiener(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-6):    
+                    numeric_noise=10**-8):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -94,13 +94,13 @@ def filter_true_wiener(image_ft,
     f0 = image_ft[*center] / ssnr_calculator.dj[*center]
     bj2 = np.abs(image_ft) ** 2
 
-    find_levels = stattools.find_decreasing_surface_levels3d if image_ft.ndim == 3 else stattools.find_decreasing_surface_levels2d
-    average_rings = stattools.average_rings3d if image_ft.ndim == 3 else stattools.average_rings2d
-    expand_ring_averages = stattools.expand_ring_averages3d if image_ft.ndim == 3 else stattools.expand_ring_averages2d
+    find_levels = utils.find_decreasing_surface_levels3d if image_ft.ndim == 3 else utils.find_decreasing_surface_levels2d
+    average_rings = utils.average_rings3d if image_ft.ndim == 3 else utils.average_rings2d
+    expand_ring_averages = utils.expand_ring_averages3d if image_ft.ndim == 3 else utils.expand_ring_averages2d
     
     if average == "surface_levels":
         mask = find_levels(np.copy(ssnr_calculator.dj), direction=0)
-        obj2a = stattools.average_mask(bj2, mask)
+        obj2a = utils.average_mask(bj2, mask)
     elif average == "rings":
         obj2ra = average_rings(bj2, ssnr_calculator.optical_system.otf_frequencies)
         obj2a = expand_ring_averages(obj2ra, ssnr_calculator.optical_system.otf_frequencies)
@@ -109,8 +109,8 @@ def filter_true_wiener(image_ft,
     
     if vja is None or dja is None:
         if average == "surface_levels":
-            dja = stattools.average_mask(np.copy(ssnr_calculator.dj), mask)
-            vja = stattools.average_mask(np.copy(ssnr_calculator.vj), mask)
+            dja = utils.average_mask(np.copy(ssnr_calculator.dj), mask)
+            vja = utils.average_mask(np.copy(ssnr_calculator.vj), mask)
 
         elif average == "rings":
             djra = average_rings(np.copy(ssnr_calculator.dj), ssnr_calculator.optical_system.otf_frequencies)

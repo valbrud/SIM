@@ -21,7 +21,7 @@ from matplotlib import colors
 import Illumination
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D
 from OpticalSystems import System4f3D, System4f2D
-import stattools
+import utils
 from Sources import IntensityHarmonic3D, PlaneWave
 import tqdm
 

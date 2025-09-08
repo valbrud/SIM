@@ -55,8 +55,8 @@ class TestSIMImages(unittest.TestCase):
         # plt.imshow(widefield)
         # plt.show()
         # image = np.ones((N, N)) * 1000
-        images = simulator.generate_sim_images(image)
-        noisy_images = simulator.generate_noisy_images(images)
+        images = simulator.generate_noiseless_sim_images(image)
+        noisy_images = simulator.add_noise(images)
 
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
         plt.subplots_adjust(left=0.1,
@@ -117,8 +117,8 @@ class TestSIMImages(unittest.TestCase):
         # plt.imshow(widefield)
         # plt.show()
 
-        images = simulator.generate_sim_images(image)
-        noisy_images = simulator.generate_noisy_images(images)
+        images = simulator.generate_noiseless_sim_images(image)
+        noisy_images = simulator.add_noise(images)
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
         plt.subplots_adjust(left=0.1,
                             bottom=0.1,
@@ -168,7 +168,7 @@ class TestSIMImages(unittest.TestCase):
         illumination_3waves.set_spatial_shifts_diagonally()
 
         simulator = SIMulator3D(illumination_3waves, optical_system)
-        images = simulator.generate_sim_images(image)
+        images = simulator.generate_noiseless_sim_images(image)
         mask = make_mask_cosine_edge2d(images[0, 0, :, :, arg].shape, 10)
         images *= mask[None, None, :, :, None]
         images_ft = np.array([np.array([wrappers.wrapped_fftn(images[r, n])for n in range(5)])  for r in range(3)])

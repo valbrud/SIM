@@ -38,74 +38,174 @@
   <section id="module-SIMulator">
 <span id="simulator-module"></span><h1>SIMulator module<a class="headerlink" href="#module-SIMulator" title="Link to this heading">¶</a></h1>
 <p>SIMulator.py</p>
-<p>This module contains the SIMulator class for simulating raw
-structured illumination microscopy (SIM) images and/or reconstructing
-the super resolution images from the raw SIM images.</p>
-<p>This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.</p>
-<div class="graphviz"><img src="../_images/inheritance-a71db212537af959e40ac0000f4817c85bdf1883.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
+<p>This module provides classes for simulating Structured Illumination Microscopy (SIM) images.
+It includes functionality for generating raw SIM images from ground truth data,
+adding noise to simulate realistic imaging conditions, and computing widefield images.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>SIMulator - Base abstract class for SIM simulation
+SIMulator2D - 2D SIM image simulation
+SIMulator3D - 3D SIM image simulation</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-a614bfcd718d952777371af3fb34eeca5025ba70.png" alt="Inheritance diagram of SIMulator" usemap="#inheritancee5414e1b2a" class="inheritance graphviz" /></div>
 <map id="inheritancee5414e1b2a" name="inheritancee5414e1b2a">
-<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="Base class for simulating Structured Illumination Microscopy (SIM) images." alt="" coords="5,5,89,33"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="SIMulator.SIMulator">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>SIMulator class for simulating raw structured illumination microscopy (SIM) images.
-The base class implements all the functionality but cannot be implemented.
-Use dimensional children classes instead.</p>
-<dl class="simple">
-<dt>Atrubtes:</dt><dd><p>illumination: PlaneWavesSIM object, the illumination configuration for the SIM experiment.
-optical_system: OpticalSystem object, the optical system used in the experiment.
-camera: Camera object, optional, the camera used to capture images.
-readout_noise_variance: float, optional, the variance of readout noise.
-effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simulation.</p>
+<p>Base class for simulating Structured Illumination Microscopy (SIM) images.</p>
+<p>This abstract base class provides the core functionality for SIM image simulation.
+It cannot be instantiated directly - use the dimensional subclasses (SIMulator2D, SIMulator3D) instead.</p>
+<p>The simulator generates raw SIM images from ground truth data by convolving with
+effective PSFs and applying phase modulation patterns corresponding to different
+illumination angles and phases.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.illumination">
+<span class="sig-name descname"><span class="pre">illumination</span></span><a class="headerlink" href="#SIMulator.SIMulator.illumination" title="Link to this definition">¶</a></dt>
+<dd><p>The illumination configuration for the SIM experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Illumination.html#Illumination.PlaneWavesSIM" title="Illumination.PlaneWavesSIM">PlaneWavesSIM</a></p>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_sim_images">
-<span class="sig-name descname"><span class="pre">generate_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_sim_images" title="Link to this definition">¶</a></dt>
-<dd><p>Generates simulated images based on the ground truth image.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.optical_system">
+<span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SIMulator.SIMulator.optical_system" title="Link to this definition">¶</a></dt>
+<dd><p>The optical system used in the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="OpticalSystems.html#OpticalSystems.OpticalSystem" title="OpticalSystems.OpticalSystem">OpticalSystem</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.camera">
+<span class="sig-name descname"><span class="pre">camera</span></span><a class="headerlink" href="#SIMulator.SIMulator.camera" title="Link to this definition">¶</a></dt>
+<dd><p>The camera used to capture images. If None, noise is added using readout_noise_variance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Camera.html#Camera.Camera" title="Camera.Camera">Camera</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.readout_noise_variance">
+<span class="sig-name descname"><span class="pre">readout_noise_variance</span></span><a class="headerlink" href="#SIMulator.SIMulator.readout_noise_variance" title="Link to this definition">¶</a></dt>
+<dd><p>The variance of readout noise to add to simulated images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.effective_psfs">
+<span class="sig-name descname"><span class="pre">effective_psfs</span></span><a class="headerlink" href="#SIMulator.SIMulator.effective_psfs" title="Link to this definition">¶</a></dt>
+<dd><p>Precomputed effective PSFs for the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.phase_modulation_patterns">
+<span class="sig-name descname"><span class="pre">phase_modulation_patterns</span></span><a class="headerlink" href="#SIMulator.SIMulator.phase_modulation_patterns" title="Link to this definition">¶</a></dt>
+<dd><p>Precomputed phase modulation patterns for the reconstruction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-25115b48aebb4ccd54bbae3aa081329a9a998f54.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
+<map id="inheritanceeb6ffd21f5" name="inheritanceeb6ffd21f5">
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="Base class for simulating Structured Illumination Microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+</map><dl class="py method">
 <dt class="sig sig-object py" id="SIMulator.SIMulator.add_noise">
-<span class="sig-name descname"><span class="pre">add_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.add_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.add_noise" title="Link to this definition">¶</a></dt>
-<dd><p>Adds noise to the simulated images based on the camera settings or readout noise variance.</p>
+<span class="sig-name descname"><span class="pre">add_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.add_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.add_noise" title="Link to this definition">¶</a></dt>
+<dd><p>Add noise to images to simulate realistic imaging conditions.</p>
+<p>If a camera object is provided, uses the camera’s noise model.
+Otherwise, adds Poisson noise and Gaussian readout noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>images</strong> (<em>numpy.ndarray</em>) – The input images to add noise to.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Images with added noise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_noisy_images">
-<span class="sig-name descname"><span class="pre">generate_noisy_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noisy_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_noisy_images" title="Link to this definition">¶</a></dt>
-<dd><p>Generates noisy images from the simulated images.</p>
+<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_noiseless_sim_images">
+<span class="sig-name descname"><span class="pre">generate_noiseless_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noiseless_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_noiseless_sim_images" title="Link to this definition">¶</a></dt>
+<dd><p>Generate noiseless SIM images from ground truth data.</p>
+<p>This method simulates the raw SIM images that would be captured by a microscope
+without adding any noise. The simulation convolves the ground truth with effective
+PSFs and applies phase modulation patterns for different illumination conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ground_truth</strong> (<em>numpy.ndarray</em>) – The ground truth image to simulate SIM imaging from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of shape (Mr, Mt, <a href="#id1"><span class="problematic" id="id2">*</span></a>psf_shape) containing the simulated noiseless SIM images,
+where Mr is the number of rotations and Mt is the number of phases per rotation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SIMulator.SIMulator.generate_noisy_sim_images">
+<span class="sig-name descname"><span class="pre">generate_noisy_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noisy_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_noisy_sim_images" title="Link to this definition">¶</a></dt>
+<dd><p>Generate noisy SIM images from ground truth data.</p>
+<p>This is a convenience method that first generates noiseless SIM images
+and then adds noise to simulate realistic imaging conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ground_truth</strong> (<em>numpy.ndarray</em>) – The ground truth image to simulate SIM imaging from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of shape (Mr, Mt, <a href="#id3"><span class="problematic" id="id4">*</span></a>psf_shape) containing the simulated noisy SIM images.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="SIMulator.SIMulator.generate_widefield">
 <span class="sig-name descname"><span class="pre">generate_widefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_widefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator.generate_widefield" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a widefield image from the input image using the optical system’s PSF.</p>
+<dd><p>Generate a widefield image by convolving with the optical system’s PSF.</p>
+<p>This simulates what would be observed in conventional widefield microscopy
+without structured illumination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> (<em>numpy.ndarray</em>) – The input image to convolve with the PSF.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The widefield image after convolution with the optical system’s PSF.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
-
-<div class="graphviz"><img src="../_images/inheritance-b9351be13e5573c9bdcddd6a2d7c748eff7fb49c.png" alt="Inheritance diagram of SIMulator.SIMulator" usemap="#inheritanceeb6ffd21f5" class="inheritance graphviz" /></div>
-<map id="inheritanceeb6ffd21f5" name="inheritanceeb6ffd21f5">
-<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
-</map><dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">add_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.add_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">generate_noisy_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_noisy_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">generate_sim_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ground_truth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_sim_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">generate_widefield</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator.generate_widefield"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -113,10 +213,14 @@ effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simu
 <dt class="sig sig-object py" id="SIMulator.SIMulator2D">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator2D" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#SIMulator.SIMulator" title="SIMulator.SIMulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SIMulator</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-8ef490f58d111ccbd23dd9475f6353a124ee4424.png" alt="Inheritance diagram of SIMulator.SIMulator2D" usemap="#inheritance9247388bd6" class="inheritance graphviz" /></div>
+<p>2D SIM image simulator.</p>
+<p>This class provides SIM simulation specifically for 2D images.
+It enforces that the optical system is 2D and inherits all simulation
+functionality from the base SIMulator class.</p>
+<div class="graphviz"><img src="../_images/inheritance-0bdcec48b4e5f6a4555e6ed9da132378132543de.png" alt="Inheritance diagram of SIMulator.SIMulator2D" usemap="#inheritance9247388bd6" class="inheritance graphviz" /></div>
 <map id="inheritance9247388bd6" name="inheritance9247388bd6">
-<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
-<area shape="rect" id="node2" href="#SIMulator.SIMulator2D" target="_top" title="SIMulator2D" alt="" coords="137,5,238,33"/>
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="Base class for simulating Structured Illumination Microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+<area shape="rect" id="node2" href="#SIMulator.SIMulator2D" target="_top" title="2D SIM image simulator." alt="" coords="137,5,238,33"/>
 </map><dl class="py attribute">
 <dt class="sig sig-object py" id="SIMulator.SIMulator2D.dimensionality">
 <span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SIMulator.SIMulator2D.dimensionality" title="Link to this definition">¶</a></dt>
@@ -128,10 +232,14 @@ effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simu
 <dt class="sig sig-object py" id="SIMulator.SIMulator3D">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SIMulator.</span></span><span class="sig-name descname"><span class="pre">SIMulator3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SIMulator.html#SIMulator3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SIMulator.SIMulator3D" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#SIMulator.SIMulator" title="SIMulator.SIMulator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SIMulator</span></code></a></p>
-<div class="graphviz"><img src="../_images/inheritance-3ef198d0f37c02834b09888b407931d86709271a.png" alt="Inheritance diagram of SIMulator.SIMulator3D" usemap="#inheritance915b5bed5c" class="inheritance graphviz" /></div>
+<p>3D SIM image simulator.</p>
+<p>This class provides SIM simulation specifically for 3D images.
+It enforces that the optical system is 3D and inherits all simulation
+functionality from the base SIMulator class.</p>
+<div class="graphviz"><img src="../_images/inheritance-b5074ea9f20790208dd51c4fb56ae92b72502504.png" alt="Inheritance diagram of SIMulator.SIMulator3D" usemap="#inheritance915b5bed5c" class="inheritance graphviz" /></div>
 <map id="inheritance915b5bed5c" name="inheritance915b5bed5c">
-<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="SIMulator class for simulating raw structured illumination microscopy (SIM) images." alt="" coords="5,5,89,33"/>
-<area shape="rect" id="node2" href="#SIMulator.SIMulator3D" target="_top" title="SIMulator3D" alt="" coords="137,5,238,33"/>
+<area shape="rect" id="node1" href="#SIMulator.SIMulator" target="_top" title="Base class for simulating Structured Illumination Microscopy (SIM) images." alt="" coords="5,5,89,33"/>
+<area shape="rect" id="node2" href="#SIMulator.SIMulator3D" target="_top" title="3D SIM image simulator." alt="" coords="137,5,238,33"/>
 </map><dl class="py attribute">
 <dt class="sig sig-object py" id="SIMulator.SIMulator3D.dimensionality">
 <span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#SIMulator.SIMulator3D.dimensionality" title="Link to this definition">¶</a></dt>

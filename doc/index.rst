@@ -25,6 +25,9 @@ API Reference
    ./source/Apodization
    ./source/Box
    ./source/Camera
+   ./source/GUI
+   ./source/GUIInitializationWidgets
+   ./source/GUIWidgets
    ./source/Illumination
    ./source/OpticalSystems
    ./source/SIMulator

@@ -218,7 +218,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             return np.sin(abs(m) * phi)
 
     @staticmethod
-    def compute_pupil_plane_abberations(zernieke_polynomials, rho, phi):
+    def compute_pupil_plane_aberrations(zernieke_polynomials, rho, phi):
         """
         Construct a 2D pupil-plane aberration by summing Zernike modes using HCIPy's zernike().
 
@@ -370,19 +370,32 @@ class System4f2DCoherent(OpticalSystem2D):
         self.alpha = alpha
         self.NA = self.n * np.sin(self.alpha)
 
-    def _PSF(self, grid):
+    def _PSF(self, grid, zernieke={}):
         r = (grid[:, :, 0] ** 2 + grid[:, :, 1] ** 2) ** 0.5
         v = 2 * np.pi * r * self.NA
-        E = 2 * scipy.special.j1(v) / v
         cx, cy = grid.shape[0] // 2, grid.shape[1] // 2
-        E[cx, cy] = 1
-        return E
+        if not zernieke:
+            E = 2 * scipy.special.j1(v) / v
+            E[cx, cy] = 1
+        else: 
+            rho = np.linspace(0, 1 - 1e-9, 100)
+            vx, vy = 2 * np.pi * grid[:, :, 0], 2 * np.pi * grid[:, :, 1]
+            psy = np.arctan2(vy, vx)
+            dphi = 2 * np.pi / 100
+            phi = np.arange(0, 2 * np.pi, dphi)
+            aberration_function = OpticalSystem.compute_pupil_plane_aberrations(zernieke, rho, phi)
+            phase_change = np.exp(1j * 2 * np.pi * self.n * aberration_function)
+            phase = np.exp(-1j * v[:, :, None, None] * rho[None, None, :, None] * np.cos(phi[None, None, None, :] - psy[:, :, None, None])) * phase_change[None, None, :, :]
+            integrated_phi = scipy.integrate.simpson(phase, x=phi, axis=3)
+            E = scipy.integrate.simpson(integrated_phi, x=rho, axis=2)
+            E /= E[cx, cy]
+        return E 
 
     def _PSF_from_pupil_function(self, pupil_function):
         E = wrappers.wrapped_ifftn(pupil_function)
         return E
 
-    def compute_psf_and_otf(self, parameters=None, pupil_function =None, account_for_pixel_size: bool = False)\
+    def compute_psf_and_otf(self, parameters=None, pupil_function =None, zernieke={}, account_for_pixel_size: bool = False)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
@@ -394,9 +407,9 @@ class System4f2DCoherent(OpticalSystem2D):
         grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
 
         if pupil_function is None:
-            psf = self._PSF(grid)
+            self.psf = self._PSF(grid, zernieke=zernieke)
         else:
-            psf = self._PSF_from_pupil_function(pupil_function)
+            self.psf = self._PSF_from_pupil_function(pupil_function)
 
         self.otf = np.abs(wrappers.wrapped_fftn(self.psf)).astype(complex)
         self.otf = self.otf / np.amax(self.otf) if self.normalize_otf else self.otf
@@ -528,7 +541,7 @@ class System4f3DCoherent(OpticalSystem3D):
                     psy = np.arctan2(vy, vx)[:, :, 0]
                     dphi = 2 * np.pi / 100
                     phi = np.arange(0, 2 * np.pi, dphi)
-                    aberration_function = OpticalSystem.compute_pupil_plane_abberations(zernieke, rho, phi)
+                    aberration_function = OpticalSystem.compute_pupil_plane_aberrations(zernieke, rho, phi)
                     # plt.plot(aberration_function[50, :])
                     # plt.show()
                     phase_change = np.exp(1j * 2 * np.pi * self.nm * aberration_function)
@@ -539,14 +552,6 @@ class System4f3DCoherent(OpticalSystem3D):
                         v_dependent_part = np.exp(-1j * v[:, :, i, None, None] * rho[None, None, :, None] * np.cos(phi[None, None, None, :] - psy[:, :, None, None]))
                         return apodization_part[None, None, :, None] * u_dependent_part[:, :, :, None] * v_dependent_part
 
-                    # for i in range(u.shape[2]):
-                    #     integrands = integrand_no_aberrations(rho, phi, i)
-                    #     integrands_aberrated = integrands * phase_change[None, None, :, :]
-                    #     integrated_phi = sp.integrate.simpson(integrands_aberrated, axis=3, x=phi)
-                    #     integrated_rho = sp.integrate.simpson(integrated_phi, axis=2, x=rho)
-                    #     E[:, :, i] = integrated_rho
-
-                    # Replace your for-loop with a parallelized version:
                     E = np.stack(Parallel(n_jobs=2)(
                         delayed(lambda i: sp.integrate.simpson(
                             np.sum(integrand_no_aberrations(rho, phi, i) * phase_change[None, None, :, :], axis=3) * dphi,
@@ -596,8 +601,8 @@ class System4f2D(System4f2DCoherent):
                  interpolation_method, 
                  normalize_otf)
 
-    def _PSF(self, grid, save_pupil_function=False):
-        E = super()._PSF(grid)
+    def _PSF(self, grid, zernieke, save_pupil_function=False):
+        E = super()._PSF(grid, zernieke=zernieke)
         if save_pupil_function:
             pupil_function = np.where(self.q_grid[:, :, 0] ** 2 + self.q_grid[:, :, 1] ** 2 < self.NA ** 2, 1, 0)
             self.__dict__['pupil_function'] = pupil_function
@@ -618,6 +623,7 @@ class System4f2D(System4f2DCoherent):
                             parameters=None,
                             pupil_function =None, 
                             save_pupil_function=False, 
+                            zernieke={},
                             account_for_pixel_size: bool = False)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
@@ -631,7 +637,7 @@ class System4f2D(System4f2DCoherent):
         grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
 
         if pupil_function is None:
-            psf = self._PSF(grid, save_pupil_function=save_pupil_function)
+            psf = self._PSF(grid, zernieke=zernieke, save_pupil_function=save_pupil_function)
 
         else:
             psf = self._PSF_from_pupil_function(pupil_function, save_pupil_function=save_pupil_function)

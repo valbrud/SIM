@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ShapesGenerator &#8212; SIMSSNR 1.0.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=f63d8bfa" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <script src="../_static/documentation_options.js?v=8d563738"></script>
@@ -32,34 +32,60 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">ShapesGenerator.py</span>
 
-<span class="sd">This module contains functions for generating various simulated images used in simulations.</span>
+<span class="sd">This module provides functions for generating various model objects. </span>
+
+<span class="sd">Functions:</span>
+<span class="sd">    generate_random_spherical_particles - Generate 3D arrays with randomly positioned spherical particles</span>
+<span class="sd">    generate_sphere_slices - Generate 3D arrays with random spheres confined to a thin slice</span>
+<span class="sd">    generate_random_lines - Generate n-D images filled with randomly oriented line segments</span>
+<span class="sd">    generate_line_grid_2d - Generate 2D regular line grids with random orientation and position</span>
+<span class="sd">    make_circle_grid - Generate 2D grids of circles with specified spacing and radius</span>
+
+<span class="sd">All functions support customizable parameters for size, intensity, and geometric properties</span>
+<span class="sd">to facilitate diverse simulation scenarios.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">gaussian_filter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.ndimage</span><span class="w"> </span><span class="kn">import</span> <span class="n">gaussian_filter</span>
 
 
 <div class="viewcode-block" id="generate_random_spherical_particles">
 <a class="viewcode-back" href="../source/ShapesGenerator.html#ShapesGenerator.generate_random_spherical_particles">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_random_spherical_particles</span><span class="p">(</span><span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">I</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_random_spherical_particles</span><span class="p">(</span><span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                                        <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                        <span class="n">r</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+                                        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                                        <span class="n">I</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+                                        <span class="n">generate_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generates an array with random spheres.</span>
+<span class="sd">    Generate a 3D array containing randomly positioned spherical particles.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        image_size (tuple[int, int, int]): Size of the point spread function in each dimension.</span>
-<span class="sd">        point_number (int): Number of points in each dimension.</span>
-<span class="sd">        r (float, optional): Radius of the spheres. Defaults to 0.1.</span>
-<span class="sd">        N (int, optional): Number of spheres to generate. Defaults to 10.</span>
-<span class="sd">        I (int, optional): Intensity of the spheres. Defaults to 1000.</span>
+<span class="sd">    Creates a 3D volume with spheres of specified radius placed at random positions.</span>
+<span class="sd">    Each sphere contributes a constant intensity to all voxels within its volume.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        np.ndarray: Array with random spheres.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size : tuple[int, int, int]</span>
+<span class="sd">        Physical size of the 3D volume in each dimension (sx, sy, sz).</span>
+<span class="sd">    point_number : int</span>
+<span class="sd">        Number of grid points along each dimension for discretization.</span>
+<span class="sd">    r : float, optional</span>
+<span class="sd">        Radius of each sphere. Default is 0.1.</span>
+<span class="sd">    N : int, optional</span>
+<span class="sd">        Number of spheres to generate. Default is 10.</span>
+<span class="sd">    I : float, optional</span>
+<span class="sd">        Intensity value added to voxels within each sphere. Default is 1000.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        3D array of shape (point_number, point_number, point_number) containing</span>
+<span class="sd">        the generated spherical particles.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
-    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span>
-                                   <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-    <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-        <span class="n">point_number</span><span class="p">,</span> <span class="n">point_number</span><span class="p">,</span> <span class="n">point_number</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">generate_default</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">grid</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span> <span class="o">/</span> <span class="n">point_number</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
@@ -79,25 +105,42 @@
 
 <div class="viewcode-block" id="generate_sphere_slices">
 <a class="viewcode-back" href="../source/ShapesGenerator.html#ShapesGenerator.generate_sphere_slices">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_sphere_slices</span><span class="p">(</span><span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">I</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_sphere_slices</span><span class="p">(</span><span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                           <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                           <span class="n">r</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+                           <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+                           <span class="n">I</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+                           <span class="n">generate_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generates a thin slice with random spheres.</span>
+<span class="sd">    Generate a 3D array with random spheres confined to a thin slice.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        image_size (tuple[int, int, int]): Size of the point spread function in each dimension.</span>
-<span class="sd">        point_number (int): Number of points in each dimension.</span>
-<span class="sd">        r (float, optional): Radius of the spheres. Defaults to 0.1.</span>
-<span class="sd">        N (int, optional): Number of spheres to generate. Defaults to 10.</span>
-<span class="sd">        I (int, optional): Intensity of the spheres. Defaults to 1000.</span>
+<span class="sd">    Creates a 3D volume with spheres positioned randomly in the XY plane but</span>
+<span class="sd">    constrained to a thin slice in the Z direction (centered at z=0).</span>
+<span class="sd">    Useful for simulating 2D-like structures in 3D space.</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        np.ndarray: A thin slice of random spheres.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size : tuple[int, int, int]</span>
+<span class="sd">        Physical size of the 3D volume in each dimension (sx, sy, sz).</span>
+<span class="sd">    point_number : int</span>
+<span class="sd">        Number of grid points along each dimension for discretization.</span>
+<span class="sd">    r : float, optional</span>
+<span class="sd">        Radius of each sphere. Default is 0.1.</span>
+<span class="sd">    N : int, optional</span>
+<span class="sd">        Number of spheres to generate. Default is 10.</span>
+<span class="sd">    I : float, optional</span>
+<span class="sd">        Intensity value added to voxels within each sphere. Default is 1000.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        3D array of shape (point_number, point_number, point_number) containing</span>
+<span class="sd">        the generated spherical particles in a thin slice.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
-    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span>
-                                   <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-    <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-        <span class="n">point_number</span><span class="p">,</span> <span class="n">point_number</span><span class="p">,</span> <span class="n">point_number</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">generate_default</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span>
+                                   <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">point_number</span><span class="p">),</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">grid</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span> <span class="o">/</span> <span class="n">point_number</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
@@ -116,62 +159,219 @@
 
 
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+
 <div class="viewcode-block" id="generate_random_lines">
 <a class="viewcode-back" href="../source/ShapesGenerator.html#ShapesGenerator.generate_random_lines">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_random_lines</span><span class="p">(</span><span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">num_lines</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_random_lines</span><span class="p">(</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">point_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">num_lines</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">generate_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate an image with randomly oriented lines.</span>
+<span class="sd">    AI-generated functions. </span>
 
-<span class="sd">    :param point_number: Number of points defining the size of the image grid (image will be point_number x point_number).</span>
-<span class="sd">    :param image_size: Tuple of (psf_x_size, psf_y_size) defining scaling in x and y directions.</span>
-<span class="sd">    :param line_width: Width of the lines.</span>
-<span class="sd">    :param num_lines: Number of lines to generate.</span>
-<span class="sd">    :param intensity: Total intensity of each line.</span>
-<span class="sd">    :return: Generated image with lines.</span>
+<span class="sd">    Generate an n-D image (2-D or 3-D) filled with randomly oriented line segments.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size : (Dx, Dy) or (Dx, Dy, Dz)</span>
+<span class="sd">        Physical size of the PSF support along each axis.</span>
+<span class="sd">    point_number : int or (Ny, Nx) or (Nz, Ny, Nx)</span>
+<span class="sd">        Number of pixels/voxels along each axis of the output grid.</span>
+<span class="sd">        • If a single int is given it is used for *every* dimension.</span>
+<span class="sd">    line_width : float or (σx, σy[, σz])</span>
+<span class="sd">        Standard deviation (in pixels) of the Gaussian blur that widens the</span>
+<span class="sd">        infinitely thin lines.  A scalar is replicated to all axes.</span>
+<span class="sd">    num_lines : int</span>
+<span class="sd">        How many line segments to draw.</span>
+<span class="sd">    intensity : float</span>
+<span class="sd">        Total integrated intensity of *each* line segment.</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img : ndarray</span>
+<span class="sd">        • shape (Ny, Nx)               if `image_size` has length 2  </span>
+<span class="sd">        • shape (Nz, Ny, Nx)           if `image_size` has length 3</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">generate_default</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
 
-    <span class="c1"># Calculate the grid spacing based on psf_size and point_number</span>
-    <span class="n">dx</span> <span class="o">=</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">point_number</span>
-    <span class="n">dy</span> <span class="o">=</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">point_number</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_size</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2-D and 3-D images are supported.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Create an empty image of size (point_number, point_number)</span>
-    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">point_number</span><span class="p">,</span> <span class="n">point_number</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="c1"># ------------- grid shape &amp; spacing -------------------------------------</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">point_number</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">point_number</span><span class="p">,)</span> <span class="o">*</span> <span class="n">dim</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">point_number</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`point_number` dimensionality &quot;</span>
+                             <span class="s2">&quot;does not match `image_size`.&quot;</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">point_number</span><span class="p">)</span>
 
+    <span class="n">spacings</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="n">n</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>   <span class="c1"># dx, dy[, dz]</span>
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="p">(</span><span class="n">line_width</span><span class="p">,)</span> <span class="o">*</span> <span class="n">dim</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">line_width</span><span class="p">)</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">line_width</span><span class="p">)</span>
+
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># ------------- helper for n-D linear interpolation ----------------------</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_intensity</span><span class="p">(</span><span class="n">indices_f</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Distribute intensity at fractional index position `indices_f`</span>
+<span class="sd">        to the 2**dim neighbouring voxels/pixels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">indices_f</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">fracs</span> <span class="o">=</span> <span class="n">indices_f</span> <span class="o">-</span> <span class="n">lows</span>
+        <span class="n">highs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">lows</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># iterate over all 2**dim vertex combinations: (low/high, low/high, …)</span>
+        <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="n">product</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="n">dim</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">highs</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">if</span> <span class="n">corner</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">else</span> <span class="n">lows</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">corner</span><span class="p">):</span>
+                <span class="n">w</span> <span class="o">*=</span> <span class="n">fracs</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="k">if</span> <span class="n">c</span> <span class="k">else</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">fracs</span><span class="p">[</span><span class="n">d</span><span class="p">])</span>
+            <span class="n">img</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span> <span class="o">*</span> <span class="n">w</span>
+
+    <span class="c1"># ------------- draw random line segments --------------------------------</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_lines</span><span class="p">):</span>
-        <span class="c1"># Randomly generate start and end points for the line within the scaled grid</span>
-        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">*</span> <span class="n">dy</span><span class="p">)</span>
-        <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">*</span> <span class="n">dx</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">*</span> <span class="n">dy</span><span class="p">)</span>
+        <span class="c1"># start &amp; end points in physical coordinates</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dim</span><span class="p">,</span> <span class="n">image_size</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dim</span><span class="p">,</span> <span class="n">image_size</span><span class="p">)</span>
 
-        <span class="c1"># Calculate line points using interpolation between start and end points</span>
-        <span class="n">num_points</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">/</span> <span class="n">dx</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span> <span class="o">/</span> <span class="n">dy</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">x_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">num_points</span><span class="p">)</span>
-        <span class="n">y_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">num_points</span><span class="p">)</span>
+        <span class="c1"># number of sampled points along the segment</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">((</span><span class="n">p1</span> <span class="o">-</span> <span class="n">p0</span><span class="p">)</span> <span class="o">/</span> <span class="n">spacings</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">t_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
 
-        <span class="c1"># Convert floating points to image grid indices using bilinear intensity distribution</span>
-        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">):</span>
-            <span class="n">x_idx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">dx</span>
-            <span class="n">y_idx</span> <span class="o">=</span> <span class="n">y</span> <span class="o">/</span> <span class="n">dy</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">t_vals</span><span class="p">:</span>
+            <span class="n">pos_physical</span> <span class="o">=</span> <span class="n">p0</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="p">(</span><span class="n">p1</span> <span class="o">-</span> <span class="n">p0</span><span class="p">)</span>
+            <span class="n">idx_frac</span> <span class="o">=</span> <span class="n">pos_physical</span> <span class="o">/</span> <span class="n">spacings</span>
+            <span class="n">add_intensity</span><span class="p">(</span><span class="n">idx_frac</span><span class="p">)</span>
 
-            <span class="n">x_low</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x_idx</span><span class="p">))</span>
-            <span class="n">y_low</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">y_idx</span><span class="p">))</span>
-            <span class="n">x_high</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x_low</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">y_high</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_low</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">point_number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># ------------- Gaussian blur to obtain finite width ---------------------</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigmas</span><span class="p">)</span>
 
-            <span class="c1"># Bilinear interpolation to distribute intensity between neighboring pixels</span>
-            <span class="n">image</span><span class="p">[</span><span class="n">x_low</span><span class="p">,</span> <span class="n">y_low</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span> <span class="o">/</span> <span class="n">num_points</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_high</span> <span class="o">-</span> <span class="n">x_idx</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_high</span> <span class="o">-</span> <span class="n">y_idx</span><span class="p">)</span>
-            <span class="n">image</span><span class="p">[</span><span class="n">x_high</span><span class="p">,</span> <span class="n">y_low</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span> <span class="o">/</span> <span class="n">num_points</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_idx</span> <span class="o">-</span> <span class="n">x_low</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_high</span> <span class="o">-</span> <span class="n">y_idx</span><span class="p">)</span>
-            <span class="n">image</span><span class="p">[</span><span class="n">x_low</span><span class="p">,</span> <span class="n">y_high</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span> <span class="o">/</span> <span class="n">num_points</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_high</span> <span class="o">-</span> <span class="n">x_idx</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_idx</span> <span class="o">-</span> <span class="n">y_low</span><span class="p">)</span>
-            <span class="n">image</span><span class="p">[</span><span class="n">x_high</span><span class="p">,</span> <span class="n">y_high</span><span class="p">]</span> <span class="o">+=</span> <span class="n">intensity</span> <span class="o">/</span> <span class="n">num_points</span> <span class="o">*</span> <span class="p">(</span><span class="n">x_idx</span> <span class="o">-</span> <span class="n">x_low</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_idx</span> <span class="o">-</span> <span class="n">y_low</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span></div>
 
-    <span class="c1"># Apply Gaussian smoothing to create smooth line edges</span>
-    <span class="n">smoothed_image</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="p">(</span><span class="n">line_width</span><span class="p">,</span> <span class="n">line_width</span><span class="p">))</span>
 
-    <span class="c1"># Normalize intensity so that each line has the specified total intensity</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">smoothed_image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">smoothed_image</span> <span class="o">=</span> <span class="p">(</span><span class="n">smoothed_image</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">smoothed_image</span><span class="p">))</span> <span class="o">*</span> <span class="n">intensity</span>
+<div class="viewcode-block" id="generate_line_grid_2d">
+<a class="viewcode-back" href="../source/ShapesGenerator.html#ShapesGenerator.generate_line_grid_2d">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_line_grid_2d</span><span class="p">(</span>
+        <span class="n">image_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">line_width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">intensity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">generate_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    AI-generated function. </span>
 
-    <span class="k">return</span> <span class="n">smoothed_image</span></div>
+<span class="sd">    Generate a 2D regular line grid with random orientation and position.</span>
+
+<span class="sd">    Creates a 2D image with parallel lines arranged in a regular grid pattern.</span>
+<span class="sd">    The orientation and initial position of the grid are randomized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_size : tuple[int, int]</span>
+<span class="sd">        Height and width of the 2D image in pixels.</span>
+<span class="sd">    pitch : float</span>
+<span class="sd">        Distance between adjacent lines in pixels.</span>
+<span class="sd">    line_width : float</span>
+<span class="sd">        Width of each line in pixels.</span>
+<span class="sd">    intensity : float</span>
+<span class="sd">        Intensity value assigned to pixels within the lines.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        2D array of shape (image_size[0], image_size[1]) containing</span>
+<span class="sd">        the generated line grid pattern.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">generate_default</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1234</span><span class="p">)</span>
+
+    <span class="c1"># Unpack size for clarity</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">image_size</span>
+
+    <span class="c1"># Prepare empty (zero) grid</span>
+    <span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># Random orientation in [0, 2π)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="c1"># Random offset in X and Y directions, each within [0, pitch)</span>
+    <span class="n">offset_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pitch</span><span class="p">)</span>
+    <span class="n">offset_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pitch</span><span class="p">)</span>
+
+    <span class="c1"># Create coordinate arrays</span>
+    <span class="n">y_coords</span><span class="p">,</span> <span class="n">x_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">((</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">))</span>
+
+    <span class="c1"># Shift coordinates by the random offset</span>
+    <span class="n">x_shifted</span> <span class="o">=</span> <span class="n">x_coords</span> <span class="o">-</span> <span class="n">offset_x</span>
+    <span class="n">y_shifted</span> <span class="o">=</span> <span class="n">y_coords</span> <span class="o">-</span> <span class="n">offset_y</span>
+
+    <span class="c1"># Project each point onto the direction of the lines</span>
+    <span class="c1"># Lines run perpendicular to the normal vector given by theta.</span>
+    <span class="c1"># Here we use dot product with the direction (cos(theta), sin(theta)).</span>
+    <span class="n">projection</span> <span class="o">=</span> <span class="n">x_shifted</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">+</span> <span class="n">y_shifted</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="c1"># Compute distance (mod pitch) to the nearest line</span>
+    <span class="c1"># The expression (projection % pitch) gives how far a point is</span>
+    <span class="c1"># within one &#39;pitch period&#39;.  The distance to the closest line</span>
+    <span class="c1"># is the minimum to 0 or pitch boundaries.</span>
+    <span class="n">distance_to_line</span> <span class="o">=</span> <span class="n">projection</span> <span class="o">%</span> <span class="n">pitch</span>
+    <span class="n">distance_to_line</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">distance_to_line</span><span class="p">,</span> <span class="n">pitch</span> <span class="o">-</span> <span class="n">distance_to_line</span><span class="p">)</span>
+
+    <span class="c1"># Wherever distance_to_line &lt; (line_width / 2), we set the intensity</span>
+    <span class="n">line_mask</span> <span class="o">=</span> <span class="n">distance_to_line</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">line_width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">grid</span><span class="p">[</span><span class="n">line_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">intensity</span>
+
+    <span class="k">return</span> <span class="n">grid</span></div>
+
+
+<div class="viewcode-block" id="make_circle_grid">
+<a class="viewcode-back" href="../source/ShapesGenerator.html#ShapesGenerator.make_circle_grid">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_circle_grid</span><span class="p">(</span><span class="n">im_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    AI-generated function.</span>
+
+<span class="sd">    Generate a 2D grid of circles with specified spacing and radius.</span>
+
+<span class="sd">    Creates a square image with circles arranged in a regular grid pattern.</span>
+<span class="sd">    Each circle has the same radius and intensity value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    im_size : int, optional</span>
+<span class="sd">        Size of the square image in pixels. Default is 128.</span>
+<span class="sd">    spacing : int, optional</span>
+<span class="sd">        Distance between circle centers in pixels. Default is 16.</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        Radius of each circle in pixels. Default is 5.</span>
+<span class="sd">    value : float, optional</span>
+<span class="sd">        Intensity value assigned to pixels within circles. Default is 1.0.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        2D array of shape (im_size, im_size) containing the circle grid pattern.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">im_size</span><span class="p">,</span> <span class="n">im_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">yy</span><span class="p">,</span> <span class="n">xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">spacing</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">im_size</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cy</span> <span class="ow">in</span> <span class="n">centres</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">cx</span> <span class="ow">in</span> <span class="n">centres</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">yy</span> <span class="o">-</span> <span class="n">cy</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">xx</span> <span class="o">-</span> <span class="n">cx</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">radius</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">img</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">img</span></div>
 
 </pre></div>
 
@@ -186,7 +386,7 @@
 
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Valerii Brudanin (TU Delft).
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     </div>
   </body>
 </html>

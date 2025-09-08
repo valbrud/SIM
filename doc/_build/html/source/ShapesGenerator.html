@@ -38,27 +38,36 @@
   <section id="module-ShapesGenerator">
 <span id="shapesgenerator-module"></span><h1>ShapesGenerator module<a class="headerlink" href="#module-ShapesGenerator" title="Link to this heading">¶</a></h1>
 <p>ShapesGenerator.py</p>
-<p>This module contains functions for generating various simulated images used in simulations.</p>
+<p>This module provides functions for generating various model objects.</p>
+<dl class="simple">
+<dt>Functions:</dt><dd><p>generate_random_spherical_particles - Generate 3D arrays with randomly positioned spherical particles
+generate_sphere_slices - Generate 3D arrays with random spheres confined to a thin slice
+generate_random_lines - Generate n-D images filled with randomly oriented line segments
+generate_line_grid_2d - Generate 2D regular line grids with random orientation and position
+make_circle_grid - Generate 2D grids of circles with specified spacing and radius</p>
+</dd>
+</dl>
+<p>All functions support customizable parameters for size, intensity, and geometric properties
+to facilitate diverse simulation scenarios.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="ShapesGenerator.generate_line_grid_2d">
-<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_line_grid_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_line_grid_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_line_grid_2d" title="Link to this definition">¶</a></dt>
-<dd><p>Generate a 2D regular line grid with a given pitch, random orientation,
-and random initial position.</p>
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_line_grid_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_line_grid_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_line_grid_2d" title="Link to this definition">¶</a></dt>
+<dd><p>AI-generated function.</p>
+<p>Generate a 2D regular line grid with random orientation and position.</p>
+<p>Creates a 2D image with parallel lines arranged in a regular grid pattern.
+The orientation and initial position of the grid are randomized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image_size</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Height and width of the 2D image.</p></li>
-<li><p><strong>pitch</strong> (<em>float</em>) – Distance between lines.</p></li>
-<li><p><strong>line_width</strong> (<em>float</em>) – Width of the lines.</p></li>
-<li><p><strong>intensity</strong> (<em>float</em>) – Intensity (value) assigned to the pixels where lines exist.</p></li>
+<li><p><strong>image_size</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Height and width of the 2D image in pixels.</p></li>
+<li><p><strong>pitch</strong> (<em>float</em>) – Distance between adjacent lines in pixels.</p></li>
+<li><p><strong>line_width</strong> (<em>float</em>) – Width of each line in pixels.</p></li>
+<li><p><strong>intensity</strong> (<em>float</em>) – Intensity value assigned to pixels within the lines.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>2D array of shape (image_size[0], image_size[1])</dt><dd><p>with the generated line grid.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>2D array of shape (image_size[0], image_size[1]) containing
+the generated line grid pattern.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
@@ -68,40 +77,50 @@ and random initial position.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ShapesGenerator.generate_random_lines">
-<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_lines" title="Link to this definition">¶</a></dt>
-<dd><p>Generate an image with randomly oriented lines.</p>
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_lines" title="Link to this definition">¶</a></dt>
+<dd><p>AI-generated functions.</p>
+<p>Generate an n-D image (2-D or 3-D) filled with randomly oriented line segments.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>point_number</strong> – Number of points defining the size of the image grid (image will be point_number x point_number).</p></li>
-<li><p><strong>image_size</strong> – Tuple of (psf_x_size, psf_y_size) defining scaling in x and y directions.</p></li>
-<li><p><strong>line_width</strong> – Width of the lines.</p></li>
-<li><p><strong>num_lines</strong> – Number of lines to generate.</p></li>
-<li><p><strong>intensity</strong> – Total intensity of each line.</p></li>
+<li><p><strong>image_size</strong> (<em>(</em><em>Dx</em><em>, </em><em>Dy</em><em>) or </em><em>(</em><em>Dx</em><em>, </em><em>Dy</em><em>, </em><em>Dz</em><em>)</em>) – Physical size of the PSF support along each axis.</p></li>
+<li><p><strong>point_number</strong> (<em>int</em><em> or </em><em>(</em><em>Ny</em><em>, </em><em>Nx</em><em>) or </em><em>(</em><em>Nz</em><em>, </em><em>Ny</em><em>, </em><em>Nx</em><em>)</em>) – Number of pixels/voxels along each axis of the output grid.
+• If a single int is given it is used for <em>every</em> dimension.</p></li>
+<li><p><strong>line_width</strong> (<em>float</em><em> or </em><em>(</em><em>σx</em><em>, </em><em>σy</em><em>[</em><em>, </em><em>σz</em><em>]</em><em>)</em>) – Standard deviation (in pixels) of the Gaussian blur that widens the
+infinitely thin lines.  A scalar is replicated to all axes.</p></li>
+<li><p><strong>num_lines</strong> (<em>int</em>) – How many line segments to draw.</p></li>
+<li><p><strong>intensity</strong> (<em>float</em>) – Total integrated intensity of <em>each</em> line segment.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Generated image with lines.</p>
+<dd class="field-even"><p><strong>img</strong> – • shape (Ny, Nx)               if <cite>image_size</cite> has length 2
+• shape (Nz, Ny, Nx)           if <cite>image_size</cite> has length 3</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ShapesGenerator.generate_random_spherical_particles">
-<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_spherical_particles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">image_size:</span> <span class="pre">~numpy.ndarray[[&lt;class</span> <span class="pre">'int'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'int'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'int'&gt;],</span> <span class="pre">~numpy.int64],</span> <span class="pre">point_number:</span> <span class="pre">int,</span> <span class="pre">r=0.1,</span> <span class="pre">N=10,</span> <span class="pre">I=1000</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_spherical_particles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_spherical_particles" title="Link to this definition">¶</a></dt>
-<dd><p>Generates an array with random spheres.</p>
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_random_spherical_particles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_random_spherical_particles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_random_spherical_particles" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 3D array containing randomly positioned spherical particles.</p>
+<p>Creates a 3D volume with spheres of specified radius placed at random positions.
+Each sphere contributes a constant intensity to all voxels within its volume.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image_size</strong> (<em>np.ndarray</em><em>[</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em><em>, </em><em>np.int64</em><em>]</em>) – Size of the point spread function in each dimension.</p></li>
-<li><p><strong>point_number</strong> (<em>int</em>) – Number of points in each dimension.</p></li>
-<li><p><strong>r</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of the spheres. Defaults to 0.1.</p></li>
-<li><p><strong>N</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of spheres to generate. Defaults to 10.</p></li>
-<li><p><strong>I</strong> (<em>int</em><em>, </em><em>optional</em>) – Intensity of the spheres. Defaults to 1000.</p></li>
+<li><p><strong>image_size</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Physical size of the 3D volume in each dimension (sx, sy, sz).</p></li>
+<li><p><strong>point_number</strong> (<em>int</em>) – Number of grid points along each dimension for discretization.</p></li>
+<li><p><strong>r</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of each sphere. Default is 0.1.</p></li>
+<li><p><strong>N</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of spheres to generate. Default is 10.</p></li>
+<li><p><strong>I</strong> (<em>float</em><em>, </em><em>optional</em>) – Intensity value added to voxels within each sphere. Default is 1000.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Array with random spheres.</p>
+<dd class="field-even"><p>3D array of shape (point_number, point_number, point_number) containing
+the generated spherical particles.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
@@ -111,20 +130,49 @@ and random initial position.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ShapesGenerator.generate_sphere_slices">
-<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_sphere_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_sphere_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_sphere_slices" title="Link to this definition">¶</a></dt>
-<dd><p>Generates a thin slice with random spheres.</p>
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">generate_sphere_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">I</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ShapesGenerator.html#generate_sphere_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.generate_sphere_slices" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 3D array with random spheres confined to a thin slice.</p>
+<p>Creates a 3D volume with spheres positioned randomly in the XY plane but
+constrained to a thin slice in the Z direction (centered at z=0).
+Useful for simulating 2D-like structures in 3D space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image_size</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Size of the point spread function in each dimension.</p></li>
-<li><p><strong>point_number</strong> (<em>int</em>) – Number of points in each dimension.</p></li>
-<li><p><strong>r</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of the spheres. Defaults to 0.1.</p></li>
-<li><p><strong>N</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of spheres to generate. Defaults to 10.</p></li>
-<li><p><strong>I</strong> (<em>int</em><em>, </em><em>optional</em>) – Intensity of the spheres. Defaults to 1000.</p></li>
+<li><p><strong>image_size</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>int</em><em>]</em>) – Physical size of the 3D volume in each dimension (sx, sy, sz).</p></li>
+<li><p><strong>point_number</strong> (<em>int</em>) – Number of grid points along each dimension for discretization.</p></li>
+<li><p><strong>r</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of each sphere. Default is 0.1.</p></li>
+<li><p><strong>N</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of spheres to generate. Default is 10.</p></li>
+<li><p><strong>I</strong> (<em>float</em><em>, </em><em>optional</em>) – Intensity value added to voxels within each sphere. Default is 1000.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A thin slice of random spheres.</p>
+<dd class="field-even"><p>3D array of shape (point_number, point_number, point_number) containing
+the generated spherical particles in a thin slice.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ShapesGenerator.make_circle_grid">
+<span class="sig-prename descclassname"><span class="pre">ShapesGenerator.</span></span><span class="sig-name descname"><span class="pre">make_circle_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">im_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ShapesGenerator.html#make_circle_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ShapesGenerator.make_circle_grid" title="Link to this definition">¶</a></dt>
+<dd><p>AI-generated function.</p>
+<p>Generate a 2D grid of circles with specified spacing and radius.</p>
+<p>Creates a square image with circles arranged in a regular grid pattern.
+Each circle has the same radius and intensity value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>im_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Size of the square image in pixels. Default is 128.</p></li>
+<li><p><strong>spacing</strong> (<em>int</em><em>, </em><em>optional</em>) – Distance between circle centers in pixels. Default is 16.</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of each circle in pixels. Default is 5.</p></li>
+<li><p><strong>value</strong> (<em>float</em><em>, </em><em>optional</em>) – Intensity value assigned to pixels within circles. Default is 1.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>2D array of shape (im_size, im_size) containing the circle grid pattern.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>

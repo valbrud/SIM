@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import Sources
 import wrappers
-import stattools
+import utils
 import config.BFPConfigurations as confs
 from Illumination import Illumination
 from VectorOperations import VectorOperations
@@ -177,7 +177,7 @@ class Box:
         self.compute_electric_field()
         self.compute_intensity_from_electric_field()
         self.compute_intensity_fourier_space()
-        fourier_peaks, amplitudes = stattools.estimate_localized_peaks(self.intensity_fourier_space, self.frequency_axes)
+        fourier_peaks, amplitudes = utils.estimate_localized_peaks(self.intensity_fourier_space, self.frequency_axes)
         numeric_spatial_waves = []
         for fourier_peak, amplitude in zip(fourier_peaks, amplitudes):
             numeric_spatial_waves.append(Sources.IntensityHarmonic3D(amplitude, 0, 2 * np.pi * np.array(fourier_peak)))

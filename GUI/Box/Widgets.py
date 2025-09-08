@@ -1,11 +1,17 @@
 """
-GUIWidgets.py
+Widgets.py
 
-This module contains utility widgets for the GUI components.
+This module contains GUI widget classes for configuring and displaying different types of sources
+in the application.
 
-This module and related ones is currently a demo-version of the user-interface, and will
-possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
-documentation is provided.
+The widgets allow users to interactively set parameters for sources such as intensity harmonics,
+plane waves, and point sources, and display their configurations.
+
+Classes:
+    SourceWidget: Abstract base class for source widgets.
+    IntensityHarmonic3DWidget: Widget for IntensityHarmonic3D sources.
+    PlaneWaveWidget: Widget for PlaneWave sources.
+    PointSourceWidget: Widget for PointSource sources.
 """
 import os
 import sys
@@ -20,55 +26,110 @@ from GUI.Box.InitializationWidgets import *
 
 
 class SourceWidget(QWidget):
+    """
+    Abstract base class for source configuration widgets.
+
+    This class provides a common interface for widgets that allow users to configure
+    different types of sources in the SIM simulation.
+
+    Attributes:
+        identifier (int): Unique identifier for the widget instance.
+    """
     identifier = 0
     isDeleted = pyqtSignal(int)
+
     @abstractmethod
     def __init__(self, source=None):
+        """
+        Initialize the source widget.
+
+        Args:
+            source: The source object to configure or display.
+        """
         super().__init__()
         self.identifier = SourceWidget.identifier
         SourceWidget.identifier += 1
 
     @abstractmethod
-    def init_ui(self, source): ...
+    def init_ui(self, source):
+        """
+        Initialize the user interface for the widget.
+
+        Args:
+            source: The source object.
+        """
+        ...
 
     @abstractmethod
-    def contextMenuEvent(self, event): ...
+    def contextMenuEvent(self, event):
+        """
+        Handle right-click context menu events.
+
+        Args:
+            event (QContextMenuEvent): The context menu event.
+        """
+        ...
 
     def remove_widget(self):
+        """
+        Remove the widget and emit deletion signal.
+        """
         self.isDeleted.emit(self.identifier)
         self.close()
+
     @abstractmethod
-    def change_widget(self): ...
+    def change_widget(self):
+        """
+        Change the widget's configuration.
+        """
+        ...
 
 
 class IntensityHarmonic3DWidget(SourceWidget):
+    """
+    Widget for configuring and displaying IntensityHarmonic3D sources.
+
+    This widget provides an interface to input parameters for an intensity harmonic 3D source,
+    including amplitude, phase, and wavevector components. It can display a pre-configured source
+    or allow user input for a new one.
+
+    Attributes:
+        isSet (pyqtSignal): Signal emitted when the source is configured.
+        intensity_plane_wave (IntensityHarmonic3D): The configured source object.
+        data_widget (IntensityHarmonic3DInitializationWidget): The input widget for parameters.
+    """
     isSet = pyqtSignal(bool)
+
     def __init__(self, ipw=None):
         super().__init__(ipw)
         self.init_ui(ipw)
 
     def init_ui(self, ipw):
-
         if not ipw:
             layout = QVBoxLayout()
             self.data_widget = IntensityHarmonic3DInitializationWidget()
             layout.addWidget(self.data_widget)
             self.setLayout(layout)
             self.data_widget.sendInfo.connect(self.on_receive_info)
-
         else:
             self.intensity_plane_wave = ipw
-
             layout = QVBoxLayout()
             layout.addWidget(QLabel('IntensityHarmonic3D'))
             layout.addWidget(QLabel('A = ' + str(ipw.amplitude)))
             layout.addWidget(QLabel('Phase = ' + str(ipw.phase.real)))
             layout.addWidget(QLabel('Wavevector = ' + str(ipw.wavevector)))
-
             self.setLayout(layout)
-            # self.isSet.emit(True)
 
     def on_receive_info(self, info):
+        """
+        Process the input information from the initialization widget.
+
+        Parses the input, creates the source object, updates the display,
+        and emits the configuration signal.
+
+        Args:
+            info (list): List of input values [amplitude, phase, kx, ky, kz].
+        """
         try:
             A, phase = [complex(value) for value in info[:2]]
             wavevector = [float(value) for value in info[2:]]
@@ -110,7 +171,6 @@ class IntensityHarmonic3DWidget(SourceWidget):
         context_menu.addAction(change_action)
 
         context_menu.exec_(event.globalPos())
-
 
     def change_widget(self):
         # Get current values
@@ -162,6 +222,19 @@ class IntensityHarmonic3DWidget(SourceWidget):
 
 
 class PlaneWaveWidget(SourceWidget):
+    """
+    Widget for configuring and displaying PlaneWave sources.
+
+    This widget allows users to set parameters for a plane wave source,
+    including field vectors, phases, and wavevector. It displays the configured
+    source or provides input fields for a new one.
+
+    Attributes:
+        isSet (pyqtSignal): Signal emitted when the source is configured.
+        isDeleted (pyqtSignal): Signal emitted when the widget is deleted.
+        plane_wave (PlaneWave): The configured source object.
+        data_widget (PlaneWaveInitializationWidget): The input widget for parameters.
+    """
     isSet = pyqtSignal(bool)
     isDeleted = pyqtSignal(int)
 
@@ -191,6 +264,15 @@ class PlaneWaveWidget(SourceWidget):
             # self.isSet.emit(True)
 
     def on_receive_info(self, info):
+        """
+        Process the input information from the initialization widget.
+
+        Parses the input, creates the source object with real phases, updates the display,
+        and emits the configuration signal.
+
+        Args:
+            info (list): List of input values [Ep, Es, phasep, phases, kx, ky, kz].
+        """
         try:
             Ep, Es, phasep, phases = [complex(value) for value in info[:4]]
             wavevector = [float(value) for value in info[4:]]
@@ -279,6 +361,20 @@ class PlaneWaveWidget(SourceWidget):
         self.deleteLater()
 
 class PointSourceWidget(SourceWidget):
+    """
+    Widget for configuring and displaying PointSource sources.
+
+    This widget allows users to set parameters for a point source,
+    including coordinates and brightness. It displays the configured
+    source or provides input fields for a new one.
+
+    Attributes:
+        isSet (pyqtSignal): Signal emitted when the source is configured.
+        coordinates (numpy.ndarray): The 3D coordinates of the point source.
+        brightnes (float): The brightness of the point source.
+        point_source (PointSource): The configured source object.
+        data_widget (PointSourceInitializationWidget): The input widget for parameters.
+    """
     isSet = pyqtSignal(bool)
 
     def __init__(self):
@@ -299,12 +395,29 @@ class PointSourceWidget(SourceWidget):
         self.data_widget.sendBrightness.connect(self.on_receive_brightness)
 
     def on_receive_brightness(self, brightness):
+        """
+        Update the brightness value.
+
+        Args:
+            brightness (float): The new brightness value.
+        """
         self.brightnes = float(brightness)
 
     def on_receive_coordinates(self, coordinates):
+        """
+        Update the coordinates.
+
+        Args:
+            coordinates (tuple): The new coordinates.
+        """
         self.coordinates = np.array(coordinates)
 
     def on_click_ok(self):
+        """
+        Handle the OK button click.
+
+        Creates the source object, updates the display, and emits the configuration signal.
+        """
         layout = QVBoxLayout()
         layout.addWidget(QLabel('PointSource'))
         layout.addWidget(QLabel(str(self.coordinates)))

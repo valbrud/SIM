@@ -1,11 +1,14 @@
 """
-GUI.py
+MainWindow.py
 
-This module contains the main graphical user interface (GUI) components of the application.
+This module contains the main window class for the GUI application. It provides the interface
+for creation and uploading of interference patterns with different electromagnetic plane waves. 
 
-This module and related ones is currently a demo-version of the user-interface, and will
-possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
-documentation is provided.
+The MainWindow class provides the primary interface for users to configure simulations,
+add sources and view plots.
+
+Classes:
+    MainWindow: The main application window.
 """
 
 import os
@@ -40,7 +43,26 @@ class PlottingMode(Enum):
 
 
 class MainWindow(QMainWindow):
+    """
+    Main window for the SIM simulation GUI.
+
+    This class manages the overall application interface, including source configuration,
+    plotting, and simulation control.
+
+    Attributes:
+        box (Box): The SIM box containing sources and simulation parameters.
+        canvas (FigureCanvas): Matplotlib canvas for plotting.
+        sources_layout (QVBoxLayout): Layout for source widgets.
+        plotting_mode (PlottingMode): Current plotting mode.
+    """
+
     def __init__(self, box=None):
+        """
+        Initialize the main window.
+
+        Args:
+            box (Box, optional): Pre-configured SIM box.
+        """
         super().__init__()
 
         np.set_printoptions(precision=2, suppress=True)
@@ -59,6 +81,12 @@ class MainWindow(QMainWindow):
         self.plotting_mode = PlottingMode.linear
 
     def init_ui(self):
+        """
+        Initialize the user interface components.
+
+        Sets up the main window layout, including plotting area, source management,
+        and control buttons.
+        """
         width = 1200
         height = 800
         self.setMinimumSize(width, height)
@@ -194,12 +222,18 @@ class MainWindow(QMainWindow):
             self.load_config()
 
     def save_config(self):
+        """
+        Save the current illumination configuration to a file (NOT IMPLEMENTED YET). 
+        """
         filename, _ = QFileDialog.getSaveFileName(self, "Save Config", "", "Config Files (*.cfg)")
         if filename:
             # Save the config logic here
             print(f"Saving config to {filename}")
 
     def load_config(self):
+        """
+        Load a predefined illumination configuration from the configuration file. 
+        """
         Widgets.SourceWidget.identifier = 0
         filename, _ = QFileDialog.getOpenFileName(self, "Load Config", "", "Config Files (*.conf)")
         filename = os.path.basename(filename)
@@ -234,11 +268,24 @@ class MainWindow(QMainWindow):
                     widget.deleteLater()
 
     def add_to_box(self, initialized, source):
+        """
+        Add a source to the SIM box if initialized.
+
+        Args:
+            initialized (bool): Whether the source is properly configured.
+            source: The source object to add.
+        """
         if initialized:
             self.box.add_source(source)
             print("source_added")
 
     def add_source(self, source):
+        """
+        Add a source widget to the UI based on its type.
+
+        Args:
+            source: The source object.
+        """
         if type(source) == Sources.IntensityHarmonic3D:
             self.add_intensity_plane_wave(source)
         if type(source) == Sources.PlaneWave:
@@ -280,11 +327,17 @@ class MainWindow(QMainWindow):
             return np.log10(1 + 10**4 * Z)
 
     def change_plotting_mode(self):
+        """
+        Change the representation of the graphical data. 
+        """
         modes = list(PlottingMode)
         self.plotting_mode = modes[(self.plotting_mode.value + 1) % len(modes)]
         self.plot_intensity_slices()
 
     def choose_view3d(self, array, number):
+        """
+        Choose the appropriate 2D slice from the 3D array based on the current view.
+        """
         if self.view == View.XY:
             Z = array[:, :, number].T
         elif self.view == View.YZ:
@@ -299,6 +352,9 @@ class MainWindow(QMainWindow):
         self.plot_intensity_slices()
 
     def plot_intensity_slices(self, intensity = None):
+        """
+        Plot the intensity slices of the 3D volume.
+        """
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
         ax.set_aspect('equal')
@@ -354,6 +410,9 @@ class MainWindow(QMainWindow):
         self.slider.valueChanged.connect(update)
 
     def plot_fourier_space_slices(self, intensity = None):
+        """
+        Plot the numeric intensity in the Fourier Domain. 
+        """
         self.canvas.figure.clear()
         ax = self.canvas.figure.add_subplot(111)
         ax.set_aspect('equal')
@@ -457,6 +516,9 @@ class MainWindow(QMainWindow):
         self.canvas.figure.gca().arrow(0., 0., *self.box.illumination.spatial_shifts[self.shift_number][:2], width=0.1, color='red')
 
     def get_ipw_from_pw(self):
+        """
+        Get the analytic Fourier transforms and corresponding Harmonic Objects from electromagnetic plane waves.
+        """
         for source in Sources.IlluminationHarmonic3D.find_ipw_from_pw(self.box.get_plane_waves()):
             self.add_source(source)
             self.box.add_source(source)

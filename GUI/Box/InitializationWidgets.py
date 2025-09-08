@@ -1,11 +1,17 @@
 """
-GUIInitializationWidgets.py
+InitializationWidgets.py
 
-This module contains classes and functions for initializing GUI widgets.
+This module contains widget classes for initializing parameters of different source types
+in the GUI.
 
-This module and related ones is currently a demo-version of the user-interface, and will
-possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
-documentation is provided.
+These widgets provide input fields for users to enter parameters such as amplitudes,
+phases, and wavevectors for sources like intensity harmonics and plane waves.
+
+Classes:
+    InitializationWidget: Abstract base class for initialization widgets.
+    IntensityHarmonic3DInitializationWidget: Widget for IntensityHarmonic3D parameters.
+    PlaneWaveInitializationWidget: Widget for PlaneWave parameters.
+    PointSourceInitializationWidget: Widget for PointSource parameters.
 """
 
 
@@ -25,18 +31,43 @@ from abc import abstractmethod
 
 
 class InitializationWidget(QWidget):
+    """
+    Abstract base class for source initialization widgets.
+
+    Provides a common structure for widgets that collect user input for source parameters.
+    """
+
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
 
     @abstractmethod
-    def request_data(self): ...
+    def request_data(self):
+        """
+        Set up the input fields for the widget.
+        """
+        ...
 
     @abstractmethod
-    def on_click_ok(self): ...
+    def on_click_ok(self):
+        """
+        Handle the OK button click to process and emit the input data.
+        """
+        ...
 
 
 class PlaneWaveInitializationWidget(InitializationWidget):
+    """
+    Widget for initializing PlaneWave source parameters.
+
+    Provides input fields for electric field components, phases, and wavevector.
+
+    Attributes:
+        sendInfo (pyqtSignal): Signal emitted with the collected parameters.
+        Ep, Es (QLineEdit): Input fields for electric field components.
+        phasep, phases (QLineEdit): Input fields for phases.
+        kx, ky, kz (QLineEdit): Input fields for wavevector components.
+    """
     sendInfo = pyqtSignal(list)
 
     def __init__(self):
@@ -117,6 +148,16 @@ class PlaneWaveInitializationWidget(InitializationWidget):
 
 
 class IntensityHarmonic3DInitializationWidget(InitializationWidget):
+    """
+    Widget for initializing IntensityHarmonic3D source parameters.
+
+    Provides input fields for amplitude, phase, and wavevector components.
+
+    Attributes:
+        sendInfo (pyqtSignal): Signal emitted with the collected parameters.
+        A (QLineEdit): Input field for amplitude.
+        phase (QLineEdit): Input field for phase.
+        kx, ky, kz (QLineEdit): Input fields for wavevector components.    """
     sendInfo = pyqtSignal(list)
 
     def __init__(self):
@@ -187,6 +228,17 @@ class IntensityHarmonic3DInitializationWidget(InitializationWidget):
 
 
 class PointSourceInitializationWidget(InitializationWidget):
+    """
+    Widget for initializing PointSource parameters.
+
+    Provides input fields for coordinates and brightness.
+
+    Attributes:
+        sendCoordinates (pyqtSignal): Signal emitted with the coordinates.
+        sendBrightness (pyqtSignal): Signal emitted with the brightness.
+        x_input, y_input, z_input (QLineEdit): Input fields for coordinates.
+        brightess_input (QLineEdit): Input field for brightness.
+    """
     sendCoordinates = pyqtSignal(tuple)
     sendBrightness = pyqtSignal(float)
     non_numbers = ['', '-']

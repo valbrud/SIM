@@ -1,3 +1,19 @@
+"""
+Reconstructor.py
+
+This module provides classes for reconstructing images from Structured Illumination Microscopy (SIM) data.
+It implements various reconstruction algorithms in both Fourier and spatial domains for 2D and 3D SIM imaging.
+
+Classes:
+    ReconstructorSIM - Base abstract class for SIM reconstruction
+    ReconstructorFourierDomain - Fourier domain reconstruction implementation
+    ReconstructorSpatialDomain - Spatial domain reconstruction implementation
+    ReconstructorFourierDomain2D - 2D Fourier domain reconstruction
+    ReconstructorSpatialDomain2D - 2D spatial domain reconstruction
+    ReconstructorFourierDomain3D - 3D Fourier domain reconstruction
+    ReconstructorSpatialDomain3D - 3D spatial domain reconstruction
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
@@ -10,7 +26,7 @@ from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPl
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
-import stattools
+import utils
 from windowing import make_mask_cosine_edge2d
 class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     """
@@ -38,6 +54,22 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                  phase_modulation_patterns=None,
                  **kwargs
                  ):
+        """
+        Initialize the SIM reconstructor.
+
+        Parameters
+        ----------
+        illumination : PlaneWavesSIM
+            The illumination configuration for the SIM experiment.
+        optical_system : OpticalSystem, optional
+            The optical system used in the experiment.
+        kernel : numpy.ndarray, optional
+            The kernel used for convolution in spatial domain reconstruction.
+        phase_modulation_patterns : numpy.ndarray, optional
+            Precomputed phase modulation patterns for the reconstruction.
+        **kwargs
+            Additional keyword arguments.
+        """
         self.illumination = illumination
         self.optical_system = optical_system
 
@@ -52,14 +84,62 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
             self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
     @abstractmethod
-    def reconstruct(self, sim_images):
+    def reconstruct(self, sim_images, upsample_factor=2):
+        """
+        Generate a row reconstructed image from SIM data.
+
+        .. math::
+           I^{SR} = h_n \\left( \\sum_n K \\ast I_n \\right)
+
+        The image is super-resolved, but not deconvolved, 
+        so that the contrast is expected to be low. 
+
+        Parameters
+        ----------
+        sim_images : numpy.ndarray
+            The SIM images to reconstruct from.
+        upsample_factor: int
+            The factor by which to upsample the reconstructed image.
+        Returns
+        -------
+        numpy.ndarray
+            The reconstructed image.
+        """
         ...
     
     def upsample(self, sim_images, factor=2):
-        upsampled = np.array([np.array([stattools.upsample(image, factor=factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
+        """
+        Upsample the SIM images by the given factor.
+
+        Parameters
+        ----------
+        sim_images : numpy.ndarray
+            The SIM images to upsample.
+        factor : int, optional
+            The upsampling factor. Default is 2.
+
+        Returns
+        -------
+        numpy.ndarray
+            The upsampled SIM images.
+        """
+        upsampled = np.array([np.array([utils.upsample(image, factor=factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
         return upsampled
     
     def get_widefield(self, sim_images):
+        """
+        Compute the widefield image from SIM data by summing all images.
+
+        Parameters
+        ----------
+        sim_images : numpy.ndarray
+            The SIM images.
+
+        Returns
+        -------
+        numpy.ndarray
+            The widefield image.
+        """
         widefield_image = np.zeros(sim_images.shape[2:])
         for rotation in sim_images:
             test = np.zeros(sim_images.shape[2:])
@@ -72,6 +152,12 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
 
 
 class ReconstructorFourierDomain(ReconstructorSIM):
+    """
+    Fourier domain reconstruction for SIM images.
+    
+    This class implements SIM reconstruction in the Fourier domain using
+    effective kernels and phase modulation patterns.
+    """
 
     def __init__(self,
                  illumination: PlaneWavesSIM,
@@ -82,6 +168,18 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                  return_ft=False,
                  **kwargs
                  ):
+        """
+        Initialization is the same as of the base class + extra parameter that may be needed
+        for numeric efficiency. 
+
+        Parameters
+        ----------
+        effective_kernels : numpy.ndarray, optional
+            Precomputed effective kernels for reconstruction.
+        return_ft : bool, optional
+            Whether to return the Fourier transform instead of the spatial image.
+
+        """
         
         super().__init__(illumination,
                          optical_system,
@@ -89,7 +187,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                          phase_modulation_patterns=phase_modulation_patterns)
         
         if kernel is not None: 
-            self.kernel = stattools.expand_kernel(kernel, self.optical_system.otf.shape)
+            self.kernel = utils.expand_kernel(kernel, self.optical_system.otf.shape)
 
         if effective_kernels:
             self.effective_kernels = effective_kernels
@@ -103,13 +201,33 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         self.return_ft = return_ft
 
     def _compute_shifted_image_ft(self, image, r, m):
+        """
+        Compute the Fourier transform of a phase-shifted image.
+
+        Parameters
+        ----------
+        image : numpy.ndarray
+            The input image.
+        r : int
+            Rotation index.
+        m : int
+            Modulation index.
+
+        Returns
+        -------
+        numpy.ndarray
+            The Fourier transform of the phase-shifted image.
+        """
         phase_shifted = image * self.phase_modulation_patterns[r, m]
         shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
         return shifted_image_ft
 
-    def reconstruct(self, sim_images, upsample=False):
-        if upsample:
-            sim_images = self.upsample(sim_images)
+    def reconstruct(self, sim_images, upsample_factor=2):
+        """
+        Explicitely performs SIM reconstruction in the Fourier domain.
+        """
+        if upsample_factor > 1:
+            sim_images = self.upsample(sim_images, upsample_factor)
         # Notations are as in C. Smith et al., "Structured illumination microscopy with noise-controlled image reconstructions", 2021
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
@@ -136,6 +254,12 @@ class ReconstructorFourierDomain(ReconstructorSIM):
 
 
 class ReconstructorSpatialDomain(ReconstructorSIM):
+    """
+    Spatial domain reconstruction for SIM images.
+    
+    This class implements SIM reconstruction in the spatial domain using
+    convolution with illumination patterns.
+    """
 
     def __init__(self,
                  illumination: PlaneWavesSIM,
@@ -169,9 +293,12 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
 
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
-    def reconstruct(self, sim_images, upsample=False):
-        if upsample:
-            sim_images = self.upsample(sim_images)
+    def reconstruct(self, sim_images, upsample_factor=1):
+        """
+        Explicitely performs SIM reconstruction in the spatial domain.
+        """
+        if upsample_factor > 1:
+            sim_images = self.upsample(sim_images, upsample_factor)
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
         for r in range(sim_images.shape[0]):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
@@ -199,7 +326,7 @@ class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
                  return_ft=False,
                  **kwargs
                  ):
-        
+
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise TypeError("illumination must be an instance of IlluminationPlaneWaves2D")
         

@@ -1,5 +1,5 @@
 """
-stattools.py
+utils.py
 
 This module contains commonly used operations on arrays, required in the context of our work.
 """
@@ -278,7 +278,7 @@ def expand_ring_averages3d(averaged: np.ndarray[tuple[int, int], ...], axes: tup
 def estimate_localized_peaks(array, axes):
     """
     Estimates localized peaks in a 3D array.
-    Current implementation is inefficient and will be replaced.
+    This particular implementation is very bad but quite universal.
 
     Args:
         array (np.ndarray): 3D array to analyze.
@@ -387,6 +387,8 @@ def downsample_circular_function(dense_function, small_size):
 
 def reverse_interpolation_nearest(x_axis, y_axis, points, values):
     """
+    AI-generated function. 
+
     Interpolate values from known points to a grid, affecting only the nearest grid cells.
 
     Parameters:
@@ -464,106 +466,6 @@ def expand_kernel(kernel: np.ndarray, target_shape: tuple[int]) -> np.ndarray:
         kernel_expanded[tuple(slices)] = kernel
         kernel = kernel_expanded
     return kernel
-
-def introduce_field_aberrations(image: np.ndarray, mode: str = "reflect"):
-    if image.ndim not in (2, 3):
-        raise ValueError("image must be 2‑D or 3‑D.")
-    img = image.astype(np.float32)
-    H, W = img.shape[:2]
-    Ny, Nx = H, W
-
-    # Coordinate grids (centred)
-    y = np.arange(H) - H // 2
-    x = np.arange(W) - W // 2
-    X, Y = np.meshgrid(x, y)
-
-    s_x = np.sin(X / Nx)
-    s_y = np.sin(Y / Ny)
-    w_a = s_x * s_y
-    w_b = np.abs(s_y)        # absolute
-    w_c = np.abs(s_x)        # absolute
-    w_0 = 1.0                # scalar
-
-    if img.ndim == 3:
-        w_a = w_a[..., None]
-        w_b = w_b[..., None]
-        w_c = w_c[..., None]
-
-    # Denominator (kernel sum) per pixel
-    denom = 2.0 * w_b + 2.0 * w_c + w_0  # w_a terms cancel
-
-    pad_width = ((1, 1), (1, 1)) + (() if img.ndim == 2 else ((0, 0),))
-    padded = np.pad(img, pad_width, mode=mode)
-
-    TL = padded[0:H,     0:W    ]
-    TC = padded[0:H,     1:W+1  ]
-    TR = padded[0:H,     2:W+2  ]
-    CL = padded[1:H+1,   0:W    ]
-    CC = padded[1:H+1,   1:W+1  ]
-    CR = padded[1:H+1,   2:W+2  ]
-    BL = padded[2:H+2,   0:W    ]
-    BC = padded[2:H+2,   1:W+1  ]
-    BR = padded[2:H+2,   2:W+2  ]
-
-    numer = (
-        w_a * TL + w_b * TC + (-w_a) * TR +
-        w_c * CL + w_0 * CC + w_c * CR +
-        (-w_a) * BL + w_b * BC + w_a * BR
-    )
-
-    out = numer / denom        # per‑pixel normalisation
-    return out.astype(image.dtype)
-
-def radial_fade(image: np.ndarray, fade_level: float = 0.75, power: float = 2.0):
-    """
-    Apply a circularly-symmetric fade (vignetting) so that
-    the image centre keeps full brightness (×1.0) and the extreme
-    corners are scaled by `fade_level`.
-
-    Parameters
-    ----------
-    image : np.ndarray
-        2-D (H×W) or 3-D (H×W×C) array, any numeric dtype.
-    fade_level : float, optional
-        Factor (0 … 1) that the *corners* will be multiplied by.
-        • 0.75 ⇒ corners are 75 % as bright as the centre  
-        • 0.0  ⇒ corners fade completely to black  
-        • 1.0  ⇒ no fade at all
-    power : float, optional
-        Controls how fast the fall-off happens:  
-        1 ≈ linear, 2 ≈ quadratic (classic vignette), >2 ≈ steeper.
-
-    Returns
-    -------
-    np.ndarray
-        Faded image, same shape & dtype as input.
-    """
-    if not (0.0 <= fade_level <= 1.0):
-        raise ValueError("fade_level must be in [0, 1].")
-
-    img = image.astype(np.float32)
-    H, W = img.shape[:2]
-
-    # Radial coordinates centred at the optical axis
-    yy, xx = np.indices((H, W))
-    yy = yy - H / 2.0
-    xx = xx - W / 2.0
-    r = np.hypot(xx, yy)
-    r_norm = r / r.max()                # 0 at centre … 1 at furthest corner
-
-    # Smooth mask: 1 at centre → fade_level at edge
-    mask = fade_level + (1.0 - fade_level) * (1.0 - r_norm**power)
-    if img.ndim == 3:                   # broadcast over colour channels
-        mask = mask[..., None]
-
-    out = img * mask
-    # Clip and cast back so dtype is preserved
-    if np.issubdtype(image.dtype, np.integer):
-        info = np.iinfo(image.dtype)
-        out = np.clip(out, info.min, info.max).astype(image.dtype)
-    else:
-        out = out.astype(image.dtype)
-    return out
 
 def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray:
     # Compute new shape after upsampling

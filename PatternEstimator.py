@@ -46,7 +46,7 @@ from VectorOperations import VectorOperations
 from wrappers import wrapped_fftn, wrapped_ifftn
 from Dimensions import DimensionMetaAbstract
 from abc import abstractmethod
-from stattools import off_grid_ft
+from utils import off_grid_ft
 
 from Illumination import (
     PlaneWavesSIM,

@@ -30,7 +30,7 @@ from wrappers import wrapped_fftn, wrapped_ifftn
 from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
 from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
-import stattools 
+import utils 
 from ResolutionMeasures import frc_one_image
 from otf_decoder import load_fairsim_otf
 
@@ -91,7 +91,7 @@ stack = data.reshape((3, 3, 1660, 1660))
 stack = stack[:, :, 700 - N//2:700 + N//2 + 1, 700 - N//2:700 + N//2+1]
 image = stack[0, 0, ...]
 image_ft = wrapped_fftn(stack[0, 0, ...])
-# noise = stattools.average_rings2d(image_ft**2, optical_system.psf_coordinates)
+# noise = utils.average_rings2d(image_ft**2, optical_system.psf_coordinates)
 # pure_noise_region = image_ft[otf < 10**-3]
 # plt.plot(np.log1p(np.abs(noise)))
 # plt.show()
@@ -303,8 +303,8 @@ ax[0, 1].set_title('Spatial')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_finite.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('Finite')
 
-ratio_spatial = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
-ratio_finite = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_spatial = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_spatial.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_finite.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
@@ -401,11 +401,11 @@ ax[2, 1].imshow(np.log1p(ssnr_spatial_measured), cmap='gray', origin='lower')
 ax[2, 1].set_title('Spatial')
 ax[2, 2].imshow(np.log1p(ssnr_finite_measured), cmap='gray', origin='lower')
 ax[2, 2].set_title('Finite')
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_spatial_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_spatial.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
-ratio_finite_theory = np.where(ssnr_fourier.ring_average__ssnri_approximated(), ssnr_finite.ring_average__ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_spatial = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_finite = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_widefield = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_spatial_theory = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_spatial.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite_theory = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_finite.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[2, 3].plot(ratio_spatial, label='s/ff')
 ax[2, 3].plot(ratio_finite, label='f/f')
 # ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
