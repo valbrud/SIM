@@ -13,6 +13,8 @@ Classes:
 
 import os
 import sys
+
+import Illumination
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '../../..'))
 sys.path.append(project_root)
@@ -519,7 +521,7 @@ class MainWindow(QMainWindow):
         """
         Get the analytic Fourier transforms and corresponding Harmonic Objects from electromagnetic plane waves.
         """
-        for source in Sources.IlluminationHarmonic3D.find_ipw_from_pw(self.box.get_plane_waves()):
+        for source in Illumination.IlluminationPlaneWaves3D.find_ipw_from_pw(self.box.get_plane_waves()):
             self.add_source(source)
             self.box.add_source(source)
 

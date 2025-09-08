@@ -1,5 +1,4 @@
-- Update documentation
-- Make an intermediate 1.5 release
+- Fix problems with a changelog
 - Fix broken unittests
 - Fix 3D Camera class
 - Improve GUI functionality
