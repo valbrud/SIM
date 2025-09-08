@@ -1,32 +1,58 @@
 """
 ShapesGenerator.py
 
-This module contains functions for generating various simulated images used in simulations.
+This module provides functions for generating various model objects. 
+
+Functions:
+    generate_random_spherical_particles - Generate 3D arrays with randomly positioned spherical particles
+    generate_sphere_slices - Generate 3D arrays with random spheres confined to a thin slice
+    generate_random_lines - Generate n-D images filled with randomly oriented line segments
+    generate_line_grid_2d - Generate 2D regular line grids with random orientation and position
+    make_circle_grid - Generate 2D grids of circles with specified spacing and radius
+
+All functions support customizable parameters for size, intensity, and geometric properties
+to facilitate diverse simulation scenarios.
 """
 
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
-def generate_random_spherical_particles(image_size: np.ndarray[[int, int, int], np.int64], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
+def generate_random_spherical_particles(image_size: tuple[int, int, int],
+                                        point_number: int,
+                                        r: float = 0.1,
+                                        N: int = 10,
+                                        I: int = 1000,
+                                        generate_default: bool = False) -> np.ndarray:
     """
-    Generates an array with random spheres.
+    Generate a 3D array containing randomly positioned spherical particles.
 
-    Args:
-        image_size (np.ndarray[[int, int, int], np.int64]): Size of the point spread function in each dimension.
-        point_number (int): Number of points in each dimension.
-        r (float, optional): Radius of the spheres. Defaults to 0.1.
-        N (int, optional): Number of spheres to generate. Defaults to 10.
-        I (int, optional): Intensity of the spheres. Defaults to 1000.
+    Creates a 3D volume with spheres of specified radius placed at random positions.
+    Each sphere contributes a constant intensity to all voxels within its volume.
 
-    Returns:
-        np.ndarray: Array with random spheres.
+    Parameters
+    ----------
+    image_size : tuple[int, int, int]
+        Physical size of the 3D volume in each dimension (sx, sy, sz).
+    point_number : int
+        Number of grid points along each dimension for discretization.
+    r : float, optional
+        Radius of each sphere. Default is 0.1.
+    N : int, optional
+        Number of spheres to generate. Default is 10.
+    I : float, optional
+        Intensity value added to voxels within each sphere. Default is 1000.
+
+    Returns
+    -------
+    np.ndarray
+        3D array of shape (point_number, point_number, point_number) containing
+        the generated spherical particles.
     """
-    # np.random.seed(1234)
-    indices = np.array(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                   np.arange(point_number))).T.reshape(-1, 3)
-    indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
-        point_number, point_number, point_number, 3)
+    if generate_default:
+        np.random.seed(1234)
+    indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
+                                   np.arange(point_number), indexing='ij'), axis=-1)
     grid = (indices / point_number - 1 / 2)
     shape = grid.shape[:3]
     array = np.zeros(shape)
@@ -43,25 +69,42 @@ def generate_random_spherical_particles(image_size: np.ndarray[[int, int, int], 
     return array
 
 
-def generate_sphere_slices(image_size: tuple[int, int, int], point_number: int, r=0.1, N=10, I=1000) -> np.ndarray:
+def generate_sphere_slices(image_size: tuple[int, int, int],
+                           point_number: int,
+                           r: float = 0.1,
+                           N: int = 10,
+                           I: int = 1000,
+                           generate_default: bool = False) -> np.ndarray:
     """
-    Generates a thin slice with random spheres.
+    Generate a 3D array with random spheres confined to a thin slice.
 
-    Args:
-        image_size (tuple[int, int, int]): Size of the point spread function in each dimension.
-        point_number (int): Number of points in each dimension.
-        r (float, optional): Radius of the spheres. Defaults to 0.1.
-        N (int, optional): Number of spheres to generate. Defaults to 10.
-        I (int, optional): Intensity of the spheres. Defaults to 1000.
+    Creates a 3D volume with spheres positioned randomly in the XY plane but
+    constrained to a thin slice in the Z direction (centered at z=0).
+    Useful for simulating 2D-like structures in 3D space.
 
-    Returns:
-        np.ndarray: A thin slice of random spheres.
+    Parameters
+    ----------
+    image_size : tuple[int, int, int]
+        Physical size of the 3D volume in each dimension (sx, sy, sz).
+    point_number : int
+        Number of grid points along each dimension for discretization.
+    r : float, optional
+        Radius of each sphere. Default is 0.1.
+    N : int, optional
+        Number of spheres to generate. Default is 10.
+    I : float, optional
+        Intensity value added to voxels within each sphere. Default is 1000.
+
+    Returns
+    -------
+    np.ndarray
+        3D array of shape (point_number, point_number, point_number) containing
+        the generated spherical particles in a thin slice.
     """
-    np.random.seed(1234)
-    indices = np.array(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                   np.arange(point_number))).T.reshape(-1, 3)
-    indices = indices[np.lexsort((indices[:, 2], indices[:, 1], indices[:, 0]))].reshape(
-        point_number, point_number, point_number, 3)
+    if generate_default:
+        np.random.seed(1234)
+    indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
+                                   np.arange(point_number), indexing='ij'), axis=-1)
     grid = (indices / point_number - 1 / 2)
     shape = grid.shape[:3]
     array = np.zeros(shape)
@@ -89,8 +132,11 @@ def generate_random_lines(
     line_width: float | Sequence[float],
     num_lines: int,
     intensity: float,
+    generate_default: bool = False
 ) -> np.ndarray:
     """
+    AI-generated functions. 
+
     Generate an n-D image (2-D or 3-D) filled with randomly oriented line segments.
 
     Parameters
@@ -113,7 +159,9 @@ def generate_random_lines(
         • shape (Ny, Nx)               if `image_size` has length 2  
         • shape (Nz, Ny, Nx)           if `image_size` has length 3
     """
-    rng = np.random.default_rng(1234)
+    if generate_default:
+        np.random.seed(1234)
+
     dim = len(image_size)
     if dim not in (2, 3):
         raise ValueError("Only 2-D and 3-D images are supported.")
@@ -153,8 +201,8 @@ def generate_random_lines(
     # ------------- draw random line segments --------------------------------
     for _ in range(num_lines):
         # start & end points in physical coordinates
-        p0 = rng.uniform([0]*dim, image_size)
-        p1 = rng.uniform([0]*dim, image_size)
+        p0 = np.random.uniform([0]*dim, image_size)
+        p1 = np.random.uniform([0]*dim, image_size)
 
         # number of sampled points along the segment
         steps = int(
@@ -176,22 +224,38 @@ def generate_line_grid_2d(
         image_size: tuple[int, int],
         pitch: float,
         line_width: float,
-        intensity: float
+        intensity: float,
+        generate_default: bool = False
 ) -> np.ndarray:
     """
-    Generate a 2D regular line grid with a given pitch, random orientation,
-    and random initial position.
+    AI-generated function. 
 
-    Args:
-        image_size (tuple[int, int]): Height and width of the 2D image.
-        pitch (float): Distance between lines.
-        line_width (float): Width of the lines.
-        intensity (float): Intensity (value) assigned to the pixels where lines exist.
+    Generate a 2D regular line grid with random orientation and position.
 
-    Returns:
-        np.ndarray: 2D array of shape (image_size[0], image_size[1])
-                    with the generated line grid.
+    Creates a 2D image with parallel lines arranged in a regular grid pattern.
+    The orientation and initial position of the grid are randomized.
+
+    Parameters
+    ----------
+    image_size : tuple[int, int]
+        Height and width of the 2D image in pixels.
+    pitch : float
+        Distance between adjacent lines in pixels.
+    line_width : float
+        Width of each line in pixels.
+    intensity : float
+        Intensity value assigned to pixels within the lines.
+
+    Returns
+    -------
+    np.ndarray
+        2D array of shape (image_size[0], image_size[1]) containing
+        the generated line grid pattern.
     """
+
+    if generate_default:
+        np.random.seed(1234)
+
     # Unpack size for clarity
     height, width = image_size
 
@@ -231,6 +295,30 @@ def generate_line_grid_2d(
     return grid
 
 def make_circle_grid(im_size=128, spacing=16, radius=5, value=1.0):
+    """
+    AI-generated function.
+
+    Generate a 2D grid of circles with specified spacing and radius.
+
+    Creates a square image with circles arranged in a regular grid pattern.
+    Each circle has the same radius and intensity value.
+
+    Parameters
+    ----------
+    im_size : int, optional
+        Size of the square image in pixels. Default is 128.
+    spacing : int, optional
+        Distance between circle centers in pixels. Default is 16.
+    radius : float, optional
+        Radius of each circle in pixels. Default is 5.
+    value : float, optional
+        Intensity value assigned to pixels within circles. Default is 1.0.
+
+    Returns
+    -------
+    np.ndarray
+        2D array of shape (im_size, im_size) containing the circle grid pattern.
+    """
     img = np.zeros((im_size, im_size), dtype=np.float32)
     yy, xx = np.indices(img.shape)
     centres = np.arange(spacing // 2, im_size, spacing)

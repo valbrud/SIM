@@ -30,7 +30,7 @@ from wrappers import wrapped_fftn, wrapped_ifftn
 from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
 from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
-import stattools 
+import utils 
 from ResolutionMeasures import frc_one_image
 
 # reconstructed_fairSIM = tifffile.imread('data/OMX_Tetraspeck200_680nm_fairSIM_reco.tiff')
@@ -300,8 +300,8 @@ ax[0, 1].set_title('Spatial')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_finite.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('Finite')
 
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+ratio_spatial = utils.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_spatial.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
+ratio_finite = utils.average_rings2d(np.where(ssnr_fourier.ssnri, ssnr_finite.ssnri/ssnr_fourier.ssnri, 0), optical_system.otf_frequencies)[:-10]
 ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
@@ -394,10 +394,10 @@ ax[1, 3].imshow(np.abs(wrapped_ifftn(filtered_widefield)).T, cmap='gray', origin
 ax[1, 3].set_title('Widefield')
 ax[2, 0].imshow(np.log1p(ssnr_fourier_measured), cmap='gray', origin='lower')
 ax[2, 0].set_title('Fourier')
-average_fourier = stattools.average_rings2d(ssnr_fourier_measured)
-average_spatial = stattools.average_rings2d(ssnr_spatial_measured)
-average_finite = stattools.average_rings2d(ssnr_finite_measured)
-average_widefield = stattools.average_rings2d(ssnr_widefield_measured)
+average_fourier = utils.average_rings2d(ssnr_fourier_measured)
+average_spatial = utils.average_rings2d(ssnr_spatial_measured)
+average_finite = utils.average_rings2d(ssnr_finite_measured)
+average_widefield = utils.average_rings2d(ssnr_widefield_measured)
 
 ax[2, 2].plot(np.log1p(average_fourier), label='fourier')
 ax[2, 2].plot(np.log1p(average_spatial), label='spatial')
@@ -410,9 +410,9 @@ ax[2, 2].legend()
 # ax[2, 1].set_title('Spatial')
 # ax[2, 2].imshow(np.log1p(ssnr_finite_measured), cmap='gray', origin='lower')
 # ax[2, 2].set_title('Finite')
-ratio_spatial = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_finite = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_widefield = stattools.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_spatial = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_finite = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
+ratio_widefield = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 
 ax[2, 3].plot(ratio_spatial, label='spatial/fourier')
 ax[2, 3].plot(ratio_finite, label='finite/fourier')

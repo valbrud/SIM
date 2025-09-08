@@ -1,4 +1,4 @@
-stattools module
+utils module
 ================
 
 .. automodule:: stattools

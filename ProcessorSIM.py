@@ -27,7 +27,7 @@ import SIMulator
 import Reconstructor
 import SSNRCalculator
 import Camera
-import stattools
+import utils
 from deconvolution import richardson_lucy_skimage, bayesian_gaussian_frequency_estimate, image_of_maximal_surprise_estimate
 import WienerFiltering
 from Apodization import AutoconvolutionApodizationSIM
@@ -185,9 +185,9 @@ class ProcessorSIM:
         """
         Simulate SIM images using the provided illumination and optical system.
         """
-        sim_images = self.simulator.generate_sim_images(true_object)
+        sim_images = self.simulator.generate_noiseless_sim_images(true_object)
         if noisy:
-            self.simulator.generate_noisy_images(images=sim_images)
+            self.simulator.add_noise(images=sim_images)
         return sim_images
     
     def generate_super_resolution_image(self, sim_images: np.ndarray) -> np.ndarray:
@@ -247,8 +247,8 @@ class ProcessorSIM:
 
             case 'Bayesian':
                 image_ft = wrappers.wrapped_fftn(image) if self.spatial_domain else image
-                average_rings = stattools.average_rings2d if self.sim_dimension == 2 else stattools.average_ring_averages3d
-                expand_rings = stattools.expand_ring_averages2d if self.sim_dimension == 3 else stattools.expand_ring_averages3d
+                average_rings = utils.average_rings2d if self.sim_dimension == 2 else utils.average_ring_averages3d
+                expand_rings = utils.expand_ring_averages2d if self.sim_dimension == 3 else utils.expand_ring_averages3d
                 averages = average_rings(image_ft, self.optical_system.otf_frequencies)
                 averages_expanded = expand_rings(averages, self.optical_system.otf_frequencies, image_ft.shape)
                 deviations = image_ft - averages_expanded
@@ -258,8 +258,8 @@ class ProcessorSIM:
 
             case 'MutualInformation':
                 image_ft = wrappers.wrapped_fftn(image) if self.spatial_domain else np.copy(image)
-                average_rings = stattools.average_rings2d if self.sim_dimension == 2 else stattools.average_ring_averages3d
-                expand_rings = stattools.expand_ring_averages2d if self.sim_dimension == 3 else stattools.expand_ring_averages3d
+                average_rings = utils.average_rings2d if self.sim_dimension == 2 else utils.average_ring_averages3d
+                expand_rings = utils.expand_ring_averages2d if self.sim_dimension == 3 else utils.expand_ring_averages3d
                 averages = average_rings(image_ft, self.optical_system.otf_frequencies)
                 averages_expanded = expand_rings(averages, self.optical_system.otf_frequencies, image_ft.shape)
                 deviations = image_ft - averages_expanded

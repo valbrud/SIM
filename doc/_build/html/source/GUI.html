@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>GUI module &#8212; SIMSSNR 1.0.0 documentation</title>
+    <title>GUI package &#8212; SIMSSNR 1.0.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=47202671" />
     <link rel="stylesheet" type="text/css" href="../_static/haiku.css?v=fce32b03" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
@@ -19,7 +19,7 @@
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>SIMSSNR 1.0.0 documentation</span></a></h1>
-        <h2 class="heading"><span>GUI module</span></h2>
+        <h2 class="heading"><span>GUI package</span></h2>
       </div>
       <div class="topnav" role="navigation" aria-label="Top">
       
@@ -36,214 +36,880 @@
         
         
   <section id="module-GUI">
-<span id="gui-module"></span><h1>GUI module<a class="headerlink" href="#module-GUI" title="Link to this heading">¶</a></h1>
-<p>GUI.py</p>
-<p>This module contains the main graphical user interface (GUI) components of the application.</p>
-<p>This module and related ones is currently a demo-version of the user-interface, and will
-possibly be sufficiently modified or replaced in the future. For this reason, no in-depth
-documentation is provided.</p>
-<div class="graphviz"><img src="../_images/inheritance-61eb347e51f9e7ca4f97a113f7988968aa76f9f1.png" alt="Inheritance diagram of GUI" usemap="#inheritance2559bf1cee" class="inheritance graphviz" /></div>
-<map id="inheritance2559bf1cee" name="inheritance2559bf1cee">
-<area shape="rect" id="node4" href="#GUI.PlottingMode" target="_top" title="PlottingMode" alt="" coords="149,104,243,128"/>
-<area shape="rect" id="node10" href="#GUI.View" target="_top" title="View" alt="" coords="165,150,227,174"/>
-<area shape="rect" id="node2" href="#GUI.MainWindow" target="_top" title="MainWindow" alt="" coords="672,28,763,52"/>
+<span id="gui-package"></span><h1>GUI package<a class="headerlink" href="#module-GUI" title="Link to this heading">¶</a></h1>
+<p>GUI package for SIM application.</p>
+<p>This package contains modules for the graphical user interface.</p>
+</section>
+<section id="module-GUI.Box">
+<span id="gui-box-module"></span><h1>GUI.Box module<a class="headerlink" href="#module-GUI.Box" title="Link to this heading">¶</a></h1>
+<p>Box submodule for GUI.</p>
+<p>Contains widgets and windows for the SIM box interface.</p>
+</section>
+<section id="module-GUI.Box.Widgets">
+<span id="gui-box-widgets-module"></span><h1>GUI.Box.Widgets module<a class="headerlink" href="#module-GUI.Box.Widgets" title="Link to this heading">¶</a></h1>
+<p>Widgets.py</p>
+<p>This module contains GUI widget classes for configuring and displaying different types of sources
+in the application.</p>
+<p>The widgets allow users to interactively set parameters for sources such as intensity harmonics,
+plane waves, and point sources, and display their configurations.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>SourceWidget: Abstract base class for source widgets.
+IntensityHarmonic3DWidget: Widget for IntensityHarmonic3D sources.
+PlaneWaveWidget: Widget for PlaneWave sources.
+PointSourceWidget: Widget for PointSource sources.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-2e1cf95689a8de88c4004aaf1806c36a16b81190.png" alt="Inheritance diagram of GUI.Box.Widgets" usemap="#inheritancef327123a6f" class="inheritance graphviz" /></div>
+<map id="inheritancef327123a6f" name="inheritancef327123a6f">
+<area shape="rect" id="node1" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget" target="_top" title="Widget for configuring and displaying IntensityHarmonic3D sources." alt="" coords="597,4,764,27"/>
+<area shape="rect" id="node2" href="#GUI.Box.Widgets.SourceWidget" target="_top" title="Abstract base class for source configuration widgets." alt="" coords="468,47,558,69"/>
+<area shape="rect" id="node3" href="#GUI.Box.Widgets.PlaneWaveWidget" target="_top" title="Widget for configuring and displaying PlaneWave sources." alt="" coords="624,47,737,69"/>
+<area shape="rect" id="node4" href="#GUI.Box.Widgets.PointSourceWidget" target="_top" title="Widget for configuring and displaying PointSource sources." alt="" coords="622,89,739,111"/>
 </map><dl class="py class">
-<dt class="sig sig-object py" id="GUI.MainWindow">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">MainWindow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
-<div class="graphviz"><img src="../_images/inheritance-16b2cda68726156b1280e29cc5f7549f1e0e7786.png" alt="Inheritance diagram of GUI.MainWindow" usemap="#inheritance82e87f22de" class="inheritance graphviz" /></div>
-<map id="inheritance82e87f22de" name="inheritance82e87f22de">
-<area shape="rect" id="node1" href="#GUI.MainWindow" target="_top" title="MainWindow" alt="" coords="668,29,763,54"/>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.Widgets.</span></span><span class="sig-name descname"><span class="pre">IntensityHarmonic3DWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#IntensityHarmonic3DWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.Widgets.SourceWidget" title="GUI.Box.Widgets.SourceWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceWidget</span></code></a></p>
+<p>Widget for configuring and displaying IntensityHarmonic3D sources.</p>
+<p>This widget provides an interface to input parameters for an intensity harmonic 3D source,
+including amplitude, phase, and wavevector components. It can display a pre-configured source
+or allow user input for a new one.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.isSet">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.isSet" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted when the source is configured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.intensity_plane_wave">
+<span class="sig-name descname"><span class="pre">intensity_plane_wave</span></span><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.intensity_plane_wave" title="Link to this definition">¶</a></dt>
+<dd><p>The configured source object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Sources.html#Sources.IntensityHarmonic3D" title="Sources.IntensityHarmonic3D">IntensityHarmonic3D</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.data_widget">
+<span class="sig-name descname"><span class="pre">data_widget</span></span><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.data_widget" title="Link to this definition">¶</a></dt>
+<dd><p>The input widget for parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget" title="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget">IntensityHarmonic3DInitializationWidget</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-9dac636dea0dedceec290051ca0bd6768d2dbf9c.png" alt="Inheritance diagram of GUI.Box.Widgets.IntensityHarmonic3DWidget" usemap="#inheritanceabba51a8ed" class="inheritance graphviz" /></div>
+<map id="inheritanceabba51a8ed" name="inheritanceabba51a8ed">
+<area shape="rect" id="node1" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget" target="_top" title="Widget for configuring and displaying IntensityHarmonic3D sources." alt="" coords="597,26,764,48"/>
+<area shape="rect" id="node2" href="#GUI.Box.Widgets.SourceWidget" target="_top" title="Abstract base class for source configuration widgets." alt="" coords="468,26,558,48"/>
 </map><dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.add_intensity_plane_wave">
-<span class="sig-name descname"><span class="pre">add_intensity_plane_wave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_intensity_plane_wave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_intensity_plane_wave" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.change_widget">
+<span class="sig-name descname"><span class="pre">change_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#IntensityHarmonic3DWidget.change_widget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.change_widget" title="Link to this definition">¶</a></dt>
+<dd><p>Change the widget’s configuration.</p>
+</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.add_plane_wave">
-<span class="sig-name descname"><span class="pre">add_plane_wave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_plane_wave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_plane_wave" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.contextMenuEvent">
+<span class="sig-name descname"><span class="pre">contextMenuEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#IntensityHarmonic3DWidget.contextMenuEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.contextMenuEvent" title="Link to this definition">¶</a></dt>
+<dd><p>Handle right-click context menu events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>QContextMenuEvent</em>) – The context menu event.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.add_point_source">
-<span class="sig-name descname"><span class="pre">add_point_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_point_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_point_source" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.init_ui">
+<span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ipw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#IntensityHarmonic3DWidget.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.init_ui" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the user interface for the widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source</strong> – The source object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id1"><span class="problematic" id="id2">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.add_source">
-<span class="sig-name descname"><span class="pre">add_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_source" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.add_to_box">
-<span class="sig-name descname"><span class="pre">add_to_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initialized</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.add_to_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.add_to_box" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.change_plotting_mode">
-<span class="sig-name descname"><span class="pre">change_plotting_mode</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.change_plotting_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.change_plotting_mode" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.change_view3d">
-<span class="sig-name descname"><span class="pre">change_view3d</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.change_view3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.change_view3d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.choose_plotting_mode">
-<span class="sig-name descname"><span class="pre">choose_plotting_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.choose_plotting_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.choose_plotting_mode" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.choose_view3d">
-<span class="sig-name descname"><span class="pre">choose_view3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.choose_view3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.choose_view3d" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.clear_layout">
-<span class="sig-name descname"><span class="pre">clear_layout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layout</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.clear_layout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.clear_layout" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_fourier_space">
-<span class="sig-name descname"><span class="pre">compute_and_plot_fourier_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_fourier_space" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_from_electric_field">
-<span class="sig-name descname"><span class="pre">compute_and_plot_from_electric_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_from_electric_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_from_electric_field" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_and_plot_from_intensity_sources">
-<span class="sig-name descname"><span class="pre">compute_and_plot_from_intensity_sources</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_and_plot_from_intensity_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_and_plot_from_intensity_sources" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_next_shift">
-<span class="sig-name descname"><span class="pre">compute_next_shift</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_next_shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_next_shift" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_numerically_approximated_intensities">
-<span class="sig-name descname"><span class="pre">compute_numerically_approximated_intensities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_numerically_approximated_intensities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_numerically_approximated_intensities" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.compute_total_intensity">
-<span class="sig-name descname"><span class="pre">compute_total_intensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.compute_total_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.compute_total_intensity" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.get_ipw_from_pw">
-<span class="sig-name descname"><span class="pre">get_ipw_from_pw</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.get_ipw_from_pw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.get_ipw_from_pw" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.init_ui">
-<span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.init_ui" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.load_config">
-<span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.load_config" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.load_illumination">
-<span class="sig-name descname"><span class="pre">load_illumination</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.load_illumination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.load_illumination" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.on_option_selected">
-<span class="sig-name descname"><span class="pre">on_option_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.on_option_selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.on_option_selected" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.plot_fourier_space_slices">
-<span class="sig-name descname"><span class="pre">plot_fourier_space_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_fourier_space_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_fourier_space_slices" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.plot_intensity_slices">
-<span class="sig-name descname"><span class="pre">plot_intensity_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_intensity_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_intensity_slices" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.plot_numerically_approximated_intensity">
-<span class="sig-name descname"><span class="pre">plot_numerically_approximated_intensity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_numerically_approximated_intensity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_numerically_approximated_intensity" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.plot_numerically_approximated_intensity_fourier_space">
-<span class="sig-name descname"><span class="pre">plot_numerically_approximated_intensity_fourier_space</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_numerically_approximated_intensity_fourier_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_numerically_approximated_intensity_fourier_space" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.plot_shift_arrow">
-<span class="sig-name descname"><span class="pre">plot_shift_arrow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.plot_shift_arrow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.plot_shift_arrow" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.remove_source">
-<span class="sig-name descname"><span class="pre">remove_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initializer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.remove_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.remove_source" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="GUI.MainWindow.save_config">
-<span class="sig-name descname"><span class="pre">save_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#MainWindow.save_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.MainWindow.save_config" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.IntensityHarmonic3DWidget.on_receive_info">
+<span class="sig-name descname"><span class="pre">on_receive_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#IntensityHarmonic3DWidget.on_receive_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.IntensityHarmonic3DWidget.on_receive_info" title="Link to this definition">¶</a></dt>
+<dd><p>Process the input information from the initialization widget.</p>
+<p>Parses the input, creates the source object, updates the display,
+and emits the configuration signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info</strong> (<em>list</em>) – List of input values [amplitude, phase, kx, ky, kz].</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="GUI.PlottingMode">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">PlottingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#PlottingMode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.PlottingMode" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<div class="graphviz"><img src="../_images/inheritance-6216f853176ca12681b88fd3c094c9c5b3408934.png" alt="Inheritance diagram of GUI.PlottingMode" usemap="#inheritance4064ec9238" class="inheritance graphviz" /></div>
-<map id="inheritance4064ec9238" name="inheritance4064ec9238">
-<area shape="rect" id="node2" href="#GUI.PlottingMode" target="_top" title="PlottingMode" alt="" coords="125,5,233,33"/>
-</map><dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.PlottingMode.linear">
-<span class="sig-name descname"><span class="pre">linear</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#GUI.PlottingMode.linear" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.Widgets.</span></span><span class="sig-name descname"><span class="pre">PlaneWaveWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PlaneWaveWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.Widgets.SourceWidget" title="GUI.Box.Widgets.SourceWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceWidget</span></code></a></p>
+<p>Widget for configuring and displaying PlaneWave sources.</p>
+<p>This widget allows users to set parameters for a plane wave source,
+including field vectors, phases, and wavevector. It displays the configured
+source or provides input fields for a new one.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.isSet">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.isSet" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted when the source is configured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.PlottingMode.logarithmic">
-<span class="sig-name descname"><span class="pre">logarithmic</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#GUI.PlottingMode.logarithmic" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.isDeleted">
+<span class="sig-name descname"><span class="pre">isDeleted</span></span><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.isDeleted" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted when the widget is deleted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.PlottingMode.mixed">
-<span class="sig-name descname"><span class="pre">mixed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#GUI.PlottingMode.mixed" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.plane_wave">
+<span class="sig-name descname"><span class="pre">plane_wave</span></span><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.plane_wave" title="Link to this definition">¶</a></dt>
+<dd><p>The configured source object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Sources.html#Sources.PlaneWave" title="Sources.PlaneWave">PlaneWave</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.data_widget">
+<span class="sig-name descname"><span class="pre">data_widget</span></span><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.data_widget" title="Link to this definition">¶</a></dt>
+<dd><p>The input widget for parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget" title="GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget">PlaneWaveInitializationWidget</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-9e7dc5a2fef07765846d4efa3281f1e01de935ba.png" alt="Inheritance diagram of GUI.Box.Widgets.PlaneWaveWidget" usemap="#inheritanced33b85fe06" class="inheritance graphviz" /></div>
+<map id="inheritanced33b85fe06" name="inheritanced33b85fe06">
+<area shape="rect" id="node1" href="#GUI.Box.Widgets.PlaneWaveWidget" target="_top" title="Widget for configuring and displaying PlaneWave sources." alt="" coords="642,28,763,52"/>
+<area shape="rect" id="node2" href="#GUI.Box.Widgets.SourceWidget" target="_top" title="Abstract base class for source configuration widgets." alt="" coords="503,28,600,52"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.change_widget">
+<span class="sig-name descname"><span class="pre">change_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PlaneWaveWidget.change_widget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.change_widget" title="Link to this definition">¶</a></dt>
+<dd><p>Change the widget’s configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.contextMenuEvent">
+<span class="sig-name descname"><span class="pre">contextMenuEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PlaneWaveWidget.contextMenuEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.contextMenuEvent" title="Link to this definition">¶</a></dt>
+<dd><p>Handle right-click context menu events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>QContextMenuEvent</em>) – The context menu event.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.init_ui">
+<span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PlaneWaveWidget.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.init_ui" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the user interface for the widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source</strong> – The source object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">isDeleted</span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id4"><span class="problematic" id="id5">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id7"><span class="problematic" id="id8">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PlaneWaveWidget.on_receive_info">
+<span class="sig-name descname"><span class="pre">on_receive_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PlaneWaveWidget.on_receive_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PlaneWaveWidget.on_receive_info" title="Link to this definition">¶</a></dt>
+<dd><p>Process the input information from the initialization widget.</p>
+<p>Parses the input, creates the source object with real phases, updates the display,
+and emits the configuration signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>info</strong> (<em>list</em>) – List of input values [Ep, Es, phasep, phases, kx, ky, kz].</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="GUI.View">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.</span></span><span class="sig-name descname"><span class="pre">View</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI.html#View"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.View" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<div class="graphviz"><img src="../_images/inheritance-578d63d22938cb4a95a56b16d418e7ae9afd5092.png" alt="Inheritance diagram of GUI.View" usemap="#inheritance68b24daac7" class="inheritance graphviz" /></div>
-<map id="inheritance68b24daac7" name="inheritance68b24daac7">
-<area shape="rect" id="node2" href="#GUI.View" target="_top" title="View" alt="" coords="125,5,197,33"/>
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.Widgets.</span></span><span class="sig-name descname"><span class="pre">PointSourceWidget</span></span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.Widgets.SourceWidget" title="GUI.Box.Widgets.SourceWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">SourceWidget</span></code></a></p>
+<p>Widget for configuring and displaying PointSource sources.</p>
+<p>This widget allows users to set parameters for a point source,
+including coordinates and brightness. It displays the configured
+source or provides input fields for a new one.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.isSet">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.isSet" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted when the source is configured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.coordinates">
+<span class="sig-name descname"><span class="pre">coordinates</span></span><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.coordinates" title="Link to this definition">¶</a></dt>
+<dd><p>The 3D coordinates of the point source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.brightnes">
+<span class="sig-name descname"><span class="pre">brightnes</span></span><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.brightnes" title="Link to this definition">¶</a></dt>
+<dd><p>The brightness of the point source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.point_source">
+<span class="sig-name descname"><span class="pre">point_source</span></span><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.point_source" title="Link to this definition">¶</a></dt>
+<dd><p>The configured source object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="Sources.html#Sources.PointSource" title="Sources.PointSource">PointSource</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.data_widget">
+<span class="sig-name descname"><span class="pre">data_widget</span></span><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.data_widget" title="Link to this definition">¶</a></dt>
+<dd><p>The input widget for parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget" title="GUI.Box.InitializationWidgets.PointSourceInitializationWidget">PointSourceInitializationWidget</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-d122a0bed30905b24c004e25e9a06e88266dcb18.png" alt="Inheritance diagram of GUI.Box.Widgets.PointSourceWidget" usemap="#inheritance2241f699f1" class="inheritance graphviz" /></div>
+<map id="inheritance2241f699f1" name="inheritance2241f699f1">
+<area shape="rect" id="node1" href="#GUI.Box.Widgets.PointSourceWidget" target="_top" title="Widget for configuring and displaying PointSource sources." alt="" coords="638,28,763,52"/>
+<area shape="rect" id="node2" href="#GUI.Box.Widgets.SourceWidget" target="_top" title="Abstract base class for source configuration widgets." alt="" coords="500,28,596,52"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.change_widget">
+<span class="sig-name descname"><span class="pre">change_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.change_widget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.change_widget" title="Link to this definition">¶</a></dt>
+<dd><p>Change the widget’s configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.contextMenuEvent">
+<span class="sig-name descname"><span class="pre">contextMenuEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.contextMenuEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.contextMenuEvent" title="Link to this definition">¶</a></dt>
+<dd><p>Handle right-click context menu events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>QContextMenuEvent</em>) – The context menu event.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.init_ui">
+<span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.init_ui" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the user interface for the widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source</strong> – The source object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">isSet</span></span><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id10"><span class="problematic" id="id11">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.on_click_ok">
+<span class="sig-name descname"><span class="pre">on_click_ok</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.on_click_ok"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.on_click_ok" title="Link to this definition">¶</a></dt>
+<dd><p>Handle the OK button click.</p>
+<p>Creates the source object, updates the display, and emits the configuration signal.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.on_receive_brightness">
+<span class="sig-name descname"><span class="pre">on_receive_brightness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">brightness</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.on_receive_brightness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.on_receive_brightness" title="Link to this definition">¶</a></dt>
+<dd><p>Update the brightness value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>brightness</strong> (<em>float</em>) – The new brightness value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.PointSourceWidget.on_receive_coordinates">
+<span class="sig-name descname"><span class="pre">on_receive_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#PointSourceWidget.on_receive_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.PointSourceWidget.on_receive_coordinates" title="Link to this definition">¶</a></dt>
+<dd><p>Update the coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coordinates</strong> (<em>tuple</em>) – The new coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.Widgets.</span></span><span class="sig-name descname"><span class="pre">SourceWidget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#SourceWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<p>Abstract base class for source configuration widgets.</p>
+<p>This class provides a common interface for widgets that allow users to configure
+different types of sources in the SIM simulation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.identifier">
+<span class="sig-name descname"><span class="pre">identifier</span></span><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.identifier" title="Link to this definition">¶</a></dt>
+<dd><p>Unique identifier for the widget instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-1c866b97100212c259e9687976b9c4e51ea51f7d.png" alt="Inheritance diagram of GUI.Box.Widgets.SourceWidget" usemap="#inheritance5599f88d3a" class="inheritance graphviz" /></div>
+<map id="inheritance5599f88d3a" name="inheritance5599f88d3a">
+<area shape="rect" id="node6" href="#GUI.Box.Widgets.SourceWidget" target="_top" title="Abstract base class for source configuration widgets." alt="" coords="576,32,687,60"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.change_widget">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">change_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#SourceWidget.change_widget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.change_widget" title="Link to this definition">¶</a></dt>
+<dd><p>Change the widget’s configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.contextMenuEvent">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">contextMenuEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#SourceWidget.contextMenuEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.contextMenuEvent" title="Link to this definition">¶</a></dt>
+<dd><p>Handle right-click context menu events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<em>QContextMenuEvent</em>) – The context menu event.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">identifier</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id12" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.init_ui">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init_ui</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#SourceWidget.init_ui"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.init_ui" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the user interface for the widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source</strong> – The source object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.isDeleted">
+<span class="sig-name descname"><span class="pre">isDeleted</span></span><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.isDeleted" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id13"><span class="problematic" id="id14">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.Widgets.SourceWidget.remove_widget">
+<span class="sig-name descname"><span class="pre">remove_widget</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/Widgets.html#SourceWidget.remove_widget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.Widgets.SourceWidget.remove_widget" title="Link to this definition">¶</a></dt>
+<dd><p>Remove the widget and emit deletion signal.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="gui-box-mainwindow-module">
+<h1>GUI.Box.MainWindow module<a class="headerlink" href="#gui-box-mainwindow-module" title="Link to this heading">¶</a></h1>
+</section>
+<section id="module-GUI.Box.InitializationWidgets">
+<span id="gui-box-initializationwidgets-module"></span><h1>GUI.Box.InitializationWidgets module<a class="headerlink" href="#module-GUI.Box.InitializationWidgets" title="Link to this heading">¶</a></h1>
+<p>InitializationWidgets.py</p>
+<p>This module contains widget classes for initializing parameters of different source types
+in the GUI.</p>
+<p>These widgets provide input fields for users to enter parameters such as amplitudes,
+phases, and wavevectors for sources like intensity harmonics and plane waves.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>InitializationWidget: Abstract base class for initialization widgets.
+IntensityHarmonic3DInitializationWidget: Widget for IntensityHarmonic3D parameters.
+PlaneWaveInitializationWidget: Widget for PlaneWave parameters.
+PointSourceInitializationWidget: Widget for PointSource parameters.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-df4205d315ef5d1688fb70179a080872a2a9ccf7.png" alt="Inheritance diagram of GUI.Box.InitializationWidgets" usemap="#inheritance261706369b" class="inheritance graphviz" /></div>
+<map id="inheritance261706369b" name="inheritance261706369b">
+<area shape="rect" id="node1" href="#GUI.Box.InitializationWidgets.InitializationWidget" target="_top" title="Abstract base class for source initialization widgets." alt="" coords="416,41,523,61"/>
+<area shape="rect" id="node3" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget" target="_top" title="Widget for initializing IntensityHarmonic3D source parameters." alt="" coords="557,4,764,24"/>
+<area shape="rect" id="node4" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget" target="_top" title="Widget for initializing PlaneWave source parameters." alt="" coords="581,41,740,61"/>
+<area shape="rect" id="node5" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget" target="_top" title="Widget for initializing PointSource parameters." alt="" coords="579,79,742,99"/>
+</map><dl class="py class">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.InitializationWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.InitializationWidgets.</span></span><span class="sig-name descname"><span class="pre">InitializationWidget</span></span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#InitializationWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.InitializationWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<p>Abstract base class for source initialization widgets.</p>
+<p>Provides a common structure for widgets that collect user input for source parameters.</p>
+<div class="graphviz"><img src="../_images/inheritance-06d52f625850e1d19a68f9581a2e3c3ce7ad85e9.png" alt="Inheritance diagram of GUI.Box.InitializationWidgets.InitializationWidget" usemap="#inheritancee4d008d050" class="inheritance graphviz" /></div>
+<map id="inheritancee4d008d050" name="inheritancee4d008d050">
+<area shape="rect" id="node1" href="#GUI.Box.InitializationWidgets.InitializationWidget" target="_top" title="Abstract base class for source initialization widgets." alt="" coords="576,32,724,60"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.InitializationWidget.on_click_ok">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">on_click_ok</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#InitializationWidget.on_click_ok"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.InitializationWidget.on_click_ok" title="Link to this definition">¶</a></dt>
+<dd><p>Handle the OK button click to process and emit the input data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.InitializationWidget.request_data">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">request_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#InitializationWidget.request_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.InitializationWidget.request_data" title="Link to this definition">¶</a></dt>
+<dd><p>Set up the input fields for the widget.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.InitializationWidgets.</span></span><span class="sig-name descname"><span class="pre">IntensityHarmonic3DInitializationWidget</span></span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#IntensityHarmonic3DInitializationWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.InitializationWidgets.InitializationWidget" title="GUI.Box.InitializationWidgets.InitializationWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">InitializationWidget</span></code></a></p>
+<p>Widget for initializing IntensityHarmonic3D source parameters.</p>
+<p>Provides input fields for amplitude, phase, and wavevector components.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.sendInfo">
+<span class="sig-name descname"><span class="pre">sendInfo</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.sendInfo" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted with the collected parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.A">
+<span class="sig-name descname"><span class="pre">A</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.A" title="Link to this definition">¶</a></dt>
+<dd><p>Input field for amplitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.phase">
+<span class="sig-name descname"><span class="pre">phase</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.phase" title="Link to this definition">¶</a></dt>
+<dd><p>Input field for phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">kx,</span> <span class="pre">ky,</span> <span class="pre">kz</span></span></dt>
+<dd><p>Input fields for wavevector components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-05068bc413ff0096effe4bc52ea9f049b12375df.png" alt="Inheritance diagram of GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget" usemap="#inheritance823ef4145b" class="inheritance graphviz" /></div>
+<map id="inheritance823ef4145b" name="inheritance823ef4145b">
+<area shape="rect" id="node1" href="#GUI.Box.InitializationWidgets.InitializationWidget" target="_top" title="Abstract base class for source initialization widgets." alt="" coords="416,23,523,43"/>
+<area shape="rect" id="node3" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget" target="_top" title="Widget for initializing IntensityHarmonic3D source parameters." alt="" coords="557,23,764,43"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.on_click_ok">
+<span class="sig-name descname"><span class="pre">on_click_ok</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#IntensityHarmonic3DInitializationWidget.on_click_ok"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.on_click_ok" title="Link to this definition">¶</a></dt>
+<dd><p>Handle the OK button click to process and emit the input data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.request_data">
+<span class="sig-name descname"><span class="pre">request_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#IntensityHarmonic3DInitializationWidget.request_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.IntensityHarmonic3DInitializationWidget.request_data" title="Link to this definition">¶</a></dt>
+<dd><p>Set up the input fields for the widget.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id15">
+<span class="sig-name descname"><span class="pre">sendInfo</span></span><a class="headerlink" href="#id15" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id16"><span class="problematic" id="id17">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.InitializationWidgets.</span></span><span class="sig-name descname"><span class="pre">PlaneWaveInitializationWidget</span></span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PlaneWaveInitializationWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.InitializationWidgets.InitializationWidget" title="GUI.Box.InitializationWidgets.InitializationWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">InitializationWidget</span></code></a></p>
+<p>Widget for initializing PlaneWave source parameters.</p>
+<p>Provides input fields for electric field components, phases, and wavevector.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.sendInfo">
+<span class="sig-name descname"><span class="pre">sendInfo</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.sendInfo" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted with the collected parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Ep,</span> <span class="pre">Es</span></span></dt>
+<dd><p>Input fields for electric field components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">phasep,</span> <span class="pre">phases</span></span></dt>
+<dd><p>Input fields for phases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">kx,</span> <span class="pre">ky,</span> <span class="pre">kz</span></span></dt>
+<dd><p>Input fields for wavevector components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-e22e99c11f7a273235b4e9852cbf2a17833dc136.png" alt="Inheritance diagram of GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget" usemap="#inheritancec2f13e4dc3" class="inheritance graphviz" /></div>
+<map id="inheritancec2f13e4dc3" name="inheritancec2f13e4dc3">
+<area shape="rect" id="node1" href="#GUI.Box.InitializationWidgets.InitializationWidget" target="_top" title="Abstract base class for source initialization widgets." alt="" coords="443,25,557,46"/>
+<area shape="rect" id="node3" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget" target="_top" title="Widget for initializing PlaneWave source parameters." alt="" coords="594,25,764,46"/>
+</map><dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.on_click_ok">
+<span class="sig-name descname"><span class="pre">on_click_ok</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PlaneWaveInitializationWidget.on_click_ok"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.on_click_ok" title="Link to this definition">¶</a></dt>
+<dd><p>Handle the OK button click to process and emit the input data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.request_data">
+<span class="sig-name descname"><span class="pre">request_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PlaneWaveInitializationWidget.request_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PlaneWaveInitializationWidget.request_data" title="Link to this definition">¶</a></dt>
+<dd><p>Set up the input fields for the widget.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id18">
+<span class="sig-name descname"><span class="pre">sendInfo</span></span><a class="headerlink" href="#id18" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id19"><span class="problematic" id="id20">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">GUI.Box.InitializationWidgets.</span></span><span class="sig-name descname"><span class="pre">PointSourceInitializationWidget</span></span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PointSourceInitializationWidget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#GUI.Box.InitializationWidgets.InitializationWidget" title="GUI.Box.InitializationWidgets.InitializationWidget"><code class="xref py py-class docutils literal notranslate"><span class="pre">InitializationWidget</span></code></a></p>
+<p>Widget for initializing PointSource parameters.</p>
+<p>Provides input fields for coordinates and brightness.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.sendCoordinates">
+<span class="sig-name descname"><span class="pre">sendCoordinates</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.sendCoordinates" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted with the coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.sendBrightness">
+<span class="sig-name descname"><span class="pre">sendBrightness</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.sendBrightness" title="Link to this definition">¶</a></dt>
+<dd><p>Signal emitted with the brightness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">x_input,</span> <span class="pre">y_input,</span> <span class="pre">z_input</span></span></dt>
+<dd><p>Input fields for coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.brightess_input">
+<span class="sig-name descname"><span class="pre">brightess_input</span></span><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.brightess_input" title="Link to this definition">¶</a></dt>
+<dd><p>Input field for brightness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QLineEdit</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="graphviz"><img src="../_images/inheritance-99f7c50f3ac811484335d154c4c924af76bd343f.png" alt="Inheritance diagram of GUI.Box.InitializationWidgets.PointSourceInitializationWidget" usemap="#inheritance0924ebffa8" class="inheritance graphviz" /></div>
+<map id="inheritance0924ebffa8" name="inheritance0924ebffa8">
+<area shape="rect" id="node1" href="#GUI.Box.InitializationWidgets.InitializationWidget" target="_top" title="Abstract base class for source initialization widgets." alt="" coords="441,25,555,46"/>
+<area shape="rect" id="node3" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget" target="_top" title="Widget for initializing PointSource parameters." alt="" coords="591,25,764,46"/>
 </map><dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.View.XY">
-<span class="sig-name descname"><span class="pre">XY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#GUI.View.XY" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.non_numbers">
+<span class="sig-name descname"><span class="pre">non_numbers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['',</span> <span class="pre">'-']</span></em><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.non_numbers" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.View.XZ">
-<span class="sig-name descname"><span class="pre">XZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#GUI.View.XZ" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.request_data">
+<span class="sig-name descname"><span class="pre">request_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PointSourceInitializationWidget.request_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.request_data" title="Link to this definition">¶</a></dt>
+<dd><p>Set up the input fields for the widget.</p>
+</dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="GUI.View.YZ">
-<span class="sig-name descname"><span class="pre">YZ</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#GUI.View.YZ" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id21">
+<span class="sig-name descname"><span class="pre">sendBrightness</span></span><a class="headerlink" href="#id21" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id22"><span class="problematic" id="id23">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id24">
+<span class="sig-name descname"><span class="pre">sendCoordinates</span></span><a class="headerlink" href="#id24" title="Link to this definition">¶</a></dt>
+<dd><p>int = …, arguments: Sequence = …) -&gt; PYQT_SIGNAL</p>
+<p>types is normally a sequence of individual types.  Each type is either a
+type object or a string that is the name of a C++ type.  Alternatively
+each type could itself be a sequence of types each describing a different
+overloaded signal.
+name is the optional C++ name of the signal.  If it is not specified then
+the name of the class attribute that is bound to the signal is used.
+revision is the optional revision of the signal that is exported to QML.
+If it is not specified then 0 is used.
+arguments is the optional sequence of the names of the signal’s arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyqtSignal(<a href="#id25"><span class="problematic" id="id26">*</span></a>types, name</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str = …, revision</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.send_brightness">
+<span class="sig-name descname"><span class="pre">send_brightness</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PointSourceInitializationWidget.send_brightness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.send_brightness" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="GUI.Box.InitializationWidgets.PointSourceInitializationWidget.send_coordinates">
+<span class="sig-name descname"><span class="pre">send_coordinates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/GUI/Box/InitializationWidgets.html#PointSourceInitializationWidget.send_coordinates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#GUI.Box.InitializationWidgets.PointSourceInitializationWidget.send_coordinates" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
+</section>
+<section id="gui-box-input-parser-module">
+<h1>GUI.Box.input_parser module<a class="headerlink" href="#gui-box-input-parser-module" title="Link to this heading">¶</a></h1>
 </section>
 
 

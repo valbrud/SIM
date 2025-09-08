@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
 import sys
-import stattools
+import utils
 # --- Imports from your simulation modules ---
 from OpticalSystems import System4f2D, System4f3D
 from SIMulator import SIMulator2D, SIMulator3D
@@ -59,9 +59,9 @@ class TestReconstruction2D(unittest.TestCase):
         #     N = 10, 
         #     I = 100
         # )
-        # self.image = stattools.introduce_field_aberrations(self.image)
-        # self.image = stattools.introduce_field_aberrations(self.image)
-        # image = stattools.radial_fade(self.image, 0.5, 2)
+        # self.image = utils.introduce_field_aberrations(self.image)
+        # self.image = utils.introduce_field_aberrations(self.image)
+        # image = utils.radial_fade(self.image, 0.5, 2)
         # image += 100
         image = self.image
         plt.title("Image")
@@ -97,21 +97,21 @@ class TestReconstruction2D(unittest.TestCase):
 
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system, readout_noise_variance=1)
-        self.sim_images = self.simulator.generate_sim_images(self.image)
+        self.sim_images = self.simulator.generate_noiseless_sim_images(self.image)
         self.sim_images_distorted = np.copy(self.sim_images)
         # for r in range(self.illumination.Mr):
         #     for n in range(self.illumination.Mt):
         #         image = self.sim_images[r, n]
-                # image_distorted = stattools.introduce_field_aberrations(image)
-                # image_distorted = stattools.introduce_field_aberrations(image_distorted)
+                # image_distorted = utils.introduce_field_aberrations(image)
+                # image_distorted = utils.introduce_field_aberrations(image_distorted)
                 # self.sim_images_distorted[r, n] = image_distorted
-                # self.sim_images_distorted[r, n] = stattools.radial_fade(image_distorted, 0.5, 2)
+                # self.sim_images_distorted[r, n] = utils.radial_fade(image_distorted, 0.5, 2)
                 # self.sim_images_distorted[r, n] += 10
                 # plt.title(f"Simulated image{r, n}")
                 # plt.imshow(image_distorted)
                 # plt.show()
 
-        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images_distorted)
+        self.noisy_images = self.simulator.add_noise(self.sim_images_distorted)
 
     def test_widefield_reconstruction(self):
         reconstructor = ReconstructorFourierDomain2D(
@@ -267,7 +267,7 @@ class TestReconstruction2D(unittest.TestCase):
         ssnr_calc = SSNRCalculator.SSNRSIM2D(self.illumination, self.optical_system, psf_kernel2d(7, (self.dx, self.dx)))
         plt.imshow(np.log1p(1 + 10**2 * ssnr_calc.dj))
         plt.show()
-        plt.imshow(np.log1p(1 + 10**2 * (ssnr_calc.dj*stattools.expand_kernel(notch_filter, ssnr_calc.dj.shape)).real))
+        plt.imshow(np.log1p(1 + 10**2 * (ssnr_calc.dj*utils.expand_kernel(notch_filter, ssnr_calc.dj.shape)).real))
         plt.show()   
 
         reconstructed_image7 = scipy.signal.convolve(reconstructed_image7, notch_kernel, mode='same')
@@ -328,7 +328,7 @@ class TesReconstruction3D(unittest.TestCase):
         plt.show()
 
         self.simulator = SIMulator3D(self.illumination, self.optical_system, readout_noise_variance=1)
-        self.sim_images = self.simulator.generate_sim_images(self.image)
+        self.sim_images = self.simulator.generate_noiseless_sim_images(self.image)
         # for r in range(self.illumination.Mr):
         #     for n in range(self.illumination.Mt):
         #         image = self.sim_images[r, n]
@@ -336,7 +336,7 @@ class TesReconstruction3D(unittest.TestCase):
         #         plt.imshow(image)
         #         plt.show()
 
-        self.noisy_images = self.simulator.generate_noisy_images(self.sim_images)
+        self.noisy_images = self.simulator.add_noise(self.sim_images)
     
 
 
@@ -389,7 +389,7 @@ class TestNonlinearReconstruction(unittest.TestCase):
         self.illumination_linear.set_spatial_shifts_diagonally()
 
         self.simulator_linear = SIMulator2D(self.illumination_linear, self.optical_system)
-        self.sim_images = self.simulator_linear.generate_sim_images(self.image)
+        self.sim_images = self.simulator_linear.generate_noiseless_sim_images(self.image)
 
         # self.sim_images += np.random.normal(0, 20, self.sim_images.shape)
 
@@ -417,7 +417,7 @@ class TestNonlinearReconstruction(unittest.TestCase):
         plt.show()
 
         simulator_non_linear = SIMulator2D(illumination_non_linear, self.optical_system)
-        sim_images_non_linear = simulator_non_linear.generate_sim_images(self.image)
+        sim_images_non_linear = simulator_non_linear.generate_noiseless_sim_images(self.image)
         nonlinear_reconstructor = ReconstructorSpatialDomain2D(
             illumination=illumination_non_linear,
             optical_system=self.optical_system

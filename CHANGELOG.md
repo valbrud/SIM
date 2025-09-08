@@ -8,12 +8,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [1.0.0] - 2024-12-11
 
 <!-- insertion marker -->
-## Unreleased
+## [1.5.0](https://github.com/valbrud/SIM/releases/tag/1.5.0) - 2025-09-08
 
-<small>[Compare with latest](https://github.com/valbrud/SIM/compare/a558b5f90a910f6db23b274403aa1022bb1fe4de...HEAD)</small>
+<small>[Compare with first commit](https://github.com/valbrud/SIM/compare/a558b5f90a910f6db23b274403aa1022bb1fe4de...1.5.0)</small>
 
 ### Added
 
+- Added changed button functionality. Fixed GUI bugs ([6271577](https://github.com/valbrud/SIM/commit/6271577d6d90a7e7f527b117dcd047a73c582cf0) by valbrud).
+- Added first complete impleemntation of the PatternEstimator class for estimation of the parameters of the illumination from data.  Two different implementations - through interpolation and cross-correlation are provided. Added modulation strength estimation as a part of the illumination class. ([8188571](https://github.com/valbrud/SIM/commit/8188571fde53e0dc3268ca034afebffcc08a9e34) by valbrud).
+- Added new versioin of illumination classes, that supports initialization with experimental data (imperfect rotations and phase shifts) ([5c71c81](https://github.com/valbrud/SIM/commit/5c71c81befa193d14093f99c16092e94d2afd044) by valbrud).
+- Added first (incomplete) version of the parameters estimate by interpolation ([00d2df7](https://github.com/valbrud/SIM/commit/00d2df767b68b9700891d6b08de96772ee674dd4) by valbrud).
+- Added partial implementation of pattern estimation through interpolation ([7eea849](https://github.com/valbrud/SIM/commit/7eea8496949b72e68a9728f0192deb7b9d7a3ba6) by valbrud).
+- Added (incomplete) parameter estimation. Added estimation of SSNR from data with binomial splitting. ([fc5d7aa](https://github.com/valbrud/SIM/commit/fc5d7aae06d6ff0716f455904985856688dba763) by valbrud).
+- Added initial implementation of the ProcessorSIM class ([9ee83c8](https://github.com/valbrud/SIM/commit/9ee83c81766f74b9f0d04042f6ebabfce96ff7fb) by valbrud).
+- Added automatic spatial shifts setter ([5b94ec5](https://github.com/valbrud/SIM/commit/5b94ec5e5d692e5244347116c54e39c50bbcd104) by valerii).
+- Added non-linear SIM implementation ([8bc6822](https://github.com/valbrud/SIM/commit/8bc6822dfa6f3bf7c71c5fab9bfc8fde560d2c61) by valerii).
+- Added functions for real and Fourier image deconvolution. ([c8ea21f](https://github.com/valbrud/SIM/commit/c8ea21f09ff29c8e00155711a737a2054c434192) by valerii).
+- Added CHANGELOG.md, requirements.txt and other auxiliary files ([85fa0f0](https://github.com/valbrud/SIM/commit/85fa0f0cbd68f0dc490a5eaf192db1cbd4ff349d) by valerii).
 - Added first version of the documentation ([edfe187](https://github.com/valbrud/SIM/commit/edfe187c6ce45b7f2a43c17fa05e9e4d7bb5b2b3) by valerii).
 - Added random lines generator. 2D local reconstructions verified ([7e478ef](https://github.com/valbrud/SIM/commit/7e478ef6b6404e6b0bf62df7308a071c60341058) by valerii).
 - Added 2D SSNR calculator ([b2b03f6](https://github.com/valbrud/SIM/commit/b2b03f6f79a0d7bcb0ec5a9dadf64e4331658d0c) by valerii).
@@ -33,16 +44,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed naming conventions ([0a03ef2](https://github.com/valbrud/SIM/commit/0a03ef2b345b572ac38081d606ad58a58854eda3) by valbrud).
+- Fixed bugs, added better debugging pipeline ([9c3768a](https://github.com/valbrud/SIM/commit/9c3768aeb10aaa1276121bacac633319f5fcaf81) by valbrud).
+- Fixed bugs in the reconstruction ([8371940](https://github.com/valbrud/SIM/commit/8371940b3f822e1df496e20843ea1df0381331b7) by valbrud).
+- Fixed reconstruction issues ([bc70602](https://github.com/valbrud/SIM/commit/bc7060244b18712ef7d528d034aac69c6159c4b2) by valbrud).
+- Fixed naming and normalization issues ([c877470](https://github.com/valbrud/SIM/commit/c877470cea65f72a0519061836806652bcfd4537) by valbrud).
+- Fixed numerical bugs ([137a7f3](https://github.com/valbrud/SIM/commit/137a7f300fe91a19a6f00737b5b043dde9bbb20b) by valbrud).
+- Fixed documentation. Fixed apodization. ([1efeab7](https://github.com/valbrud/SIM/commit/1efeab7b66ba1b066f3721e43d27e9195933a267) by valbrud).
+- Fixed paths. Fixed reconstruction procedure. Added metaclass to ensure proper dimensionality checking. ([dfaa2b7](https://github.com/valbrud/SIM/commit/dfaa2b726720b2c33f3477ff3ec987182565abde) by valbrud).
+- Fixed design imperfections ([a0e5d84](https://github.com/valbrud/SIM/commit/a0e5d84c05b873459a8d2ff8c6892e748d9b5dbc) by valerii).
+- Fixed reconstruction algorithm. ([79acf21](https://github.com/valbrud/SIM/commit/79acf214dbbe734f0c9c209e0884b6c7761029d1) by valerii).
+- Fixed numeric errors ([12e7c32](https://github.com/valbrud/SIM/commit/12e7c32c57af1347b6ca5555ae0bf1ffa0413b96) by valerii).
+- Fixed code redundancy at the expense of slight generalization reduction. Fixed SIMulator class ([54fde9e](https://github.com/valbrud/SIM/commit/54fde9e26b3e311f783b1ffe113353f10233b0ce) by valerii).
 - Fixed: Reconstruction has bugs remaining, but works for all cases. ([88de609](https://github.com/valbrud/SIM/commit/88de6090d7ceab890259f55ff470f2973017f3fd) by valerii).
 - Fixed: Numerical peaks search is working ([56b34c1](https://github.com/valbrud/SIM/commit/56b34c126e348ba98b2352d5f4f4338e2b42e94c) by valerii).
 - Fixed a mistake in Vj. SSNR functionality extended for lattice configuration ([4349ef2](https://github.com/valbrud/SIM/commit/4349ef2df7cab42e1f9fbe8c6cf1fd2a4b33bf95) by valerii).
 
 ### Changed
 
+- Changed: Design of the PatternEstimator is more versitile and simple ([df793ec](https://github.com/valbrud/SIM/commit/df793ec9c76ed57264857c87db59e89e269b8d6e) by valbrud).
+- Changed interface to the SSNR class, significantly reduced the number of classes ([e969835](https://github.com/valbrud/SIM/commit/e9698356913bc71760811e47e532a3b2034e7a4d) by valerii).
+- Changed interface to the Illumination class, now it is the whole tree of classes ([43da4dd](https://github.com/valbrud/SIM/commit/43da4dd12f52aebfeba7ad47a1fb535e8029892b) by valerii).
 - Changed: Article plots generating functions are moved to a separate folder. ([365a351](https://github.com/valbrud/SIM/commit/365a3511b3b98e54a2e857da1bba4d93fae2d32f) by valerii).
 - Changed: Major renaming. Visualization extension. SSNR functionality improved. ([1930c94](https://github.com/valbrud/SIM/commit/1930c94f56e13d4a659e2a8c4bd04e7990d1083e) by valerii).
 - Changed: common configurations now belong to a class. Intensity plane waves can now be computed from plane waves analytically ([bb6a74d](https://github.com/valbrud/SIM/commit/bb6a74d9ccc6f3590add084c921748524720bf35) by valerii).
 - Changed: design rethinking ([bca05e3](https://github.com/valbrud/SIM/commit/bca05e3735611374ef650f773efe91b2caaa7543) by valerii).
 - Changed: code was vectorized. ([406821e](https://github.com/valbrud/SIM/commit/406821ee1231be37074e7e35f99327a91db9ffe6) by valbrud).
-
-<!-- insertion marker -->

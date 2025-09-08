@@ -1,5 +1,11 @@
 """
-This module contains a class for parsing command line arguments for the initialization of GUI
+input_parser.py
+
+This module provides functionality for parsing command-line arguments and reading configuration files
+for the Structured Illumination Microscopy (SIM) GUI application.
+
+Classes:
+    ConfigParser: Handles argument parsing and configuration loading.
 """
 
 import os
@@ -15,10 +21,24 @@ from importlib.machinery import SourceFileLoader
 import Box
 import sys
 import os
+import MainWindow
 
 
 class ConfigParser:
+    """
+    Parser for command-line arguments and configuration files.
+
+    Handles parsing of input arguments for GUI initialization and configuration loading.
+
+    Attributes:
+        parser (ArgumentParser): The argument parser instance.
+        args: Parsed command-line arguments.
+    """
+
     def __init__(self):
+        """
+        Initialize the argument parser with defined arguments.
+        """
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument("input_file", type=str, help="Path to the input config file")
         self.parser.add_argument("-i", "--compute_intensity", action="store_true", help="Compute intensity")
@@ -28,6 +48,15 @@ class ConfigParser:
 
     @staticmethod
     def read_configuration(file):
+        """
+        Read and load a configuration file as a module.
+
+        Args:
+            file (str): The name of the configuration file.
+
+        Returns:
+            module: The loaded configuration module.
+        """
         spec = spec_from_loader("config_file",
                                 SourceFileLoader("config_file", os.getcwd() + "/config/" + file))
         conf = module_from_spec(spec)

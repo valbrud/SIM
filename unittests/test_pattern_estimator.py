@@ -79,7 +79,7 @@ class TestPatternEstimator2D(unittest.TestCase):
             self.theoretical_illumination, self.optical_system
         )
         """Estimator recovers phases and modulation depth on clean data."""
-        raw_stack = self.simulator.generate_sim_images(self.sample)
+        raw_stack = self.simulator.generate_noiseless_sim_images(self.sample)
         raw_stack = self.simulator.add_noise(raw_stack)  # (3, 3, N, N)
         plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[0, 0]))).T, cmap='gray', origin='lower')
         plt.show()
@@ -121,7 +121,7 @@ class TestPatternEstimator2D(unittest.TestCase):
         # self.sample = 10000 * self.experimenatal_illumination.get_illumination_density(self.optical_system.x_grid)
         # plt.imshow(self.sample, cmap='gray')
         # plt.show()
-        raw_stack = self.simulator.generate_sim_images(self.sample)
+        raw_stack = self.simulator.generate_noiseless_sim_images(self.sample)
         # for n in range(3):
         #     plt.imshow(raw_stack[1, n], cmap='gray')
         #     plt.show()
@@ -238,7 +238,7 @@ class TestPatternEstimator3D(unittest.TestCase):
         # self.sample = 10000 * self.experimenatal_illumination.get_illumination_density(self.optical_system.x_grid)
         # plt.imshow(self.sample, cmap='gray')
         # plt.show()
-        raw_stack = self.simulator.generate_sim_images(self.sample)
+        raw_stack = self.simulator.generate_noiseless_sim_images(self.sample)
         # for n in range(3):
         #     plt.imshow(raw_stack[1, n], cmap='gray')
         #     plt.show()

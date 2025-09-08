@@ -1,7 +1,7 @@
 import os.path
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..'))
+project_root = os.path.abspath(os.path.join(current_dir, '../..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
 
@@ -74,8 +74,8 @@ if __name__=="__main__":
  
     
     # simulator = SIMulator2D(illumination, optical_system)
-    # sim_images = simulator.generate_sim_images(image)
-    # sim_images = simulator.generate_noisy_images(sim_images)
+    # sim_images = simulator.generate_noiseless_sim_images(image)
+    # sim_images = simulator.add_noise(sim_images)
 
     ssnr_calculator_fourier = SSNRSIM2D(
         illumination=illumination,

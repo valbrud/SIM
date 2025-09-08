@@ -17,7 +17,7 @@ from matplotlib import colors
 from Illumination import IlluminationPlaneWaves3D
 from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase
 from OpticalSystems import System4f3D, System4f2D
-import stattools
+import utils
 from Sources import IntensityHarmonic3D
 import tqdm
 import wrappers
@@ -1383,8 +1383,8 @@ class TestApproximations(unittest.TestCase):
         for name in noise_estimators:
             noise_estimator = noise_estimators[name]
             noise_estimator.ssnri
-            dj_ra = stattools.average_rings3d(noise_estimator.dj, (fx, fy, fz))
-            dj2_ra = stattools.average_rings3d(noise_estimator.dj**2, (fx, fy, fz))
+            dj_ra = utils.average_rings3d(noise_estimator.dj, (fx, fy, fz))
+            dj2_ra = utils.average_rings3d(noise_estimator.dj**2, (fx, fy, fz))
             full_fraction_approximation = 1/2 * dj2_ra/dj_ra + dj_ra
             nom_and_denom_separated_approximation = (1/2 + 1) * dj_ra
             fig = plt.figure()
@@ -1472,8 +1472,8 @@ class TestSSNRFromImage(unittest.TestCase):
 
         self.simulator = SIMulator2D(illumination, self.optical_system)
         image = generate_random_lines(psf_size, N, 0.3, 100, 100)
-        images = self.simulator.generate_sim_images(image)
-        noisy_images = self.simulator.generate_noisy_images(images)
+        images = self.simulator.generate_noiseless_sim_images(image)
+        noisy_images = self.simulator.add_noise(images)
 
         stack = noisy_images[0, ...]
         plt.imshow(stack[0])
@@ -1500,8 +1500,8 @@ class TestSSNRFromImage(unittest.TestCase):
 
         self.simulator = SIMulator3D(illumination, self.optical_system)
         image = generate_random_lines(psf_size, N, 0.3, 100, 100000)
-        images = self.simulator.generate_sim_images(image)
-        noisy_images = self.simulator.generate_noisy_images(images)
+        images = self.simulator.generate_noiseless_sim_images(image)
+        noisy_images = self.simulator.add_noise(images)
         stack = noisy_images[0, ...].reshape(-1, N, N)
         plt.imshow(stack[0, :, :])
         plt.show()

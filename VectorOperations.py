@@ -19,11 +19,33 @@ class VectorOperations:
 
     @staticmethod
     def rotate_vector2d(vector2d, angle):
+        """
+        Rotate a 2D vector by a given angle.
+
+        Args:
+            vector2d (np.ndarray): The 2D vector to rotate.
+            angle (float): The angle of rotation.
+
+        Returns:
+            np.ndarray: The rotated 2D vector.
+        """
         rotation_matrix = VectorOperations.rotation_matrix(angle)
         return rotation_matrix @ vector2d
 
     @staticmethod
     def rotate_vector3d(vector3d, rot_ax_vector, rot_angle):
+        """
+        Rotate a 3D vector with a bloch matrices method around a specified axis by a given angle.
+
+        Args:
+            vector3d (np.ndarray): The 3D vector to rotate.
+            rot_ax_vector (np.ndarray): The axis of rotation.
+            rot_angle (float): The angle of rotation.
+
+        Returns:
+            np.ndarray: The rotated 3D vector.
+        """
+
         length = np.dot(vector3d, vector3d) ** 0.5
         if length == 0:
             return vector3d

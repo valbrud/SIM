@@ -30,22 +30,48 @@
         
   <h1>Source code for input_parser</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module contains a class for parsing command line arguments for the initialization of GUI</span>
+<span class="sd">input_parser.py</span>
+
+<span class="sd">This module provides functionality for parsing command-line arguments and reading configuration files</span>
+<span class="sd">for the Structured Illumination Microscopy (SIM) GUI application.</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    ConfigParser: Handles argument parsing and configuration loading.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">project_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_dir</span><span class="p">,</span> <span class="s1">&#39;../../..&#39;</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">project_root</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_dir</span><span class="p">)</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">spec_from_loader</span><span class="p">,</span> <span class="n">module_from_spec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">importlib.machinery</span><span class="w"> </span><span class="kn">import</span> <span class="n">SourceFileLoader</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">GUI</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">Box</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">MainWindow</span>
 
 
 <div class="viewcode-block" id="ConfigParser">
 <a class="viewcode-back" href="../source/input_parser.html#input_parser.ConfigParser">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConfigParser</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parser for command-line arguments and configuration files.</span>
+
+<span class="sd">    Handles parsing of input arguments for GUI initialization and configuration loading.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        parser (ArgumentParser): The argument parser instance.</span>
+<span class="sd">        args: Parsed command-line arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the argument parser with defined arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;input_file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input config file&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--compute_intensity&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Compute intensity&quot;</span><span class="p">)</span>
@@ -57,6 +83,15 @@
 <a class="viewcode-back" href="../source/input_parser.html#input_parser.ConfigParser.read_configuration">[docs]</a>
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">read_configuration</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and load a configuration file as a module.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (str): The name of the configuration file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            module: The loaded configuration module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">spec_from_loader</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">,</span>
                                 <span class="n">SourceFileLoader</span><span class="p">(</span><span class="s2">&quot;config_file&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;/config/&quot;</span> <span class="o">+</span> <span class="n">file</span><span class="p">))</span>
         <span class="n">conf</span> <span class="o">=</span> <span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
@@ -71,8 +106,8 @@
     <span class="n">conf</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">read_configuration</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_file</span><span class="p">)</span>
     <span class="n">box</span> <span class="o">=</span> <span class="n">Box</span><span class="o">.</span><span class="n">Box</span><span class="p">(</span><span class="n">conf</span><span class="o">.</span><span class="n">sources</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">conf</span><span class="o">.</span><span class="n">point_number</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">input_file</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">parser</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">gui</span><span class="p">:</span>
-        <span class="n">app</span> <span class="o">=</span> <span class="n">GUI</span><span class="o">.</span><span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
-        <span class="n">window</span> <span class="o">=</span> <span class="n">GUI</span><span class="o">.</span><span class="n">MainWindow</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="o">.</span><span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="o">.</span><span class="n">MainWindow</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span>
 </pre></div>
 

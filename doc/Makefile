@@ -5,6 +5,7 @@
 # from the environment for the first two.
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
+SPHINXAPIDOC  ?= sphinx-apidoc
 SOURCEDIR     = .
 BUILDDIR      = _build
 
@@ -13,6 +14,10 @@ help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 .PHONY: help Makefile
+
+# Target to generate .rst files for GUI modules
+apidoc-gui:
+	@$(SPHINXAPIDOC) -f -o "$(SOURCEDIR)" ../GUI
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

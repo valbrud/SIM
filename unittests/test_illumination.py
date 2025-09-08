@@ -16,7 +16,7 @@ from Box import Box
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
-import stattools
+import utils
 import sys
 
 from Illumination import *

@@ -14,7 +14,7 @@ import ShapesGenerator
 import scipy
 import matplotlib.pyplot as plt
 import SIMulator
-import stattools
+import utils
 import wrappers
 from config.BFPConfigurations import *
 import unittest
@@ -29,7 +29,7 @@ class TestKernels(unittest.TestCase):
     def test_sinc_kernel(self):
         for size in range(1, 11, 2):
             kernel = kernels.sinc_kernel2d(size)
-            expanded = stattools.expand_kernel(kernel, (9, 9))
+            expanded = utils.expand_kernel(kernel, (9, 9))
             self.assertEqual(expanded.shape, (9, 9))
             plt.imshow(expanded, cmap='gray')
             # plt.title(f'Sinc Kernel Size {size}')
@@ -40,7 +40,7 @@ class TestKernels(unittest.TestCase):
     def test_psf_kernel2d(self):
         for size in range(1, 11, 2):
             kernel = kernels.psf_kernel2d(size, (0.1, 0.1))
-            expanded = stattools.expand_kernel(kernel, (9, 9))
+            expanded = utils.expand_kernel(kernel, (9, 9))
             self.assertEqual(expanded.shape, (9, 9))
             plt.imshow(expanded, cmap='gray')
             # plt.title(f'PSF Kernel Size {size}')
@@ -1126,7 +1126,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         values = np.array(values)
         #
         tj_approximate = np.zeros((filter_size, filter_size, 1))
-        tj_approximate = stattools.reverse_interpolation_nearest(x[N//2 - filter_size//2: N//2 + filter_size//2 + 1],
+        tj_approximate = utils.reverse_interpolation_nearest(x[N//2 - filter_size//2: N//2 + filter_size//2 + 1],
                                                               y[N//2 - filter_size//2: N//2 + filter_size//2 + 1], points, values)
         for r in range(illumination.Mr):
             angle = illumination.angles[r]
@@ -1176,7 +1176,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         # tj_approximate = np.zeros((filter_size, filter_size, 1))
         # tj_approximate[:, :, 0] = tj_real[N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2]
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N)
-        images = simulator.generate_sim_images(image)
+        images = simulator.generate_noiseless_sim_images(image)
         image_sr = simulator.reconstruct_real2d_finite_kernel(images, kernel)
 
         image_filtered = scipy.ndimage.convolve(image_sr, tj_approximate[:, :], mode='constant', cval=0.0, origin=0)
@@ -1356,7 +1356,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         filter_size = N
 
         tj_approximate = np.zeros((filter_size, filter_size))
-        tj_approximate = stattools.reverse_interpolation_nearest(x[N // 2 - filter_size // 2: N // 2 + filter_size // 2 + 1],
+        tj_approximate = utils.reverse_interpolation_nearest(x[N // 2 - filter_size // 2: N // 2 + filter_size // 2 + 1],
                                                                           y[N // 2 - filter_size // 2: N // 2 + filter_size // 2 + 1], points, values)
 
         apodization_size = 3
@@ -1384,7 +1384,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         # plt.show()
 
         simulator = SIMulator.SIMulator(illumination, optical_system, psf_size, N)
-        images = simulator.generate_sim_images2d(image)
+        images = simulator.generate_noiseless_sim_images2d(image)
         # for rotation in images:
         #     for image in rotation:
         #         plt.imshow(image)

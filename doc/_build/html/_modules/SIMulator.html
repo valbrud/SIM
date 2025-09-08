@@ -32,11 +32,14 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">SIMulator.py</span>
 
-<span class="sd">This module contains the SIMulator class for simulating raw</span>
-<span class="sd">structured illumination microscopy (SIM) images and/or reconstructing</span>
-<span class="sd">the super resolution images from the raw SIM images.</span>
+<span class="sd">This module provides classes for simulating Structured Illumination Microscopy (SIM) images.</span>
+<span class="sd">It includes functionality for generating raw SIM images from ground truth data,</span>
+<span class="sd">adding noise to simulate realistic imaging conditions, and computing widefield images.</span>
 
-<span class="sd">This class will be probably split into two classes in the future. The detailed documentation will be provided in the further release.</span>
+<span class="sd">Classes:</span>
+<span class="sd">    SIMulator - Base abstract class for SIM simulation</span>
+<span class="sd">    SIMulator2D - 2D SIM image simulation</span>
+<span class="sd">    SIMulator3D - 3D SIM image simulation</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -46,7 +49,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">Sources</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">wrappers</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">Box</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoxSIM</span><span class="p">,</span> <span class="n">Field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">Illumination</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlaneWavesSIM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">Camera</span><span class="w"> </span><span class="kn">import</span> <span class="n">Camera</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">VectorOperations</span><span class="w"> </span><span class="kn">import</span> <span class="n">VectorOperations</span>
@@ -56,30 +58,56 @@
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SIMulator</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">DimensionMetaAbstract</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SIMulator class for simulating raw structured illumination microscopy (SIM) images.</span>
-<span class="sd">    The base class implements all the functionality but cannot be implemented.</span>
-<span class="sd">    Use dimensional children classes instead.</span>
+<span class="sd">    Base class for simulating Structured Illumination Microscopy (SIM) images.</span>
 <span class="sd">    </span>
-<span class="sd">    Atrubtes:</span>
-<span class="sd">        illumination: PlaneWavesSIM object, the illumination configuration for the SIM experiment.</span>
-<span class="sd">        optical_system: OpticalSystem object, the optical system used in the experiment.</span>
-<span class="sd">        camera: Camera object, optional, the camera used to capture images.</span>
-<span class="sd">        readout_noise_variance: float, optional, the variance of readout noise.</span>
-<span class="sd">        effective_psfs: numpy.ndarray, optional, precomputed effective PSFs for the simulation.</span>
+<span class="sd">    This abstract base class provides the core functionality for SIM image simulation.</span>
+<span class="sd">    It cannot be instantiated directly - use the dimensional subclasses (SIMulator2D, SIMulator3D) instead.</span>
 <span class="sd">    </span>
-<span class="sd">    methods:</span>
-<span class="sd">        generate_sim_images(ground_truth): Generates simulated images based on the ground truth image.</span>
-<span class="sd">        add_noise(image): Adds noise to the simulated images based on the camera settings or readout noise variance.</span>
-<span class="sd">        generate_noisy_images(sim_images): Generates noisy images from the simulated images.</span>
-<span class="sd">        generate_widefield(image): Generates a widefield image from the input image using the optical system&#39;s PSF.</span>
+<span class="sd">    The simulator generates raw SIM images from ground truth data by convolving with</span>
+<span class="sd">    effective PSFs and applying phase modulation patterns corresponding to different</span>
+<span class="sd">    illumination angles and phases.</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    illumination : PlaneWavesSIM</span>
+<span class="sd">        The illumination configuration for the SIM experiment.</span>
+<span class="sd">    optical_system : OpticalSystem</span>
+<span class="sd">        The optical system used in the experiment.</span>
+<span class="sd">    camera : Camera, optional</span>
+<span class="sd">        The camera used to capture images. If None, noise is added using readout_noise_variance.</span>
+<span class="sd">    readout_noise_variance : float</span>
+<span class="sd">        The variance of readout noise to add to simulated images.</span>
+<span class="sd">    effective_psfs : numpy.ndarray</span>
+<span class="sd">        Precomputed effective PSFs for the simulation.</span>
+<span class="sd">    phase_modulation_patterns : numpy.ndarray</span>
+<span class="sd">        Precomputed phase modulation patterns for the reconstruction.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">:</span> <span class="n">PlaneWavesSIM</span><span class="p">,</span>
                  <span class="n">optical_system</span><span class="p">:</span> <span class="n">OpticalSystem</span><span class="p">,</span>
                  <span class="n">camera</span><span class="p">:</span> <span class="n">Camera</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">effective_psfs</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the SIM simulator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        illumination : PlaneWavesSIM</span>
+<span class="sd">            The illumination configuration for the SIM experiment.</span>
+<span class="sd">        optical_system : OpticalSystem</span>
+<span class="sd">            The optical system used in the experiment.</span>
+<span class="sd">        camera : Camera, optional</span>
+<span class="sd">            The camera used to capture images. If provided, noise will be added</span>
+<span class="sd">            based on camera properties.</span>
+<span class="sd">        readout_noise_variance : float, optional</span>
+<span class="sd">            The variance of readout noise to add if no camera is provided.</span>
+<span class="sd">            Default is 0 (no noise).</span>
+<span class="sd">        effective_psfs : numpy.ndarray, optional</span>
+<span class="sd">            Precomputed effective PSFs. If None, they will be computed from</span>
+<span class="sd">            the optical system.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span> <span class="o">=</span> <span class="n">optical_system</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span> <span class="o">=</span> <span class="n">illumination</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">=</span> <span class="n">readout_noise_variance</span>
@@ -91,20 +119,33 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">effective_psfs</span> <span class="o">=</span> <span class="n">effective_psfs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phase_modulation_patterns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">get_phase_modulation_patterns</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SIMulator.generate_sim_images">
-<a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_sim_images">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_sim_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">):</span>
+<div class="viewcode-block" id="SIMulator.generate_noiseless_sim_images">
+<a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_noiseless_sim_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_noiseless_sim_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate noiseless SIM images from ground truth data.</span>
+
+<span class="sd">        This method simulates the raw SIM images that would be captured by a microscope</span>
+<span class="sd">        without adding any noise. The simulation convolves the ground truth with effective</span>
+<span class="sd">        PSFs and applies phase modulation patterns for different illumination conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ground_truth : numpy.ndarray</span>
+<span class="sd">            The ground truth image to simulate SIM imaging from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Array of shape (Mr, Mt, *psf_shape) containing the simulated noiseless SIM images,</span>
+<span class="sd">            where Mr is the number of rotations and Mt is the number of phases per rotation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="c1"># sim_images_ft = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)</span>
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">sim_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">rearranged_indices</span><span class="p">:</span>
-                <span class="n">projective_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">rearranged_indices</span><span class="p">[</span><span class="n">sim_index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">rearranged_indices</span><span class="p">[</span><span class="n">sim_index</span><span class="p">]</span> <span class="k">else</span> <span class="p">()</span>
-                <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">glue_indices</span><span class="p">(</span><span class="n">sim_index</span><span class="p">,</span> <span class="n">projective_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
-                <span class="n">wavevector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">wavevector</span><span class="p">)</span>
-                <span class="n">wavevector</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">dimensions</span><span class="p">))]</span> <span class="o">=</span> <span class="mi">0</span>
-                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
-                    <span class="n">total_phase_modulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_modulation_patterns</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">phase_matrix</span><span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">)]</span>
-                    <span class="n">sim_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">+=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">total_phase_modulation</span> <span class="o">*</span> <span class="n">ground_truth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_modulation_patterns</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_psfs</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sim_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">rearranged_indices</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
+                <span class="n">total_phase_modulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_modulation_patterns</span><span class="p">[</span><span class="n">sim_index</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">phase_matrix</span><span class="p">[(</span><span class="n">sim_index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+                <span class="n">sim_images</span><span class="p">[</span><span class="n">sim_index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">]</span> <span class="o">+=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">total_phase_modulation</span> <span class="o">*</span> <span class="n">ground_truth</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_modulation_patterns</span><span class="p">[</span><span class="n">sim_index</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_psfs</span><span class="p">[</span><span class="n">sim_index</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
                     
         <span class="n">sim_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">sim_images</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">10</span>
         <span class="k">return</span> <span class="n">sim_images</span></div>
@@ -112,30 +153,78 @@
 
 <div class="viewcode-block" id="SIMulator.add_noise">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.add_noise">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add noise to images to simulate realistic imaging conditions.</span>
+
+<span class="sd">        If a camera object is provided, uses the camera&#39;s noise model.</span>
+<span class="sd">        Otherwise, adds Poisson noise and Gaussian readout noise.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        images : numpy.ndarray</span>
+<span class="sd">            The input images to add noise to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Images with added noise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="p">:</span>
-            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">one_rotation</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">one_rotation</span><span class="p">:</span>
+                    <span class="n">image</span><span class="p">[</span><span class="n">one_rotation</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="n">one_rotation</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">+</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">+</span>
                                   <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span><span class="p">))</span>
             <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span><span class="p">)</span>
-            <span class="n">image</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">image</span></div>
+            <span class="n">images</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">sigma</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">images</span></div>
 
 
-<div class="viewcode-block" id="SIMulator.generate_noisy_images">
-<a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_noisy_images">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_noisy_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sim_images</span><span class="p">):</span>
-        <span class="n">noisy_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sim_images</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span><span class="p">):</span>
-                <span class="n">noisy_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_noise</span><span class="p">(</span><span class="n">sim_images</span><span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="p">])</span>
+<div class="viewcode-block" id="SIMulator.generate_noisy_sim_images">
+<a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_noisy_sim_images">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_noisy_sim_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ground_truth</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate noisy SIM images from ground truth data.</span>
 
+<span class="sd">        This is a convenience method that first generates noiseless SIM images</span>
+<span class="sd">        and then adds noise to simulate realistic imaging conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ground_truth : numpy.ndarray</span>
+<span class="sd">            The ground truth image to simulate SIM imaging from.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Array of shape (Mr, Mt, *psf_shape) containing the simulated noisy SIM images.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">noiseless_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_noiseless_sim_images</span><span class="p">(</span><span class="n">ground_truth</span><span class="p">)</span>
+        <span class="n">noisy_images</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_noise</span><span class="p">(</span><span class="n">noiseless_images</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">noisy_images</span></div>
 
+    
 <div class="viewcode-block" id="SIMulator.generate_widefield">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator.generate_widefield">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">generate_widefield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a widefield image by convolving with the optical system&#39;s PSF.</span>
+
+<span class="sd">        This simulates what would be observed in conventional widefield microscopy</span>
+<span class="sd">        without structured illumination.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image : numpy.ndarray</span>
+<span class="sd">            The input image to convolve with the PSF.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            The widefield image after convolution with the optical system&#39;s PSF.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">widefield_image</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">signal</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">widefield_image</span></div>
 </div>
@@ -145,6 +234,13 @@
 <div class="viewcode-block" id="SIMulator2D">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SIMulator2D</span><span class="p">(</span><span class="n">SIMulator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    2D SIM image simulator.</span>
+<span class="sd">    </span>
+<span class="sd">    This class provides SIM simulation specifically for 2D images.</span>
+<span class="sd">    It enforces that the optical system is 2D and inherits all simulation</span>
+<span class="sd">    functionality from the base SIMulator class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">:</span> <span class="n">PlaneWavesSIM</span><span class="p">,</span>
                  <span class="n">optical_system</span><span class="p">:</span> <span class="n">OpticalSystem</span><span class="p">,</span>
@@ -161,6 +257,13 @@
 <div class="viewcode-block" id="SIMulator3D">
 <a class="viewcode-back" href="../source/SIMulator.html#SIMulator.SIMulator3D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SIMulator3D</span><span class="p">(</span><span class="n">SIMulator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    3D SIM image simulator.</span>
+<span class="sd">    </span>
+<span class="sd">    This class provides SIM simulation specifically for 3D images.</span>
+<span class="sd">    It enforces that the optical system is 3D and inherits all simulation</span>
+<span class="sd">    functionality from the base SIMulator class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">:</span> <span class="n">PlaneWavesSIM</span><span class="p">,</span>
                  <span class="n">optical_system</span><span class="p">:</span> <span class="n">OpticalSystem</span><span class="p">,</span>

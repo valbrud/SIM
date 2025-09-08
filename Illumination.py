@@ -30,12 +30,12 @@ from abc import abstractmethod, ABC
 from Sources import IntensityHarmonic3D
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
-import stattools
+import utils
 from ShiftsFinder import ShiftsFinder3d, ShiftsFinder2d
 from Dimensions import *
 from Dimensions import DimensionMetaAbstract
 import copy 
-from stattools import off_grid_ft
+from utils import off_grid_ft
 
 class Illumination(ABC, metaclass=DimensionMetaAbstract):
     """
@@ -73,11 +73,11 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         _spatial_shifts (list): List of spatial shifts.
         _Mr (int): Number of rotations.
         Mt (int): Number of spatial shifts.
-        waves (dict): Dictionary of intensity plane waves.
+        waves (dict): Dictionary of illumination harmonics.
         phase_matrix (dict): Dictionary of all phase the relevant phase shifts.
 
     methods:
-        init_from_list: Class method to initialize Illumination from a list of intensity plane waves.
+        init_from_list: Class method to initialize Illumination from a list of illumination harmonics.
         index_harmonics: Index the frequencies of the intensity harmonics.
         glue_indices: Glue the indices of the SIM and projected indices.
         get_wavevectors: Get the wavevectors for a given rotation.
@@ -101,7 +101,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         Collect the information describing the SIM experiment
 
         Args:
-            intensity_harmonics_dict (dict): Dictionary of intensity plane waves.
+            intensity_harmonics_dict (dict): Dictionary of illumination harmonics.
             Mr (int): Number of rotations.
         """
         self._Mr = Mr
@@ -159,10 +159,10 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                        angles=None,
                        ) -> 'PlaneWavesSIM':
         """
-        Class method to initialize Illumination from a list of intensity plane waves.
+        Class method to initialize Illumination from a list of illumination harmonics.
 
         Args:
-            intensity_harmonics_list (list): List of intensity plane waves.
+            intensity_harmonics_list (list): List of illumination harmonics.
             base_vector_lengths (tuple): Base vector lengths of the illumination Fourier space Bravais lattice.
             dimensions (tuple): Indicates which SIM dimensions are projective(0) and true(1). In this notation
             'true' means that illumination shifts are necessary for disentanglement in this direction. For example,
@@ -603,6 +603,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         return am
     
     def __eq__(self, other):
+        """
+        Compare illumination classes. 
+        """
         if not isinstance(other, PlaneWavesSIM):
             return False
         if self.Mr != other.Mr or not np.allclose(self.angles, other.angles):
@@ -732,14 +735,14 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
     @staticmethod
     def find_ipw_from_pw(plane_waves) -> dict[tuple[Any], IntensityHarmonic3D].values:
         """
-        Static method to find intensity plane waves
+        Static method to find illumination harmonics
          (i.e. Fourier transform of the illumination pattern) from plane waves.
 
         Args:
             plane_waves (list): List of plane waves.
 
         Returns:
-            list: List of intensity plane waves.
+            list: List of illumination harmonics.
         """
         intensity_harmonics = {}
         for projection_index in (0, 1, 2):
@@ -858,15 +861,23 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
 
 
 class PlaneWavesSIMNonlinear(PlaneWavesSIM):
-
+    """
+    Expands the functionality of PlaneWavesSIM to the case of non-linear fluorescence response. 
+    """
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic],
                  nonlinear_expansion_coefficients: tuple[float, ...],
                  dimensions: tuple[int, ...],
-                 Mr=1,
+                 Mr: int=1,
                  spatial_shifts=None, 
-                 angles=None):
-        
+                 angles: tuple[float, ...]=None):
+        """
+        Same as in linear case, but with extra nonlinear_expansion_coefficients.
+
+        Args: 
+        nonlinear_expansion_coefficients (tuple[float, ...]): Polinomial coefficients for the nonlinear expansion, showing 
+        how the non-linear response is modeled. Reduces to the linear case when dict is (0, 1, 0, ...)
+        """
         key = next(iter(intensity_harmonics_dict.keys()))
         harmonics_filtered = {key: intensity_harmonics_dict[key] for key in intensity_harmonics_dict.keys() if not np.isclose(intensity_harmonics_dict[key].amplitude, 0)}
         harmonics_nonlinear = {}
@@ -960,6 +971,13 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
                                       illumination: PlaneWavesSIM,
                                       nonlinear_expansion_coefficients: tuple[float, ...]):
         intensity_harmonics_dict = illumination.harmonics
+        """
+        Init the non-linear illumination model from a linear one with the same parameters but non-linear response modeled by
+        nonlinear_expansion_coefficients.
+
+        Args:
+          nonlinear_expansion_coefficients (tuple[float, ...]): Coefficients for the nonlinear expansion, showing how the non-linear response is modeled.
+        """
         return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, illumination.dimensions, illumination.Mr, illumination.spatial_shifts, illumination.angles)
 
     @classmethod

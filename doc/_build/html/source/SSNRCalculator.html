@@ -14,8 +14,8 @@
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="ShapesGenerator module" href="ShapesGenerator.html" />
-    <link rel="prev" title="SSNRBasedFiltering module" href="SSNRBasedFiltering.html" /> 
+    <link rel="next" title="VectorOperations module" href="VectorOperations.html" />
+    <link rel="prev" title="Sources module" href="Sources.html" /> 
   </head><body>
       <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
           <span>SIMSSNR 1.0.0 documentation</span></a></h1>
@@ -24,11 +24,11 @@
       <div class="topnav" role="navigation" aria-label="Top">
       
         <p>
-        «&#160;&#160;<a href="SSNRBasedFiltering.html">SSNRBasedFiltering module</a>
+        «&#160;&#160;<a href="Sources.html">Sources module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="ShapesGenerator.html">ShapesGenerator module</a>&#160;&#160;»
+        <a href="VectorOperations.html">VectorOperations module</a>&#160;&#160;»
         </p>
 
       </div>
@@ -119,6 +119,20 @@ for a given system optical system and illumination.</p>
 <dt class="sig sig-object py" id="id3">
 <span class="sig-name descname"><span class="pre">compute_ssnri_volume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volume_element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.compute_ssnri_volume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRBase.estimate_ssnr_from_image_binomial_splitting">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">estimate_ssnr_from_image_binomial_splitting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Generator</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase.estimate_ssnr_from_image_binomial_splitting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase.estimate_ssnr_from_image_binomial_splitting" title="Link to this definition">¶</a></dt>
+<dd><p>Spectral Signal-to-Noise Ratio (SSNR) based on ½–½ binomial pixel splitting.</p>
+<ul class="simple">
+<li><p>Single Poisson image  → pixels are split once per iteration</p></li>
+<li><dl class="simple">
+<dt>Stack of images      → <strong>each frame</strong> is split independently and the</dt><dd><p>resulting SSNR maps are averaged.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id4">
@@ -252,6 +266,11 @@ for a given system optical system and illumination.</p>
 <dd></dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.illumination_reconstruction">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">illumination_reconstruction</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.illumination_reconstruction" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.kernel">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.kernel" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -260,6 +279,12 @@ for a given system optical system and illumination.</p>
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.optical_system">
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.optical_system" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.ring_average_ssnri_approximated">
+<span class="sig-name descname"><span class="pre">ring_average_ssnri_approximated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.ring_average_ssnri_approximated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.ring_average_ssnri_approximated" title="Link to this definition">¶</a></dt>
+<dd><p>Compute ring avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; instead of &lt;Dj^2 / Vj&gt;</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -324,11 +349,11 @@ for a given system optical system and illumination.</p>
       <div class="bottomnav" role="navigation" aria-label="Bottom">
       
         <p>
-        «&#160;&#160;<a href="SSNRBasedFiltering.html">SSNRBasedFiltering module</a>
+        «&#160;&#160;<a href="Sources.html">Sources module</a>
         &#160;&#160;::&#160;&#160;
         <a class="uplink" href="../index.html">Contents</a>
         &#160;&#160;::&#160;&#160;
-        <a href="ShapesGenerator.html">ShapesGenerator module</a>&#160;&#160;»
+        <a href="VectorOperations.html">VectorOperations module</a>&#160;&#160;»
         </p>
 
       </div>

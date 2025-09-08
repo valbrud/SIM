@@ -4,6 +4,5 @@ numpy==2.2.0
 pandas==2.2.3
 pyfftw==0.15.0
 PyQt5==5.15.11
-PyQt5-sip==12.15.0
 scikit-image==0.25.1
 joblib==1.4.2

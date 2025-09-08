@@ -13,12 +13,12 @@ import numpy as np
 from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 import OpticalSystems
 import wrappers
-from stattools import average_rings2d
+from utils import average_rings2d
 import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
 from Dimensions import DimensionMeta
-import stattools
+import utils
 
 class SSNRBase(metaclass=DimensionMeta):
     """
@@ -296,7 +296,7 @@ class SSNRSIM(SSNRBase):
 
     @kernel.setter
     def kernel(self, kernel_new):
-        kernel_new = stattools.expand_kernel(kernel_new, self.optical_system.psf.shape)
+        kernel_new = utils.expand_kernel(kernel_new, self.optical_system.psf.shape)
 
         self.kernel_ft = wrappers.wrapped_ifftn(kernel_new)
         self.kernel_ft /= np.amax(self.kernel_ft)
@@ -376,7 +376,7 @@ class SSNRSIM(SSNRBase):
         return ((self.dj * np.abs(object_ft)) ** 2 /
                 (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
 
-    def ring_average__ssnri_approximated(self, number_of_samples=None):
+    def ring_average_ssnri_approximated(self, number_of_samples=None):
         """
         Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
         """

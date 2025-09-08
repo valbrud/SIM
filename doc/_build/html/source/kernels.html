@@ -45,6 +45,36 @@ psf_kernel2d: Generate a 2D kernel that has the shape of PSF in the Fourier doma
 </dd>
 </dl>
 <dl class="py function">
+<dt class="sig sig-object py" id="kernels.angular_notch_kernel">
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">angular_notch_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size_px</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_stop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design_grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#angular_notch_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.angular_notch_kernel" title="Link to this definition">¶</a></dt>
+<dd><p>Design a small real-space convolution kernel whose frequency response suppresses
+m-fold (Cn) anisotropic peaks starting at a given radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kernel_size_px</strong> (<em>int</em>) – Odd spatial kernel size in pixels (e.g., 5, 7, 9, 11, 13).</p></li>
+<li><p><strong>cn</strong> (<em>int</em>) – Rotational symmetry order (2, 3, 4, 6, …). Uses cos(cn * theta).</p></li>
+<li><p><strong>f_start</strong> (<em>float</em>) – Start radius in cycles/pixel where the angular notch begins (e.g., 0.20–0.30).
+Use ~0.25 if peaks cluster near half-cutoff for Nyquist-sampled data.</p></li>
+<li><p><strong>f_stop</strong> (<em>float</em><em>, </em><em>optional</em>) – Stop radius of the notch (default 0.5, i.e., Nyquist). The notch ramps smoothly
+from f_start to f_stop using a raised-cosine. Must satisfy 0 &lt; f_start &lt; f_stop ≤ 0.5.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em>, </em><em>optional</em>) – Notch depth (0–1 typical). Larger beta → stronger isotropization (more peak suppression).</p></li>
+<li><p><strong>fb</strong> (<em>float</em><em>, </em><em>optional</em>) – Width of an isotropic Gaussian base exp(-(R/fb)^2) that keeps the spatial kernel compact.
+Larger fb → tighter kernel (less base low-pass).</p></li>
+<li><p><strong>theta0</strong> (<em>float</em><em>, </em><em>optional</em>) – Angular offset in radians to align the notch with rotated peak constellations.</p></li>
+<li><p><strong>design_grid</strong> (<em>int</em><em>, </em><em>optional</em>) – Odd size of the design grid in frequency domain (defaults to max(65, 8*N+1)).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>K</strong> – Real-valued kernel normalized to sum to 1 (DC-preserving).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(N, N) np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="kernels.psf_kernel2d">
 <span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">psf_kernel2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dense_kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#psf_kernel2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.psf_kernel2d" title="Link to this definition">¶</a></dt>
 <dd><p>Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).</p>
@@ -63,9 +93,37 @@ psf_kernel2d: Generate a 2D kernel that has the shape of PSF in the Fourier doma
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="kernels.sinc_kernel">
-<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_r_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_z_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel" title="Link to this definition">¶</a></dt>
-<dd><p>Generate a 2D/3D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.</p>
+<dt class="sig sig-object py" id="kernels.sinc_kernel1d">
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel1d" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 1D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel_r_size</strong> – The size of the kernel in the radial direction.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 1D triangular kernel.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kernels.sinc_kernel2d">
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel2d" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 2D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel_r_size</strong> – The size of the kernel in the radial direction.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D triangular kernel.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kernels.sinc_kernel3d">
+<span class="sig-prename descclassname"><span class="pre">kernels.</span></span><span class="sig-name descname"><span class="pre">sinc_kernel3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_r_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_z_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/kernels.html#sinc_kernel3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#kernels.sinc_kernel3d" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a 3D triangular kernel, resulting in :math: <cite>sinc^2</cite> in Fourier space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
