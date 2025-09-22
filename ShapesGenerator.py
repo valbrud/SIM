@@ -20,9 +20,9 @@ from scipy.ndimage import gaussian_filter
 
 def generate_random_spherical_particles(image_size: tuple[int, int, int],
                                         point_number: int,
-                                        r: float = 0.1,
-                                        N: int = 10,
-                                        I: int = 1000,
+                                        radius: float = 0.1,
+                                        num_particles: int = 10,
+                                        intensity: int = 1000,
                                         generate_default: bool = False) -> np.ndarray:
     """
     Generate a 3D array containing randomly positioned spherical particles.
@@ -51,22 +51,44 @@ def generate_random_spherical_particles(image_size: tuple[int, int, int],
     """
     if generate_default:
         np.random.seed(1234)
-    indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                   np.arange(point_number), indexing='ij'), axis=-1)
-    grid = (indices / point_number - 1 / 2)
-    shape = grid.shape[:3]
-    array = np.zeros(shape)
-    grid *= image_size[None, None, None, :]
-    sx, sy, sz = image_size
-    cx = np.random.rand(N) * sx - sx // 2
-    cy = np.random.rand(N) * sy - sy // 2
-    cz = np.random.rand(N) * sz - sz // 2
-    centers = np.column_stack((cx, cy, cz))
 
-    for i in range(N):
-        dist2 = np.sum((grid - centers[None, None, None, i]) ** 2, axis=3)
-        array[dist2 < r ** 2] += I
-    return array
+    if image_size.size not in (2, 3):
+        raise ValueError("Invalid dimensionality. Choose either 2 or 3.")
+
+    if image_size.size == 2:
+        indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
+                                    indexing='ij'), axis=-1)
+        grid = (indices / point_number - 1 / 2)
+        shape = grid.shape[:2]
+        array = np.zeros(shape)
+        grid *= image_size[None, None, :]
+        sx, sy = image_size
+        cx = np.random.rand(num_particles) * sx - sx // 2
+        cy = np.random.rand(num_particles) * sy - sy // 2
+        centers = np.column_stack((cx, cy))
+
+        for i in range(num_particles):
+            dist2 = np.sum((grid - centers[None, None, i]) ** 2, axis=2)
+            array[dist2 < radius ** 2] += intensity
+        return array
+
+    if image_size.size == 3:
+        indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
+                                    np.arange(point_number), indexing='ij'), axis=-1)
+        grid = (indices / point_number - 1 / 2)
+        shape = grid.shape[:3]
+        array = np.zeros(shape)
+        grid *= image_size[None, None, None, :]
+        sx, sy, sz = image_size
+        cx = np.random.rand(num_particles) * sx - sx // 2
+        cy = np.random.rand(num_particles) * sy - sy // 2
+        cz = np.random.rand(num_particles) * sz - sz // 2
+        centers = np.column_stack((cx, cy, cz))
+
+        for i in range(num_particles):
+            dist2 = np.sum((grid - centers[None, None, None, i]) ** 2, axis=3)
+            array[dist2 < radius ** 2] += intensity
+        return array
 
 
 def generate_sphere_slices(image_size: tuple[int, int, int],

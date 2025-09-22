@@ -394,12 +394,12 @@ class TestConstructPupilAberration(unittest.TestCase):
         #                 "Aberration for (2,2) mode should be symmetric in phi.")
 
     def test_OTF_2D_aberrated(self):
-        alpha = np.pi / 4
-        n = 1.33
+        alpha = 67/57
+        n = 1.518
         NA = n * np.sin(alpha)
-        dx = 1 / (4 * NA)
+        dx = 8 / 68
         dy = dx
-        N = 101
+        N = 61
         max_r = N // 2 * dx
         psf_size = 2 * np.array((max_r, max_r))
         x = np.linspace(-max_r, max_r, N)
@@ -407,6 +407,26 @@ class TestConstructPupilAberration(unittest.TestCase):
         fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy), N)
 
+        # N = 61 
+        # wavelength = 680e-9
+        # px_scaled = 80e-9
+        # dx = px_scaled / wavelength
+        # NA = 1.4
+        # nmedium = 1.518
+        # alpha = np.arcsin(NA / nmedium)
+        # print(alpha)
+
+        # max_r = dx * N // 2
+        # x = np.linspace(-max_r, max_r, N)
+        # y = np.copy(x)
+        # psf_size = 2 * np.array((max_r, max_r))
+
+        # fx = np.linspace(-1/(2 * dx), 1/(2 * dx), N)
+        # fy = np.copy(fx)
+        # fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
+
+        fxn = fx / (2 * NA)
+        fyn = fy / (2 * NA)
         arg = N // 2
         # print(fz[arg])
 
@@ -420,7 +440,11 @@ class TestConstructPupilAberration(unittest.TestCase):
 
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
         aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(4, 0): 0.072})
+                                                                          zernieke={(2, 0): 0.0, (4, 0): 0.0})
+        
+        plt.plot(non_aberrated_otf[N//2, N//2:], label='Non-aberrated OTF') 
+        plt.plot(aberrated_otf_spherical[N//2, N//2:], label='Spherical Aberration OTF') 
+        plt.show()
         aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
                                                                           zernieke={(3, 1): 0.072})
         aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N),

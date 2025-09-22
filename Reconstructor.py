@@ -28,6 +28,7 @@ from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
 import utils
 from windowing import make_mask_cosine_edge2d
+
 class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     """
     Base class for reconstructing images from structured illumination microscopy (SIM) data.
@@ -71,9 +72,9 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
             Additional keyword arguments.
         """
         self.illumination = illumination
-        self.optical_system = optical_system
+        self._optical_system = optical_system
 
-        self.kernel = kernel
+        self._kernel = kernel
         self.phase_modulation_patterns = phase_modulation_patterns
 
         if phase_modulation_patterns:
@@ -83,8 +84,23 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                 raise AttributeError("If phase modulation patterns are not provided, optical system must be provided to compute them.")
             self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
+    @property
+    def optical_system(self):
+        return self._optical_system
+    
+    @optical_system.setter
+    def optical_system(self, new_optical_system):
+        self._optical_system = new_optical_system
+        if self.kernel is None:
+            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
+        else:
+            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+    @property
+    def kernel(self):
+        return self._kernel
+
     @abstractmethod
-    def reconstruct(self, sim_images, upsample_factor=2):
+    def reconstruct(self, sim_images, upsample_factor=1):
         """
         Generate a row reconstructed image from SIM data.
 
@@ -107,7 +123,7 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         """
         ...
     
-    def upsample(self, sim_images, factor=2):
+    def upsample(self, sim_images, upsample_factor=1):
         """
         Upsample the SIM images by the given factor.
 
@@ -123,7 +139,7 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         numpy.ndarray
             The upsampled SIM images.
         """
-        upsampled = np.array([np.array([utils.upsample(image, factor=factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
+        upsampled = np.array([np.array([utils.upsample(image, factor=upsample_factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
         return upsampled
     
     def get_widefield(self, sim_images):
@@ -200,6 +216,12 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 _, self.effective_kernels = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
         self.return_ft = return_ft
 
+    @ReconstructorSIM.kernel.setter
+    def kernel(self, new_kernel):
+        self._kernel = utils.expand_kernel(new_kernel, self.optical_system.otf.shape)
+        _, self.effective_kernels = self.illumination.compute_effective_kernels(self._kernel, self.optical_system.psf_coordinates)
+
+
     def _compute_shifted_image_ft(self, image, r, m):
         """
         Compute the Fourier transform of a phase-shifted image.
@@ -222,7 +244,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
         return shifted_image_ft
 
-    def reconstruct(self, sim_images, upsample_factor=2):
+    def reconstruct(self, sim_images, upsample_factor=1):
         """
         Explicitely performs SIM reconstruction in the Fourier domain.
         """
@@ -292,6 +314,10 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                 self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic])
 
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
+
+    @ReconstructorSIM.kernel.setter
+    def kernel(self, new_kernel):
+        self._kernel = new_kernel
 
     def reconstruct(self, sim_images, upsample_factor=1):
         """

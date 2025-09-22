@@ -13,6 +13,8 @@ import wrappers
 
 def frc(image1, image2, is_fourier=False, num_bins=100):
     """
+    AI-generated function. 
+    
     Compute the Fourier Ring Correlation (FRC) between two images.
     
     Parameters:
@@ -56,6 +58,7 @@ def frc(image1, image2, is_fourier=False, num_bins=100):
     for i in range(num_bins):
         # Create a mask for pixels within the current radial bin
         mask = (r >= bins[i]) & (r < bins[i+1])
+        freq[i] = (bins[i] + bins[i+1]) / 2
         if np.any(mask):
             # Compute the numerator: cross-correlation (phase sensitive)
             numerator = np.sum(f1[mask] * np.conjugate(f2[mask]))
@@ -63,7 +66,6 @@ def frc(image1, image2, is_fourier=False, num_bins=100):
             denominator = np.sqrt(np.sum(np.abs(f1[mask])**2) * np.sum(np.abs(f2[mask])**2))
             frc_values[i] = np.abs(numerator) / denominator if denominator != 0 else 0.0
             # Define the spatial frequency for the bin as the mean radius
-            freq[i] = (bins[i] + bins[i+1]) / 2
     return frc_values, freq
 
 def correct_for_readout_noise(image, readout_noise): ...

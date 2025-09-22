@@ -1,4 +1,5 @@
 import os.path
+import pickle
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
@@ -47,16 +48,19 @@ N = 255
 wavelength = 680e-9
 px_scaled = 80e-9
 dx = px_scaled / wavelength
-NA = 1.38
+NA = 1.4
+NA_best_fit = 1.15
 nmedium = 1.518
 alpha = np.arcsin(NA / nmedium)
+alpha_best_fit = np.arcsin(NA_best_fit / nmedium)
+
 max_r = dx * N // 2
 x = np.linspace(-max_r, max_r, N)
 y = np.copy(x)
 psf_size = 2 * np.array((max_r, max_r))
 fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
 fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
-xml_file = "data/OMX-OTF-683nm-2d.xml"        
+xml_file = project_root + "/data/OMX-OTF-683nm-2d.xml"        
 otf_cube = load_fairsim_otf(xml_file)
 otf = otf_cube[2]  
 otf = np.fft.fftshift(otf)
@@ -71,14 +75,21 @@ otf = np.fft.fftshift(otf)
 # plt.plot(otf[:, N//2], label='OTF_fairSIM')
 # plt.show()
 otf = otf[2::2, 2::2]
-optical_system = System4f2D(alpha = alpha, refractive_index=nmedium)
-optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_size=False, save_pupil_function=True, zernieke={(2, -2): 0.05})
-plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='Paraxial OTF')
+optical_system = System4f2D(alpha = alpha_best_fit, refractive_index=nmedium)
+
+aberrated_psf_dict = pickle.load(open(current_dir + "\\aberrated_psf_dict2_tetraspec_680.pkl", "rb"))
+for key, value in aberrated_psf_dict.items():
+    value = utils.expand_kernel(value, (N, N))
+    aberrated_psf_dict[key] = value
+
+optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_size=False, save_pupil_function=True)
+# optical_system.psf = aberrated_psf_dict[(0.0864, 0.0288)]
+plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='Estimated OTF')
 plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='FairSIM OTF')
 plt.xlabel('q, $1/\lambda$')
 plt.ylabel('Normalized value')
 plt.legend()
-plt.savefig('reconstructions/images/OTF_comparison.png')
+# plt.savefig('reconstructions/images/OTF_comparison.png')
 plt.show()
 
 # optical_system.otf = otf
@@ -89,7 +100,7 @@ plt.show()
 plt.imshow(np.log1p(optical_system.otf.real), cmap='gray')
 plt.show()
 
-data = tifffile.imread('data/OMX_Tetraspeck200_680nm.tiff')
+data = tifffile.imread(project_root + '/data/OMX_Tetraspeck200_680nm.tiff')
 print(data.shape)
 
 stack = data.reshape((3, -1, 5, 512, 512))
@@ -130,7 +141,7 @@ plt.show()
 configurations = BFPConfiguration(refraction_index=nmedium)
 
 illumination3d = configurations.get_2_oblique_s_waves_and_s_normal(
-    alpha-0.5, 
+    alpha_best_fit-0.4, 
     1, 0,
     Mr=3,
     Mt=5, 
@@ -160,15 +171,15 @@ illumination = pattern_estimator.estimate_illumination_parameters(
 
 illumination_experimental = copy.deepcopy(illumination)
 
-for harmonic in illumination.harmonics:
-    # wavevector, amplitude = illumination.harmonics[harmonic].wavevector, illumination.harmonics[harmonic].amplitude
-    # damping_factor = 2
-    # lukosz_factor = 2 * np.pi * 4 * NA / np.sqrt(np.sum(wavevector**2))
-    # lucosz_amplitude = np.cos(np.pi / (1 + lukosz_factor / damping_factor))
-    # print(harmonic, 'lucosz_factor=', lukosz_factor, 'lucosz_amplitude=', lucosz_amplitude)
-    # scaling_factor = (lucosz_amplitude / illumination.Mt / illumination.Mr) / np.abs(amplitude) 
-    if harmonic[1] != (0, 0):
-        illumination.harmonics[harmonic].amplitude = 0.031
+# for harmonic in illumination.harmonics:
+#     # wavevector, amplitude = illumination.harmonics[harmonic].wavevector, illumination.harmonics[harmonic].amplitude
+#     # damping_factor = 2
+#     # lukosz_factor = 2 * np.pi * 4 * NA / np.sqrt(np.sum(wavevector**2))
+#     # lucosz_amplitude = np.cos(np.pi / (1 + lukosz_factor / damping_factor))
+#     # print(harmonic, 'lucosz_factor=', lukosz_factor, 'lucosz_amplitude=', lucosz_amplitude)
+#     # scaling_factor = (lucosz_amplitude / illumination.Mt / illumination.Mr) / np.abs(amplitude) 
+#     if harmonic[1] != (0, 0):
+#         illumination.harmonics[harmonic].amplitude = 0.016
 
 illumination_widefield = configurations.get_widefield()
 illumination_widefield = IlluminationPlaneWaves2D.init_from_3D(
@@ -342,13 +353,13 @@ ax[0, 1].set_title('K 5')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_spatial9.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('K 9')
 
-ratio_spatial = np.where(ssnr_spatial9.ring_average_ssnri_approximated(), ssnr_spatial1.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri(), 0)[:-10]
-ratio_finite = np.where(ssnr_spatial9.ring_average_ssnri_approximated(), ssnr_spatial5.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri(), 0)[:-10]
-ax[1, 0].plot(ratio_spatial)
-ax[1, 0].plot(ratio_finite)
+ratio15 = np.where(ssnr_spatial9.ring_average_ssnri_approximated(), ssnr_spatial1.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri(), 0)[:-20]
+ratio59 = np.where(ssnr_spatial9.ring_average_ssnri_approximated(), ssnr_spatial5.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri(), 0)[:-20]
+ax[1, 0].plot(ratio15)
+ax[1, 0].plot(ratio59)
 
-ax[1, 1].imshow(ssnr_spatial1.ssnri/ssnr_spatial9.ssnri, label = '15', origin='lower')
-ax[1, 2].imshow(ssnr_spatial5.ssnri/ssnr_spatial9.ssnri, label = '59', origin='lower')
+ax[1, 1].imshow((ssnr_spatial1.ssnri/ssnr_spatial9.ssnri)[20:-20, 20:-20], label = '15', origin='lower')
+ax[1, 2].imshow((ssnr_spatial5.ssnri/ssnr_spatial9.ssnri)[20:-20, 20:-20], label = '59', origin='lower')
 ax[1, 2].legend()
 plt.show()
 
@@ -440,23 +451,23 @@ ax[2, 1].imshow(np.log1p(ssnr_spatial5_measured), cmap='gray', origin='lower')
 ax[2, 1].set_title('Spatial')
 ax[2, 2].imshow(np.log1p(ssnr_spatial9_measured), cmap='gray', origin='lower')
 ax[2, 2].set_title('Finite')
-ratio_spatial = utils.average_rings2d(np.where(ssnr_spatial9_measured, (ssnr_spatial1_measured - 1)/(ssnr_spatial9_measured-1), 0), optical_system.otf_frequencies)
-ratio_finite = utils.average_rings2d(np.where(ssnr_spatial9_measured, (ssnr_spatial5_measured - 1)/(ssnr_spatial9_measured-1), 0), optical_system.otf_frequencies)
+ratio15 = utils.average_rings2d(np.where(ssnr_spatial9_measured, (ssnr_spatial1_measured - 1)/(ssnr_spatial9_measured-1), 0), optical_system.otf_frequencies)
+ratio59 = utils.average_rings2d(np.where(ssnr_spatial9_measured, (ssnr_spatial5_measured - 1)/(ssnr_spatial9_measured-1), 0), optical_system.otf_frequencies)
 ratio_widefield = utils.average_rings2d(np.where(ssnr_spatial9_measured, (ssnr_widefield_measured - 1)/(ssnr_spatial9_measured-1), 0), optical_system.otf_frequencies)
-ratio_spatial_theory = np.where(ssnr_spatial1.ring_average_ssnri_approximated(), ssnr_spatial1.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri_approximated(), 0)
-ratio_finite_theory = np.where(ssnr_spatial5.ring_average_ssnri_approximated(), ssnr_spatial5.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri_approximated(), 0)
-ax[2, 3].plot(fr, ratio_spatial, label='s/f')
-ax[2, 3].plot(fr, ratio_finite, label='f/f')
+ratio15_theory = np.where(ssnr_spatial1.ring_average_ssnri_approximated(), ssnr_spatial1.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri_approximated(), 0)
+ratio59_theory = np.where(ssnr_spatial5.ring_average_ssnri_approximated(), ssnr_spatial5.ring_average_ssnri_approximated()/ssnr_spatial9.ring_average_ssnri_approximated(), 0)
+ax[2, 3].plot(fr, ratio15, label='s/f')
+ax[2, 3].plot(fr, ratio59, label='f/f')
 # ax[2, 3].plot(ratio_widefield, label='widefield/fourier')
-ax[2, 3].plot(fr, ratio_spatial_theory, label = 's/f, t')
-ax[2, 3].plot(fr, ratio_finite_theory, label = 's/f, t')
+ax[2, 3].plot(fr, ratio15_theory, label = 's/f, t')
+ax[2, 3].plot(fr, ratio59_theory, label = 's/f, t')
 # ax[2, 3].legend()
 ax[2, 3].set_ylim(-0.1, 1.5)
 plt.show()
 
 fig, axes = plt.subplots()
-axes.plot(fr, ratio_spatial/ratio_spatial_theory, label='$K_2/ K_1$')
-axes.plot(fr, ratio_finite/ratio_finite_theory, label='$K_3/ K_1$')
+axes.plot(fr, ratio15/ratio15_theory, label='$K_2/ K_1$')
+axes.plot(fr, ratio59/ratio59_theory, label='$K_3/ K_1$')
 # axes.plot(fr, ratio_widefield, label='$WF / K_1$')
 axes.set_xlabel('q, $1/\lambda$')
 axes.set_ylabel('$R^E/R^A$')
@@ -476,9 +487,9 @@ plt.title('Ideal OTF')
 plt.show()
 
 apodized_fourier = np.abs(wrapped_ifftn(ideal_otf * filtered_spatial1))
-apodized_spatial =  np.abs(wrapped_ifftn(ideal_otf * ssnr_spatial5))
-apodized_finite = np.abs(wrapped_ifftn(ideal_otf * ssnr_spatial9))
-apodized_widefield = np.abs(wrapped_ifftn(optical_system.otf * ssnr_widefield))
+apodized_spatial =  np.abs(wrapped_ifftn(ideal_otf * filtered_spatial5))
+apodized_finite = np.abs(wrapped_ifftn(ideal_otf * filtered_spatial9))
+apodized_widefield = np.abs(wrapped_ifftn(optical_system.otf * filtered_widefield))
 
 fig, ax = plt.subplots(1, 4, figsize=(15, 5))
 fig.suptitle('Apodized images')

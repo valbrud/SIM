@@ -72,7 +72,7 @@ class TestFRC(unittest.TestCase):
         )
 
         psf_size = (self.N, self.N)
-        optical_system.compute_psf_and_otf_cordinates(psf_size, self.N)
+        optical_system.compute_psf_and_otf_coordinates(psf_size, self.N)
         optical_system.compute_psf_and_otf()
 
         # Convolve ground truth with PSF
@@ -150,7 +150,7 @@ class TestFRC(unittest.TestCase):
             normalize_otf=True
         )
         psf_size = (self.N, self.N)
-        optical_system.compute_psf_and_otf_cordinates(psf_size, self.N)
+        optical_system.compute_psf_and_otf_coordinates(psf_size, self.N)
         optical_system.compute_psf_and_otf()
 
         # Convolve ground truth with PSF

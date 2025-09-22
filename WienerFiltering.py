@@ -69,7 +69,7 @@ def filter_true_wiener(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-8):    
+                    numeric_noise=10**-10):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -89,8 +89,8 @@ def filter_true_wiener(image_ft,
         raise ValueError("The image and SSNR calculator dimensions do not match.")
 
     center = np.array(image_ft.shape)//2
-    print(image_ft[*center])
-    print(ssnr_calculator.dj[*center])
+    # print(image_ft[*center])
+    # print(ssnr_calculator.dj[*center])
     f0 = image_ft[*center] / ssnr_calculator.dj[*center]
     bj2 = np.abs(image_ft) ** 2
 
@@ -118,7 +118,7 @@ def filter_true_wiener(image_ft,
             dja = expand_ring_averages(djra, ssnr_calculator.optical_system.otf_frequencies)
             vja = expand_ring_averages(vjra, ssnr_calculator.optical_system.otf_frequencies)
     
-    print('total_counts', f0)
+    # print('total_counts', f0)
     noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
     noise_power = vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
     ssnr = ((obj2a - noise_power ) /
