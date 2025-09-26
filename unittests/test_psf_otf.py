@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import unittest
 import time
-from psf_models import compute_2d_psf_coherent_no_aberrations
+from psf_models import compute_2d_psf_coherent, compute_3d_psf_coherent
+from pupil_functions import make_vortex_pupil
 import wrappers
 
 # Add project paths
@@ -13,14 +14,14 @@ project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 
 alpha = 2 * np.pi / 5
-n = 1.518
+n = 1
 NA = n * np.sin(alpha)
-dx = 1 / (4 * NA)  
+dx = 1 / (8 * NA)  
 dy = dx
-dz = 1 / (2 * (1 - np.cos(alpha)))
+dz = 1 / n / (4 * (1 - np.cos(alpha)))
 
-Nl = 255
-Nz = 51 
+Nl = 101
+Nz = 101 
 
 max_r = Nl // 2 * dx
 max_z = Nz // 2 * dz
@@ -30,7 +31,7 @@ psf_size3d = 2 * np.array((max_r, max_r, max_z))
 
 x = np.linspace(-max_r, max_r, Nl)
 y = np.copy(x)
-z = np.linspace(-max_r, max_r, Nz)
+z = np.linspace(-max_z, max_z, Nz)
 
 x_grid2d = np.stack(np.meshgrid(x, y, indexing='ij'), axis=-1) 
 x_grid3d = np.stack(np.meshgrid(x, y, z, indexing='ij'), axis=-1)
@@ -90,84 +91,20 @@ def _gpu_available():
         return False
 
 
-
-def make_vortex_pupil(
-    rho,
-    phi,
-    m=1,
-    rho_inner=0.0,
-    rho_outer=1.0,
-    amplitude=None,
-    dtype=np.complex128,
-):
-    """
-    Build a true vortex pupil P(ρ, φ) = A(ρ) * exp(i m φ) within an annulus.
-
-    Parameters
-    ----------
-    rho : (Nu,) array
-        Radial quadrature nodes in [0,1].
-    phi : (Nphi,) array
-        Angular nodes in [0, 2π).
-    m : int
-        Topological charge of the vortex (phase term exp(i*m*phi)).
-    rho_inner : float
-        Inner radius (0 <= rho_inner < rho_outer).
-    rho_outer : float
-        Outer radius (rho_inner < rho_outer <= 1).
-    amplitude : None or (Nu,) array or callable
-        Radial amplitude A(ρ). If None -> A(ρ)=1 on the annulus.
-        If array, must have shape (Nu,).
-        If callable, it will be called as amplitude(rho) and must return (Nu,).
-    dtype : np.dtype
-        Complex dtype of the returned array.
-
-    Returns
-    -------
-    P : (Nu, Nphi) complex array
-        The complex pupil over (ρ, φ).
-    """
-    rho = np.asarray(rho)
-    phi = np.asarray(phi)
-
-    if not (0.0 <= rho_inner < rho_outer <= 1.0):
-        raise ValueError("Require 0 <= rho_inner < rho_outer <= 1.")
-
-    # Radial amplitude profile A(ρ)
-    if amplitude is None:
-        A = np.ones_like(rho, dtype=float)
-    elif callable(amplitude):
-        A = np.asarray(amplitude(rho), dtype=float)
-    else:
-        A = np.asarray(amplitude, dtype=float)
-        if A.shape != rho.shape:
-            raise ValueError(f"amplitude must have shape {rho.shape}, got {A.shape}")
-
-    # Annular aperture mask M(ρ)
-    M = ((rho >= rho_inner) & (rho <= rho_outer)).astype(float)  # (Nu,)
-
-    # Helical phase term e^{i m φ}
-    phase_phi = np.exp(1j * m * phi)  # (Nphi,)
-
-    # Broadcast to (Nu, Nphi)
-    P = (A * M)[:, None] * phase_phi[None, :]
-
-    return P.astype(dtype, copy=False)
-
 # ---- tests -------------------------------------------------------------------
 
-class TestPSFOTF(unittest.TestCase):
+class TestPSFOTF2D(unittest.TestCase):
 
     def test_cpu_basic(self):
         """CPU: sanity run, normalization, finite values, and plots."""
         
         # --- TIME MARKER START ---
         t_start = time.time()
-        E = compute_2d_psf_coherent_no_aberrations(
+        E = compute_2d_psf_coherent(
             x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nu=129, device='cpu'
         )
         t_end = time.time()
-        print(f"test_cpu_basic: compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_cpu_basic: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
         # --- TIME MARKER END ---
         
         self.assertEqual(E.shape, x_grid2d[...,0].shape)
@@ -184,11 +121,11 @@ class TestPSFOTF(unittest.TestCase):
         
         # --- TIME MARKER START ---
         t_start = time.time()
-        E = compute_2d_psf_coherent_no_aberrations(
+        E = compute_2d_psf_coherent(
             x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nu=129, device='gpu'
         )
         t_end = time.time()
-        print(f"test_gpu_basic: compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_gpu_basic: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
         # --- TIME MARKER END ---
         
         self.assertEqual(E.shape, x_grid2d[..., 0].shape)
@@ -207,49 +144,32 @@ class TestPSFOTF(unittest.TestCase):
 
     def test_nontrivial_pupil_vortex(self):
         """Non-trivial pupil (vortex-like radial apodization proxy)."""
-        Nphi = 255
-        Nu = 129
-        float_type = np.float64
-        xp = np
-        cp_mod = None
-        from psf_models import _roots_legendre
-        phi  = xp.linspace(float_type(0.0), float_type(2.0)*xp.pi, Nphi, endpoint=False, dtype=float_type)  # [Nphi]
-        wphi = (float_type(2.0) * xp.pi) / float_type(Nphi)
-
-        # u-quad (Gauss–Legendre on [0,1]) via nodes/weights on [-1,1]
-        x_gl, w_gl = _roots_legendre(int(Nu), cp_mod)  # float64 by default
-        x_gl = x_gl.astype(float_type, copy=False)
-        w_gl = w_gl.astype(float_type, copy=False)
-        # Map to u ∈ [0,1]
-        u_nodes = 0.5 * (x_gl + float_type(1.0))     # [Nu]
-        w_u     = 0.5 * w_gl                 # [Nu]
-        rho     = xp.sqrt(u_nodes)           # ρ = √u
-        w_r     = 0.5 * w_u                  # because ∫ f(ρ) ρ dρ = 1/2 ∫ f(√u) du
-
-        P_vortex = make_vortex_pupil(rho, phi, m=1, rho_inner=0.0, rho_outer=1.0)
+        Nphi = 455
+        Nrho = 125
+        P_vortex = make_vortex_pupil(Nrho, Nphi, m=1, rho_inner=0.0, rho_outer=1.0)
 
         # --- TIME MARKER START ---
         t_start = time.time()
-        E = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nu, device='gpu'
+        E = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
         )
         t_end = time.time()
-        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
 
         t_start = time.time()
-        E = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nu, device='gpu'
+        E = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
         )
         t_end = time.time()
-        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
 
         
         t_start = time.time()
-        E = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nu, device='gpu'
+        E = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
         )
         t_end = time.time()
-        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
         # --- TIME MARKER END ---
 
         # self.assertEqual(E.shape, x_grid2d[...,0].shape)
@@ -265,21 +185,21 @@ class TestPSFOTF(unittest.TestCase):
         # Low-accuracy (fast)
         # --- TIME MARKER START ---
         t_start = time.time()
-        E_low = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=None, Nphi=64, Nu=33, device='cpu'
+        E_low = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=None, Nphi=64, Nu=33, device='gpu'
         )
         t_end = time.time()
-        print(f"test_low_vs_high_quadrature (low): compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_low_vs_high_quadrature (low): compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
         # --- TIME MARKER END ---
         
         # High-accuracy (reference-ish)
         # --- TIME MARKER START ---
         t_start = time.time()
-        E_high = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=None, Nphi=129, Nu=129, device='cpu'
+        E_high = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=None, Nphi=129, Nu=129, device='gpu'
         )
         t_end = time.time()
-        print(f"test_low_vs_high_quadrature (high): compute_2d_psf_coherent_no_aberrations took {t_end - t_start:.4f} seconds")
+        print(f"test_low_vs_high_quadrature (high): compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
         # --- TIME MARKER END ---
 
         # Basic checks
@@ -298,34 +218,69 @@ class TestPSFOTF(unittest.TestCase):
         plot_psf_otf_plot(I_low, OTF_low, "CPU, low quadrature (Nphi=64, Nu=33)")
         plot_psf_otf_plot(I_high, OTF_high, "CPU, high quadrature (Nphi=256, Nu=129)")
 
+class TestPSFOTF3D(unittest.TestCase):
 
-# Optional: a second GPU test to pair with low-vs-high, but it’s skipped if no GPU
-class TestPSFOTF_GPU_Extras(unittest.TestCase):
-    @unittest.skipUnless(_gpu_available(), "CuPy/GPU not available")
-    def test_gpu_low_vs_high_quadrature(self):
-        E_low = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=None, Nphi=64, Nu=33, device='gpu'
+    def test_high_NA_no_aberrations(self):
+        """Test high NA vs low NA."""
+        t_start = time.time()
+        E_high = compute_3d_psf_coherent(
+            grid2d=x_grid2d,
+            z_values=z,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            nsample=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=201,
+            Nu=101,
+            device='gpu'
         )
-        E_high = compute_2d_psf_coherent_no_aberrations(
-            x_grid2d, NA, pupil_function=None, Nphi=129, Nu=129, device='gpu'
-        )
-        # Bring to host if needed
-        try:
-            import cupy as cp
-            if isinstance(E_low, cp.ndarray):  E_low  = cp.asnumpy(E_low)
-            if isinstance(E_high, cp.ndarray): E_high = cp.asnumpy(E_high)
-        except Exception:
-            pass
-
-        self.assertTrue(np.isfinite(E_low).all())
+        t_end = time.time()
+        print(f"test_cpu_basic: compute_3d_psf_coherent took {t_end - t_start:.4f} seconds")
+        # --- TIME MARKER END ---
+        
+        self.assertEqual(E_high.shape, x_grid3d[...,0].shape)
         self.assertTrue(np.isfinite(E_high).all())
 
-        I_low, OTF_low = compute_incoherent_psf_and_otf(E_low)
         I_high, OTF_high = compute_incoherent_psf_and_otf(E_high)
-        plot_psf_otf_plot(I_low, OTF_low, "GPU, low quadrature")
-        plot_psf_otf_plot(I_high, OTF_high, "GPU, high quadrature")
 
+        E_low = compute_3d_psf_coherent(
+            grid2d=x_grid2d,
+            z_values=z,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            nsample=n,
+            high_NA=False,
+            pupil_function=None,
+            Nphi=201,
+            Nu=101,
+            device='gpu'
+        )
 
+        I_low, OTF_low = compute_incoherent_psf_and_otf(E_low)
+
+        plot_psf_otf_plot(np.log1p(10**4 * I_low[:,:,Nz//2]), np.log1p(10**4 *OTF_low[:,:,Nz//2]), "PSF/OTF central z slice low_NA_model")
+        plot_psf_otf_plot(np.log1p(10 ** 4 * I_high[:,:,Nz//2]), np.log1p(10 ** 4 * OTF_high[:,:,Nz//2]), "PSF/OTF central z slice high_NA_model")
+
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        axes[0, 0].set_title("PSF x cut (y=0, z=center)")
+        axes[0, 1].set_title("PSF z cut (x=0, y=center)")
+        axes[1, 0].set_title("OTF fx cut (fy=0, fz=center)")
+        axes[1, 1].set_title("OTF fz cut (fx=0, fy=center)")
+        axes[0, 0].plot(np.log1p(10**4 * I_low[:, Nl//2, Nz//2]), label="Paraxial approximation")
+        axes[0, 0].plot(np.log1p(10**4 * I_high[Nl//2, :, Nz//2]), label="high_NA_model")
+        axes[0, 0].legend()
+        axes[0, 1].plot(I_low[Nl//2, Nl//2, :], label="Paraxial approximation")
+        axes[0, 1].plot(I_high[Nl//2, Nl//2, :], label="high_NA_model")
+        axes[0, 1].legend()
+        axes[1, 0].plot(OTF_low[Nl//2, :, Nz//2], label="Paraxial approximation")
+        axes[1, 0].plot(OTF_high[Nl//2, :, Nz//2], label = "high_NA_model")
+        axes[1, 0].legend()
+        axes[1, 1].plot(OTF_low[Nl//2, Nl//4, :], label = "Paraxial approximation")
+        axes[1, 1].plot(OTF_high[Nl//2, Nl//4, :], label = "high_NA_model")
+        axes[1, 1].legend()
+
+        plt.show()
 if __name__ == "__main__":
     unittest.main()
     plt.show()

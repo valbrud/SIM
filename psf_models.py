@@ -1,8 +1,59 @@
 import numpy as np
-import time
 
-def _cpu_free_and_budget(safety=0.70):
-    """Return (free_bytes, budget_bytes) for system RAM, or (None, None) if psutil missing."""
+def _detect_gpu():
+    """Return ('gpu', cupy_module) if GPU is available, otherwise ('cpu', None)."""
+    try:
+        import cupy as cp
+        _ = cp.asarray([0], dtype=cp.float32)  # smoke test
+        return 'gpu', cp
+    except Exception:
+        return 'cpu', None
+
+def _setup_phi(Nphi, xp, float_type):
+    Nphi = int(Nphi)
+    phi  = xp.linspace(float_type(0.0), float_type(2.0) * xp.pi, Nphi, endpoint=False, dtype=float_type)
+    wphi = (float_type(2.0) * xp.pi) / float_type(Nphi)
+    return phi, wphi
+
+def _setup_rho_legendre(Nu, legendre_roots_fn, xp, float_type):
+    x_gl, w_gl = legendre_roots_fn(int(Nu))         # returns xp arrays
+    x_gl = x_gl.astype(float_type, copy=False)
+    w_gl = w_gl.astype(float_type, copy=False)
+    u_nodes = 0.5 * (x_gl + float_type(1.0))
+    w_u     = 0.5 * w_gl
+    rho     = xp.sqrt(u_nodes)
+    w_r     = 0.5 * w_u
+    return rho, w_r
+
+def _cpu_roots_legendre(N):
+    x, w = np.polynomial.legendre.leggauss(N)
+    return np.asarray(x), np.asarray(w)
+
+def _gpu_roots_legendre(N):
+    # prefer GPU native; fallback to CPU then copy
+    import cupy as cp
+    try:
+        from cupyx.scipy.special import roots_legendre as _roots
+        return _roots(N)
+    except Exception:
+        x, w = np.polynomial.legendre.leggauss(N)
+        return cp.asarray(x), cp.asarray(w)
+
+def j0_bessel_cpu(x):
+    try:
+        from scipy.special import j0 as _j0
+        return _j0(x)
+    except Exception as e:
+        j0 = getattr(np.special, "j0", None)
+        if j0 is None:
+            raise RuntimeError("CPU path requires scipy.special.j0 (or NumPy>=2.0 np.special.j0).") from e
+        return j0(x)
+
+def j0_bessel_gpu(x):
+    from cupyx.scipy.special import j0 as _j0
+    return _j0(x)
+
+def _cpu_mem_budget(safety=0.70):
     try:
         import psutil
         free = int(psutil.virtual_memory().available)
@@ -10,263 +61,276 @@ def _cpu_free_and_budget(safety=0.70):
     except Exception:
         return None, None
 
-def _cpu_suggest_workers(budget_bytes, per_tile_bytes, reserve_cores=1):
-    """
-    Suggest a thread count that respects both cores and memory.
-    If budget or per_tile_bytes is unknown, fallback to (cores - reserve).
-    """
-    total = max(1, os.cpu_count() or 1)
-    by_cores = max(1, total - reserve_cores)
-    if not budget_bytes or not per_tile_bytes:
-        return by_cores
-    by_mem = max(1, int(budget_bytes // max(1, per_tile_bytes)))
-    return max(1, min(by_cores, by_mem))
-
-def _gpu_free_and_budget(cp_mod, safety=0.70):
-    """Return (free_bytes, budget_bytes) for the active CUDA device."""
+def _gpu_mem_budget(safety=0.70):
     try:
-        free_bytes, _ = cp_mod.cuda.Device().mem_info
-        return int(free_bytes), int(free_bytes * safety)
+        import cupy as cp
+        free, _ = cp.cuda.Device().mem_info
+        return int(free), int(free * safety)
     except Exception:
         return None, None
 
-def _dtype_byte_sizes(use_complex64):
-    """(float_bytes, complex_bytes) for current precision."""
-    if use_complex64:
-        return 4, 8    # float32, complex64
-    else:
-        return 8, 16   # float64, complex128
-    
-def _pick_backend(device='auto'):
-    """
-    Returns (xp, cp) where xp is numpy or cupy. cp is cupy module or None.
-    device='auto' -> GPU if CuPy available and a device exists, else CPU.
-    device='cpu'  -> force NumPy
-    device='gpu'  -> force CuPy (raises if unavailable)
-    """
-    if device == 'cpu':
-        return np, None
-    try:
-        import cupy as cp
-        if device in ('auto', 'gpu'):
-            # If we can allocate a tiny array, assume GPU is usable.
-            cp.asarray([0], dtype=cp.float32)
-            return cp, cp
-    except Exception:
-        pass
-    if device == 'gpu':
-        raise RuntimeError("CuPy/GPU requested but not available.")
-    return np, None
-
-
-def _roots_legendre(N, cp_mod):
-    """
-    Legendre nodes/weights on [-1,1] for the chosen backend.
-    - On CPU: numpy.polynomial.legendre.leggauss
-    - On GPU: cupyx.scipy.special.roots_legendre if available; else compute on CPU and copy.
-    Returns (x, w) on xp with dtype float64.
-    """
-    if cp_mod is None:
-        x, w = np.polynomial.legendre.leggauss(N)
-        return x, w
-    # GPU path
-    try:
-        from cupyx.scipy.special import roots_legendre as _roots
-        x, w = _roots(N)
-        return x, w
-    except Exception:
-        # Fallback: compute on CPU then send to GPU
-        x, w = np.polynomial.legendre.leggauss(N)
-        return cp_mod.asarray(x), cp_mod.asarray(w)
-
-
-def _ensure_xp_array(a, xp):
-    """Move a NumPy/CuPy array to the chosen backend/dtype."""
-    # If already that backend, cheap cast; else copy/convert.
-    return xp.asarray(a)
+def _dtype_bytes(use_complex64):
+    return (4, 8) if use_complex64 else (8, 16)  # (float_bytes, complex_bytes)
 
 
 def _normalize_pupil_array(pupil_array, rho, phi, xp):
     """
-    Normalize/validate the explicit pupil array.
-
-    Inputs
-        pupil_array: explicit pupil array or None.
-        - None                -> unit radial pupil
-        - shape (Nu,)         -> radial-only pupil P(ρ) (uses 1D J0 integration)
-        - shape (Nu, Nphi)    -> general pupil P(ρ, φ) (uses 2D φ integration)
-    Returns
-        P        : xp.ndarray, shape (Nu,) for radial-only, or (Nu, Nphi) for φ-dependent
-        is_radial: bool  (True if shape is (Nu,))
+    explicit pupil:
+      None          -> (Nu,) ones, radial
+      (Nu,)         -> radial
+      (Nu, Nphi)    -> general
     """
     if pupil_array is None:
-        # default: unit radial pupil
         return xp.ones_like(rho), True
-
     P = xp.asarray(pupil_array)
     if P.ndim == 1:
         if P.shape[0] != rho.shape[0]:
             raise ValueError(f"pupil (Nu,) expected length {rho.size}, got {P.shape[0]}")
         return P, True
-
     if P.ndim == 2:
-        Nu_expected, Nphi_expected = rho.shape[0], phi.shape[0]
-        if P.shape != (Nu_expected, Nphi_expected):
-            raise ValueError(
-                f"pupil (Nu,Nphi) expected {(Nu_expected, Nphi_expected)}, got {P.shape}"
-            )
+        if P.shape != (rho.size, phi.size):
+            raise ValueError(f"pupil (Nu,Nphi) expected {(rho.size, phi.size)}, got {P.shape}")
         return P, False
+    raise ValueError("pupil must be None, (Nu,) or (Nu, Nphi).")
 
 
-def j0_bessel(x, xp, cp_mod):
+def _get_apodization(rho, xp, salpha):
     """
-    Backend-aware J0(x) evaluator.
-    - GPU: cupyx.scipy.special.j0
-    - CPU: scipy.special.j0  (raises a clear error if SciPy is missing)
+    Apodization over ρ:
+      None        -> (Nu,) ones
+      (Nu,) array -> used as-is
     """
-    if cp_mod is None:
-        try:
-            from scipy.special import j0 as _j0cpu
-        except Exception as e:
-            raise RuntimeError(
-                "CPU path requires scipy.special.j0; please install SciPy."
-            ) from e
-        return _j0cpu(x)
-    else:
-        from cupyx.scipy.special import j0 as _j0gpu
-        return _j0gpu(x)
-    
+    A = xp.asarray(1 / (1 - (rho * salpha) ** 2) ** 0.25)
+    return A
 
-def compute_2d_psf_coherent_no_aberrations(
-    grid,
-    NA, 
-    pupil_function=None,
-    Nphi=256,
-    Nu=129,
-    device='auto',
-    use_complex64=True,
+def _integrate_radial_common(
+    vx, vy, rho, w_r, P, use_complex64, j0_fn, xp,
+    mem_budget_bytes=None,     # None → no tiling
 ):
-    """
-    AI-generated function. Architecture is developed by a human.
+    float_type  = xp.float32 if use_complex64 else xp.float64
+    complex_type= xp.complex64 if use_complex64 else xp.complex128
+    float_bytes, complex_bytes = _dtype_bytes(use_complex64)
 
-    Scalar coherent PSF (no aberrations), low-NA approximation.
-    Integrand: exp(-i * rho * (vx*cos(phi) + vy*sin(phi))) * P(rho)
-    Quadrature:
-      - φ: periodic trapezoid, Nphi points on [0, 2π)
-      - ρ: u-substitution (u = ρ^2) with Gauss–Legendre on u ∈ [0,1]
-            ρ = √u,   dρ = du / (2√u)  =>  ∫ f(ρ) ρ dρ = 1/2 ∫ f(√u) du
-    Normalization: on-axis field E(0) = 1 (using the *same* quadrature).
-    Inputs:
-      grid: (..., 2) array with spatial freqs (cycles) → internally scaled by 2π.
-      pupil_function: callable P(rho) over [0,1], or None for unit pupil.
-      Nphi: number of φ samples (endpoint excluded). Power-of-two is nice.
-      Nu:   number of Gauss–Legendre nodes in u ∈ [0,1].
-      device: 'auto' | 'cpu' | 'gpu'
-      use_complex64: True -> complex64 (fast, light), False -> complex128
-    Returns:
-      E: complex field with shape grid[...,0].shape (same x–y shape as grid)
-    """
-    
-    xp, cp_mod = _pick_backend(device)
-    float_type = xp.float32 if use_complex64 else xp.float64
-    complex_type = xp.complex64 if use_complex64 else xp.complex128
+    vmag = xp.sqrt(vx * vx + vy * vy).astype(float_type, copy=False)  # (Nx,Ny)
 
-    float_bytes, complex_bytes = _dtype_byte_sizes(use_complex64)
-    gpu_free, gpu_budget = _gpu_free_and_budget(cp_mod, safety=0.70)
-
-    # --- parse inputs and basic arrays ---
-    grid = _ensure_xp_array(grid, xp)
-    if grid.shape[-1] != 2:
-        raise ValueError("grid must have shape (..., 2) with (vx, vy).")
-    vx = (2.0 * NA *  xp.pi * grid[..., 0]).astype(float_type)  # angular spatial frequency
-    vy = (2.0 * NA *  xp.pi * grid[..., 1]).astype(float_type)
-
-    # φ-quad (periodic trapezoid)
-    Nphi = int(Nphi)
-    phi  = xp.linspace(float_type(0.0), float_type(2.0)*xp.pi, Nphi, endpoint=False, dtype=float_type)  # [Nphi]
-    wphi = (float_type(2.0) * xp.pi) / float_type(Nphi)
-
-    # u-quad (Gauss–Legendre on [0,1]) via nodes/weights on [-1,1]
-    x_gl, w_gl = _roots_legendre(int(Nu), cp_mod)  # float64 by default
-    x_gl = x_gl.astype(float_type, copy=False)
-    w_gl = w_gl.astype(float_type, copy=False)
-    # Map to u ∈ [0,1]
-    u_nodes = 0.5 * (x_gl + float_type(1.0))     # [Nu]
-    w_u     = 0.5 * w_gl                 # [Nu]
-    rho     = xp.sqrt(u_nodes)           # ρ = √u
-    w_r     = 0.5 * w_u                  # because ∫ f(ρ) ρ dρ = 1/2 ∫ f(√u) du
-
-    P, is_radial = _normalize_pupil_array(pupil_function, rho, phi, xp)
-
-    if is_radial:
-        vmag = xp.sqrt(vx * vx + vy * vy).astype(float_type, copy=False)  # (Nx,Ny)
-
-        # Estimate memory for full (Nx,Ny,Nu) J0 path on GPU
-        need_bytes = None
-        if cp_mod is not None and gpu_budget is not None:
-            NxNy = vmag.size
-            Nu_local = rho.size
-            # crude: temp J0 (complex) + a couple of float temps
-            need_bytes = NxNy * Nu_local * (complex_bytes + 2 * float_bytes)
-
-        if (cp_mod is not None) and (gpu_budget is not None) and (need_bytes > gpu_budget):
-            # Tile over ρ so the working set fits VRAM
-            # choose a safe rho_block based on budget
-            per_rho_bytes = vmag.size * (complex_bytes + 2 * float_bytes)
-            rho_block = max(8, int(gpu_budget // max(1, per_rho_bytes)))
+    # Estimate peak for full (Nx,Ny,Nu) J0 buffer (rough)
+    if mem_budget_bytes is not None:
+        NxNy = vmag.size
+        per_rho_bytes = NxNy * (complex_bytes + 2 * float_bytes)
+        total_need = per_rho_bytes * rho.size
+        if total_need > mem_budget_bytes:
+            # ρ-tiling
+            rho_block = max(8, int(mem_budget_bytes // max(1, per_rho_bytes)))
             rho_block = int(min(rho.size, rho_block))
             if rho_block < 8:
-                rho_block = 8  # tiny safety floor
-
+                rho_block = 8
             E_acc = xp.zeros_like(vmag, dtype=complex_type)
-            start = 0
-            while start < rho.size:
-                stop = min(rho.size, start + rho_block)
-                J0 = j0_bessel(vmag[..., None] * rho[None, None, start:stop], xp, cp_mod)     # (Nx,Ny,nb)
-                I_rho = (float_type(2.0) * xp.pi) * J0 * P[None, None, start:stop]           # (Nx,Ny,nb)
-                E_acc = E_acc + xp.tensordot(I_rho, w_r[start:stop], axes=([2], [0]))
-                start = stop
-            E = E_acc.astype(complex_type, copy=False)
+            s = 0
+            while s < rho.size:
+                e = min(rho.size, s + rho_block)
+                J0 = j0_fn(vmag[..., None] * rho[None, None, s:e])
+                I_rho = (float_type(2.0) * xp.pi) * J0 * P[None, None, s:e]
+                E_acc = E_acc + xp.tensordot(I_rho, w_r[s:e], axes=([2], [0]))
+                s = e
+            return E_acc.astype(complex_type, copy=False)
 
-        else:
-            # Full, single-pass evaluation fits in VRAM or we are on CPU
-            J0 = j0_bessel(vmag[..., None] * rho[None, None, :], xp, cp_mod)                 # (Nx,Ny,Nu)
-            I_rho = (float_type(2.0) * xp.pi) * J0 * P[None, None, :]                        # (Nx,Ny,Nu)
-            E = xp.tensordot(I_rho, w_r, axes=([2], [0])).astype(complex_type, copy=False)   # (Nx,Ny)
+    # Single pass
+    J0 = j0_fn(vmag[..., None] * rho[None, None, :])                 # (Nx,Ny,Nu)
+    I_rho = (float_type(2.0) * xp.pi) * J0 * P[None, None, :]        # (Nx,Ny,Nu)
+    return xp.tensordot(I_rho, w_r, axes=([2], [0])).astype(complex_type, copy=False)
+
+def _integrate_phi_common(
+    vx, vy, rho, phi, w_r, wphi, P, use_complex64, xp,
+    mem_budget_bytes=None,     # None → no tiling
+):
+    """
+    Accumulates Iphi (Nx,Ny,Nu) by tiling over φ to respect memory.
+    """
+    float_type  = xp.float32 if use_complex64 else xp.float64
+    complex_type= xp.complex64 if use_complex64 else xp.complex128
+    float_bytes, complex_bytes = _dtype_bytes(use_complex64)
+
+    Nx, Ny = vx.shape
+    Iphi_acc = xp.zeros((Nx, Ny, rho.size), dtype=complex_type)
+
+    # Choose φ tile
+    if mem_budget_bytes is not None:
+        per_phi_bytes = (vx.size * rho.size) * (3 * float_bytes + 2 * complex_bytes)
+        acc_bytes = (vx.size * rho.size) * complex_bytes
+        max_block = max(1, int((mem_budget_bytes - acc_bytes) // max(1, per_phi_bytes)))
+        phi_block = int(min(phi.size, max(8, max_block)))
     else:
-        # Accumulate (Nx,Ny,Nu) without allocating the full (Nx,Ny,Nu,Nphi)
-        Nx, Ny = vx.shape
-        Iphi_acc = xp.zeros((Nx, Ny, rho.size), dtype=complex_type)
+        phi_block = int(phi.size)
 
-        # Pick a phi_block that fits GPU VRAM (or just use full Nphi on CPU)
-        if cp_mod is not None and gpu_budget is not None:
-            # rough per-φ-sample cost for (Nx,Ny,Nu,P): kx, ky, phase (floats) + kernel, integrand (complex)
-            per_phi_bytes = (vx.size * rho.size) * (3 * float_bytes + 2 * complex_bytes)
-            # plus the accumulator once
-            acc_bytes = (vx.size * rho.size) * complex_bytes
-            # pick the largest block that fits budget
-            max_block = max(1, int((gpu_budget - acc_bytes) // max(1, per_phi_bytes)))
-            phi_block = int(min(Nphi, max(8, max_block)))
+    p = 0
+    while p < phi.size:
+        q = min(phi.size, p + phi_block)
+        phi_tile = phi[p:q]                           # (P,)
+        cphi = xp.cos(phi_tile); sphi = xp.sin(phi_tile)
+        kx = vx[..., None, None] * rho[None, None, :, None] * cphi[None, None, None, :]
+        ky = vy[..., None, None] * rho[None, None, :, None] * sphi[None, None, None, :]
+        phase = -1j * (kx + ky)
+        kernel = xp.exp(phase)
+        P_tile = P[:, p:q]                            # (Nu,P)
+        integrand = kernel * P_tile[None, None, :, :] # (Nx,Ny,Nu,P)
+        Iphi_acc += wphi * xp.sum(integrand, axis=-1) # (Nx,Ny,Nu)
+        p = q
+
+    return xp.tensordot(Iphi_acc, w_r, axes=([2], [0])).astype(complex_type, copy=False)
+
+# Compute PSF and OTF under the assumption of Abbe's Sine condition
+def compute_2d_psf_coherent(
+    grid,
+    NA,
+    nmedium = 1.0, 
+    pupil_function=None,   # None | (Nu,) | (Nu, Nphi)
+    Nphi=256,
+    Nu=129,
+    high_NA=False,         # True for high NA, False for paraxial
+    device='auto',         # 'auto' | 'cpu' | 'gpu'
+    use_complex64=True,
+    safety=0.70,
+):
+    """
+    Manager + compute in one: selects CPU/GPU mode explicitly via device_mode,
+    then runs the shared integrators. Always returns a NumPy array.
+    """
+    # ---- pick device mode & xp ----
+    if device == 'cpu':
+        device_mode, xp = 'cpu', np
+    elif device == 'gpu':
+        device_mode, cp_mod = _detect_gpu()
+        if device_mode != 'gpu':
+            raise RuntimeError("CuPy/GPU requested but not available.")
+        xp = cp_mod
+    else:  # 'auto'
+        device_mode, cp_mod = _detect_gpu()
+        xp = (cp_mod if device_mode == 'gpu' else np)
+
+    # dtypes
+    float_type   = xp.float32 if use_complex64 else xp.float64
+    complex_type = xp.complex64 if use_complex64 else xp.complex128
+
+    # memory budget & specialized funcs
+    if device_mode == 'gpu':
+        _, mem_budget_bytes = _gpu_mem_budget(safety)
+        roots_legendre_fn   = _gpu_roots_legendre
+        j0_fn               = j0_bessel_gpu
+        to_xp               = xp.asarray
+        to_host             = (lambda a: a.get())
+    else:
+        _, mem_budget_bytes = _cpu_mem_budget(safety)
+        roots_legendre_fn   = _cpu_roots_legendre
+        j0_fn               = j0_bessel_cpu
+        to_xp               = xp.asarray  # np.asarray
+        to_host             = (lambda a: a)  # already NumPy
+
+    # ---- inputs on chosen device ----
+    grid_xp = to_xp(grid)
+    if grid_xp.shape[-1] != 2:
+        raise ValueError("grid must have shape (..., 2) with (vx, vy).")
+    vx = (2.0 * NA * xp.pi * grid_xp[..., 0]).astype(float_type)
+    vy = (2.0 * NA * xp.pi * grid_xp[..., 1]).astype(float_type)
+
+    # ---- quadrature on device ----
+    phi,  wphi  = _setup_phi(Nphi, xp, float_type)
+    rho,  w_r   = _setup_rho_legendre(Nu, roots_legendre_fn, xp, float_type)
+
+    # ---- pupil normalization on device ----
+    P, is_radial = _normalize_pupil_array(pupil_function, rho, phi, xp)
+
+    if high_NA:
+        salpha = NA/nmedium
+        A = _get_apodization(rho, xp, salpha)
+        P = (P * A) if is_radial else (P * A[:, None])
+    # ---- compute using shared integrators (with budget for tiling) ----
+    if is_radial:
+        E = _integrate_radial_common(
+            vx, vy, rho, w_r, P, use_complex64, j0_fn, xp,
+            mem_budget_bytes=mem_budget_bytes
+        )
+    else:
+        E = _integrate_phi_common(
+            vx, vy, rho, phi, w_r, wphi, P, use_complex64, xp,
+            mem_budget_bytes=mem_budget_bytes
+        )
+
+    # ---- return host ndarray (NumPy) ----
+    E = E.astype(complex_type, copy=False)
+    return to_host(E)
+
+
+def compute_3d_psf_coherent(
+    grid2d,
+    NA,
+    z_values,
+    nsample = 1.0,
+    nmedium = 1.0,
+    pupil_function=None,         # None | (Nu,) | (Nu, Nphi)
+    high_NA=False,               # True for high NA, False for paraxial
+    Nphi=256,
+    Nu=129,
+    device='auto',               # 'auto' | 'cpu' | 'gpu'
+    use_complex64=True,
+    safety=0.70,
+):
+    """
+    Compute a 3D coherent PSF by stacking 2D slices at defocus values z_values.
+
+    For each z, we pass to compute_2d_psf_coherent() a pupil equal to:
+        P(ρ, φ) = P(ρ, φ) * K(ρ; z)
+
+    Defocus kernels K_defocus(ρ; z):
+      - Paraxial:
+          K(ρ; z) = exp( i * (2π * z * NA^2 / n_sample) * ρ^2 )
+        (equivalently exp(i u^2/2) with u = sqrt(2 * 2π * z * NA^2 / n_sample) * ρ)
+
+      - High NA (Debye-like, same medium):
+          K(ρ; z) = exp( i * (2π * n_sample * z) * sqrt(1 - (NA/n_sample)^2 * ρ^2) )
+
+    Returns
+    -------
+    E3D : np.ndarray (complex)
+        Shape (Nz, *grid.shape[:-1]). Each slice is the complex coherent field.
+    """
+
+    rho, _ = _setup_rho_legendre(Nu, _cpu_roots_legendre, np, np.float32)  # (Nu,)
+    E = []
+    salpha = NA/nmedium
+    if NA <= nsample:
+        u_values = 4 * np.pi * z_values * (nsample - np.sqrt(nsample ** 2 - NA ** 2))
+    else:
+        u_values = 4 * np.pi * z_values * nsample * (1 - np.sqrt(1 - salpha ** 2))
+
+    for u in u_values:
+
+        if not high_NA:
+            defocus_kernel = np.exp(1j * u/2 * (rho ** 2))
         else:
-            phi_block = Nphi  # CPU or unknown budget → single pass
+            cos_theta = np.sqrt(1.0 - (rho * salpha) ** 2)
+            cos_alpha = np.sqrt(1.0 - salpha ** 2)
+            defocus_kernel = np.exp(1j * u/2 * (1 - cos_theta) / (1 - cos_alpha))
 
-        p0 = 0
-        while p0 < Nphi:
-            ps = slice(p0, min(p0 + phi_block, Nphi))
-            phi_tile = phi[ps]                         # (P,)
-            cphi = xp.cos(phi_tile)                    # (P,)
-            sphi = xp.sin(phi_tile)                    # (P,)
+        if pupil_function is None:
+            P_z = defocus_kernel
+        else:
+            if pupil_function.ndim == 1:
+                P_z = pupil_function * defocus_kernel                     
+            else:
+                P_z = pupil_function * defocus_kernel[:, None]
 
-            kx = vx[..., None, None] * rho[None, None, :, None] * cphi[None, None, None, :]
-            ky = vy[..., None, None] * rho[None, None, :, None] * sphi[None, None, None, :]
-            phase = -1j * (kx + ky)                    # (Nx,Ny,Nu,P)
-            kernel = xp.exp(phase)                     # (Nx,Ny,Nu,P)
+        Ez = compute_2d_psf_coherent(
+            grid=grid2d,
+            NA=NA,
+            nmedium=nmedium,
+            pupil_function=P_z,
+            Nphi=Nphi,
+            Nu=Nu,
+            high_NA=high_NA,
+            device=device,
+            use_complex64=use_complex64,
+            safety=safety,
+        )
 
-            P_tile = P[:, ps]                          # (Nu,P)
-            integrand = kernel * P_tile[None, None, :, :]   # (Nx,Ny,Nu,P)
-            Iphi_acc += wphi * xp.sum(integrand, axis=-1)   # (Nx,Ny,Nu)
-
-            p0 = ps.stop
-
-        E = xp.tensordot(Iphi_acc, w_r, axes=([2], [0])).astype(complex_type, copy=False)  # (Nx,Ny)
-    return E if xp == np else E.get()
+        E.append(Ez)
+    return np.stack(E, axis=2)

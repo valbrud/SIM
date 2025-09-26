@@ -11,7 +11,6 @@ import numpy as np
 import scipy as sp
 import scipy.interpolate
 from numpy import ndarray
-from hcipy import zernike, SeparatedCoords, PolarGrid
 from math import factorial
 
 import wrappers
@@ -724,7 +723,7 @@ class System4f3D(System4f3DCoherent):
         
         elif parameters:
             psf_size, N = parameters
-            self.compute_psf_and_otf_cordinates(psf_size, N)
+            self.compute_psf_and_otf_coordinates(psf_size, N)
 
         grid = np.stack(np.meshgrid(*self.psf_coordinates), axis=-1)
         psf = self._PSF(grid, high_NA, 

@@ -22,10 +22,10 @@ from config.BFPConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
 class TestOpticalSystems3D(unittest.TestCase):
     def test_OTF(self):
-        alpha = np.pi / 3
-        dx = 1 / (32 * np.sin(alpha))
+        alpha = 2 * np.pi / 5
+        dx = 1 / (4 * np.sin(alpha))
         dy = dx
-        dz = 1 / (16 * (1 - np.cos(alpha)))
+        dz = 1 / (2 * (1 - np.cos(alpha)))
         N = 51
         max_r = N // 2 * dx
         max_z = N // 2 * dz
@@ -36,7 +36,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
         high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
         normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
-        normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
+        normalized_high_NA_psf = high_NA_psf / np.amax(low_NA_psf)
         print(np.sum(low_NA_psf), np.sum(high_NA_psf))
         fig, axes = plt.subplots(2, 2)
         axes[0, 0].plot(normalized_paraxial_psf[N//2, :, N//2] , label="Paraxial approximation")
@@ -48,8 +48,8 @@ class TestOpticalSystems3D(unittest.TestCase):
         axes[1, 0].plot(low_NA_otf[N//2, :, N//2], label="Paraxial approximation")
         axes[1, 0].plot(high_NA_otf[N//2, :, N//2], label = "high_NA_model")
         plt.legend()
-        axes[1, 1].plot(low_NA_otf[N//2, N//2, :], label = "Paraxial approximation")
-        axes[1, 1].plot(high_NA_otf[N//2, N//2, :], label = "high_NA_model")
+        axes[1, 1].plot(low_NA_otf[N//2, N//4, :], label = "Paraxial approximation")
+        axes[1, 1].plot(high_NA_otf[N//2, N//4, :], label = "high_NA_model")
         plt.legend()
         plt.show()
 
