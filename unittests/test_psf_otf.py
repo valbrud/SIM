@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import unittest
 import time
-from psf_models import compute_2d_psf_coherent, compute_3d_psf_coherent
+from psf_models import *
 from pupil_functions import make_vortex_pupil
 import wrappers
 
@@ -20,8 +20,8 @@ dx = 1 / (8 * NA)
 dy = dx
 dz = 1 / n / (4 * (1 - np.cos(alpha)))
 
-Nl = 101
-Nz = 101 
+Nl = 71
+Nz = 21 
 
 max_r = Nl // 2 * dx
 max_z = Nz // 2 * dz
@@ -218,6 +218,59 @@ class TestPSFOTF2D(unittest.TestCase):
         plot_psf_otf_plot(I_low, OTF_low, "CPU, low quadrature (Nphi=64, Nu=33)")
         plot_psf_otf_plot(I_high, OTF_high, "CPU, high quadrature (Nphi=256, Nu=129)")
 
+    def test_vectorial_vs_scalar(self):
+        """Test scalar vs vectorial."""
+        t_start = time.time()
+        E_scalar = compute_2d_psf_coherent(
+            grid=x_grid2d,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=101,
+            Nu=101,
+            device='gpu', 
+            safety=0.9
+        )
+        t_end = time.time()
+        print(f"test_cpu_basic: compute_3d_scalar_psf took {t_end - t_start:.4f} seconds")
+
+        Is, OTFs = compute_incoherent_psf_and_otf(E_scalar)
+
+        t_start = time.time()
+        Iv = compute_2d_incoherent_vectorial_psf_free_dipole(
+            grid=x_grid2d,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=101,
+            Nu=101,
+            device='gpu', 
+            safety=0.9
+        )
+        t_end = time.time()
+        print(f"test_cpu_basic: compute_3d_vectorial_psf took {t_end - t_start:.4f} seconds")
+
+        OTFv = wrappers.wrapped_fftn(Iv).real
+
+        plot_psf_otf_plot(np.log1p(10**4 * Is[:,:]), np.log1p(10**4 * OTFs[:,:]), "PSF/OTF central z slice low_NA_model")
+        plot_psf_otf_plot(np.log1p(10 ** 4 * Iv[:,:]), np.log1p(10 ** 4 * OTFv[:,:]), "PSF/OTF central z slice high_NA_model")
+
+        fig, axes = plt.subplots(1, 2, figsize=(10, 8))
+        axes[0].set_title("PSF x cut (y=0, z=center)")
+        axes[1].set_title("PSF z cut (x=0, y=center)")
+        axes[0].plot(np.log1p(10**4 * Is[:, Nl//2]), label="Scalar model")
+        axes[0].plot(np.log1p(10**4 * Iv[Nl//2, :]), label="Vectorial model")
+        axes[0].legend()
+
+        axes[1].plot(OTFs[Nl//2, :], label="Scalar model")
+        axes[1].plot(OTFv[Nl//2, :], label = "Vectorial model")
+        axes[1].legend()
+
+
+        plt.show()
+
 class TestPSFOTF3D(unittest.TestCase):
 
     def test_high_NA_no_aberrations(self):
@@ -278,6 +331,69 @@ class TestPSFOTF3D(unittest.TestCase):
         axes[1, 0].legend()
         axes[1, 1].plot(OTF_low[Nl//2, Nl//4, :], label = "Paraxial approximation")
         axes[1, 1].plot(OTF_high[Nl//2, Nl//4, :], label = "high_NA_model")
+        axes[1, 1].legend()
+
+        plt.show()
+
+    def test_vectorial_vs_scalar(self):
+        """Test high NA vs low NA."""
+        t_start = time.time()
+        E_scalar = compute_3d_psf_coherent(
+            grid2d=x_grid2d,
+            z_values=z,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            nsample=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=101,
+            Nu=101,
+            device='gpu', 
+            safety=0.9
+        )
+        t_end = time.time()
+        print(f"test_cpu_basic: compute_3d_scalar_psf took {t_end - t_start:.4f} seconds")
+
+        Is, OTFs = compute_incoherent_psf_and_otf(E_scalar)
+
+        t_start = time.time()
+        Iv = compute_3d_incoherent_vectorial_psf_free_dipole(
+            grid2d=x_grid2d,
+            z_values=z,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            nsample=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=101,
+            Nu=101,
+            device='gpu', 
+            safety=0.9
+        )
+        t_end = time.time()
+        print(f"test_cpu_basic: compute_3d_vectorial_psf took {t_end - t_start:.4f} seconds")
+
+        OTFv = wrappers.wrapped_fftn(Iv).real
+
+        plot_psf_otf_plot(np.log1p(10 ** 4 * Is[:,:,Nz//2]), np.log1p(10 ** 4 * OTFs[:,:,Nz//2]), "PSF/OTF central z slice low_NA_model")
+        plot_psf_otf_plot(np.log1p(10 ** 4 * Iv[:,:,Nz//2]), np.log1p(10 ** 4 * OTFv[:,:,Nz//2]), "PSF/OTF central z slice high_NA_model")
+
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        axes[0, 0].set_title("PSF x cut (y=0, z=center)")
+        axes[0, 1].set_title("PSF z cut (x=0, y=center)")
+        axes[1, 0].set_title("OTF fx cut (fy=0, fz=center)")
+        axes[1, 1].set_title("OTF fz cut (fx=0, fy=center)")
+        axes[0, 0].plot(np.log1p(10**4 * Is[:, Nl//2, Nz//2]), label="Scalar model")
+        axes[0, 0].plot(np.log1p(10**4 * Iv[Nl//2, :, Nz//2]), label="Vectorial model")
+        axes[0, 0].legend()
+        axes[0, 1].plot(Is[Nl//2, Nl//2, :], label="Scalar model")
+        axes[0, 1].plot(Iv[Nl//2, Nl//2, :], label="Vectorial model")
+        axes[0, 1].legend()
+        axes[1, 0].plot(OTFs[Nl//2, :, Nz//2], label="Scalar model")
+        axes[1, 0].plot(OTFv[Nl//2, :, Nz//2], label = "Vectorial model")
+        axes[1, 0].legend()
+        axes[1, 1].plot(OTFs[Nl//2, Nl//4, :], label = "Scalar model")
+        axes[1, 1].plot(OTFv[Nl//2, Nl//4, :], label = "Vectorial model")
         axes[1, 1].legend()
 
         plt.show()

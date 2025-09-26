@@ -334,3 +334,164 @@ def compute_3d_psf_coherent(
 
         E.append(Ez)
     return np.stack(E, axis=2)
+
+
+def _normalize_radial_param(val, rho, xp=np):
+    """
+    Maps Fresnel-like parameters to a (Nu,) radial array:
+      None/1.0/float -> constant radial array
+      (Nu,)          -> used as-is
+    """
+    if val is None:
+        return xp.ones_like(rho)
+    arr = xp.asarray(val)
+    if arr.ndim == 0:
+        return xp.full_like(rho, float(arr))
+    if arr.shape == (rho.size,):
+        return arr
+    raise ValueError(f"Expected scalar or (Nu,) array; got shape {arr.shape}.")
+
+def compute_2d_vectorial_components_free_dipole(
+    grid,
+    NA,
+    nmedium=1.0,
+    pupil_function=None,     # None | (Nu,) | (Nu, Nphi)
+    tp=1.0,                  # scalar or (Nu,)
+    ts=1.0,                  # scalar or (Nu,)
+    Nphi=256,
+    Nu=129,
+    high_NA=True,
+    device='auto',
+    use_complex64=True,
+    safety=0.70,
+):
+    float_type = np.float32 if use_complex64 else np.float64
+    # Local quadrature just to build augmented pupils
+    phi, _ = _setup_phi(Nphi, np, float_type)
+    rho, _ = _setup_rho_legendre(Nu, _cpu_roots_legendre, np, float_type)
+
+    # Base pupil to (Nu,Nphi)
+    P_base, is_radial = _normalize_pupil_array(pupil_function, rho, phi, np)
+
+    # θ-geometry
+    salpha = NA / nmedium
+    cos_theta = np.sqrt(np.clip(1.0 - (salpha * rho) ** 2, 0.0, 1.0))  # (Nu,)
+    sin_theta = np.clip(salpha * rho, 0.0, 1.0)                        # (Nu,)
+
+    # Fresnel factors as (Nu,)
+    tp_r = _normalize_radial_param(tp, rho, np)
+    ts_r = _normalize_radial_param(ts, rho, np)
+
+    # Radial weights (Nu,)
+    F0 = 0.5 * (ts_r + tp_r * cos_theta)
+    F1 = (tp_r / np.sqrt(2.0)) * sin_theta
+    F2 = 0.5 * (ts_r - tp_r * cos_theta)
+
+    # Angular harmonics
+    c1 = np.cos(phi); s1 = np.sin(phi)
+    c2 = np.cos(2.0 * phi); s2 = np.sin(2.0 * phi)
+
+    # Five augmented pupils (Nu,Nphi)
+    P0  = P_base * F0
+    P1c = P_base[:, None] * F1[:, None] * c1[None, :]
+    P1s = P_base[:, None] * F1[:, None] * s1[None, :]
+    P2c = P_base[:, None] * F2[:, None] * c2[None, :]
+    P2s = P_base[:, None] * F2[:, None] * s2[None, :]
+
+    # Reuse coherent integrator unchanged
+    U0  = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P0,
+                                  Nphi=Nphi, Nu=Nu, high_NA=high_NA, device=device,
+                                  use_complex64=use_complex64, safety=safety)
+    U1c = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P1c,
+                                  Nphi=Nphi, Nu=Nu, high_NA=high_NA, device=device,
+                                  use_complex64=use_complex64, safety=safety)
+    U1s = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P1s,
+                                  Nphi=Nphi, Nu=Nu, high_NA=high_NA, device=device,
+                                  use_complex64=use_complex64, safety=safety)
+    U2c = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P2c,
+                                  Nphi=Nphi, Nu=Nu, high_NA=high_NA, device=device,
+                                  use_complex64=use_complex64, safety=safety)
+    U2s = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P2s,
+                                  Nphi=Nphi, Nu=Nu, high_NA=high_NA, device=device,
+                                  use_complex64=use_complex64, safety=safety)
+    return U0, U1c, U1s, U2c, U2s
+
+
+# --- 2D: incoherent PSF wrapper (squares + sums components) ---
+def compute_2d_incoherent_vectorial_psf_free_dipole(
+    grid,
+    NA,
+    nmedium=1.0,
+    pupil_function=None,
+    tp=1.0,
+    ts=1.0,
+    Nphi=256,
+    Nu=129,
+    high_NA=True,
+    device='auto',
+    use_complex64=True,
+    safety=0.70,
+):
+    U0, U1c, U1s, U2c, U2s = compute_2d_vectorial_components_free_dipole(
+        grid, NA, nmedium, pupil_function, tp, ts, Nphi, Nu,
+        high_NA, device, use_complex64, safety
+    )
+    I = np.abs(U0)**2 + np.abs(U1c)**2 + np.abs(U1s)**2 + np.abs(U2c)**2 + np.abs(U2s)**2
+    I /= I.sum()
+    return I
+
+
+def compute_3d_incoherent_vectorial_psf_free_dipole(
+    grid2d,
+    NA,
+    z_values,
+    nsample=1.0,
+    nmedium=1.0,
+    pupil_function=None,     # None | (Nu,) | (Nu, Nphi)
+    tp=1.0,
+    ts=1.0,
+    Nphi=256,
+    Nu=129,
+    high_NA=True,
+    device='auto',
+    use_complex64=True,
+    safety=0.70,
+):
+    float_type = np.float32 if use_complex64 else np.float64
+    # Local quadrature to shape the defocus kernel
+    phi, _ = _setup_phi(Nphi, np, float_type)
+    rho, _ = _setup_rho_legendre(Nu, _cpu_roots_legendre, np, float_type)
+
+    # Base pupil to (Nu,Nphi)
+    P_base, is_radial = _normalize_pupil_array(pupil_function, rho, phi, np)
+
+    # Geometry for defocus
+    salpha = NA / nmedium
+    cos_theta = np.sqrt(np.clip(1.0 - (salpha * rho) ** 2, 0.0, 1.0))
+    cos_alpha = np.sqrt(np.clip(1.0 - salpha**2, 0.0, 1.0))
+
+    # Same u(z) construction you used in your scalar 3D
+    if NA <= nsample:
+        u_values = 4 * np.pi * z_values * (nsample - np.sqrt(nsample**2 - NA**2))
+    else:
+        u_values = 4 * np.pi * z_values * nsample * (1 - np.sqrt(1 - salpha**2))
+
+    slices = []
+    for u in u_values:
+        if not high_NA:
+            K_rho = np.exp(1j * (u/2) * (rho**2))                              # (Nu,)
+        else:
+            K_rho = np.exp(1j * (u/2) * (1.0 - cos_theta) / (1.0 - cos_alpha)) # (Nu,)
+        P_z = P_base * K_rho                                        # (Nu,Nphi)
+
+        # get components at this z
+        U0, U1c, U1s, U2c, U2s = compute_2d_vectorial_components_free_dipole(
+            grid2d, NA, nmedium, P_z, tp, ts, Nphi, Nu,
+            high_NA, device, use_complex64, safety
+        )
+
+        I_z = np.abs(U0)**2 + np.abs(U1c)**2 + np.abs(U1s)**2 + np.abs(U2c)**2 + np.abs(U2s)**2
+        slices.append(I_z)
+        print("Computed z-slice with u={:.3f}".format(u))
+    I = np.stack(slices, axis=2)  # (Nx, Ny, Nz)
+    return I / I.sum()
