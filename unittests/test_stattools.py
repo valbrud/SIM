@@ -9,7 +9,7 @@ sys.path.append(current_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 import utils
-import wrappers
+import hpc_utils
 import unittest
 import sys
 from OpticalSystems import System4f3D
@@ -185,7 +185,7 @@ class TestMiscellaneous(unittest.TestCase):
         fig.suptitle("Original Image")
         axes[0].imshow(image, cmap='gray')
         axes[0].axis('off')
-        axes[1].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(image))), cmap='gray')
+        axes[1].imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image))), cmap='gray')
         axes[1].axis('off')
         plt.show()
         # You can also generate other features like lines (uncomment below if needed)
@@ -202,6 +202,6 @@ class TestMiscellaneous(unittest.TestCase):
         fig.suptitle("Original Image")
         axes[0].imshow(np.abs(upsampled_image), cmap='gray')
         axes[0].axis('off')
-        axes[1].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(upsampled_image))), cmap='gray')
+        axes[1].imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(upsampled_image))), cmap='gray')
         axes[1].axis('off')
         plt.show()

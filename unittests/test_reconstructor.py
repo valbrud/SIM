@@ -21,7 +21,7 @@ import ShapesGenerator
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorSpatialDomain3D
 from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel
 from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_constant
-import wrappers
+import hpc_utils
 import SSNRCalculator
 
 class TestReconstruction2D(unittest.TestCase):
@@ -125,7 +125,7 @@ class TestReconstruction2D(unittest.TestCase):
         axes[1].imshow(reconstructed_image)
         axes[1].set_title("Reconstructed Widefield")
         plt.show()
-        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image))))
         plt.title("Reconstructed Widefield FFT")
         plt.show()
 
@@ -152,9 +152,9 @@ class TestReconstruction2D(unittest.TestCase):
             readout_noise_variance=1,
             kernel = psf_kernel2d(9, (self.dx, self.dx))
         )            
-        filtered, *_  = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        filtered, *_  = filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed_image), calc)
         fig, axes = plt.subplots(1, 2)
-        axes[0].imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        axes[0].imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image))))
         axes[0].set_title("Reconstructed FT")
         axes[1].imshow(np.log1p(np.abs((filtered))))
         axes[1].set_title("Filtered FT")
@@ -162,7 +162,7 @@ class TestReconstruction2D(unittest.TestCase):
         fig, axes = plt.subplots(1, 2)
         axes[0].imshow(np.abs(reconstructed_image[self.N//2 - 100:self.N//2 + 100, self.N//2 - 100:self.N//2 + 100]))
         axes[0].set_title("Reconstructed")
-        axes[1].imshow(np.abs(wrappers.wrapped_ifftn(filtered)))
+        axes[1].imshow(np.abs(hpc_utils.wrapped_ifftn(filtered)))
         axes[1].set_title("Filtered")
         plt.show()
 
@@ -174,7 +174,7 @@ class TestReconstruction2D(unittest.TestCase):
         )
         # Reconstruct the image.
         reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images_distorted)
-        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image))))
         fig, axes = plt.subplots(1, 2)
         axes[0].imshow(self.widefield)
         axes[1].imshow(reconstructed_image)
@@ -185,7 +185,7 @@ class TestReconstruction2D(unittest.TestCase):
             readout_noise_variance=0.1,
             kernel = psf_kernel2d(1, (self.dx, self.dx))
         )            
-        filtered= filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        filtered= filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed_image), calc)
 
     def test_spatial_reconstruction_finite_kernel(self):
         spatial_reconstructor = ReconstructorSpatialDomain2D(
@@ -196,7 +196,7 @@ class TestReconstruction2D(unittest.TestCase):
         # Reconstruct the image.
         plt.title("Spatial-domain reconstruction with finite kernel")
         reconstructed_image = spatial_reconstructor.reconstruct(self.sim_images_distorted)
-        plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(reconstructed_image))))
+        plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image))))
         plt.show()
         plt.imshow(reconstructed_image[self.N//2 - 100:self.N//2 + 100, self.N//2 - 100:self.N//2 + 100])
         plt.show()
@@ -206,7 +206,7 @@ class TestReconstruction2D(unittest.TestCase):
             readout_noise_variance=0.1,
             kernel = psf_kernel2d(9, (self.dx, self.dx))
         )            
-        filtered = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image), calc)
+        filtered = filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed_image), calc)
  
 
     def test_compare_kernel_size_effect(self):
@@ -263,7 +263,7 @@ class TestReconstruction2D(unittest.TestCase):
         plt.imshow(reconstructed_image7)
         plt.show()
         notch_kernel = angular_notch_kernel(11, 6, 0.25, theta0=0)
-        notch_filter = wrappers.wrapped_fftn(notch_kernel)
+        notch_filter = hpc_utils.wrapped_fftn(notch_kernel)
         ssnr_calc = SSNRCalculator.SSNRSIM2D(self.illumination, self.optical_system, psf_kernel2d(7, (self.dx, self.dx)))
         plt.imshow(np.log1p(1 + 10**2 * ssnr_calc.dj))
         plt.show()

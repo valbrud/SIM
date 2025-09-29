@@ -8,7 +8,7 @@ sys.path.append(current_dir)
 
 import unittest
 import numpy as np
-import wrappers
+import hpc_utils
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
@@ -23,7 +23,7 @@ class TestFourierProperties(unittest.TestCase):
         fxk = np.fft.fftshift(np.fft.ifft(np.fft.fftshift(fx)))
 
         fy = fx * np.exp(1j * 2 * np.pi * x)
-        fyk = wrappers.wrapped_ifft(fy)
+        fyk = hpc_utils.wrapped_ifft(fy)
         # plt.plot(x)
         # plt.plot(y.real)
         plt.plot(f, fxk)

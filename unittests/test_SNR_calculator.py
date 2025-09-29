@@ -20,7 +20,7 @@ from OpticalSystems import System4f3D, System4f2D
 import utils
 from Sources import IntensityHarmonic3D
 import tqdm
-import wrappers
+import hpc_utils
 
 
 configurations = BFPConfiguration(refraction_index=1)
@@ -1478,7 +1478,7 @@ class TestSSNRFromImage(unittest.TestCase):
         stack = noisy_images[0, ...]
         plt.imshow(stack[0])
         plt.show()
-        im_ft = wrappers.wrapped_fftn(stack[0])
+        im_ft = hpc_utils.wrapped_fftn(stack[0])
         plt.imshow(np.log1p(np.abs(10**4*im_ft)))
         plt.show()
 

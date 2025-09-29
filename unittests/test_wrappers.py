@@ -9,7 +9,7 @@ sys.path.append(current_dir)
 import unittest
 import numpy as np
 import matplotlib.pyplot as plt
-import wrappers
+import hpc_utils
 
 N = 100
 
@@ -22,8 +22,8 @@ class TestWrappersFT(unittest.TestCase):
         x = np.array([n * dx - L / 2 for n in range(N)])
         aperture = np.zeros(len(x))
         aperture[(x >= -b / 2) * (x <= b / 2)] = 1
-        apertureFT = dx * wrappers.wrapped_fft(aperture)
-        apertureIFT = 1 / dx * wrappers.wrapped_ifft(apertureFT)
+        apertureFT = dx * hpc_utils.wrapped_fft(aperture)
+        apertureIFT = 1 / dx * hpc_utils.wrapped_ifft(apertureFT)
         np.testing.assert_array_almost_equal(aperture, apertureIFT, 12)
 
     def test_nd(self):
@@ -42,8 +42,8 @@ class TestWrappersFT(unittest.TestCase):
         ax = fig.add_subplot(projection='3d')
         aperture = np.zeros((len(x), len(y)))
         aperture[(X >= -b / 2) * (X <= b / 2) * (Y >= -b/2) * (Y <= b/2)] = 1
-        apertureFT = dx * dy * wrappers.wrapped_fftn(aperture)
-        apertureIFT = 1 / dx / dy * wrappers.wrapped_ifftn(apertureFT)
+        apertureFT = dx * dy * hpc_utils.wrapped_fftn(aperture)
+        apertureIFT = 1 / dx / dy * hpc_utils.wrapped_ifftn(apertureFT)
         ax.plot_wireframe(X, Y, apertureIFT.real)
         plt.show()
 
@@ -55,6 +55,6 @@ class TestWrappersFT(unittest.TestCase):
         x = np.array([n * dx - L / 2 for n in range(N)])
         aperture = np.zeros(len(x))
         aperture[(x >= -b / 2) * (x <= b / 2)] = 1
-        apertureFT = dx * wrappers.wrapped_fft(aperture)
-        apertureIFT = 1 / dx * wrappers.wrapped_ifft(apertureFT)
+        apertureFT = dx * hpc_utils.wrapped_fft(aperture)
+        apertureIFT = 1 / dx * hpc_utils.wrapped_ifft(apertureFT)
         np.testing.assert_array_almost_equal(aperture, apertureIFT, 12)

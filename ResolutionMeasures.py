@@ -9,7 +9,7 @@ sys.path.append(current_dir)
 
 import numpy as np
 import matplotlib.pyplot as plt
-import wrappers
+import hpc_utils
 
 def frc(image1, image2, is_fourier=False, num_bins=100):
     """
@@ -36,8 +36,8 @@ def frc(image1, image2, is_fourier=False, num_bins=100):
     
     # If input images are in real space, transform them to Fourier space
     if not is_fourier:
-        f1 = wrappers.wrapped_fftn(image1)
-        f2 = wrappers.wrapped_fftn(image2)
+        f1 = hpc_utils.wrapped_fftn(image1)
+        f2 = hpc_utils.wrapped_fftn(image2)
     else:
         f1, f2 = image1, image2
     

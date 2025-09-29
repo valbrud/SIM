@@ -20,7 +20,8 @@ import scipy
 from abc import abstractmethod
 from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 import Sources
-import wrappers
+import hpc_utils
+import hpc_utils
 from Box import BoxSIM, Field
 from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 from VectorOperations import VectorOperations
@@ -241,7 +242,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
             The Fourier transform of the phase-shifted image.
         """
         phase_shifted = image * self.phase_modulation_patterns[r, m]
-        shifted_image_ft = wrappers.wrapped_fftn(phase_shifted)
+        shifted_image_ft = hpc_utils.wrapped_fftn(phase_shifted)
         return shifted_image_ft
 
     def reconstruct(self, sim_images, upsample_factor=1):
@@ -271,7 +272,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         # plt.show()
         if self.return_ft:
             return reconstructed_image_ft
-        reconstructed_image = np.abs(wrappers.wrapped_ifftn(reconstructed_image_ft))
+        reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_image_ft))
         return reconstructed_image
 
 
@@ -330,12 +331,15 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
             for n in range(sim_images.shape[1]):
 
-                image_convolved = scipy.signal.convolve2d(sim_images[r, n], self.kernel, mode='same', boundary='wrap')
+                image_convolved = hpc_utils.convolve2d(
+                    sim_images[r, n], self.kernel, mode='same', boundary='wrap'
+                )
                 image1rotation += self.illumination_patterns[r, n] * image_convolved
-            # plt.imshow(np.log1p(np.abs(wrappers.wrapped_fftn(image1rotation))))
+
+            # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation))))
             # plt.show() 
             reconstructed_image += image1rotation
-        # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)S
+        # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)
         # reconstructed_image *= mask
         return reconstructed_image
 

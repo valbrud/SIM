@@ -25,7 +25,7 @@ from numpy import ndarray, dtype
 from skimage.color.rgb_colors import dimgray
 import scipy 
 import Sources
-import wrappers
+import hpc_utils
 from abc import abstractmethod, ABC
 from Sources import IntensityHarmonic3D
 from VectorOperations import VectorOperations
@@ -475,7 +475,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             
             # effective_kernel /= np.sum(np.abs(effective_kernel))
             effective_kernels[sim_index] = effective_kernel
-            effective_kernels_ft[sim_index] = wrappers.wrapped_fftn(effective_kernel)
+            effective_kernels_ft[sim_index] = hpc_utils.wrapped_fftn(effective_kernel)
             # effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
             # plt.imshow(np.abs(effective_kernels_ft[sim_index]).T, cmap='gray', origin='lower')
             # plt.title(f"Effective kernel {sim_index}")

@@ -11,7 +11,7 @@ import OpticalSystems
 import unittest
 
 from config.BFPConfigurations import *
-import wrappers
+import hpc_utils
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 import scipy
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
         pupil_function = np.zeros((self.N, self.N), dtype=np.float64)
         Fx, Fy = np.meshgrid(self.fx, self.fy)
         pupil_function[(Fx**2 + Fy**2) * 2 * np.pi < k1**2] = 1
-        ctf = wrappers.wrapped_fftn(pupil_function)
+        ctf = hpc_utils.wrapped_fftn(pupil_function)
         plt.imshow(pupil_function, cmap='gray')
         plt.title('Pupil Function')
         plt.show()
@@ -70,7 +70,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
         plt.imshow(ideal_otf, cmap='gray')
         plt.title('Ideal OTF')
         plt.show()
-        ideal_psf = np.real(wrappers.wrapped_ifftn(ideal_otf))
+        ideal_psf = np.real(hpc_utils.wrapped_ifftn(ideal_otf))
         plt.imshow(ideal_psf, cmap='gray')
         plt.title('Ideal PSF')
         plt.show()
@@ -107,7 +107,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
             sim_otf += np.abs(otf)
         sim_otf /= np.amax(sim_otf)
 
-        sim_psf = np.real(wrappers.wrapped_ifftn(sim_otf))
+        sim_psf = np.real(hpc_utils.wrapped_ifftn(sim_otf))
         sim_psf /= np.sum(sim_psf)
         apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, square)
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))

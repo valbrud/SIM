@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 
 import WienerFiltering
-import wrappers
+import hpc_utils
 from config.BFPConfigurations import *
 import unittest
 import time
@@ -52,7 +52,7 @@ class TestWiener(unittest.TestCase):
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
         image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r = 0.5,  N=100)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
         # plt.imshow(np.abs(image_ft[:, :, N//2]))
@@ -90,7 +90,7 @@ class TestWiener(unittest.TestCase):
 
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
-        wjr = wrappers.wrapped_ifftn(wj)
+        wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 
         Fx, Fy = np.meshgrid(fx, fy)
@@ -177,7 +177,7 @@ class TestWiener(unittest.TestCase):
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
         image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r = 0.5,  N=100, I=1000)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
         # plt.imshow(np.abs(image_ft[:, :, N//2]))
@@ -216,8 +216,8 @@ class TestWiener(unittest.TestCase):
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
 
-        wjr = wrappers.wrapped_ifftn(wj)
-        wjrw = wrappers.wrapped_ifftn(wjw)
+        wjr = hpc_utils.wrapped_ifftn(wj)
+        wjrw = hpc_utils.wrapped_ifftn(wjw)
         # plt.imshow(np.abs(wjr - wjrw)[:, :, N//2])
         # plt.show()
         Fx, Fy = np.meshgrid(fx, fy)
@@ -305,7 +305,7 @@ class TestWiener(unittest.TestCase):
         R = (X**2 + Y**2 + Z**2)**0.5
         # image[R < max_r//2] = 1000
         image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1,  N=500, I=100)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
         # plt.imshow(np.abs(image_ft[:, :, N//2]))
@@ -344,8 +344,8 @@ class TestWiener(unittest.TestCase):
         image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
         widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
 
-        tjr = wrappers.wrapped_ifftn(tj)
-        tjrw = wrappers.wrapped_ifftn(tjw)
+        tjr = hpc_utils.wrapped_ifftn(tj)
+        tjrw = hpc_utils.wrapped_ifftn(tjw)
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
@@ -432,7 +432,7 @@ class TestWiener(unittest.TestCase):
         # image[R < max_r//2] = 1000
         # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r= 0.1,  N=1000, I=200)
         image = ShapesGenerator.generate_sphere_slices(psf_size, N, r= 0.1,  N=100, I=200000)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
         # plt.imshow(np.abs(image_ft[:, :, N//2]))
@@ -569,7 +569,7 @@ class TestWiener(unittest.TestCase):
         image[(N+1)//4, (3 * N+1)//4, N//2] = 10**5
         image += 100
         X, Y, Z = np.meshgrid(x, y, z)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         arg = N // 2
         print(fz[arg])
 
@@ -600,15 +600,15 @@ class TestWiener(unittest.TestCase):
         simulator = SIMulator.SIMulator(illumination_s_polarized, optical_system, psf_size, N)
         images = simulator.generate_noiseless_sim_images(image)
         image_sr = simulator.reconstruct_real_space(images)
-        image_sr_ft = wrappers.wrapped_fftn(image_sr)
+        image_sr_ft = hpc_utils.wrapped_fftn(image_sr)
         plt.plot(np.log(1 + 10**4 * np.abs(image_sr_ft[:, 25, 25])), label='ft rec')
-        plt.plot(np.log(1 + 10**4 * np.abs(wrappers.wrapped_fftn(image)[:, 25, 25] * noise_estimator.dj[:, 25, 25])))
+        plt.plot(np.log(1 + 10**4 * np.abs(hpc_utils.wrapped_fftn(image)[:, 25, 25] * noise_estimator.dj[:, 25, 25])))
         plt.legend()
         plt.show()
         image_widefield = simulator.generate_widefield(images)
         image_filtered, ssnr,  wj, geff, uj = wiener.filter_SDR_reconstruction(image, image_sr)
         widefield_benchmark, ssnrw, wjw, geff, uj = wiener_widefield.filter_SDR_reconstruction(image, image_widefield)
-        wjr = wrappers.wrapped_ifftn(wj)
+        wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 
         Fx, Fy = np.meshgrid(fx, fy)
@@ -730,8 +730,8 @@ class TestWiener(unittest.TestCase):
         image_sr_ft, image_sr = simulator.reconstruct_Fourier_space(images)
         image_widefield = simulator.generate_widefield(images)
         plt.plot(np.log(1 + 10**4 * np.abs(image_sr_ft[:, N//2, N//2])), label='ft rec')
-        plt.plot(np.log(1 + 10**4 * np.abs(wrappers.wrapped_fftn(image)[:, N//2, N//2] * noise_estimator.dj[:, N//2, N//2])))
-        # plt.plot(np.log(1 + 10**4 * np.abs(wrappers.wrapped_fftn(image_widefield)[:, N//2, N//2])))
+        plt.plot(np.log(1 + 10**4 * np.abs(hpc_utils.wrapped_fftn(image)[:, N//2, N//2] * noise_estimator.dj[:, N//2, N//2])))
+        # plt.plot(np.log(1 + 10**4 * np.abs(hpc_utils.wrapped_fftn(image_widefield)[:, N//2, N//2])))
         plt.legend()
         plt.show()
         wiener_model = WienerFiltering.WienerFilter3dModel(noise_estimator)
@@ -739,15 +739,15 @@ class TestWiener(unittest.TestCase):
 
         wiener_reconstruction = WienerFiltering.WienerFilter3dReconstruction(noise_estimator)
         filtered_image, ssnr_rec, wj_rec, otf_sim_rec, tj_rec = wiener_reconstruction.filter_object(image_sr, real_space=True, average="surface_levels_3d")
-        # filtered_image = np.abs(wrappers.wrapped_ifftn(tj_rec * wrappers.wrapped_fftn(image_sr)))
+        # filtered_image = np.abs(hpc_utils.wrapped_ifftn(tj_rec * hpc_utils.wrapped_fftn(image_sr)))
         plt.plot(np.log(1 + 10 ** 4 * np.abs(ssnr_rec[:, N//2, N//2])), label='ssnr rec')
         plt.plot(np.log(1 + 10 ** 4 * np.abs(ssnr[:, N//2, N//2])))
         plt.legend()
         plt.show()
         print("COMPUTED AT THE END", np.abs(ssnr_rec[N//2, N//2, N//2]))
         print("WHAT IT SHOULD BE", np.abs(ssnr[N//2, N//2, N//2]))
-        plt.plot(np.log(1 + 10 ** 4 * np.abs((wrappers.wrapped_fftn(filtered_image[:, N//2, N//2])))), label='freqs rec')
-        plt.plot(np.log(1 + 10 ** 4 * np.abs((wrappers.wrapped_fftn(expected_image[:, N//2, N//2])))))
+        plt.plot(np.log(1 + 10 ** 4 * np.abs((hpc_utils.wrapped_fftn(filtered_image[:, N//2, N//2])))), label='freqs rec')
+        plt.plot(np.log(1 + 10 ** 4 * np.abs((hpc_utils.wrapped_fftn(expected_image[:, N//2, N//2])))))
         plt.legend()
         plt.show()
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
@@ -768,7 +768,7 @@ class TestWiener(unittest.TestCase):
         ax3.set_title("SSNR rec", fontsize=25)
         ax4.set_title("SSNR true", fontsize=25)
         # ax4.set_title("Filtered model", fontsize=25)
-        rec_exp = wrappers.wrapped_ifftn(noise_estimator.dj * wrappers.wrapped_fftn(image)).real
+        rec_exp = hpc_utils.wrapped_ifftn(noise_estimator.dj * hpc_utils.wrapped_fftn(image)).real
         # ax3.tick_params(labelsize=20)
         im1 = ax1.imshow(rec_exp[:, :, N // 2], vmin=0, vmax=np.amax(rec_exp))
         im2 = ax2.imshow(image_sr[:, :, N // 2], vmin=0, vmax=np.amax(image_sr))
@@ -836,7 +836,7 @@ class TestFlat(unittest.TestCase):
         image[N//2, N//2, N//2] = 10000000
 
         # image = ShapesGenerator.generate_random_spherical_particles(psf_size, N, r=0.1, N=100)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_ft = hpc_utils.wrapped_fftn(image)
         # plt.imshow(image[:, :, N//2])
         # plt.show()
         # plt.imshow(np.abs(image_ft[:, :, N//2]))
@@ -874,7 +874,7 @@ class TestFlat(unittest.TestCase):
 
         image_filtered, wj, otf_sim, tj = flat.filter_object(image_ft, real_space=False)
         widefield_benchmark, wjw, otf_simw, tjw = flat_widefield.filter_object(image_ft, real_space=False)
-        wjr = wrappers.wrapped_ifftn(wj)
+        wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 
         Fx, Fy = np.meshgrid(fx, fy)

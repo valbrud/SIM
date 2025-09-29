@@ -17,7 +17,7 @@ import scipy
 from OpticalSystems import OpticalSystem
 from abc import abstractmethod
 import Sources
-import wrappers
+import hpc_utils
 from Illumination import PlaneWavesSIM
 from Camera import Camera
 from VectorOperations import VectorOperations

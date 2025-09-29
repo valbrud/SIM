@@ -15,7 +15,7 @@ sys.path.append(current_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 import OpticalSystems
-import wrappers
+import hpc_utils
 import unittest
 alpha = 2 * np.pi / 5
 nmedium = 1.5
@@ -47,7 +47,7 @@ class TestConfocalSSNR(unittest.TestCase):
         optical_system = OpticalSystems.System4f2D(alpha=alpha, refractive_index=1.5)
         PSF_em, OTF_em = optical_system.compute_psf_and_otf((psf_size, N))
         SSNR_widefield = OTF_em ** 2
-        OTF_confocal = wrappers.wrapped_fftn(PSF_em ** 2)
+        OTF_confocal = hpc_utils.wrapped_fftn(PSF_em ** 2)
         OTF_confocal /= np.amax(OTF_confocal)
         SSNR_confocal = OTF_confocal**2
         fig, ax = plt.subplots()
@@ -61,7 +61,7 @@ class TestConfocalSSNR(unittest.TestCase):
             # plt.imshow(PSF_ex)
             # ax.plot(fy / (2 * NA), OTF_ex[N//2, :], label = f'r_closed = {round(obstacle/NA, 1)} R')
             # plt.show()
-            OTF_eff = wrappers.wrapped_fftn(PSF_ex * PSF_em)
+            OTF_eff = hpc_utils.wrapped_fftn(PSF_ex * PSF_em)
             OTF_eff /= np.amax(OTF_eff)
             SSNR_eff = OTF_eff ** 2
             ratio = SSNR_confocal/SSNR_eff
@@ -86,7 +86,7 @@ class TestConfocalSSNR(unittest.TestCase):
         # plt.imshow(PSF_em[:, :, N//2])
         # plt.show()
         SSNR_widefield = OTF_em ** 2
-        OTF_confocal = wrappers.wrapped_fftn(PSF_em ** 2)
+        OTF_confocal = hpc_utils.wrapped_fftn(PSF_em ** 2)
         OTF_confocal /= np.amax(OTF_confocal)
         # plt.imshow(OTF_confocal[:, N // 2, :].real)
         # plt.show()
@@ -105,7 +105,7 @@ class TestConfocalSSNR(unittest.TestCase):
             # plt.show()
             # ax.plot(fy / (2 * NA), OTF_ex[N//2, :, N//2], label = f'I ratio = {Ir}')
             # plt.show()
-            OTF_eff = wrappers.wrapped_fftn(PSF_ex * PSF_em)
+            OTF_eff = hpc_utils.wrapped_fftn(PSF_ex * PSF_em)
             OTF_eff /= np.amax(OTF_eff)
             # plt.imshow(OTF_eff[:, N//2, :].real)
             # plt.show()

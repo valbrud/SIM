@@ -14,7 +14,7 @@ import scipy
 from matplotlib import colors
 
 import OpticalSystems
-import wrappers
+import hpc_utils
 from config.BFPConfigurations import *
 from OpticalSystems import System4f3D, System4f2D
 from matplotlib.widgets import Slider
@@ -138,14 +138,14 @@ class TestOpticalSystems3D(unittest.TestCase):
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r, 2 * max_z)), N))
         psf = optical_system.psf
         # otf = optical_system.otf
-        otf = wrappers.wrapped_fftn(psf)
+        otf = hpc_utils.wrapped_fftn(psf)
         otf/= np.amax(otf)
         # plt.plot(fx, otf[N//2, N//2, :], label='Full')
         psf_cut = np.zeros(psf.shape)
         size = 11
         psf_cut[N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1] \
             = psf[N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1, N//2 - size//2:N//2 + size//2 + 1]
-        otf_cut = wrappers.wrapped_fftn(psf_cut)
+        otf_cut = hpc_utils.wrapped_fftn(psf_cut)
         otf_cut /= np.amax(otf_cut)
 
         fig, ax = plt.subplots(figsize=(6, 6))
@@ -208,7 +208,7 @@ class TestOpticalSystems3D(unittest.TestCase):
             otf_sim = np.zeros(optical_system.otf.shape, dtype=np.complex128)
             for otf in effective_otfs:
                 otf_sim += effective_otfs[otf]
-            psf_sim = np.abs(wrappers.wrapped_ifftn(otf_sim))
+            psf_sim = np.abs(hpc_utils.wrapped_ifftn(otf_sim))
             psf_sim /= np.sum(psf_sim)
             # plt.imshow(psf_sim[:, :, N//2])
             # plt.show()
@@ -289,7 +289,7 @@ class TestOpticalSystems2D(unittest.TestCase):
             otf_sim = np.zeros(optical_system.otf.shape, dtype = np.complex128)
             for otf in effective_otfs:
                 otf_sim += effective_otfs[otf]
-            psf_sim = np.abs(wrappers.wrapped_ifftn(otf_sim))
+            psf_sim = np.abs(hpc_utils.wrapped_ifftn(otf_sim))
             psf_sim /= np.sum(psf_sim)
             # plt.imshow(psf_sim[:, :, N//2])
             # plt.show()

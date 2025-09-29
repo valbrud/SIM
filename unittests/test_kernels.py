@@ -15,7 +15,7 @@ import scipy
 import matplotlib.pyplot as plt
 import SIMulator
 import utils
-import wrappers
+import hpc_utils
 from config.BFPConfigurations import *
 import unittest
 from matplotlib.widgets import Slider
@@ -1148,7 +1148,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         #                     N//2]
         tj_approximate = np.pad(tj_approximate, ((pad_value, pad_value), (pad_value, pad_value)))
 
-        tj_ft = wrappers.wrapped_fftn(tj_approximate[:, :])
+        tj_ft = hpc_utils.wrapped_fftn(tj_approximate[:, :])
         # plt.plot(np.abs(tj_ft[:, N//2]) )
         plt.plot(tj_ft[:, N//2] * noise_estimator_finite.ssnr[:, N//2])
         plt.show()
@@ -1168,7 +1168,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         arg = N // 2
         # wiener = SSNRBasedFiltering.WienerFilter3dModel(noise_estimator_finite)
         # ideal, _, _, _, tj = wiener.filter_object(image)
-        # tj_real = wrappers.wrapped_fftn(tj)
+        # tj_real = hpc_utils.wrapped_fftn(tj)
         # plt.imshow(np.abs(tj_real[:, :, N//2]))
         # plt.show()
         # tj_real /= np.amax(tj_real)
@@ -1215,11 +1215,11 @@ class TestLocalDeconvolution(unittest.TestCase):
         image_filtered /= np.amax(image_filtered)
         ideal /= np.amax(ideal)
 
-        image_widefield_ft = wrappers.wrapped_fftn(image_widefield)
-        image_sr_ft = wrappers.wrapped_fftn(image_sr)
-        image_filtered_ft = wrappers.wrapped_fftn(image_filtered)
-        # image_ideal_ft = wrappers.wrapped_fftn(ideal)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_widefield_ft = hpc_utils.wrapped_fftn(image_widefield)
+        image_sr_ft = hpc_utils.wrapped_fftn(image_sr)
+        image_filtered_ft = hpc_utils.wrapped_fftn(image_filtered)
+        # image_ideal_ft = hpc_utils.wrapped_fftn(ideal)
+        image_ft = hpc_utils.wrapped_fftn(image)
 
         image_widefield2d_ft = np.sum(image_widefield_ft, axis=2)
         image_sr2d_ft = np.sum(image_sr_ft, axis=2)
@@ -1378,7 +1378,7 @@ class TestLocalDeconvolution(unittest.TestCase):
         #                     N//2 - filter_size//2 : N//2 + filter_size//2 + 1]
         # tj_approximate = np.pad(tj_approximate, ((pad_value, pad_value), (pad_value, pad_value), (0, 0)))
         #
-        # tj_ft = wrappers.wrapped_fftn(tj_approximate[:, :])
+        # tj_ft = hpc_utils.wrapped_fftn(tj_approximate[:, :])
         # plt.imshow((np.abs(1 + np.log(tj_ft))))
         # plt.plot(tj_ft[:, N//2] * noise_estimator_finite.ssnr[N//2, :,  N//2])
         # plt.show()
@@ -1403,8 +1403,8 @@ class TestLocalDeconvolution(unittest.TestCase):
         # plt.plot(fx, np.abs(tj[N//2, :]))
         # plt.plot(fx, np.abs(tj[:, N//2]))
         # plt.show()
-        ideal = wrappers.wrapped_ifftn(tj * wrappers.wrapped_fftn(image_sr))
-        tj_real = wrappers.wrapped_fftn(tj)
+        ideal = hpc_utils.wrapped_ifftn(tj * hpc_utils.wrapped_fftn(image_sr))
+        tj_real = hpc_utils.wrapped_fftn(tj)
         tj_real /= np.amax(tj_real)
         filter_size = 15
         tj_approximate = tj_real[N//2-filter_size//2: N//2 + filter_size//2 + 1, N//2-filter_size//2: N//2 + filter_size//2 + 1]
@@ -1452,11 +1452,11 @@ class TestLocalDeconvolution(unittest.TestCase):
         image_filtered /= np.amax(image_filtered)
         ideal /= np.amax(ideal)
 
-        image_widefield_ft = wrappers.wrapped_fftn(image_widefield)
-        image_sr_ft = wrappers.wrapped_fftn(image_sr)
-        image_filtered_ft = wrappers.wrapped_fftn(image_filtered)
-        image_ideal_ft = wrappers.wrapped_fftn(ideal)
-        image_ft = wrappers.wrapped_fftn(image)
+        image_widefield_ft = hpc_utils.wrapped_fftn(image_widefield)
+        image_sr_ft = hpc_utils.wrapped_fftn(image_sr)
+        image_filtered_ft = hpc_utils.wrapped_fftn(image_filtered)
+        image_ideal_ft = hpc_utils.wrapped_fftn(ideal)
+        image_ft = hpc_utils.wrapped_fftn(image)
 
         image_widefield2d_ft = np.sum(image_widefield_ft)
         image_sr2d_ft = np.sum(image_sr_ft)

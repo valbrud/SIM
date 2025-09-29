@@ -6,7 +6,7 @@ import unittest
 import time
 from psf_models import *
 from pupil_functions import make_vortex_pupil
-import wrappers
+import hpc_utils
 
 # Add project paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +56,7 @@ def compute_incoherent_psf_and_otf(E_field):
     I = np.abs(E_field)**2
     I /= np.sum(I)
     # OTF is the FFT of intensity (no shift needed for origin at [0,0])
-    OTF = wrappers.wrapped_fftn(I).real
+    OTF = hpc_utils.wrapped_fftn(I).real
     return I, OTF
 
 def plot_psf_otf_plot(I, OTF, title):
@@ -252,7 +252,7 @@ class TestPSFOTF2D(unittest.TestCase):
         t_end = time.time()
         print(f"test_cpu_basic: compute_3d_vectorial_psf took {t_end - t_start:.4f} seconds")
 
-        OTFv = wrappers.wrapped_fftn(Iv).real
+        OTFv = hpc_utils.wrapped_fftn(Iv).real
 
         plot_psf_otf_plot(np.log1p(10**4 * Is[:,:]), np.log1p(10**4 * OTFs[:,:]), "PSF/OTF central z slice low_NA_model")
         plot_psf_otf_plot(np.log1p(10 ** 4 * Iv[:,:]), np.log1p(10 ** 4 * OTFv[:,:]), "PSF/OTF central z slice high_NA_model")
@@ -373,7 +373,7 @@ class TestPSFOTF3D(unittest.TestCase):
         t_end = time.time()
         print(f"test_cpu_basic: compute_3d_vectorial_psf took {t_end - t_start:.4f} seconds")
 
-        OTFv = wrappers.wrapped_fftn(Iv).real
+        OTFv = hpc_utils.wrapped_fftn(Iv).real
 
         plot_psf_otf_plot(np.log1p(10 ** 4 * Is[:,:,Nz//2]), np.log1p(10 ** 4 * OTFs[:,:,Nz//2]), "PSF/OTF central z slice low_NA_model")
         plot_psf_otf_plot(np.log1p(10 ** 4 * Iv[:,:,Nz//2]), np.log1p(10 ** 4 * OTFv[:,:,Nz//2]), "PSF/OTF central z slice high_NA_model")

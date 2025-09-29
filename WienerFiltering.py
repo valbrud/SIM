@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import utils
-import wrappers
+import hpc_utils
 
 def filter_constant(image_ft, otf, w):
     """

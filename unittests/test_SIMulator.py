@@ -22,7 +22,7 @@ from SIMulator import SIMulator2D, SIMulator3D
 from Camera import Camera
 # from simulations.mutual_information_filtering import psf_size
 from config.SIM_N100_NA15 import *
-import wrappers
+import hpc_utils
 from windowing import make_mask_cosine_edge2d
 class TestSIMImages(unittest.TestCase):
     def test_generate_images2d(self):
@@ -78,8 +78,8 @@ class TestSIMImages(unittest.TestCase):
         im2 = ax2.imshow(noisy_widefield, vmin=0)
         plt.show()
 
-        ax1.imshow(np.abs(np.log1p(wrappers.wrapped_fftn(noisy_images[0, 0]))), vmin=0)
-        ax2.imshow(np.abs(np.log1p(wrappers.wrapped_fftn(noisy_widefield))), vmin=0)
+        ax1.imshow(np.abs(np.log1p(hpc_utils.wrapped_fftn(noisy_images[0, 0]))), vmin=0)
+        ax2.imshow(np.abs(np.log1p(hpc_utils.wrapped_fftn(noisy_widefield))), vmin=0)
 
         plt.show()
 
@@ -171,7 +171,7 @@ class TestSIMImages(unittest.TestCase):
         images = simulator.generate_noiseless_sim_images(image)
         mask = make_mask_cosine_edge2d(images[0, 0, :, :, arg].shape, 10)
         images *= mask[None, None, :, :, None]
-        images_ft = np.array([np.array([wrappers.wrapped_fftn(images[r, n])for n in range(5)])  for r in range(3)])
+        images_ft = np.array([np.array([hpc_utils.wrapped_fftn(images[r, n])for n in range(5)])  for r in range(3)])
         fig, axes = plt.subplots(3, 5, figsize=(15, 9), constrained_layout=True)
         for r in range(3):
             for n in range(5):

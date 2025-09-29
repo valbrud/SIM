@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import Sources
-import wrappers
+import hpc_utils
 import utils
 import config.BFPConfigurations as confs
 from Illumination import Illumination
@@ -189,10 +189,10 @@ class Box:
             self.numerically_approximated_intensity += field.field
         self.numerically_approximated_intensity = self.numerically_approximated_intensity.real
         self.numerically_approximated_intensity_fourier_space = (
-                wrappers.wrapped_fftn(self.numerically_approximated_intensity) * self.box_volume)
+                hpc_utils.wrapped_fftn(self.numerically_approximated_intensity) * self.box_volume)
 
     def compute_intensity_fourier_space(self):
-        self.intensity_fourier_space = (wrappers.wrapped_fftn(self.intensity) *
+        self.intensity_fourier_space = (hpc_utils.wrapped_fftn(self.intensity) *
                                         (self.box_volume / self.point_number[0] / self.point_number[1] / self.point_number[2]))
         self.intensity_fourier_space /= np.sum(self.intensity)
 

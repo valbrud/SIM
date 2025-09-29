@@ -9,7 +9,7 @@ sys.path.append(project_root)
 sys.path.append(current_dir)
 import matplotlib.pyplot as plt
 from OpticalSystems import System4f2D
-import wrappers 
+import hpc_utils 
 
 # Parameters from the original file
 N = 61 
@@ -33,11 +33,12 @@ fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
 fxn = fx / (2 * NA)
 fyn = fy / (2 * NA)
 
+NA_range = np.round(np.linspace(1.1, 1.2, 11), 4)
 # Aberration strengths
-aberration_steps = np.arange(0, 0.108 + 0.0072, 0.0072)  # 15 steps: 0 to 0.108
+aberration_steps = np.round(np.arange(0., 0.1 + 0.001, 0.02), 4)  # 15 steps: -0.108 to 0.108
 
 # File to save/load
-pickle_file = current_dir + '/aberrated_psf_dict3_tetraspec_680.pkl'
+pickle_file = current_dir + '/aberrated_psf_dict_expanded_tetraspec_680.pkl'
 
 # Load existing dict if available
 if os.path.exists(pickle_file):
@@ -48,40 +49,52 @@ else:
     psf_dict = {}
     print("Starting new PSF dict.")
 
-fig, ax = plt.subplots()
+i = 0
+for NA in NA_range:
+    i+=1
+    alpha = np.arcsin(NA / nmedium)
+    print(f"COMPUTING for NA={NA}, alpha={alpha}")
+    print(f"COMPUTING for NA={NA}, alpha={alpha}")
+    fig = plt.figure(i)
+    ax = fig.add_subplot(1, 1, 1)
 
-# Loop over defocus and spherical
-for defocus in aberration_steps:
-    for spherical in aberration_steps:
-        key = (defocus, spherical)
-        if key in psf_dict:
-            print(f"Skipping {key}, already computed.")
-            continue
-        
-        print(f"Computing PSF for defocus={defocus}, spherical={spherical}")
-        
-        # Create optical system
+    for defocus in aberration_steps:
+        for spherical in aberration_steps:
+            for secondary_spherical in aberration_steps:
+                key = (NA, defocus, spherical, secondary_spherical)
+                if key in psf_dict:
+                    print(f"Skipping {key}, already computed.")
+                    continue
+
+                print(f"Computing PSF for defocus={defocus}, spherical={spherical} and secondary_spherical={secondary_spherical}")
+                
+                # Create optical system
 
 
-        optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
-        
-        # Define zernike aberrations
-        zernieke = {
-            (2, 0): defocus,  # Defocus
-            (4, 0): spherical  # Spherical
-        }
-        
-        # Compute PSF
-        optical_system.compute_psf_and_otf((psf_size, N), zernieke=zernieke)
-        # ax.plot( optical_system.otf[N//2, N//2:], label=f'Defocus: {defocus:.3f}, Spherical: {spherical:.3f}')
-        # plt.show()
-        # Store in dict
-        psf_dict[key] = optical_system.psf.copy()
-        
-        # Save after each computation
-        with open(pickle_file, 'wb') as f:
-            pickle.dump(psf_dict, f)
-        
-        print(f"Saved PSF for {key}")
+                optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
+                
+                # Define zernike aberrations
+                zernieke = {
+                    (2, 0): defocus,  # Defocus
+                    (4, 0): spherical,  # Spherical
+                    (6, 0): secondary_spherical  # Secondary Spherical
+                }
+                
+                # Compute PSF
+                optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, vectorial=False, zernieke=zernieke)
 
-print("Computation complete. PSF dict saved to aberrated_psf_dict2.pkl")
+                if defocus == 0.1:
+                    ax.plot( optical_system.otf[N//2, N//2:], label=f'Spherical: {spherical:.3f}, Secondary Spherical: {secondary_spherical:.3f}')
+                # Store in dict
+                psf_dict[key] = optical_system.psf.copy()
+                
+                # Save after each computation
+                with open(pickle_file, 'wb') as f:
+                    pickle.dump(psf_dict, f)
+                
+                print(f"Saved PSF for {key}")
+            ax.legend()
+        print(f"Completed NA={NA}. Total entries: {len(psf_dict)}")
+        print("Computation complete. PSF dict saved to aberrated_psf_dict_expanded.pkl")
+
+plt.show()

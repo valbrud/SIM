@@ -12,7 +12,7 @@ import numpy as np
 
 from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 import OpticalSystems
-import wrappers
+import hpc_utils
 from utils import average_rings2d
 import VectorOperations
 import matplotlib.pyplot as plt
@@ -136,8 +136,8 @@ class SSNRBase(metaclass=DimensionMeta):
                 nB = frame - nA
 
                 # wrappers for centred FFT / IFFT
-                e1 = wrappers.wrapped_fftn(nA, axes=(-2, -1))
-                e2 = wrappers.wrapped_fftn(nB, axes=(-2, -1))
+                e1 = hpc_utils.wrapped_fftn(nA, axes=(-2, -1))
+                e2 = hpc_utils.wrapped_fftn(nB, axes=(-2, -1))
 
                 num = np.abs(e1 + e2) ** 2        # |ê₁+ê₂|²
                 den = np.abs(e1 - e2) ** 2        # |ê₁–ê₂|²
@@ -298,7 +298,7 @@ class SSNRSIM(SSNRBase):
     def kernel(self, kernel_new):
         kernel_new = utils.expand_kernel(kernel_new, self.optical_system.psf.shape)
 
-        self.kernel_ft = wrappers.wrapped_ifftn(kernel_new)
+        self.kernel_ft = hpc_utils.wrapped_ifftn(kernel_new)
         self.kernel_ft /= np.amax(self.kernel_ft)
         self._kernel = kernel_new
         self.effective_kernels_ft = {}
@@ -434,7 +434,7 @@ class SSNRSIM(SSNRBase):
             return self._find_threshold_value(stock, max, average, noise_level, ssnr_widefield)
 
     def compute_maximum_resolved_lateral(self):
-        fR = 2 * self.optical_system.n * np.sin(self.optical_system.alpha)
+        fR = 2 * self.optical_system.nm * np.sin(self.optical_system.alpha)
         fourier_peaks_wavevectors = np.array([spatial_wave.wavevector for spatial_wave in self.illumination.waves.values()])
         fI = np.max(np.array([(wavevector[0] ** 2 + wavevector[1] ** 2) ** 0.5 for wavevector in fourier_peaks_wavevectors]))
         return fR + fI

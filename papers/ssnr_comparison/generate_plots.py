@@ -23,7 +23,6 @@ from SSNRCalculator import SSNRSIM3D, SSNRSIM2D
 from OpticalSystems import System4f3D, System4f2D
 import utils
 from Sources import IntensityHarmonic3D, PlaneWave
-import tqdm
 
 path_to_figures = 'Figures/'
 path_to_animations = 'Animations/'

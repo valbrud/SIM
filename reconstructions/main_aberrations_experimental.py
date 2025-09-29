@@ -14,6 +14,7 @@ import numpy as np
 import scipy
 import pickle
 import utils 
+import time
 import windowing
 from config.BFPConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
@@ -24,11 +25,15 @@ from SIMulator import SIMulator2D
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from Illumination import IlluminationPlaneWaves2D
 import ShapesGenerator
-import wrappers
+import hpc_utils
+import hpc_utils
 from WienerFiltering import filter_true_wiener
 from kernels import psf_kernel2d
 from PatternEstimator import IlluminationPatternEstimator2D
 np.random.seed(1234)
+
+mode = hpc_utils.pick_backend('cpu')
+print("Using backend:", mode)
 
 N = 255
 wavelength = 680e-9
@@ -73,7 +78,7 @@ stack = stack * mask[np.newaxis, np.newaxis, ...]
 print(stack.shape)
 plt.imshow(stack[0, 0, ...].T, cmap='gray', origin='lower')
 plt.show()
-plt.imshow(np.log1p(10 ** 8 * np.abs(wrappers.wrapped_fftn(stack[0, 0, ...]))).T, cmap='gray', origin='lower')
+plt.imshow(np.log1p(10 ** 8 * np.abs(hpc_utils.wrapped_fftn(stack[0, 0, ...]))).T, cmap='gray', origin='lower')
 plt.show()
 
 aberrated_psf_dict = pickle.load(open(current_dir + "\\aberrated_psf_dict3_tetraspec_680.pkl", "rb"))
@@ -84,7 +89,7 @@ for key, value in aberrated_psf_dict.items():
 optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
 optical_system.compute_psf_and_otf((psf_size, N))
 
-otf = wrappers.wrapped_fftn(aberrated_psf_dict[(0.0, 0.0)])
+otf = hpc_utils.wrapped_fftn(aberrated_psf_dict[(0.0, 0.0)])
 plt.plot(otf[N//2, N//2:], label='Paraxial OTF')
 plt.show()
 
@@ -118,20 +123,34 @@ illumination = pattern_estimator.estimate_illumination_parameters(
 )
 
 
-calc_reference7 = SSNRSIM2D(
+calc7 = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
     kernel=psf_kernel2d(7, (dx, dx))
 )
 
-calc_reference9 = SSNRSIM2D(
+calc9 = SSNRSIM2D(
     illumination=illumination,
     optical_system=optical_system,
     kernel=psf_kernel2d(9, (dx, dx))
 )
 
+
 optical_system_reconstruction = System4f2D(alpha=alpha, refractive_index=nmedium)
 optical_system_reconstruction.compute_psf_and_otf_coordinates(psf_size, N)
+
+spatial_reconstructor7 = ReconstructorSpatialDomain2D(
+    illumination=illumination,
+    optical_system=optical_system,
+    kernel=psf_kernel2d(7, (dx, dx))
+)
+
+spatial_reconstructor9 = ReconstructorSpatialDomain2D(
+    illumination=illumination,
+    optical_system=optical_system,
+    kernel=psf_kernel2d(9, (dx, dx))
+)
+
 
 fig, axes = plt.subplots(1, 3)
 min_loss_function = 10**6
@@ -147,49 +166,42 @@ for key, psf in aberrated_psf_dict.items():
     color = plt.cm.tab10(color_idx % 10)
     optical_system_reconstruction.psf = psf
     optical_system_reconstruction._otf /= optical_system_reconstruction._otf[N//2, N//2]
-
+    start_total = time.time()
+    start = time.time()
     illumination.estimate_modulation_coefficients(stack, optical_system_reconstruction.psf, optical_system_reconstruction.x_grid,
                                                                     method='peak_height_ratio', update=True)
     print("Estimated modulation coefficients: {}".format(illumination.get_amplitudes()[0])
           )
-    
-    spatial_reconstructor7 = ReconstructorSpatialDomain2D(
-        illumination=illumination,
-        optical_system=optical_system_reconstruction,
-        kernel=psf_kernel2d(7, (dx, dx))
-    )
+    end = time.time()
+    print("Time taken for pattern estimation: {:.2f} seconds".format(end - start))
 
-    spatial_reconstructor9 = ReconstructorSpatialDomain2D(
-        illumination=illumination,
-        optical_system=optical_system_reconstruction,
-        kernel=psf_kernel2d(9, (dx, dx))
-    )
+    # strart = time.time()
+    #     # spatial_reconstructor7.illumination.
+    # end = time.time()
+    # print("Time taken for initialising reconstructors: {:.2f} seconds".format(end - start))
 
-
+    start = time.time()
     reconstructed_image7 = spatial_reconstructor7.reconstruct(stack)
     reconstructed_image9 = spatial_reconstructor9.reconstruct(stack)
-
-    calc7 = SSNRSIM2D(
-        illumination=illumination,
-        optical_system=optical_system_reconstruction,
-        kernel = psf_kernel2d(7, (dx, dx))
-    )
-
-    calc9 = SSNRSIM2D(
-        illumination=illumination,
-        optical_system=optical_system_reconstruction,
-        kernel = psf_kernel2d(9, (dx, dx))
-    )
-
-    
-    filtered7, _, ssnr7 = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image7), calc7)
-    filtered9, _, ssnr9 = filter_true_wiener(wrappers.wrapped_fftn(reconstructed_image9), calc9)
-
+    end = time.time()
+    print("Time taken for reconstruction: {:.2f} seconds".format(end - start))
+    start = time.time()
+    calc7.optical_system = optical_system_reconstruction
+    calc9.optical_system = optical_system_reconstruction
+    end = time.time()
+    print("Time taken for initialising SSNR calculators: {:.2f} seconds".format(end - start))
+    start = time.time()
+    filtered7, _, ssnr7 = filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed_image7), calc7)
+    filtered9, _, ssnr9 = filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed_image9), calc9)
+    end = time.time()
+    print("Time taken for Wiener filtering: {:.2f} seconds".format(end - start))
+    start = time.time()
     r = fxn[N//2:]
 
     ratio79_experimental = (ssnr7[N//2, N//2:])/(ssnr9[N//2, N//2:])
     ratio79_theoretical = calc7.ring_average_ssnri_approximated()/calc9.ring_average_ssnri_approximated()
-
+    end = time.time()
+    print("Time taken for SSNR ratio calculation: {:.2f} seconds".format(end - start))
     R = np.where(ssnr7[N//2, N//2:] >=9,  ratio79_experimental/ratio79_theoretical, 0)
     R = np.where(r <= 1.5, R, 0)
 
@@ -199,6 +211,8 @@ for key, psf in aberrated_psf_dict.items():
     if loss_function < min_loss_function:
         min_loss_function = loss_function
         estimated_key = key
+    end_total = time.time()
+    print("Total time taken for key {}: {:.2f} seconds".format(key, end_total - start_total))
 
     if key[0] == 0.0864:
         if color_idx == 0:
@@ -232,6 +246,7 @@ for key, psf in aberrated_psf_dict.items():
 
         color_idx += 1
 
+
 # axes_test.legend()
 # axes[0].legend()
 # axes[1].legend()
@@ -245,7 +260,7 @@ fig_comparison, axes_comparison = plt.subplots(1, 2)
 axes_comparison[0].plot(x[N//2:], optical_system.psf[N//2, N//2:], label='Initial PSF')
 axes_comparison[0].plot(x[N//2:], aberrated_psf_dict[estimated_key][N//2, N//2:], label='Estimated PSF')
 axes_comparison[1].plot(r, optical_system.otf[N//2, N//2:], label='Initial OTF')
-axes_comparison[1].plot(r, wrappers.wrapped_fftn(aberrated_psf_dict[estimated_key])[N//2, N//2:], label='Estimated OTF')
+axes_comparison[1].plot(r, hpc_utils.wrapped_fftn(aberrated_psf_dict[estimated_key])[N//2, N//2:], label='Estimated OTF')
 axes_comparison[0].legend()
 axes_comparison[1].legend()
 

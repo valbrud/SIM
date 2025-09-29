@@ -9,7 +9,7 @@ from scipy.interpolate import RectBivariateSpline
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import scipy
-import wrappers
+import hpc_utils
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
@@ -473,7 +473,7 @@ def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray
     new_shape = np.round(original_shape * factor).astype(int)
 
     # Compute Fourier transform of the image
-    image_ft = wrappers.wrapped_fftn(image)
+    image_ft = hpc_utils.wrapped_fftn(image)
 
     # Compute padding widths for each dimension
     pad_width = []
@@ -491,5 +491,5 @@ def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray
         noise[center_slices] = 0
         ft_padded += noise
 
-    upsampled = wrappers.wrapped_ifftn(ft_padded) 
+    upsampled = hpc_utils.wrapped_ifftn(ft_padded) 
     return upsampled
