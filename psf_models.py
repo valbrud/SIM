@@ -382,11 +382,11 @@ def compute_2d_vectorial_components_free_dipole(
     c2 = np.cos(2.0 * phi); s2 = np.sin(2.0 * phi)
 
     # Five augmented pupils (Nrho,Nphi)
-    P0  = P_base * F0
-    P1c = P_base[:, None] * F1[:, None] * c1[None, :]
-    P1s = P_base[:, None] * F1[:, None] * s1[None, :]
-    P2c = P_base[:, None] * F2[:, None] * c2[None, :]
-    P2s = P_base[:, None] * F2[:, None] * s2[None, :]
+    P0  = P_base * F0 if is_radial else P_base * F0[:, None]
+    P1c = (P_base[:, None] if is_radial else P_base) * F1[:, None] * c1[None, :]
+    P1s = (P_base[:, None] if is_radial else P_base) * F1[:, None] * s1[None, :]
+    P2c = (P_base[:, None] if is_radial else P_base) * F2[:, None] * c2[None, :]
+    P2s = (P_base[:, None] if is_radial else P_base) * F2[:, None] * s2[None, :]
 
     # Reuse coherent integrator unchanged
     U0  = compute_2d_psf_coherent(grid, NA, nmedium=nmedium, pupil_function=P0,

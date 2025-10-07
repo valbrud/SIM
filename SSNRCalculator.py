@@ -376,21 +376,33 @@ class SSNRSIM(SSNRBase):
         return ((self.dj * np.abs(object_ft)) ** 2 /
                 (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
 
-    def ring_average_ssnri_approximated(self, number_of_samples=None):
+    def ring_average_ssnri_approximated(self, number_of_samples=None, mask=None):
         """
         Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
         """
         q_axes = self.optical_system.otf_frequencies
         dj = np.copy(self.dj)
         vj = np.copy(self.vj)
+        
         if len(q_axes) == 2:
-            return average_rings2d(dj**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj, q_axes, number_of_samples=number_of_samples)
+            if mask is not None:
+                dja = utils.average_mask(dj, mask, shape='reduced')
+                vja = utils.average_mask(vj, mask, shape='reduced')
+                return np.nan_to_num(dja**2 / vja)
+            else:
+                return average_rings2d(dj**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj, q_axes, number_of_samples=number_of_samples)
+        
         elif len(q_axes) != 3:
             raise AttributeError("PSF dimension is not equal to 2 or 3!")
 
         averaged_slices = []
         for i in range(dj.shape[2]):
-            averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
+            if mask is not None:
+                dja = utils.average_mask(dj[i], mask, shape='reduced')
+                vja = utils.average_mask(vj[i], mask, shape='reduced')
+                averaged_slices.append(np.nan_to_num(dja**2 / vja))
+            else:
+                averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
         return np.array(averaged_slices).T
 
     def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):

@@ -13,6 +13,7 @@ __pycache__/
 other_projects/
 *.doctree
 data/
-reconstructions/images/
+reconstructions/
 simulations/BlindSIM/
 simulations/statistics/
+

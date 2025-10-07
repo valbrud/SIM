@@ -485,11 +485,14 @@ def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray
     ft_padded = np.pad(image_ft, pad_width, mode='constant')
     if add_shot_noize:
         # Add shot noise to the padded Fourier coefficients
-        variance = np.sum(image)**2 / 2 
+        variance = np.sum(image) / 2 
         center_slices = tuple(slice(pad, pad + orig) for (pad, _), orig in zip(pad_width, original_shape))
         noise = np.random.normal(0, variance**0.5, ft_padded.shape) + 1j * np.random.normal(0, variance**0.5, ft_padded.shape)
         noise[center_slices] = 0
+        noise_inverse = np.flip(noise).conjugate()
+        noise[:new_shape[0]//2, ...] = noise_inverse[:new_shape[0]//2, ...]
         ft_padded += noise
-
-    upsampled = hpc_utils.wrapped_ifftn(ft_padded) 
+    # plt.imshow(np.log1p(10 ** 8 *np.abs(ft_padded)), cmap='gray')
+    # plt.show()
+    upsampled = hpc_utils.wrapped_ifftn(ft_padded)
     return upsampled

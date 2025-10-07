@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import unittest
 import time
 from psf_models import *
-from pupil_functions import make_vortex_pupil
+from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations
 import hpc_utils
+import pupil_functions
 
 # Add project paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -271,6 +272,29 @@ class TestPSFOTF2D(unittest.TestCase):
 
         plt.show()
 
+    def test_vectorial_zernieke(self):
+        """Test high NA vs low NA."""
+        zernieke = {
+            (2, -2): 0.072,  # Astigmatism Oblique
+        }
+        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernieke, Nrho=129, Nphi=256)
+        aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
+
+        t_start = time.time()
+        psf = compute_2d_incoherent_vectorial_psf_free_dipole(
+            grid=x_grid2d,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            high_NA=True,
+            pupil_function=aberration_function,
+            device='gpu', 
+            safety=0.9,
+        )
+        t_end = time.time()
+        print(f"test_gpu_basic: compute_2d_vectorial_psf with aberrations took {t_end - t_start:.4f} seconds")
+        OTF = hpc_utils.wrapped_fftn(psf).real
+        plot_psf_otf_plot(np.log1p(10 ** 4 * psf[:,:]), np.log1p(10 ** 4 * OTF[:,:]), "PSF/OTF central z slice high_NA_model with Zernike aberrations")
+
 class TestPSFOTF3D(unittest.TestCase):
 
     def test_high_NA_no_aberrations(self):
@@ -285,7 +309,7 @@ class TestPSFOTF3D(unittest.TestCase):
             high_NA=True,
             pupil_function=None,
             Nphi=201,
-            Nu=101,
+            Nrho=101,
             device='gpu'
         )
         t_end = time.time()
@@ -397,6 +421,8 @@ class TestPSFOTF3D(unittest.TestCase):
         axes[1, 1].legend()
 
         plt.show()
+
+
 if __name__ == "__main__":
     unittest.main()
     plt.show()

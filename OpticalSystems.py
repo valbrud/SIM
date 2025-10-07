@@ -6,6 +6,7 @@ This module contains classes for simulating and analyzing optical systems.
 Note: More reasonable interface for accessing and calculating of the PSF and OTF is expected in the future.
 For this reason the detailed documentation on the computations is not provided yet.
 """
+import utils
 from joblib import Parallel, delayed
 import numpy as np
 import scipy as sp
@@ -55,7 +56,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     # the functions. To use full functionality, compute the pupil function manually and provide as an array.  
     known_pupil_elements = {'vortex' : pupil_functions.make_vortex_pupil} 
 
-    def __init__(self, interpolation_method: str, normalize_otf = 'True'):
+    def __init__(self, interpolation_method: str, normalize_otf = 'True', computed_size: int = 0):
         self._psf = None
         self._otf = None
         self._x_grid = None
@@ -66,6 +67,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         self._interpolation_method = None
         self.interpolation_method = interpolation_method
         self.normalize_otf = True
+        self._otf_pixel = None
 
     @property
     def psf(self):
@@ -88,7 +90,21 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         self._psf /= np.sum(self._psf)
         self._otf /= np.sum(self.psf)
 
+    @property 
+    def otf_pixel(self):
+        return self._otf_pixel 
 
+    @property
+    def otf_with_pixel_size_correction(self):
+        if self.otf_pixel is None:
+            self.compute_pixel_correction()
+        return self._otf * self._otf_pixel
+    
+    @property
+    def psf_with_pixel_size_correction(self):
+        corrected_psf = hpc_utils.wrapped_iffn(self.pixel_size_corrected_otf)
+        return corrected_psf / np.sum(corrected_psf)
+    
     @property
     def interpolation_method(self):
         return self._interpolation_method
@@ -162,14 +178,16 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         """
         self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates, indexing='ij'), axis=-1)
     
-    def _account_for_pixel_size(self):
+    def compute_pixel_correction(self):
         x_grid = self.x_grid
         dx = x_grid[*([1] * self.dimensionality)] - x_grid[*([0]*self.dimensionality)]
         q_grid = self.q_grid
         q_grid_flat = q_grid.reshape(-1, self.dimensionality)
         otf_pixel = np.prod(np.sinc(q_grid_flat * dx[None, :]), axis=1)
-        self.otf = self.otf * otf_pixel.reshape(*self.otf.shape)
-
+        otf_pixel = otf_pixel.reshape(np.array(q_grid.shape)[:-1])
+        self._otf_pixel = otf_pixel
+        return otf_pixel 
+    
     def _prepare_interpolator(self):
         """
         Prepare the interpolator based on OTF values and axes.
@@ -185,14 +203,16 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
                                                                       bounds_error=False,
                                                                       fill_value=0.)
 
-    def _upsample(self, factor=2):
+    def upsample(self, factor=1, include_coordinates=True):
         """
         Upsample the PSF by zero-padding the OTF.
         Coordinates are changed accordingly.
         """
-
-        self.psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates)
-        self.compute_psf_and_otf()
+        if factor == 1:
+            return
+        if include_coordinates:
+            self.psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates)
+        self.psf = utils.upsample(self.psf, factor)
         self._x_grid = None
         self._q_grid = None
 
@@ -261,12 +281,22 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
 
         return OpticalSystem.known_pupil_elements[pupil_element](Nrho, Nphi)
     
+    @abstractmethod
+    def get_uniform_pupil(self):
+        """ 
+        Returns a uniformly filled with ones pupil function. Beware that the coordinates of this one 
+        are not equal to the rho and phi used elsewhere. This function computes the pupil function on a
+        uniform frequency grid and used for apodization.
+        """
+        pass
+
 class OpticalSystem2D(OpticalSystem):
 
     dimensionality = 2
 
-    def __init__(self, interpolation_method, normalize_otf=True):
+    def __init__(self, interpolation_method, normalize_otf=True, computed_size: int = 0):
         super().__init__(interpolation_method, normalize_otf)
+        self.computed_size = computed_size
 
     def compute_psf_and_otf_coordinates(self, psf_size: tuple[float], N: int):
         if type(N) is int:
@@ -314,8 +344,22 @@ class OpticalSystem2D(OpticalSystem):
     #Required by the abstract base class. Implementation is provided in the subclasses.
     def compute_psf_and_otf(self) -> tuple[np.float64, np.float64]:
         pass
+    
+    def get_uniform_pupil(self):
+        rho = np.sqrt(self.q_grid[..., 0]**2 + self.q_grid[..., 1]**2)
+        pupil_function = np.where(rho <= self.NA, 1., 0.)
+        return pupil_function
 
-
+    @property
+    def computational_grid(self):
+        if not self.computed_size:
+            return super().x_grid
+        else:
+            centerx, centery = self.psf_coordinates[0].size // 2, self.psf_coordinates[1].size // 2
+            x, y = self.psf_coordinates[0][centerx - self.computed_size // 2:centerx + self.computed_size // 2 + 1], self.psf_coordinates[1][centery - self.computed_size // 2:centery + self.computed_size // 2 + 1]
+            grid = np.meshgrid(x, y, indexing='ij')
+            return np.stack(grid, axis=-1)
+        
 class OpticalSystem3D(OpticalSystem):
 
     dimensionality = 3
@@ -373,15 +417,20 @@ class OpticalSystem3D(OpticalSystem):
                                            np.ndarray[tuple[int, int, int], np.float64]]: 
         pass
 
+    def get_uniform_pupil(self):
+        rho = np.sqrt(self.q_grid[..., 0, 0]**2 + self.q_grid[..., 0, 1]**2)
+        pupil_function = np.where(rho <= self.NA, 1., 0.)
+        return pupil_function
 
 class System4f2DCoherent(OpticalSystem2D): 
     def __init__(self,
                  alpha=np.pi / 4,
                  refractive_index=1,
                  interpolation_method="linear", 
-                 normalize_otf = False):
+                 normalize_otf = False, 
+                 computed_size:int = 0):
         
-        super().__init__(interpolation_method, normalize_otf)
+        super().__init__(interpolation_method, normalize_otf, computed_size)
         self.nm = refractive_index
         self.alpha = alpha
         self.NA = self.nm * np.sin(self.alpha)
@@ -403,12 +452,10 @@ class System4f2DCoherent(OpticalSystem2D):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
-        grid = np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
-
         pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
 
         psf = psf_models.compute_2d_psf_coherent(
-            grid=grid, 
+            grid=self.computational_grid, 
             NA=self.NA, 
             nmedium=self.nm, 
             pupil_function=pupil_function, 
@@ -416,7 +463,10 @@ class System4f2DCoherent(OpticalSystem2D):
             Nrho=Nrho, 
             Nphi=Nphi, 
         )
-        
+
+        if self.computed_size:
+            psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
+
         self.psf = psf 
         self.otf = hpc_utils.wrapped_fftn(self.psf)
         
@@ -447,7 +497,7 @@ class System4f3DCoherent(OpticalSystem3D):
                             pupil_function=None, 
                             zernieke={}, 
                             Nrho = 129, 
-                            Nphi = 129) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                            Nphi = 129,) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
@@ -486,12 +536,14 @@ class System4f2D(System4f2DCoherent):
                  alpha=np.pi / 4,
                  refractive_index=1,
                  interpolation_method="linear", 
-                 normalize_otf=True):
+                 normalize_otf=True, 
+                 computed_size:int = 0):
         
         super().__init__(alpha,
                  refractive_index,
                  interpolation_method, 
-                 normalize_otf)
+                 normalize_otf, 
+                 computed_size)
     
     def compute_psf_and_otf(self, parameters=None,
                             high_NA=False,
@@ -500,9 +552,9 @@ class System4f2D(System4f2DCoherent):
                             pupil_function=None, 
                             zernieke={}, 
                             Nrho = 129, 
-                            Nphi = 129)\
-            -> tuple[np.ndarray[tuple[int, int, int], np.float64],
-                     np.ndarray[tuple[int, int, int], np.float64]]:
+                            Nphi = 129, 
+                            ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                                np.ndarray[tuple[int, int, int], np.float64]]:
         
         if self.psf_coordinates is None and parameters is None and pupil_function is None:
             raise AttributeError("Compute psf first or provide psf parameters")
@@ -516,10 +568,10 @@ class System4f2D(System4f2DCoherent):
             psf = np.abs(csf) ** 2
 
         else:
-            grid= np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
-
+            pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
+            
             psf = psf_models.compute_2d_incoherent_vectorial_psf_free_dipole(
-                grid=grid, 
+                grid=self.computational_grid,
                 NA=self.NA,
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
@@ -528,7 +580,10 @@ class System4f2D(System4f2DCoherent):
                 Nphi=Nphi, 
             )
 
-        self.psf = psf 
+            if self.computed_size:
+                utils.expand_kernel(psf, (self.psf_coordinates[0], self.psf_coordinates[1]))
+
+        self.psf = psf.real 
         self.otf = hpc_utils.wrapped_fftn(self.psf)
         
         self._normalize_psf__and_otf()
@@ -558,7 +613,8 @@ class System4f3D(System4f3DCoherent):
                             pupil_function=None, 
                             zernieke={}, 
                             Nrho = 129, 
-                            Nphi = 129) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                            Nphi = 129, 
+                            ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")

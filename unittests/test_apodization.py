@@ -33,7 +33,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
         self.configurations = configurations
         print(N, dx *  NA)
         self.optical_system = OpticalSystems.System4f2D(alpha=alpha, refractive_index=nobject)
-        self.optical_system.compute_psf_and_otf(((psf_size[0], psf_size[1]), N), save_pupil_function=True)
+        self.optical_system.compute_psf_and_otf(((psf_size[0], psf_size[1]), N))
     
     def test_extended_space_conventional(self):
         conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1)

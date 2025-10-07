@@ -69,7 +69,8 @@ def filter_true_wiener(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-10):    
+                    numeric_noise=10**-10, 
+                    mask = None):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -99,7 +100,8 @@ def filter_true_wiener(image_ft,
     expand_ring_averages = utils.expand_ring_averages3d if image_ft.ndim == 3 else utils.expand_ring_averages2d
     
     if average == "surface_levels":
-        mask = find_levels(np.copy(ssnr_calculator.dj), direction=0)
+        if mask is None:
+            mask = find_levels(np.copy(ssnr_calculator.dj), direction=0)
         obj2a = utils.average_mask(bj2, mask)
     elif average == "rings":
         obj2ra = average_rings(bj2, ssnr_calculator.optical_system.otf_frequencies)
@@ -119,13 +121,13 @@ def filter_true_wiener(image_ft,
             vja = expand_ring_averages(vjra, ssnr_calculator.optical_system.otf_frequencies)
     
     # print('total_counts', f0)
-    noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
+    # noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
     noise_power = vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
     ssnr = ((obj2a - noise_power ) /
                  noise_power).real
     ssnr = np.nan_to_num(ssnr)
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, 0)
-    # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-5), ssnr, 0)
+    ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-5), ssnr, 0)
     # plt.plot(np.log(1 + (obj2ra).real), label='total')
     # plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
     # plt.plot(np.log(1 + (np.abs(ssnr))[center[0], center[1]:]), label = 'ssnr')
@@ -139,5 +141,6 @@ def filter_true_wiener(image_ft,
     filtered = image_ft  / (ssnr_calculator.dj + w)
     filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
     filtered = np.nan_to_num(filtered)
+    filtered = np.where(ssnr < 1, 0, filtered)
     return filtered, w, ssnr
 

@@ -140,7 +140,20 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         numpy.ndarray
             The upsampled SIM images.
         """
+        # plt.title("Before upsampling")
+        # plt.imshow(sim_images[0,0], cmap='gray')
+        # plt.show()
         upsampled = np.array([np.array([utils.upsample(image, factor=upsample_factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
+        # plt.title("After upsampling")
+        # plt.imshow(upsampled[0,0], cmap='gray')
+        # plt.show()
+        # for i in range(upsampled.shape[0]):
+        #     for j in range(upsampled.shape[1]):
+        #         plt.imshow(np.log1p(10**8 * np.abs(hpc_utils.wrapped_fftn(upsampled[i,j]))), cmap='gray')
+        #         plt.show()
+        # # plt.show()
+        # plt.plot(np.log1p(10**8 * np.mean(hpc_utils.wrapped_fftn(upsampled[0,0]), axis=1)))
+        # plt.show()
         return upsampled
     
     def get_widefield(self, sim_images):
@@ -311,6 +324,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
         for n in range(self.illumination.Mt):
             for harmonic in self.illumination.harmonics:
                 r = harmonic[0]
+                # self.illumination_patterns[r, n] = self.illumination.get_illumination_density(self.optical_system.x_grid, r=r, n=n)
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
                 self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic])
 
@@ -446,3 +460,66 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
                          kernel=kernel,
                          phase_modulation_patterns=phase_modulation_patterns,
                         )
+        
+
+def estimate_gain_and_offset(sim_images, edge_pixels=30):
+    # Shapes and constants
+    H, W = sim_images.shape[-2:]
+    image_size = H * W  # FIX 1: correct number of pixels per image
+
+    # Edge “strip” pixel count — matches your numerator's double-counting
+    e = int(edge_pixels)
+    if not (1 <= e <= min(H, W)//2):
+        raise ValueError(f"edge_pixels must be in 1..{min(H,W)//2}")
+    mask = np.zeros((H, W), dtype=bool)
+    e = int(edge_pixels)
+    mask[:e, :] = True
+    mask[-e:, :] = True
+    mask[:, :e] |= True
+    mask[:, -e:] |= True
+    edge_pixel_number = int(mask.sum())
+
+    # Accumulators
+    sI = np.zeros(sim_images.shape[:2], dtype=float)
+    N  = np.zeros(sim_images.shape[:2], dtype=float)
+
+    # FIX 2: correct sample-count check
+    if sim_images.shape[0] * sim_images.shape[1] < 2:
+        raise ValueError(
+            "Impossible to estimate gain and offset with less than 2 images by this method. "
+            "Use as many images as possible."
+        )
+
+    # Per-image stats
+    for r in range(sim_images.shape[0]):
+        for n in range(sim_images.shape[1]):
+            image = sim_images[r, n]
+            sI[r, n] = float(np.sum(image))
+
+            image_ft  = hpc_utils.wrapped_fftn(image)
+            image_ft2 = (image_ft * image_ft.conjugate()).real
+
+            N[r, n] = image_ft2[mask].sum() / edge_pixel_number
+
+            # Optional debug:
+            print(f"({r},{n}) sum={sI[r,n]:.6g} Nedge={N[r,n]:.6g} std~{N[r,n]**0.5:.6g}")
+
+    # Linear model: sum(I) = alpha * N + offset * (H*W)
+    num_imgs = sim_images.shape[0] * sim_images.shape[1]
+    X = np.column_stack([
+        N.ravel(),
+        np.full(num_imgs, image_size, dtype=float)
+    ])
+    y = sI.ravel()
+
+    theta, residuals_vec, rank, svals = np.linalg.lstsq(X, y, rcond=None)
+    alpha, beta = theta
+
+    if alpha == 0:
+        raise ZeroDivisionError("Estimated alpha is zero; cannot invert to get 'gain'.")
+
+    gain   = 1.0 / alpha
+    offset = float(beta)           # this is a per-pixel offset (global across all images)
+    f0     = N / (gain**2)         # same shape as (r, n)
+
+    return gain, offset, f0

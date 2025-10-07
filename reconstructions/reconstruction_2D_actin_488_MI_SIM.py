@@ -70,7 +70,7 @@ psf_size = 2 * np.array((max_r, max_r))
 # plt.show()
 # otf = otf[2::2, 2::2]
 optical_system = System4f2D(alpha = alpha, refractive_index=nmedium)
-optical_system.compute_psf_and_otf((psf_size, N), account_for_pixel_size=False, save_pupil_function=True)
+optical_system.compute_psf_and_otf((psf_size, N))
 plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='OTF_simulated')
 # plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='OTF_fairSIM')
 plt.legend()
@@ -103,9 +103,22 @@ total_counts = np.sum(stack[0, 0, ...])
 print('total_counts', total_counts)
 
 # exit()
+offset = np.min(stack)
+pure_noise_region = image_ft[optical_system.otf < 10**-3]
 
-offset = 90
-gain = 6
+average_noise = np.mean(np.abs(pure_noise_region)**2)
+gain = average_noise / np.sum((image - offset))
+
+print('gain', np.median(gain), 'offset', offset)
+
+stack = (stack - offset) / gain
+
+noise = utils.average_rings2d(image_ft**2, optical_system.psf_coordinates)
+average_noise = np.mean(np.abs(pure_noise_region)**2)
+
+plt.plot(np.log1p(np.abs(noise)))
+plt.plot(np.log1p(np.sum(image) * np.ones_like(noise)), label='Estimated noise level')
+plt.show()
 stack = (stack - offset) // gain
 stack[stack < 0] = 1
 from windowing import make_mask_cosine_edge2d

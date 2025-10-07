@@ -1091,8 +1091,8 @@ class PhasesEstimator:
                         if m[1][0] >= 0:
                             phase = np.angle(Amn[(m, n)])
                             index = (m, n)
-                            phase_matrix[(r, n, m[1])] = np.exp(-1j * phase[0, 0])
-                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(1j * phase[0, 0])
+                            phase_matrix[(r, n, m[1])] = np.exp(1j * phase[0, 0])
+                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(-1j * phase[0, 0])
 
         return phase_matrix
 

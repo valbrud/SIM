@@ -849,7 +849,8 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
         illumination_density = np.zeros(grid.shape[:2], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))]
+            phase = np.angle(self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))])
+            # print(round(phase / (2 * np.pi / 13)))
             amplitude = self.harmonics[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic2D(amplitude, phase, wavevector).get_intensity(grid)

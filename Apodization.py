@@ -50,8 +50,8 @@ class AutoconvolutionApodization(ABC):
 
     
 class AutoconvolutionApodizationWidefield(AutoconvolutionApodization):
-    def __init__(self, pupil_function):
-        self._pupil_function = pupil_function
+    def __init__(self, optical_system: OpticalSystem):
+        self._pupil_function = optical_system.get_uniform_pupil()
         super().__init__()
         
     
@@ -115,10 +115,6 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metacla
         if not illumination.dimensionality == optical_system.dimensionality:
             raise ValueError("The illumination and pupil function dimensions do not match.")
         
-        if not 'pupil_function'in optical_system.__dict__:
-            raise ValueError("The optical system does not have a stored pupil function \
-                             required for the autoconvoluiton method of apodization.")
-
         if not illumination.electric_field_plane_waves:
             raise ValueError("The illumination does not have plane waves, whose wavevectors are\
                              required for the autoconvoluiton method of apodization.")
@@ -126,7 +122,7 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metacla
         self._optical_system = optical_system
         self._illumination = illumination
 
-        super().__init__(self._optical_system.pupil_function)
+        super().__init__(optical_system)
 
     def _compute_ideal_transfer_functions(self, **kwargs):
         raise NotImplementedError("The autoconvolution method of apodization is dimension-specific due to numeric issues.")
@@ -147,7 +143,8 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
         super().__init__(optical_system, illumination)
 
     def _compute_ideal_transfer_functions(self, **kwargs):
-        ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1., 0)
+        # ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1., 0)
+        ideal_pupil_function = self._optical_system.get_uniform_pupil()
         ideal_pupil_function_ift = hpc_utils.wrapped_ifftn(ideal_pupil_function)
         
         grid = self._optical_system.x_grid
