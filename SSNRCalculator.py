@@ -13,7 +13,7 @@ import numpy as np
 from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
 import OpticalSystems
 import hpc_utils
-from utils import average_rings2d
+from utils import average_rings2d, expand_ring_averages2d
 import VectorOperations
 import matplotlib.pyplot as plt
 from abc import abstractmethod
@@ -376,34 +376,6 @@ class SSNRSIM(SSNRBase):
         return ((self.dj * np.abs(object_ft)) ** 2 /
                 (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
 
-    def ring_average_ssnri_approximated(self, number_of_samples=None, mask=None):
-        """
-        Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
-        """
-        q_axes = self.optical_system.otf_frequencies
-        dj = np.copy(self.dj)
-        vj = np.copy(self.vj)
-        
-        if len(q_axes) == 2:
-            if mask is not None:
-                dja = utils.average_mask(dj, mask, shape='reduced')
-                vja = utils.average_mask(vj, mask, shape='reduced')
-                return np.nan_to_num(dja**2 / vja)
-            else:
-                return average_rings2d(dj**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj, q_axes, number_of_samples=number_of_samples)
-        
-        elif len(q_axes) != 3:
-            raise AttributeError("PSF dimension is not equal to 2 or 3!")
-
-        averaged_slices = []
-        for i in range(dj.shape[2]):
-            if mask is not None:
-                dja = utils.average_mask(dj[i], mask, shape='reduced')
-                vja = utils.average_mask(vj[i], mask, shape='reduced')
-                averaged_slices.append(np.nan_to_num(dja**2 / vja))
-            else:
-                averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
-        return np.array(averaged_slices).T
 
     def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):
         g2 = np.sum(self.optical_system.otf * self.optical_system.otf.conjugate()).real
@@ -481,6 +453,51 @@ class SSNRSIM2D(SSNRSIM):
         
         super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
 
+    def ssnri_like_sectorial_average(self,  mask=None, degree_of_symmetry=1, theta0=0.):
+        """
+        Compute avergaged ssnri as <Dj^2> / <Vj> in a sector instead of <Dj^2 / Vj>
+        """
+        q_axes = self.optical_system.otf_frequencies
+        dj = np.copy(self.dj)
+        vj = np.copy(self.vj)
+        
+        if len(q_axes) != 2:
+            raise AttributeError("PSF dimensionality is not equal to 2!")
+        
+        if mask is not None:
+            dja = utils.average_mask(dj, mask, shape='reduced')
+            vja = utils.average_mask(vj, mask, shape='reduced')
+            return np.nan_to_num(dja**2 / vja)
+        else:
+            return average_rings2d(dj**2, q_axes, degree_of_symmetry, theta0) / average_rings2d(vj, q_axes, degree_of_symmetry, theta0)
+        
+
+    def ssnr_like_sectorial_average_from_image(self, image_ft, degree_of_symmetry=1, theta0=0.):
+        if image_ft.ndim != self.dimensionality:
+            raise ValueError("The image and SSNR calculator dimensions do not match.")
+
+        center = np.array(image_ft.shape)//2
+        # print(image_ft[*center])
+        # print(self.dj[*center])
+        f0 = image_ft[*center] / self.dj[*center]
+        bj2 = np.abs(image_ft) ** 2
+
+        obj2sa = average_rings2d(bj2, self.optical_system.otf_frequencies, degree_of_symmetry, theta0)    
+        djsa = average_rings2d(np.copy(self.dj), self.optical_system.otf_frequencies, degree_of_symmetry, theta0)
+        vjsa = average_rings2d(np.copy(self.vj), self.optical_system.otf_frequencies, degree_of_symmetry, theta0)
+
+        numeric_noise = 10**-12
+        # print('total_counts', f0)
+        # noise_power_ra = vjra * f0 + image_ft.size * self.readout_noise_variance**2 * djra
+        noise_power = vjsa * f0 + image_ft.size * self.readout_noise_variance**2 * djsa
+        ssnr_sa = ((obj2sa - noise_power ) /
+                    noise_power).real
+        ssnr_sa = np.nan_to_num(ssnr_sa)
+        ssnr_sa = np.where(djsa > numeric_noise, ssnr_sa, 0)
+        
+        return ssnr_sa
+
+
     def plot_effective_kernel_and_otf(self):
         Nx, Ny = self.optical_system.otf.shape
         fig, ax = plt.subplots()
@@ -522,3 +539,24 @@ class SSNRSIM3D(SSNRSIM):
         if not isinstance(illumination_reconstruction, IlluminationPlaneWaves3D) and not illumination_reconstruction is None:
             raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
         super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
+
+    def ssnri_like_sectorial_average(self, number_of_samples=None, mask=None):
+        """
+        Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
+        """
+        q_axes = self.optical_system.otf_frequencies
+        dj = np.copy(self.dj)
+        vj = np.copy(self.vj)
+        
+        if len(q_axes) != 3:
+            raise AttributeError("PSF dimension is not equal to 3!")
+
+        averaged_slices = []
+        for i in range(dj.shape[2]):
+            if mask is not None:
+                dja = utils.average_mask(dj[i], mask, shape='reduced')
+                vja = utils.average_mask(vj[i], mask, shape='reduced')
+                averaged_slices.append(np.nan_to_num(dja**2 / vja))
+            else:
+                averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
+        return np.array(averaged_slices).T

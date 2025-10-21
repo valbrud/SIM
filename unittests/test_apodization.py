@@ -76,13 +76,13 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
         plt.show()
 
     def test_apodization_sim(self):
-        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1)
+        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1, angles=(0 + np.pi/4, np.pi/3 + np.pi/4, 2*np.pi/3 + np.pi/4))
         conventional = IlluminationPlaneWaves2D.init_from_3D(conventional)    
         apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, conventional)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf, cmap='gray')
         axes[0].set_title('Ideal CTF')
-        axes[1].imshow(apodization.ideal_otf, cmap='gray')
+        axes[1].imshow(np.log1p(10**8 * apodization.ideal_otf), cmap='gray')
         axes[1].set_title('Ideal OTF')
         axes[2].imshow(apodization.ideal_psf, cmap='gray')
         plt.show()

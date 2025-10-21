@@ -320,6 +320,8 @@ class OpticalSystem2D(OpticalSystem):
         fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx)
         fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
         self._otf_frequencies = (fx, fy)
+        self._x_grid = None
+        self._q_grid = None
 
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
@@ -472,7 +474,7 @@ class System4f2DCoherent(OpticalSystem2D):
         
         self._normalize_psf__and_otf()
 
-        self._prepare_interpolator()
+        # self._prepare_interpolator()
         return self.psf, self.otf
 
 
@@ -527,7 +529,7 @@ class System4f3DCoherent(OpticalSystem3D):
         
         self._normalize_psf__and_otf()
 
-        self._prepare_interpolator()
+        # self._prepare_interpolator()
         return self.psf, self.otf
 
 
@@ -581,14 +583,14 @@ class System4f2D(System4f2DCoherent):
             )
 
             if self.computed_size:
-                utils.expand_kernel(psf, (self.psf_coordinates[0], self.psf_coordinates[1]))
+                psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
 
         self.psf = psf.real 
         self.otf = hpc_utils.wrapped_fftn(self.psf)
         
         self._normalize_psf__and_otf()
 
-        self._prepare_interpolator()
+        # self._prepare_interpolator()
         return self.psf, self.otf
 
 
@@ -646,7 +648,7 @@ class System4f3D(System4f3DCoherent):
             self.otf /= np.amax(self.otf)
             self.psf = psf / np.sum(psf)
 
-        self._prepare_interpolator()
+        # self._prepare_interpolator()
         return self.psf, self.otf
 
 

@@ -161,7 +161,7 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
                 ideal_pupil_function[phase_shifted >  0.1 * np.amax(self.pupil_function)] = 1
 
         self._ideal_ctf = ideal_pupil_function
-        self._ideal_otf = np.flip(scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same'))
+        self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
         self._ideal_otf /= np.amax(self._ideal_otf)
         self._ideal_psf = hpc_utils.wrapped_ifftn(self._ideal_otf).real
         self._ideal_psf /= np.sum(self._ideal_psf)

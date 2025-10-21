@@ -489,21 +489,21 @@ class TestConstructPupilAberration(unittest.TestCase):
 
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
         aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(2, 0): 0.0, (4, 0): 0.0})
+                                                                          zernieke={(4, 0): 0.072})
         
-        plt.plot(non_aberrated_otf[N//2, N//2:], label='Non-aberrated OTF') 
-        plt.plot(aberrated_otf_spherical[N//2, N//2:], label='Spherical Aberration OTF') 
-        plt.show()
+        # plt.plot(non_aberrated_otf[N//2, N//2:], label='Non-aberrated OTF') 
+        # plt.plot(aberrated_otf_spherical[N//2, N//2:], label='Spherical Aberration OTF') 
+        # plt.show()
         aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
                                                                           zernieke={(3, 1): 0.072})
         aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(2, 2): 0.072})
+                                                                          zernieke={(2, -2): 0.072})
         aberrated_psfs = [aberrated_psf_spherical, aberrated_psf_comma, aberrated_psf_astigmatism]
         aberrated_otfs = [aberrated_otf_spherical, aberrated_otf_comma, aberrated_otf_astigmatism]
         i = 0
         for psf in aberrated_psfs:
             fig, axes = plt.subplots(figsize =(8, 6))
-            im = axes.imshow(psf[:, :].T, origin='lower', extent=(two_NA_fy[0], two_NA_fy[-1], two_NA_fx[0], two_NA_fy[-1]))
+            im = axes.imshow(psf[:, :].T.real, origin='lower', extent=(two_NA_fy[0], two_NA_fy[-1], two_NA_fx[0], two_NA_fy[-1]))
             cb = plt.colorbar(im, fraction=0.046, pad=0.04)
             cb.ax.tick_params(labelsize=30)
             cb.set_label("$PSF$", fontsize=30)

@@ -19,7 +19,7 @@ sys.path.append(project_root)
 # Import required modules
 from ShapesGenerator import generate_random_lines
 from OpticalSystems import System4f2D
-from ResolutionMeasures import frc, frc_one_image
+from resolution_measures import frc, frc_one_image
 import scipy.signal
 
 

@@ -160,7 +160,7 @@ def average_mask(array: np.ndarray[np.float64], mask: np.ndarray[np.int32], shap
 #     # theta = np.arange(0, 2 * np.pi, 2 * np.pi / r.size)
 
 
-def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, num_angles=360, number_of_samples: int = None):
+def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, degree_of_symmetry=1, theta0 = 0.,  num_angles=360, number_of_samples: int = None,):
     """
     Averages the 2D array radially using bilinear interpolation in polar coordinates.
 
@@ -169,6 +169,8 @@ def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, num_angle
         axes: Tuple of arrays representing the grid axes (ax1, ax2).
         num_samples: Number of radial samples (r) to take.
         num_angles: Number of angular samples (theta).
+        degree_of_symmetry: Avarage within an angular sector 2pi/degree_of_symmetry instead of a whole ring
+        theta0: initial angle for the averaging
 
     Returns:
         radii: Radial distances at which the interpolation is performed.
@@ -190,10 +192,10 @@ def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, num_angle
 
     for i, r in enumerate(ax):
         # Parametric equations for points on a circle of radius r
-        theta = np.linspace(0, 2 * np.pi, num_angles, endpoint=False)
+        theta = np.linspace(theta0, theta0 + 2 * np.pi / degree_of_symmetry, num_angles, endpoint=False)
         sample_x = r * np.cos(theta)
         sample_y = r * np.sin(theta)
-        allowed_values = (sample_x >= ax[0]) * (sample_y >= ax[0])
+        allowed_values = (sample_x >= ax[0]) * (sample_y >= ax[0]) 
         sample_x = sample_x[allowed_values]
         sample_y = sample_y[allowed_values]
         # Perform bilinear interpolation at these points
@@ -245,6 +247,7 @@ def expand_ring_averages2d(averaged: np.ndarray[int, ...], axes: tuple[np.ndarra
 
     x, y = np.meshgrid(ax1, ax2)
     r = (x ** 2 + y ** 2) ** 0.5
+    phi = np.angle(x + 1j * y)
     ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -1e-10]
     ax = ax1 if ax1[-1] < ax2[-1] else ax2
     shape = r.shape
@@ -254,7 +257,6 @@ def expand_ring_averages2d(averaged: np.ndarray[int, ...], axes: tuple[np.ndarra
         expanded[(r <= ax[i] + 10 ** -10) * (r > r_old)] = averaged[i]
         r_old = ax[i] + 10 ** -10
     return expanded
-
 
 def expand_ring_averages3d(averaged: np.ndarray[tuple[int, int], ...], axes: tuple[np.ndarray, np.ndarray, np.ndarray] = None) -> np.ndarray[tuple[int, int, int], ...]:
     """
@@ -273,7 +275,6 @@ def expand_ring_averages3d(averaged: np.ndarray[tuple[int, int], ...], axes: tup
     for iz in range(axes[2].size):
         expanded[:, :, iz] = expand_ring_averages2d(averaged[:, iz], axes=(axes[0], axes[1]))
     return expanded
-
 
 def estimate_localized_peaks(array, axes):
     """
