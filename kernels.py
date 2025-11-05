@@ -10,11 +10,13 @@ Functions
 """
 
 
+import hpc_utils
 import utils
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.special
 
-def sinc_kernel1d(kernel_size: int) -> np.ndarray:
+def sinc_kernel1d(kernel_size: int = 0, pixel_size: float = 1.0, first_zero_frequency: float = 0.,) -> np.ndarray:
     """
     Generate a 1D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
 
@@ -24,14 +26,29 @@ def sinc_kernel1d(kernel_size: int) -> np.ndarray:
     Returns:
         A 1D triangular kernel.
     """
-    func_r = np.zeros(kernel_size)
-    func_r[0:kernel_size // 2 + 1] = np.linspace(0, 1, (kernel_size + 1) // 2 + 1)[1:]
-    func_r[kernel_size // 2: kernel_size] = np.linspace(1, 0, (kernel_size + 1) // 2 + 1)[:-1]
+    if not kernel_size and not first_zero_frequency:
+        raise ValueError("Either kernel_size or first_zero_frequency must be provided.")
+    if kernel_size:
+        if not kernel_size % 2 == 1:
+            raise ValueError("Kernel size must be odd.")
+        kernel_cut_off = (kernel_size // 2 + 1) * pixel_size
+    else:
+        kernel_cut_off = 0.5 / (first_zero_frequency * pixel_size) * pixel_size
+        print(f"Computed kernel cut off: {kernel_cut_off}")
+        kernel_size = int(2 * np.floor(0.5 / (first_zero_frequency * pixel_size))) + 1
+        print(f"Computed kernel size: {kernel_size}")
+        if not kernel_size % 2 == 1:
+            kernel_size += 1
+
+    x = np.linspace(-(kernel_size // 2) * pixel_size, (kernel_size // 2) * pixel_size, kernel_size)
+    r = np.abs(x)
+
+    func_r = 1 - r / kernel_cut_off
     return func_r
 
 
 
-def sinc_kernel2d(kernel_size: int) -> np.ndarray:
+def sinc_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0.,) -> np.ndarray:
     """
     Generate a 2D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
 
@@ -41,10 +58,10 @@ def sinc_kernel2d(kernel_size: int) -> np.ndarray:
     Returns:
         A 2D triangular kernel.
     """
-    kernel = sinc_kernel1d(kernel_size)[:, None] * sinc_kernel1d(kernel_size)[None, :]
+    kernel = sinc_kernel1d(kernel_size, pixel_size[0], first_zero_frequency)[:, None] * sinc_kernel1d(kernel_size, pixel_size[1], first_zero_frequency)[None, :]
     return kernel
 
-def sinc_kernel3d(kernel_r_size: int, kernel_z_size=1) -> np.ndarray:
+def sinc_kernel3d(kernel_r_size: int, kernel_z_size: int = 1, pixel_size: tuple[float, float, float] = (1.0, 1.0, 1.0), first_zero_frequency_r: float = 0., first_zero_frequency_z: float = 0.) -> np.ndarray:
     """
     Generate a 3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
 
@@ -55,32 +72,53 @@ def sinc_kernel3d(kernel_r_size: int, kernel_z_size=1) -> np.ndarray:
     Returns:
         A 2D/3D triangular kernel.
     """
-    kernel = sinc_kernel1d(kernel_r_size)[:, None,  None] * sinc_kernel1d(kernel_r_size)[None, :, None] * sinc_kernel1d(kernel_z_size)[None, None, :]
+    kernel = sinc_kernel1d(kernel_r_size, pixel_size[0], first_zero_frequency_r)[:, None,  None] * sinc_kernel1d(kernel_r_size, pixel_size[1], first_zero_frequency_r)[None, :, None] * sinc_kernel1d(kernel_z_size, pixel_size[2], first_zero_frequency_z)[None, None, :]
     return kernel
 
-def psf_kernel2d(kernel_size: int, pixel_size: tuple[float, float], dense_kernel_size=50) -> np.ndarray:
+def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0., N = 511) -> np.ndarray:
     """
     Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).
-
+    Remark: Historically it take 2d pixel size, but it is assumed to be isotropic.
+    
     Args:
         kernel_size: The size of the kernel.
         pixel_size: The pixel size in the real space.
-        dense_kernel_size: The size of the dense kernel. Default is 50. This parameter is used for better interpolation of the PSF values on a small grid.
+        first_zero_frequency: The frequency of the first zero crossing in the Fourier domain.
 
     Returns:
         A 2D kernel.
     """
-    dx, dy = pixel_size
-    dense_kernel_size = dense_kernel_size // kernel_size * kernel_size
-    x_max, y_max = dx * (dense_kernel_size//2), dy * (dense_kernel_size//2)
-    x = np.linspace(-x_max, x_max, dense_kernel_size)
-    y = np.linspace(-y_max, y_max, dense_kernel_size)
-    X, Y = np.meshgrid(x, y)
-    r = (X ** 2 + Y ** 2) ** 0.5
-    R = np.min((x[-1], y[-1]))
-    kernel_dense = (2 / np.pi) * (np.arccos(r / R) - (r / R) * (1 - (r / R) ** 2) ** 0.5)
-    kernel_dense = np.where(np.isnan(kernel_dense), 0, kernel_dense)
-    kernel = utils.downsample_circular_function(kernel_dense, (kernel_size, kernel_size))
+    if not kernel_size and not first_zero_frequency:
+        raise ValueError("Either kernel_size or first_zero_frequency must be provided.")
+    
+    if kernel_size: 
+        if not kernel_size % 2 == 1:
+            raise ValueError("Kernel size must be odd.")
+        kernel_cut_off =(kernel_size // 2 + 1)* pixel_size[0]
+
+    else: 
+        kernel_cut_off = 0.61 / (first_zero_frequency * pixel_size[0]) * pixel_size[0]
+        kernel_size = int(2 * np.floor(kernel_cut_off) / pixel_size[0]) + 1
+        if not kernel_size % 2 == 1:
+            kernel_size += 1
+        print(f"First zero frequency: {first_zero_frequency}")
+        print(f"Computed kernel cut off: {kernel_cut_off}")
+        print(f"Computed kernel size: {kernel_size}")
+
+    x, y = np.linspace(-(kernel_size // 2) * pixel_size[0], kernel_size // 2 * pixel_size[0], kernel_size), np.linspace(-(kernel_size // 2) * pixel_size[1], kernel_size // 2 * pixel_size[1], kernel_size)
+    r = np.sqrt(x[:, None]**2 + y[None, :]**2)
+    kernel = np.where(r <= kernel_cut_off, 2/np.pi * (np.arccos(r / kernel_cut_off+1e-15) - (r / kernel_cut_off) * np.sqrt(1 - (r / (kernel_cut_off + 1e-15))**2)), 0.0)
+    # fxmax, fymax = 0.5 / pixel_size[0], 0.5 / pixel_size[1]
+    # fx, fy = np.linspace(-fxmax, fxmax, N), np.linspace(-fymax, fymax, N)
+    # FX, FY = np.meshgrid(fx, fy, indexing='xy')
+    # FR = np.sqrt(FX**2 + FY**2)
+    # FR_scaled = 3.817 * FR / first_zero_frequency
+    # kernel_ft = (scipy.special.j1(FR_scaled) / (FR_scaled + 1e-15))**2
+    # kernel = hpc_utils.wrapped_ifftn(kernel_ft).real
+    # center = np.array(kernel.shape) // 2
+    # kernel = kernel[center[0] - kernel_size // 2:center[0] + kernel_size // 2 + 1,
+    #                 center[1] - kernel_size // 2:center[1] + kernel_size // 2 + 1]
+
     kernel /= np.sum(kernel) 
     return kernel
 

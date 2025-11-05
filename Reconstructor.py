@@ -256,6 +256,9 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         """
         phase_shifted = image * self.phase_modulation_patterns[r, m]
         shifted_image_ft = hpc_utils.wrapped_fftn(phase_shifted)
+        # plt.imshow(np.log1p(10**8 * np.abs(shifted_image_ft)), cmap='gray')
+        # plt.title(f'FT of image r={r}, m={m}')
+        # plt.show()
         return shifted_image_ft
 
     def reconstruct(self, sim_images, upsample_factor=1):
@@ -280,6 +283,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 # plt.imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)])))
                 # plt.show()
                 image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)].conjugate()
+
             reconstructed_image_ft += image1rotation_ft
         # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
         # plt.show()

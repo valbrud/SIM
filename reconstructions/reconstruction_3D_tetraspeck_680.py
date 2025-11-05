@@ -31,7 +31,7 @@ from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_consta
 from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
 import utils 
-from ResolutionMeasures import frc_one_image
+from resolution_measures import frc_one_image
 from otf_decoder import load_fairsim_otf
 
 

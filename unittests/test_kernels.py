@@ -48,6 +48,20 @@ class TestKernels(unittest.TestCase):
             plt.axis('off')
             plt.savefig(f'simulations/Figures/psf_kernel_size_{size}.png', bbox_inches='tight')
 
+    def test_continuous_change(self):
+        pixel_size = 0.5
+        N= 201
+        first_zero_frequency = np.linspace(0.5, 0.05, 25)
+        for fz in first_zero_frequency:
+            kernel = kernels.psf_kernel2d(pixel_size=(pixel_size, pixel_size), first_zero_frequency=fz)
+            kernel = utils.expand_kernel(kernel, (N, N))
+            plt.plot(kernel[N//2, :], label=f'FZ={fz:.2f}')
+        plt.title('PSF Kernel Profiles for Varying First Zero Frequencies')
+        plt.xlabel('Pixel Index')
+        plt.ylabel('Kernel Value')
+        plt.legend()
+        plt.show()
+
 class TestSSNRSimulations(unittest.TestCase):
     def test_compare_ssnr(self):
         theta = np.pi / 4

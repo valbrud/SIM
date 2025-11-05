@@ -31,7 +31,7 @@ from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_consta
 from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
 import utils 
-from ResolutionMeasures import frc_one_image
+from resolution_measures import frc_one_image
 from otf_decoder import load_fairsim_otf
 
 
@@ -316,8 +316,8 @@ ax[0, 1].set_title('Spatial')
 ax[0, 2].imshow(np.log1p(10 ** 8 * np.abs(ssnr_finite.ssnri)).T, cmap='gray', origin='lower')
 ax[0, 2].set_title('Finite')
 
-ratio_spatial = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_spatial.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
-ratio_finite = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_finite.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_spatial = np.where(ssnr_fourier.ssnri_like_average(), ssnr_spatial.ssnri_like_average()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite = np.where(ssnr_fourier.ssnri_like_average(), ssnr_finite.ssnri_like_average()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[1, 0].plot(ratio_spatial)
 ax[1, 0].plot(ratio_finite)
 
@@ -417,8 +417,8 @@ ax[2, 2].set_title('Finite')
 ratio_spatial = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_spatial_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_finite = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_finite_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
 ratio_widefield = utils.average_rings2d(np.where(ssnr_fourier_measured, ssnr_widefield_measured/ssnr_fourier_measured, 0), optical_system.otf_frequencies)[:-10]
-ratio_spatial_theory = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_spatial.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
-ratio_finite_theory = np.where(ssnr_fourier.ring_average_ssnri_approximated(), ssnr_finite.ring_average_ssnri_approximated()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_spatial_theory = np.where(ssnr_fourier.ssnri_like_average(), ssnr_spatial.ssnri_like_average()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
+ratio_finite_theory = np.where(ssnr_fourier.ssnri_like_average(), ssnr_finite.ssnri_like_average()/ssnr_fourier.ring_average_ssnri(), 0)[:-10]
 ax[2, 3].plot(ratio_spatial, label='s/ff')
 ax[2, 3].plot(ratio_finite, label='f/f')
 # ax[2, 3].plot(ratio_widefield, label='widefield/fourier')

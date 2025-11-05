@@ -31,7 +31,7 @@ from WienerFiltering import filter_true_wiener, filter_flat_noise, filter_consta
 from SSNRCalculator import SSNRSIM2D, SSNRWidefield2D
 from Apodization import AutoconvolutuionApodizationSIM2D
 import utils 
-from ResolutionMeasures import frc_one_image
+from resolution_measures import frc_one_image
 
 # reconstructed_fairSIM = tifffile.imread('data/OMX_Tetraspeck200_680nm_fairSIM_reco.tiff')
 # print(reconstructed_fairSIM.shape)
