@@ -104,7 +104,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             intensity_harmonics_dict (dict): Dictionary of illumination harmonics.
             Mr (int): Number of rotations.
         """
-        self._Mr = Mr
+        self._Mr = len(angles) if angles is not None else Mr
+        
         self.angles = np.array(angles) if angles is not None else np.arange(0, np.pi, np.pi / Mr)
 
         key = list(intensity_harmonics_dict.keys())[0]
@@ -227,10 +228,10 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         return self._phase_matrix
     
     @phase_matrix.setter
-    def phase_matrix(self, new_phase_matrix):
-        shift_indices = set(index[1] for index in new_phase_matrix.keys())
+    def phase_matrix(self, phase_matrix_new):
+        shift_indices = set(index[1] for index in phase_matrix_new.keys())
         self.Mt = len(shift_indices)
-        self._phase_matrix = new_phase_matrix
+        self._phase_matrix = phase_matrix_new
 
     def _rearrange_indices(self, dimensions) -> dict[tuple[int, ...], tuple[tuple[int, ...]]]:
         """
@@ -717,6 +718,24 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             illumination.electric_field_plane_waves = plane_waves
         return illumination
     
+    def project_in_quasi_2d(self):
+        new_harmonics_dict = {}
+        for sim_index in self.rearranged_indices:
+            off_plane_count = len(self.rearranged_indices[sim_index])
+            for off_plane_index in self.rearranged_indices[sim_index]:
+                index = self.glue_indices(sim_index, off_plane_index, self.dimensions)
+                harmonic = copy.deepcopy(self.harmonics[index])
+                harmonic.amplitude = np.abs(harmonic.amplitude)
+                harmonic.phase = 0
+                harmonic.wavevector = np.array([harmonic.wavevector[0], harmonic.wavevector[1], 0])
+                if not sim_index in new_harmonics_dict:
+                    new_harmonics_dict[sim_index] = harmonic
+                else:
+                    new_harmonics_dict[sim_index].amplitude += harmonic.amplitude
+            new_harmonics_dict[sim_index].amplitude /= off_plane_count
+        
+        illumination_projected = IlluminationPlaneWaves3D(new_harmonics_dict, self.dimensions, self.Mr, self.spatial_shifts, self.angles)
+        return illumination_projected
 
     @staticmethod
     def index_harmonics(waves_list: list[Sources.IntensityHarmonic3D], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int],
@@ -784,6 +803,9 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
             amplitude = self.harmonics[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic3D(amplitude, phase, wavevector).get_intensity(grid)
+
+        # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(illumination_density)[:, :, grid.shape[2]//2])), cmap='gray')
+        # plt.show()
 
         return illumination_density.real
 

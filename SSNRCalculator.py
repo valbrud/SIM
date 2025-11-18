@@ -246,9 +246,9 @@ class SSNRSIM(SSNRBase):
 
         if not self.effective_kernels_ft:
             if not kernel is None:
-                self.kernel = kernel
+                self._kernel = utils.expand_kernel(kernel, self.optical_system.psf.shape)
             else:
-                self.kernel = self.optical_system.psf
+                self._kernel = self.optical_system.psf
 
         self._compute_ssnri()
 
@@ -298,8 +298,8 @@ class SSNRSIM(SSNRBase):
     def kernel(self, kernel_new):
         kernel_new = utils.expand_kernel(kernel_new, self.optical_system.psf.shape)
 
-        self.kernel_ft = hpc_utils.wrapped_ifftn(kernel_new)
-        self.kernel_ft /= np.amax(self.kernel_ft)
+        self._kernel_ft = hpc_utils.wrapped_ifftn(kernel_new)
+        self._kernel_ft /= np.amax(self._kernel_ft)
         self._kernel = kernel_new
         self.effective_kernels_ft = {}
         self._compute_effective_kernels_ft()
@@ -329,7 +329,7 @@ class SSNRSIM(SSNRBase):
         # plt.title("Dj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
         # plt.show()
-        return np.abs(d_j)
+        return d_j
 
     def _compute_Vj(self):
         center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
@@ -355,26 +355,29 @@ class SSNRSIM(SSNRBase):
         # plt.title("Vj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))
         # plt.show()
-        return np.abs(v_j)
+        return v_j
 
     def _compute_ssnri(self):
-        # Only needed if effective kernels/otfs were deleted in a memory efficient mode
+        # Only needed if effective otfs were deleted in a memory efficient mode
         if not self.effective_otfs:
             self._compute_effective_otfs()
+        
+        if not self.effective_kernels_ft:
+            self._compute_effective_kernels_ft()
 
         self.dj = self._compute_Dj()
         self.vj = self._compute_Vj()
         ssnr = np.zeros(self.dj.shape, dtype=np.float64)
         mask = (self.vj != 0) * (self.dj != 0)
-        numpy.putmask(ssnr, mask, np.abs(self.dj) ** 2 / self.vj)
+        numpy.putmask(ssnr, mask, np.abs(self.dj ** 2 / self.vj))
         self._ssnri = ssnr
         if self.save_memory:
             self.effective_otfs = {}
             self.effective_kernels_ft = {}
 
     def compute_full_ssnr(self, object_ft):
-        return ((self.dj * np.abs(object_ft)) ** 2 /
-                (np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj))
+        return ((np.abs(self.dj * object_ft)) ** 2 /
+                np.abs((np.amax(np.abs(object_ft)) * self.vj + self.optical_system.otf.size * self.readout_noise_variance * self.dj)))
 
 
     def compute_analytic_ssnri_volume(self, factor=10, volume_element=1):
@@ -510,6 +513,7 @@ class SSNRSIM2D(SSNRSIM):
         ax.set_ylim(0, 1)
         ax.legend()
         ax.grid()
+        plt.show()
 
     def imshow_effective_kernel_and_otf(self):
         Nx, Ny = self.optical_system.otf.shape

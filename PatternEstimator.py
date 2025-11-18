@@ -608,7 +608,7 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimator):
             if m[0] != r:
                 continue
             if m[1][0] >= 0:
-                for n in range(illumination.spatial_shifts.shape[1]):
+                for n in range(illumination.Mt):
                     signal_function = (images[r, n] * images[r, n] * estimated_modualtion_patterns[m]).flatten()
                     noise_function = (images[r, n] *  estimated_modualtion_patterns[m]).flatten()
                     Amn[(m, n)] = fourier_exponents @ (signal_function - noise_function)

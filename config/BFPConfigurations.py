@@ -55,6 +55,40 @@ class BFPConfiguration:
 
         return illumination
 
+    def get_3_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3):
+        theta = angle_oblique
+        k1 = self.k * np.sin(theta)
+        k2 = self.k * (np.cos(theta) - 1)
+
+        base_vector_kx = k1
+        base_vector_ky = k1 
+        base_vector_kz = k2  
+        base_vectors = (base_vector_kx, base_vector_ky, base_vector_kz)
+        # p = strength_s_normal
+        p = strength_s_normal
+        b = strength_oblique
+        a0 = (2 * p ** 2 + 3 * b ** 2)
+    
+        sources = [
+            Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
+            Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((-k1/2, k1 * np.sqrt(3)/2, k2))),
+            Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((-k1/2, -k1 * np.sqrt(3)/2, k2))),
+            Sources.PlaneWave(p / a0 ** 0.5, 1j * p / a0 ** 0.5, 0, 0, np.array((1e-12, 0, 1e-9))),
+
+        ]
+        illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
+                                                                      base_vectors,
+                                                                      dimensions=(1, 1, 0),
+                                                                      Mr=1,
+                                                                      store_plane_waves=True)
+        illumination.Mt = Mt
+        illumination.normalize_spatial_waves()
+
+        if dimensionality == 2:
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1))
+
+        return illumination
+
     def get_4_oblique_s_waves_and_s_normal_diagonal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3):
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -267,6 +301,21 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1)
+        
+        vec_x = np.array((k1, 0, k2))
+        vec_mx = np.array((-k1, 0, k2))
+        ax_z = np.array((0, 0, 1))
+        illumination.electric_field_plane_waves = sources = [
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, vec_x),
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, vec_mx),
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi/3)),
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 2 * np.pi/3)),
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 4 * np.pi/3)),
+            Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, VectorOperations.rotate_vector3d(vec_mx, ax_z, 4 * np.pi/3)),
+
+            Sources.PlaneWave(1/a0**0.5, 1j /a0**0.5, 0, 0, np.array((10**-12, 0, 10**-9))),
+        ]
+
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 

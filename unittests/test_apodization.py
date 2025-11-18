@@ -146,7 +146,7 @@ class TestAutoconvolutionSIM3D(unittest.TestCase):
         self.NA = NA
         self.configurations = configurations
         self.optical_system = OpticalSystems.System4f3D(alpha=alpha, refractive_index_medium=nmedium, refractive_index_sample=nobject)
-        self.optical_system.compute_psf_and_otf((psf_size, N), save_pupil_function=True)
+        self.optical_system.compute_psf_and_otf((psf_size, N))
 
     def test_apodization_sim(self):
         conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1)

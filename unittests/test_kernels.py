@@ -51,11 +51,12 @@ class TestKernels(unittest.TestCase):
     def test_continuous_change(self):
         pixel_size = 0.5
         N= 201
-        first_zero_frequency = np.linspace(0.5, 0.05, 25)
+        first_zero_frequency = np.linspace(1, 0.05, 20)
         for fz in first_zero_frequency:
-            kernel = kernels.psf_kernel2d(pixel_size=(pixel_size, pixel_size), first_zero_frequency=fz)
+            kernel = kernels.sinc_kernel2d(pixel_size=(pixel_size, pixel_size), first_zero_frequency=fz)
             kernel = utils.expand_kernel(kernel, (N, N))
-            plt.plot(kernel[N//2, :], label=f'FZ={fz:.2f}')
+            # plt.plot(kernel[N//2, :], label=f'FZ={fz:.2f}')
+            plt.plot(hpc_utils.wrapped_fftn(kernel)[N//2, :], label=f'{fz}')
         plt.title('PSF Kernel Profiles for Varying First Zero Frequencies')
         plt.xlabel('Pixel Index')
         plt.ylabel('Kernel Value')
@@ -880,7 +881,7 @@ class TestSSNRSimulations(unittest.TestCase):
         ax[2].imshow(np.log1p(1 + 10**8 * ssnr_3waves_ra.T), vmin=0)
         fig.colorbar(im)
         plt.show()
-
+    
     def test_compare_ssnr_2d(self):
         theta = np.pi / 4
         alpha = np.pi / 4

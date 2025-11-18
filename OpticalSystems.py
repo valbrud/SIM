@@ -87,8 +87,6 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     def otf(self, new_otf):
         self._otf = new_otf
         self._psf = hpc_utils.wrapped_ifftn(new_otf)
-        self._psf /= np.sum(self._psf)
-        self._otf /= np.sum(self.psf)
 
     @property 
     def otf_pixel(self):
@@ -230,8 +228,8 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     
     def _normalize_psf__and_otf(self):
         if self.normalize_otf:
-            self.psf /= np.sum(self.psf)
-            self.otf /= np.max(np.abs(self.otf))
+            self._psf /= np.sum(self.psf)
+            self._otf /= np.max(np.abs(self.otf))
 
     def _get_pupil_function(self, Nrho: int, Nphi: int, pupil_element, pupil_function, zernieke={}) -> ndarray[tuple[int, int], np.complex128]:
         
@@ -515,6 +513,7 @@ class System4f3DCoherent(OpticalSystem3D):
 
         psf = psf_models.compute_3d_psf_coherent(
             grid2d=grid2d, 
+            NA=self.NA,
             z_values=z_values, 
             nsample=self.ns, 
             nmedium=self.nm, 
@@ -585,8 +584,8 @@ class System4f2D(System4f2DCoherent):
             if self.computed_size:
                 psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
 
-        self.psf = psf.real 
-        self.otf = hpc_utils.wrapped_fftn(self.psf)
+        self._otf = hpc_utils.wrapped_fftn(psf).real
+        self._psf = psf.real
         
         self._normalize_psf__and_otf()
 
@@ -621,8 +620,12 @@ class System4f3D(System4f3DCoherent):
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
         
+        elif parameters:
+            psf_size, N = parameters
+            self.compute_psf_and_otf_coordinates(psf_size, N)
+
         if not vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, high_NA, pupil_element, pupil_function, zernieke, Nrho, Nphi)
+            csf, _ = super().compute_psf_and_otf(None, high_NA, pupil_element, pupil_function, zernieke, Nrho, Nphi)
             psf = np.abs(csf) ** 2
 
         else:
@@ -643,10 +646,10 @@ class System4f3D(System4f3DCoherent):
                 Nphi=Nphi, 
             )
 
-        self.otf = hpc_utils.wrapped_fftn(self.psf)
-        if self.normalize_otf:
-            self.otf /= np.amax(self.otf)
-            self.psf = psf / np.sum(psf)
+        self._otf = hpc_utils.wrapped_fftn(psf).real
+        self._psf = psf.real
+
+        self._normalize_psf__and_otf()
 
         # self._prepare_interpolator()
         return self.psf, self.otf

@@ -443,7 +443,8 @@ def expand_kernel(kernel: np.ndarray, target_shape: tuple[int]) -> np.ndarray:
     Returns:
         np.ndarray: The expanded kernel.
     """
-
+    if type(target_shape) is int:
+        target_shape = (target_shape,) * len(kernel.shape)
     shape = np.array(kernel.shape, dtype=np.int32)
 
     if ((shape % 2) == 0).any():

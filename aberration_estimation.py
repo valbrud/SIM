@@ -109,8 +109,8 @@ def compute_loss_function_multikernel(stack,
             calc1.optical_system = optical_system
             calc2.optical_system = optical_system
 
-            _, _, ssnr1 = WienerFiltering.filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed1), calc1)
-            _, _, ssnr2 = WienerFiltering.filter_true_wiener(hpc_utils.wrapped_fftn(reconstructed2), calc2)
+            _, _, ssnr1 = WienerFiltering.filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed1), calc1)
+            _, _, ssnr2 = WienerFiltering.filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed2), calc2)
             
             N = optical_system.psf.shape[0]
             ratio_experimental = (ssnr1[N//2, N//2:])/(ssnr2[N//2, N//2:])

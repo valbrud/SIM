@@ -8,7 +8,7 @@ sys.path.append(current_dir)
 
 import scipy.signal
 import Illumination
-from OpticalSystems import OpticalSystem
+from OpticalSystems import OpticalSystem2D, OpticalSystem3D, OpticalSystem
 from abc import ABC, abstractmethod
 import hpc_utils
 import numpy as np
@@ -16,6 +16,7 @@ import scipy
 from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 from Dimensions import DimensionMetaAbstract
+from OpticalSystems import System4f3DCoherent
 
 class AutoconvolutionApodization(ABC):
     """
@@ -111,13 +112,18 @@ AutoconvolutionApodizationISM = AutoconvolutionApodizationPointScanning
 AutoconvolutionApodizationRCM = AutoconvolutionApodizationPointScanning
 
 class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metaclass=DimensionMetaAbstract):
-    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
+    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray]):
         if not illumination.dimensionality == optical_system.dimensionality:
             raise ValueError("The illumination and pupil function dimensions do not match.")
         
-        if not illumination.electric_field_plane_waves:
-            raise ValueError("The illumination does not have plane waves, whose wavevectors are\
-                             required for the autoconvoluiton method of apodization.")
+        if plane_wave_wavevectors: 
+            self.plane_wave_wavevectors = plane_wave_wavevectors
+        else: 
+            self.plane_wave_wavevectors = []
+            if not illumination.electric_field_plane_waves and not plane_wave_wavevectors:
+                raise ValueError("Plane wave wavevectors required.")
+            for plane_wave in illumination.electric_field_plane_waves:
+                self.plane_wave_wavevectors.append(plane_wave.wavevector)
         
         self._optical_system = optical_system
         self._illumination = illumination
@@ -139,18 +145,18 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metacla
 
 class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
     dimensionality = 2
-    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
-        super().__init__(optical_system, illumination)
+    def __init__(self, optical_system: OpticalSystem2D, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray]):
+        super().__init__(optical_system, illumination, plane_wave_wavevectors)
 
     def _compute_ideal_transfer_functions(self, **kwargs):
-        # ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1., 0)
-        ideal_pupil_function = self._optical_system.get_uniform_pupil()
+        ideal_pupil_function = np.where(np.abs(self.pupil_function) > 10**-1 * np.amax(self.pupil_function), 1., 0)
+        # ideal_psf = self._optical_system.compute_psf_and_otf()
         ideal_pupil_function_ift = hpc_utils.wrapped_ifftn(ideal_pupil_function)
         
         grid = self._optical_system.x_grid
         for Mr in range(self._illumination.Mr):
-            for plane_wave in self._illumination.electric_field_plane_waves:
-                wavevector = np.copy(plane_wave.wavevector)
+            for plane_wave_wavevector in self.plane_wave_wavevectors:
+                wavevector = np.copy(plane_wave_wavevector)
                 wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
                 
                 wavevector = np.array([wavevector[0], wavevector[1]])
@@ -167,37 +173,73 @@ class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
         self._ideal_psf /= np.sum(self._ideal_psf)
     
 
+def _build_edwald_sphere_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius: float, angle_cutoff: float):
+    """
+    Builds a spherical mask in the frequency domain representing the Ewald sphere.
+    """
+    Qx, Qy, Qz = q_grid[..., 0], q_grid[..., 1], q_grid[..., 2]
+    qx_center, qy_center, qz_center = q_center
+
+    distance_from_center = np.sqrt((Qx - qx_center)**2 + (Qy - qy_center)**2 + (Qz - qz_center)**2)
+    angle = np.arccos((Qz - qz_center) / (distance_from_center + 1e-12))
+
+    sphere_mask = distance_from_center <= q_radius
+    interior_mask = scipy.ndimage.binary_erosion(sphere_mask, iterations=1)
+    sphere_mask = sphere_mask & ~interior_mask
+    sphere_mask = sphere_mask & (angle <= angle_cutoff)
+    return sphere_mask
+
 class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
     dimensionality = 3
-    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM):
-        super().__init__(optical_system, illumination)
-    
-    def _compute_ideal_transfer_functions(self, **kwargs):
-        widefield_coherent_psf = hpc_utils.wrapped_fftn(self.pupil_function)
-        ideal_sim_coherent_psf = np.copy(widefield_coherent_psf)
+    def __init__(self, optical_system: OpticalSystem3D, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray] = None, N_dense: int = 201):
+        self.N_dense = N_dense
+        super().__init__(optical_system, illumination, plane_wave_wavevectors)
 
-        grid = self._optical_system.x_grid
-        for Mr in range(self._illumination.Mr):
-            for plane_wave in self._illumination.electric_field_plane_waves:
-                wavevector = np.copy(plane_wave.wavevector)
-                wavevector[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
-                
-                if not np.isclose(wavevector, 0).all(): 
-                    phase_modulated = widefield_coherent_psf * np.exp(1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
-                    ideal_sim_coherent_psf += phase_modulated
-                    phase_modulated_ft = hpc_utils.wrapped_ifftn(phase_modulated).real
-                    # plt.imshow(phase_modulated_ft[:, 50, :], cmap='gray')
-                    # plt.show()
-        ideal_pupil_function = np.abs(hpc_utils.wrapped_ifftn(ideal_sim_coherent_psf))
-        # plt.imshow(ideal_pupil_function[:, 50, :], cmap='gray')
+    def _compute_ideal_transfer_functions(self, **kwargs):
+        N_dense = self.N_dense
+        # widefield_coherent_psf, _ =  System4f3DCoherent.compute_psf_and_otf(self._optical_system)
+        qx, qy, qz = self._optical_system.otf_frequencies
+        qx_min, qx_max = qx.min(), qx.max()
+        qy_min, qy_max = qy.min(), qy.max()
+        qz_min, qz_max = qz.min(), qz.max()
+        qx_dense = np.linspace(qx_min, qx_max, N_dense)
+        qy_dense = np.linspace(qy_min, qy_max, N_dense)
+        qz_dense = np.linspace(qz_min, qz_max, N_dense)
+
+        q_grid_dense = np.stack(np.meshgrid(qx_dense, qy_dense, qz_dense, indexing='ij'), axis=-1)
+
+        ideal_pupil_function = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
+        for wavevector in self.plane_wave_wavevectors:
+            print(wavevector)
+            q_center = wavevector / (2 * np.pi)
+            angle_cutoff = self._optical_system.alpha
+            q_radius = self._optical_system.NA / np.sin(angle_cutoff)
+            sphere_mask = _build_edwald_sphere_mask(q_grid_dense, q_center, q_radius, angle_cutoff)
+            ideal_pupil_function = np.where(sphere_mask, 1., ideal_pupil_function)
+
+        # plt.imshow(ideal_pupil_function[:, N_dense//2, :], cmap='gray')
         # plt.show()
-        ideal_pupil_function /= np.amax(ideal_pupil_function)
-        ideal_pupil_function = np.where(ideal_pupil_function > 10**-1, 1., 0)
-        # plt.imshow(ideal_pupil_function[:, 50, :], cmap='gray')
+        # plt.imshow(np.flip(ideal_pupil_function)[:, N_dense//2, :], cmap='gray')
         # plt.show()
-        self._ideal_ctf = ideal_pupil_function
-        self._ideal_otf = np.flip(scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same'))
+        ideal_otf_dense = np.flip(scipy.signal.convolve(ideal_pupil_function, np.flip(ideal_pupil_function).conjugate(), mode='same'))
+        
+        # plt.imshow(np.log1p(ideal_otf_dense[:, N_dense//2, :]), cmap='gray')
+        # plt.title('Ideal OTF Dense')
+        # plt.show()
+        # plt.imshow(np.where(np.abs(ideal_otf_dense[:, N_dense//2, :]) > 10**-6, 1, 0), cmap='gray')
+
+        interpolator_ctf = scipy.interpolate.RegularGridInterpolator((qx_dense, qy_dense, qz_dense), ideal_pupil_function, method='linear',
+                                                                      bounds_error=False,
+                                                                      fill_value=0.)
+        interpolator_otf = scipy.interpolate.RegularGridInterpolator((qx_dense, qy_dense, qz_dense), ideal_otf_dense, method='linear',
+                                                                      bounds_error=False,
+                                                                      fill_value=0.)
+        
+        self._ideal_ctf = interpolator_ctf(self._optical_system.q_grid.flatten()).reshape(self._optical_system.otf.shape)
+        self._ideal_otf = interpolator_otf(self._optical_system.q_grid.flatten()).reshape(self._optical_system.otf.shape)
+
         self._ideal_otf /= np.amax(self._ideal_otf)
+        
         self._ideal_psf = hpc_utils.wrapped_ifftn(self._ideal_otf).real
         self._ideal_psf /= np.sum(self._ideal_psf)
 
