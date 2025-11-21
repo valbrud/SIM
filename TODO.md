@@ -1,3 +1,4 @@
+- Implement an interpolation for the object/ssnr for wiener filtering
 - Fix problems with a changelog
 - Fix broken unittests
 - Fix 3D Camera class

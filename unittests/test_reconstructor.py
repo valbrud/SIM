@@ -342,15 +342,14 @@ class TesReconstruction3D(unittest.TestCase):
         
         configurations = BFPConfiguration(refraction_index=1.5)
         illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(
-            self.theta, 1, 1, 5, Mt=1, dimensionality=3
+            self.theta, 1, 1 , 5 , Mt=1, dimensionality=3
         )
 
-        self.illumination_apodization = configurations.get_6_oblique_s_waves_and_circular_normal(
-            self.theta, 1, 1, Mt=1, dimensionality=3
-        )
 
         self.illumination = illumination_3waves3d
         self.illumination.set_spatial_shifts_diagonally()
+        print(self.illumination.angles)
+
         # plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, self.x, self.z))[:, :, self.N//2])
         # plt.show()
 
@@ -427,7 +426,7 @@ class TesReconstruction3D(unittest.TestCase):
         cut_off_frequency_l = 1 / (2 * self.dx)
         import copy
         illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2d()
-        m1, m2 = 10, 7
+        m1, m2 = 1, 1
         for r in range(illumination_reconstruction.Mr):
             illumination_reconstruction.harmonics[(r, (1, 0, 0))].amplitude *= m1
             illumination_reconstruction.harmonics[(r, (-1, 0, 0))].amplitude *= m1
@@ -436,10 +435,10 @@ class TesReconstruction3D(unittest.TestCase):
 
         kernel=kernels.psf_kernel2d(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)[..., None] * kernels.sinc_kernel1d(pixel_size=self.dz, first_zero_frequency=cut_off_frequency_l)[None, None, :]
         spatial_reconstructor = ReconstructorFourierDomain3D(
-            illumination=self.illumination, 
-            # illumination=illumination_reconstruction,
+            # illumination=self.illumination, 
+            illumination=illumination_reconstruction,
             optical_system=self.optical_system,
-            # kernel=kernel
+            kernel=kernel
         )
         illumination_widefield = BFPConfiguration(refraction_index=1.5).get_widefield(3)
 
@@ -455,21 +454,21 @@ class TesReconstruction3D(unittest.TestCase):
         self.sim_images *= mask[None, None, :, :, :]
         self.noisy_images *= mask[None, None, :, :, :]
         self.widefield = np.sum(self.noisy_images, axis=(0,1))
-        apodization = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, self.illumination_apodization)
+        apodization = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, self.illumination)
         apodization_filter = apodization.ideal_otf
 
         reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images) 
         reconstructed_image_ft = hpc_utils.wrapped_fftn(reconstructed_image)
-        # plt.imshow(np.where(np.abs(apodization_filter) > 10**-6, 1, 0)[:, self.N//2, :])
-        # plt.show()
+        plt.imshow(np.where(np.abs(apodization_filter) > 10**-6, 1, 0)[:, :, self.N//2])
+        plt.show()
 
         # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image[:, :, self.N//2]))))
         # plt.show()
         ssnr_calc = SSNRCalculator.SSNRSIM3D(   
             illumination = self.illumination, 
             optical_system = self.optical_system,
-            # kernel=kernel,
-            # illumination_reconstruction=illumination_reconstruction
+            kernel=kernel,
+            illumination_reconstruction=illumination_reconstruction
             )
 
         ssnr_widefield = SSNRCalculator.SSNRSIM3D(
@@ -485,11 +484,11 @@ class TesReconstruction3D(unittest.TestCase):
         widefield_ft = hpc_utils.wrapped_fftn(widefield) * np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)
         # plt.imshow(np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)[:, self.N//2, :])
         # plt.show()
-        filtered_ft, _, _ = filter_true_wiener_sim(
-            reconstructed_image_ft, ssnr_calc, average='surface_levels')
+        filtered_ft, _, _ = filter_simulated_object_wiener(
+            reconstructed_image_ft, ssnr_calc, hpc_utils.wrapped_fftn(self.image))
         
-        filtered_widefield_ft, _, _ = filter_true_wiener_sim(
-            widefield_ft, ssnr_widefield, average='surface_levels')
+        filtered_widefield_ft, _, _ = filter_simulated_object_wiener(
+            widefield_ft, ssnr_widefield, hpc_utils.wrapped_fftn(self.image))
         
         # fx, fy, fz = self.optical_system.otf_frequencies
         # FX, FY, FZ = np.meshgrid(fx, fy, fz, indexing='ij')

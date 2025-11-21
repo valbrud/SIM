@@ -11,15 +11,30 @@ import unittest
 from ShapesGenerator import generate_random_spherical_particles, generate_sphere_slices
 import matplotlib.pyplot as plt
 configurations = BFPConfiguration()
+import hpc_utils
 
 class TestSpheres(unittest.TestCase):
     def test_random_overlapping_spheres(self):
         max_r = 4
         max_z = 4
+        n = 101
         N = 100
-        psf_size = 2 * np.array((max_r, max_r, max_z))
-        spheres = generate_random_spherical_particles(psf_size, N, r =0.5,  N=100)
-        plt.imshow(spheres[:, :, N//2])
+        psf_size = 2 * np.array((max_r, max_r))
+        np.random.seed(42)
+        spheres_1 = generate_random_spherical_particles(psf_size, n, radius=0.5,  num_particles=N)
+        np.random.seed(42)
+        spheres_2 = generate_random_spherical_particles(psf_size, n, radius=1,  num_particles= N, intensity = 25000)
+
+        spheres_1_ft = hpc_utils.wrapped_fftn(spheres_1)
+        spheres_2_ft = hpc_utils.wrapped_fftn(spheres_2)
+        plt.plot(np.log1p(np.abs(spheres_1_ft)[:,  n//2]))
+        plt.plot(np.log1p(np.abs(spheres_2_ft)[:,  n//2]))
+        plt.show()
+
+        plt.imshow(np.log1p(np.abs(spheres_1_ft)[:, :]))
+        plt.show()
+
+        plt.imshow(np.log1p(np.abs(spheres_2_ft)[:, :]))
         plt.show()
 
     def test_slices(self):

@@ -187,6 +187,9 @@ def _build_edwald_sphere_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius:
     interior_mask = scipy.ndimage.binary_erosion(sphere_mask, iterations=1)
     sphere_mask = sphere_mask & ~interior_mask
     sphere_mask = sphere_mask & (angle <= angle_cutoff)
+    # plt.imshow(sphere_mask[:, :, q_grid.shape[2]//2], cmap='gray')
+    # plt.title('Ewald Sphere Mask')
+    # plt.show()
     return sphere_mask
 
 class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
@@ -209,21 +212,25 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
         q_grid_dense = np.stack(np.meshgrid(qx_dense, qy_dense, qz_dense, indexing='ij'), axis=-1)
 
         ideal_pupil_function = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
-        for wavevector in self.plane_wave_wavevectors:
-            print(wavevector)
-            q_center = wavevector / (2 * np.pi)
-            angle_cutoff = self._optical_system.alpha
-            q_radius = self._optical_system.NA / np.sin(angle_cutoff)
-            sphere_mask = _build_edwald_sphere_mask(q_grid_dense, q_center, q_radius, angle_cutoff)
-            ideal_pupil_function = np.where(sphere_mask, 1., ideal_pupil_function)
+        for Mr in range(self._illumination.Mr):
+            # print(self._illumination.angles[Mr])
+            for wavevector in self.plane_wave_wavevectors:
+                wavevector_rotated = np.copy(wavevector)
+                wavevector_rotated[:2] = VectorOperations.rotate_vector2d(np.copy(wavevector[:2]), self._illumination.angles[Mr])
+                # print(wavevector)
+                q_center = wavevector_rotated / (2 * np.pi)
+                angle_cutoff = self._optical_system.alpha
+                q_radius = self._optical_system.NA / np.sin(angle_cutoff)
+                sphere_mask = _build_edwald_sphere_mask(q_grid_dense, q_center, q_radius, angle_cutoff)
+                ideal_pupil_function = np.where(sphere_mask, 1., ideal_pupil_function)
 
-        # plt.imshow(ideal_pupil_function[:, N_dense//2, :], cmap='gray')
-        # plt.show()
+                # plt.imshow(ideal_pupil_function[:, :,  N_dense//2], cmap='gray')
+                # plt.show()
         # plt.imshow(np.flip(ideal_pupil_function)[:, N_dense//2, :], cmap='gray')
         # plt.show()
         ideal_otf_dense = np.flip(scipy.signal.convolve(ideal_pupil_function, np.flip(ideal_pupil_function).conjugate(), mode='same'))
         
-        # plt.imshow(np.log1p(ideal_otf_dense[:, N_dense//2, :]), cmap='gray')
+        # plt.imshow(np.log1p(ideal_otf_dense[:, :, N_dense//2]), cmap='gray')
         # plt.title('Ideal OTF Dense')
         # plt.show()
         # plt.imshow(np.where(np.abs(ideal_otf_dense[:, N_dense//2, :]) > 10**-6, 1, 0), cmap='gray')

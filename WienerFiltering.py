@@ -201,18 +201,18 @@ def filter_simulated_object_wiener(image_ft,
     if image_ft.ndim != ssnr_calculator.dj.ndim:
         raise ValueError("The image and SSNR calculator dimensions do not match.")
 
+    # plt.imshow(np.log1p(10**8 * np.abs(ground_object_ft[:, :, ground_object_ft.shape[2]//2])), cmap='gray')
+    # plt.title('Ground truth object FT')
+    # plt.show()
     ssnr = ssnr_calculator.compute_full_ssnr(ground_object_ft)
 
-    # w = (ssnr_calculator .vj * np.amax(np.abs(ground_object_ft)) + image_ft.size * ssnr_calculator.readout_noise_variance**2 * ssnr_calculator.dj) / \
-    #     (ssnr_calculator.dj.conjugate() * np.abs(ground_object_ft)**2)
-    
     w = ssnr_calculator.dj / ssnr
     # plt.imshow(np.log1p(np.abs(w[20:-20, 20:-20, 50])), cmap='gray')
     # plt.show()
 
     filtered = image_ft / (ssnr_calculator.dj + w)
 
-    filtered = np.where(ssnr_calculator.dj > 10**-10, filtered, 0)
+    filtered = np.where(ssnr_calculator.dj > 10**-12, filtered, 0)
     filtered = np.nan_to_num(filtered)
 
     return filtered, w, ssnr
