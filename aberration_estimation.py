@@ -26,11 +26,15 @@ def compute_loss_function(stack,
     start = time.time()
     # print(optical_system.NA)
     optical_system.compute_psf_and_otf(high_NA=True, vectorial=vectorial, zernieke=zernieke)
+    # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
+    # plt.title("OTF with aberrations")
+    # plt.show()
     end = time.time()
     # print(f"Computed PSF in {end - start} seconds.")
     start = time.time()
     illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
     end = time.time()
+
     # print(f"Estimated illumination in {end - start} seconds.")
     # print(illumination.get_all_amplitudes()[0])
     reconstructed1 = reconstructor1.reconstruct(stack)
@@ -39,42 +43,73 @@ def compute_loss_function(stack,
     calc1.optical_system = optical_system
     calc2.optical_system = optical_system
 
+    # print("Analyzing the 360 spectrum")
     ssnr1 = calc1.ssnr_like_sectorial_average_from_image(hpc_utils.wrapped_fftn(reconstructed1))
     ssnr2 = calc2.ssnr_like_sectorial_average_from_image(hpc_utils.wrapped_fftn(reconstructed2))
+    # fig, ax = plt.subplots(1, 2)
+    # im = ax[0].imshow(np.log1p(np.abs((calc1.ssnri))), origin='lower')
+    # fig.colorbar(im, ax=ax[0])
+    # ax[0].set_title("Calc 1 SSNR FT")
+    # im = ax[1].imshow(np.log1p(np.abs((calc2.ssnri))), origin='lower')
+    # fig.colorbar(im, ax=ax[1])
+    # ax[1].set_title("Calc 2 SSNR FT")
+    # plt.show()
     
+
     ratio_experimental = ssnr1/ssnr2
     ratio_theoretical = calc1.ssnri_like_sectorial_average()/calc2.ssnri_like_sectorial_average()
+    # plt.plot(ratio_experimental, label='Experimental ratio')
+    # plt.plot(ratio_theoretical, label='Theoretical ratio')
+    # plt.gca().set_ylim(0, 2)
+    # plt.legend()
+    # plt.show()
     R = np.where(ssnr1 >=9,  ratio_experimental/ratio_theoretical, 0)
     R = np.where(ssnr2 >=9,  R, 0)
     # R = np.where(r <= 1.5, R, 0)
     R = np.nan_to_num(R, nan=0.0, posinf=100, neginf=-100)
     loss_function = np.sum(np.where(R!=0, (R - 1)**2, 0))
     # print("  Loss function ra: ", loss_function)
+    exp = np.zeros((sectors, len(ssnr1)))
+    theor = np.zeros((sectors, len(ssnr1)))
+
     if sectors >= 2:
         for sector in range(sectors):
+            # print("Analyzing sector ", sector)
             degree_of_symmetry = sectors * 2
-            theta_start = theta0 + sector * np.pi / degree_of_symmetry
+            theta_start = theta0 + sector * np.pi / sectors
+            # print(theta0, theta_start)
             ssnr1 = calc1.ssnr_like_sectorial_average_from_image(hpc_utils.wrapped_fftn(reconstructed1), degree_of_symmetry, theta_start)
+            exp[sector, :] = ssnr1
             ssnr2 = calc2.ssnr_like_sectorial_average_from_image(hpc_utils.wrapped_fftn(reconstructed2), degree_of_symmetry, theta_start)
-            # plt.plot(ssnr1, label='SSNR 1')
-            # plt.plot(ssnr2, label='SSNR 2')
-            # plt.legend()
-            # plt.show()
+            ssnr1t = calc1.ssnri_like_sectorial_average(None, degree_of_symmetry, theta_start)
+            ssnr2t = calc2.ssnri_like_sectorial_average(None, degree_of_symmetry, theta_start)
+            theor[sector, :] = ssnr1t
 
             ratio_experimental = ssnr1/ssnr2
-            ratio_theoretical = calc1.ssnri_like_sectorial_average(None, degree_of_symmetry, theta_start)/calc2.ssnri_like_sectorial_average(None, degree_of_symmetry, theta_start)
+            ratio_theoretical = ssnr1t/ssnr2t
             
             R = np.where(ssnr1 >=9,  ratio_experimental/ratio_theoretical, 1)
             R = np.where(ssnr2 >=9,  R, 1)
             R = np.nan_to_num(R, nan=0.0, posinf=100, neginf=-100)
-            # plt.plot(ratio_experimental, label='Experimental ratio')
-            # plt.plot(ratio_theoretical, label='Theoretical ratio')
+            # plt.plot(ratio_experimental, label=f'Experimental ratio sector {sector}')
+            # plt.plot(ratio_theoretical, label=f'Theoretical ratio sector {sector}')
             # plt.gca().set_ylim(0, 2)
             # plt.legend()
             # plt.show()
             loss_function += np.sum(np.where(R!=0, (R - 1)**2, 0))
             # print("  Loss function sector ", sector, ": ", np.sum(np.where(R!=0, (R - 1)**2, 0)))
 
+    # fig, ax = plt.subplots(1, 2)
+    # for sector in range(len(exp)):
+    #     ax[0].plot(np.log1p(exp[sector, :]), label=f'Experimental sector {sector}')
+    #     ax[1].plot(theor[sector, :], label=f'Theoretical sector {sector}')
+    # ax[0].plot(np.log1p(calc1.ssnr_like_sectorial_average_from_image(hpc_utils.wrapped_fftn(reconstructed1))), label='Full')
+    # ax[1].plot(calc1.ssnri_like_sectorial_average(), label='Full')
+    # ax[0].set_title("Experimental SSNR sectors")
+    # ax[1].set_title("Theoretical SSNR sectors")
+    # ax[0].legend()
+    # ax[1].legend()
+    # plt.show()
     return loss_function 
 
 def compute_loss_function_multikernel(stack,
@@ -371,6 +406,8 @@ def refine_sim_aberration_estimation(stack,
     calc2  = SSNRCalculator.SSNRSIM2D(illumination, optical_system, kernel2)
     zernieke = initial_aberrations.copy()
     NA = optical_system.NA
+    print("Starting NA:", NA)
+    print("Starting aberrations:", zernieke )
     loss_function_old = compute_loss_function(stack, optical_system, illumination, zernieke, reconstructor1, reconstructor2, calc1, calc2, sectors, theta0, vectorial)
     for iteration in range(max_iterations):
         print(f"  Iteration {iteration}, loss function: {loss_function_old}")

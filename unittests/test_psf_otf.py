@@ -8,7 +8,7 @@ from psf_models import *
 from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations
 import hpc_utils
 import pupil_functions
-
+from otf_fast import compute_3d_otf_fast
 # Add project paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
@@ -298,6 +298,7 @@ class TestPSFOTF2D(unittest.TestCase):
 class TestPSFOTF3D(unittest.TestCase):
 
     def test_high_NA_no_aberrations(self):
+        
         """Test high NA vs low NA."""
         t_start = time.time()
         E_high = compute_3d_psf_coherent(
@@ -420,6 +421,162 @@ class TestPSFOTF3D(unittest.TestCase):
         axes[1, 1].plot(OTFv[Nl//2, Nl//4, :], label = "Vectorial model")
         axes[1, 1].legend()
 
+        plt.show()
+
+class TestFastOTF3D(unittest.TestCase):
+    def test_fast_otf(self):
+        """Test high NA vs low NA."""
+        zernieke = {
+            (2, -2): 0.072,  # Astigmatism Oblique
+        }
+        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernieke, Nrho=129, Nphi=256)
+        aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
+    
+        t_start = time.time()
+        OTF_fast = compute_3d_otf_fast(
+            q_grid=q_grid3d,
+            NA=n * np.sin(alpha),
+            z_values=z,
+            nsample=n,
+            nmedium=n,
+            pupil_function=aberration_function,         
+            high_NA=True,
+            Nphi=101,
+            Nrho=101,
+            device='gpu',
+            use_complex64=True,
+            minimum_grid_point_number=512,
+        )
+        t_end = time.time()
+        print(f"fast OTF route: compute_3d_otf_fast took {t_end - t_start:.4f} s")
+
+        # Reconstruct PSF from fast OTF for a rough comparison
+        I_fast = np.fft.ifftn(OTF_fast).real
+        plt.imshow(np.log1p(10**4 * I_fast[:,:,Nz//2]), origin='lower')
+
+    def test_scalar_fast_otf_vs_psf_route(self):
+        """Compare 3D OTF from fast CTF route vs PSF-based route."""
+
+        # --- scalar PSF + OTF via direct 3D PSF computation ---
+        t_start = time.time()
+        E_scalar = compute_3d_psf_coherent(
+            grid2d=x_grid2d,
+            z_values=z,
+            NA=n * np.sin(alpha),
+            nmedium=n,
+            nsample=n,
+            high_NA=True,
+            pupil_function=None,
+            Nphi=101,
+            Nrho=101,
+            device='gpu',
+            safety=0.9,
+        )
+        t_end = time.time()
+        print(f"scalar PSF route: compute_3d_psf_coherent took {t_end - t_start:.4f} s")
+
+        I_psf, OTF_psf = compute_incoherent_psf_and_otf(E_scalar)
+
+        # --- fast 3D OTF via CTF autocorrelation on Ewald sphere ---
+        t_start = time.time()
+        OTF_fast = compute_3d_otf_fast(
+            q_grid=q_grid3d,
+            NA=n * np.sin(alpha),
+            z_values=z,
+            nsample=n,
+            nmedium=n,
+            pupil_function=None,          # or your Zernike-based callable
+            high_NA=True,
+            Nphi=101,
+            Nrho=101,
+            device='gpu',
+            use_complex64=True,
+            minimum_grid_point_number=32,
+        )
+        t_end = time.time()
+        print(f"fast OTF route: compute_3d_otf_fast took {t_end - t_start:.4f} s")
+
+        # Reconstruct PSF from fast OTF for a rough comparison
+        I_fast = np.fft.ifftn(OTF_fast).real
+
+        # --- slices ---
+        zc  = Nz // 2          # central z index
+        kzc = Nz // 2          # central kz index
+        yc  = Nl // 2          # central y index
+        kyc = Nl // 2          # central ky index
+
+        # central PSF slice (x–y at z center)
+        psf_slice_std  = I_psf[:, :, zc]
+        psf_slice_fast = I_fast[:, :, zc]
+
+        # OTF slices: kx–ky at kz center
+        otf_xy_std  = OTF_psf[:, :, kzc].real
+        otf_xy_fast = OTF_fast[:, :, kzc].real
+
+        # OTF slices: kx–kz at ky center
+        otf_xz_std  = OTF_psf[:, kyc, :].real
+        otf_xz_fast = OTF_fast[:, kyc, :].real
+
+        # --- 2D PSF/OTF field plots ---
+        plot_psf_otf_plot(
+            np.log1p(10**4 * psf_slice_std),
+            np.log1p(10**4 * otf_xy_std),
+            "PSF/OTF (PSF route, central slices)",
+        )
+        plot_psf_otf_plot(
+            np.log1p(10**4 * psf_slice_fast),
+            np.log1p(10**4 * otf_xy_fast),
+            "PSF/OTF (fast OTF route, central slices)",
+        )
+
+        # --- 1D line-cut comparisons ---
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+        axes[0, 0].set_title("PSF x cut (y=0, z=center)")
+        axes[0, 0].plot(
+            np.log1p(10**4 * psf_slice_std[:, yc]),
+            label="PSF route",
+        )
+        axes[0, 0].plot(
+            np.log1p(10**4 * psf_slice_fast[:, yc]),
+            label="fast OTF route",
+        )
+        axes[0, 0].legend()
+
+        axes[0, 1].set_title("PSF z cut (x=0, y=center)")
+        axes[0, 1].plot(
+            I_psf[Nl // 2, Nl // 2, :],
+            label="PSF route",
+        )
+        axes[0, 1].plot(
+            I_fast[Nl // 2, Nl // 2, :],
+            label="fast OTF route",
+        )
+        axes[0, 1].legend()
+
+        axes[1, 0].set_title("OTF fx cut (fy=0, fz=center)")
+        axes[1, 0].plot(
+            OTF_psf[:, yc, kzc].real,
+            label="PSF route",
+        )
+        axes[1, 0].plot(
+            OTF_fast[:, yc, kzc].real,
+            label="fast OTF route",
+        )
+        axes[1, 0].legend()
+
+        axes[1, 1].set_title("OTF fz cut (fx=0, fy=center)")
+        axes[1, 1].plot(
+            OTF_psf[Nl // 2, yc, :].real,
+            label="PSF route",
+        )
+        axes[1, 1].plot(
+            OTF_fast[Nl // 2, yc, :].real,
+            label="fast OTF route",
+        )
+        axes[1, 1].legend()
+
+        plt.tight_layout()
         plt.show()
 
 

@@ -68,7 +68,7 @@ class SSNRBase(metaclass=DimensionMeta):
         averaged_slices = []
         for i in range(ssnri.shape[2]):
             averaged_slices.append(average_rings2d(ssnri[:, :, i], (q_axes[0], q_axes[1]), number_of_samples=number_of_samples))
-        return np.array(averaged_slices).T
+        return np.array(averaged_slices)
 
     def compute_ssnri_volume(self, factor=10, volume_element=1):
         return np.sum(np.abs(self.ssnri)) * volume_element * factor
@@ -463,16 +463,17 @@ class SSNRSIM2D(SSNRSIM):
         q_axes = self.optical_system.otf_frequencies
         dj = np.copy(self.dj)
         vj = np.copy(self.vj)
-        
         if len(q_axes) != 2:
             raise AttributeError("PSF dimensionality is not equal to 2!")
         
         if mask is not None:
-            dja = utils.average_mask(dj, mask, shape='reduced')
+            d2ja = utils.average_mask(dj * dj.conjugate(), mask, shape='reduced')
             vja = utils.average_mask(vj, mask, shape='reduced')
-            return np.nan_to_num(dja**2 / vja)
+            return np.nan_to_num(d2ja / vja)
         else:
-            return average_rings2d(dj**2, q_axes, degree_of_symmetry, theta0) / average_rings2d(vj, q_axes, degree_of_symmetry, theta0)
+            d2ja = average_rings2d(dj * dj.conjugate(), q_axes, degree_of_symmetry, theta0)
+            vja = average_rings2d(vj, q_axes, degree_of_symmetry, theta0)
+            return d2ja / vja
         
 
     def ssnr_like_sectorial_average_from_image(self, image_ft, degree_of_symmetry=1, theta0=0.):
@@ -563,4 +564,4 @@ class SSNRSIM3D(SSNRSIM):
                 averaged_slices.append(np.nan_to_num(dja**2 / vja))
             else:
                 averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
-        return np.array(averaged_slices).T
+        return np.array(averaged_slices)

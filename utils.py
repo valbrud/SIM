@@ -5,7 +5,7 @@ This module contains commonly used operations on arrays, required in the context
 """
 
 import numpy as np
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RegularGridInterpolator
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import scipy
@@ -181,29 +181,43 @@ def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, degree_of
     else:
         ax1, ax2 = axes[0], axes[1]
 
-    interpolator = RectBivariateSpline(ax1, ax2, array)
     ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -1e-10]
     ax = ax1 if ax1[-1] < ax2[-1] else ax2
     if number_of_samples:
         ax = np.linspace(ax[0], ax[-1], number_of_samples)
     # Create the interpolation function for the array
 
-    averaged = np.zeros(ax.size)
+    averaged = np.zeros(ax.size, dtype = array.dtype)
+    r_step = ax[1] - ax[0]
+    X, Y = np.meshgrid(axes[1], axes[0])
+    R = (X ** 2 + Y ** 2) ** 0.5
+    THETA = np.angle(X + 1j * Y)
+    for i, r in enumerate(ax-1e-9):
+        theta_max = theta0 + 2 * np.pi / degree_of_symmetry
+        samples = array[(R >= r) * (R < r + r_step) * (THETA >= theta0) * (THETA < theta_max)]
 
-    for i, r in enumerate(ax):
-        # Parametric equations for points on a circle of radius r
-        theta = np.linspace(theta0, theta0 + 2 * np.pi / degree_of_symmetry, num_angles, endpoint=False)
-        sample_x = r * np.cos(theta)
-        sample_y = r * np.sin(theta)
-        allowed_values = (sample_x >= ax[0]) * (sample_y >= ax[0]) 
-        sample_x = sample_x[allowed_values]
-        sample_y = sample_y[allowed_values]
-        # Perform bilinear interpolation at these points
-        interpolated_values = interpolator.ev(sample_x, sample_y)
-        # plt.plot(interpolated_values)
-        # plt.show()
-        # Radially average by taking the mean of interpolated values
-        averaged[i] = np.mean(interpolated_values)
+        averaged[i] = np.mean(samples)
+            # Visualize the array and highlight the angular sector
+    # fig, ax = plt.subplots()
+    # ax.imshow(np.log1p(np.abs(array)), origin='lower', extent=[ax2[0], ax2[-1], ax1[0], ax1[-1]])
+
+    # # Create a mask for the angular sector
+    # y_grid, x_grid = np.meshgrid(axes[1], axes[0])
+    # theta_grid = np.arctan2(y_grid, x_grid)
+    # theta_min = theta0
+    # theta_max = theta0 + 2 * np.pi / degree_of_symmetry
+
+    # # Handle angle wrapping
+    # theta_grid_wrapped = np.mod(theta_grid - theta_min, 2 * np.pi)
+    # sector_mask = theta_grid_wrapped <= (theta_max - theta_min)
+
+    # # Overlay the sector in red
+    # sector_overlay = np.zeros((*array.shape, 4))
+    # sector_overlay[sector_mask] = [1, 0, 0, 0.3]  # Red with transparency
+    # ax.imshow(sector_overlay, origin='lower', extent=[ax2[0], ax2[-1], ax1[0], ax1[-1]])
+    # plt.colorbar(ax.images[0], ax=ax)
+    # plt.title('Array with Angular Sector Highlighted')
+    # plt.show()
 
     return averaged
 

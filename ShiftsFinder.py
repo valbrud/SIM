@@ -114,12 +114,19 @@ class ShiftsFinder3d(ShiftsFinder):
         table = ShiftsFinder3d.generate_table(funcs, bases)
         return ShiftsFinder3d.find_pairs(table, np.arange(1, highest_base_number, 1))
 
+def build_phase_matrix(shift_number, shift_ratios, m_vectors):
+    phase_matrix = np.zeros((shift_number, len(m_vectors)), dtype=complex)
+    for i in range(shift_number):
+        for j, m_vec in enumerate(m_vectors):
+            phase = sum((shift_ratios[dim] * m_vec[dim]) for dim in range(len(m_vec)))
+            phase_matrix[i, j] = np.exp(2j * np.pi * phase / shift_number)
+    return phase_matrix
 
 # Example Usage
 if __name__ == "__main__":
     from config.BFPConfigurations import *
-    illumination = BFPConfiguration().get_4_circular_oblique_waves_and_circular_normal(np.pi / 4, 1)
-    expanded_lattice = illumination.compute_expanded_lattice()
+    illumination = BFPConfiguration().get_2_oblique_s_waves_and_s_normal(np.pi / 4, 1)
+    expanded_lattice = illumination.compute_expanded_lattice(ignore_projected_dimensions=False)
 
     # 2D Shift Finder
     # shift_finder_2d = ShiftsFinder2d(highest_base_number=50)
@@ -129,3 +136,35 @@ if __name__ == "__main__":
     # 3D Shift Finder
     shift_ratios_3d = ShiftsFinder3d.get_shift_ratios(expanded_lattice)
     print("3D Shift Ratios:", shift_ratios_3d)
+
+    ratios_selected = shift_ratios_3d[7]
+    print("Selected Ratios:", ratios_selected)
+
+
+    pi = np.pi
+    i = 1j
+
+    M1 = np.array([
+        [np.exp(0*i), np.exp(0*i), np.exp(0*i), 1, np.exp(0*i), np.exp(0*i), np.exp(0*i)],
+        [np.exp(-4*pi*i/5), np.exp(-2*pi*i/5), np.exp(-2*pi*i/5), 1, np.exp(2*pi*i/5), np.exp(2*pi*i/5), np.exp(4*pi*i/5)],
+        [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5), np.exp(-4*pi*i/5), 1, np.exp(4*pi*i/5), np.exp(4*pi*i/5), np.exp(8*pi*i/5)],
+        [np.exp(-12*pi*i/5), np.exp(-6*pi*i/5), np.exp(-6*pi*i/5), 1, np.exp(6*pi*i/5), np.exp(6*pi*i/5), np.exp(12*pi*i/5)],
+        [np.exp(-16*pi*i/5), np.exp(-8*pi*i/5), np.exp(-8*pi*i/5), 1, np.exp(8*pi*i/5), np.exp(8*pi*i/5), np.exp(16*pi*i/5)],
+        [np.exp(0*i), np.exp(0*i - 2*pi*i/4), np.exp(0*i + pi*i/2), 1, np.exp(0*i - pi*i/2), np.exp(0*i), np.exp(0*i)],
+        [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5 - pi*i/2), np.exp(-4*pi*i/5 + pi*i/2), 1, np.exp(4*pi*i/5 + pi*i/2), np.exp(4*pi*i/5), np.exp(8*pi*i/5)]
+    ], dtype=complex)
+
+    cond1 = np.linalg.cond(M1)
+
+    # ---------- Matrix 2 ----------
+    phases3d = np.array([-4*np.pi/7, -6*np.pi/7, 2*np.pi/7, 0, -2*np.pi/7, 6*np.pi/7, 4*np.pi/7])
+    M2 = np.array([[np.exp(1j * k * phases3d[j]) for j in range(7)] for k in range(7)], dtype=complex)
+    
+    cond2 = np.linalg.cond(M2)
+
+    phases2d = np.array([-4*np.pi/5, -2*np.pi/5, 0, 2*np.pi/5, 4*np.pi/5])
+    M3 = np.array([[np.exp(1j * k * phases2d[j]) for j in range(5)] for k in range(5)], dtype=complex)
+    cond3 = np.linalg.cond(M3)
+    print("Condition number of Matrix 1:", cond1)
+    print("Condition number of Matrix 2:", cond2)
+    print("Condition number of Matrix 3:", cond3)
