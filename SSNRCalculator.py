@@ -473,7 +473,7 @@ class SSNRSIM2D(SSNRSIM):
         else:
             d2ja = average_rings2d(dj * dj.conjugate(), q_axes, degree_of_symmetry, theta0)
             vja = average_rings2d(vj, q_axes, degree_of_symmetry, theta0)
-            return d2ja / vja
+            return (d2ja / vja).real
         
 
     def ssnr_like_sectorial_average_from_image(self, image_ft, degree_of_symmetry=1, theta0=0.):
@@ -499,7 +499,7 @@ class SSNRSIM2D(SSNRSIM):
         ssnr_sa = np.nan_to_num(ssnr_sa)
         ssnr_sa = np.where(djsa > numeric_noise, ssnr_sa, 0)
         
-        return ssnr_sa
+        return ssnr_sa.real
 
 
     def plot_effective_kernel_and_otf(self):

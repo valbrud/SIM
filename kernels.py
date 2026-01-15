@@ -42,7 +42,7 @@ def sinc_kernel1d(kernel_size: int = 0, pixel_size: float = 1.0, first_zero_freq
     r = np.abs(x)
 
     func_r = 1 - r / kernel_cut_off
-    return func_r
+    return func_r / np.sum(func_r)
 
 
 
@@ -57,7 +57,7 @@ def sinc_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 
         A 2D triangular kernel.
     """
     kernel = sinc_kernel1d(kernel_size, pixel_size[0], first_zero_frequency)[:, None] * sinc_kernel1d(kernel_size, pixel_size[1], first_zero_frequency)[None, :]
-    return kernel
+    return kernel / np.sum(kernel)
 
 def sinc_kernel3d(kernel_r_size: int = 0, kernel_z_size: int = 0, pixel_size: tuple[float, float, float] = (1.0, 1.0, 1.0), first_zero_frequency_r: float = 0., first_zero_frequency_z: float = 0.) -> np.ndarray:
     """
@@ -71,7 +71,7 @@ def sinc_kernel3d(kernel_r_size: int = 0, kernel_z_size: int = 0, pixel_size: tu
         A 2D/3D triangular kernel.
     """
     kernel = sinc_kernel1d(kernel_r_size, pixel_size[0], first_zero_frequency_r)[:, None,  None] * sinc_kernel1d(kernel_r_size, pixel_size[1], first_zero_frequency_r)[None, :, None] * sinc_kernel1d(kernel_z_size, pixel_size[2], first_zero_frequency_z)[None, None, :]
-    return kernel
+    return kernel / np.sum(kernel)
 
 def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0., N = 511) -> np.ndarray:
     """

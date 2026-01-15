@@ -280,6 +280,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                     sum_shifts += self.illumination.phase_matrix[(r, n, m)] * image_shifted_ft
                 # plt.imshow(np.log(1 + 10**8 * np.abs(sum_shifts)))
                 # plt.show()
+                # plt.title(f'R={r}, m={m}')
                 # plt.imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)])))
                 # plt.show()
                 image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)].conjugate()
@@ -378,7 +379,7 @@ class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise TypeError("illumination must be an instance of IlluminationPlaneWaves2D")
         
-        if not isinstance(optical_system, OpticalSystem2D):
+        if not optical_system is None and not isinstance(optical_system, OpticalSystem2D):
             raise TypeError("optical_system must be an instance of OpticalSystem2D")
         
         super().__init__(illumination=illumination,

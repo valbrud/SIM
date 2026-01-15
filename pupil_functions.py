@@ -14,6 +14,79 @@ def setup_rho_legendre(Nrho, float_type=np.float32):
     rho     = np.sqrt(u_nodes)
     return rho
 
+def noll_to_nm(j):
+    """
+    Convert 1-based Noll index j to Zernike indices (n, m),
+    following the standard Noll convention.
+
+    Returns (n, m) with |m| <= n and (n - |m|) even.
+    """
+    if j < 1:
+        raise ValueError("Noll index j must be >= 1")
+
+    # Upper bound on n: use triangular numbers T_{n+1} = (n+1)(n+2)/2
+    n_max = 0
+    while (n_max + 1) * (n_max + 2) // 2 < j:
+        n_max += 1
+
+    # Scan all valid (n, m) up to this n and look for the one with index j
+    for n in range(n_max + 1):
+        for m in range(-n, n + 1, 2):  # same parity as n
+            base = n * (n + 1) // 2 + abs(m)
+            mod4 = n % 4
+
+            # Noll's offset term (from the piecewise definition)
+            if (m > 0 and mod4 in (0, 1)) or (m < 0 and mod4 in (2, 3)):
+                offset = 0
+            elif (m >= 0 and mod4 in (2, 3)) or (m <= 0 and mod4 in (0, 1)):
+                offset = 1
+            else:
+                continue  # shouldn't happen
+
+            j_candidate = base + offset
+            if j_candidate == j:
+                return n, m
+
+    raise ValueError(f"No (n, m) pair found for Noll index j={j}")
+
+def zernike(n, m, RHO, PHI):
+    """
+    Evaluate Zernike polynomial Z_n^m on a grid (RHO, PHI).
+    Values outside the unit disk (RHO > 1) are set to zero.
+    RHO and PHI must be numpy arrays of identical shape.
+    """
+
+    m_abs = abs(m)
+
+    # radial part R_n^{|m|}
+    if (n - m_abs) % 2 != 0:
+        # forbidden combination, polynomial is identically zero
+        R = np.zeros_like(RHO)
+    else:
+        R = np.zeros_like(RHO, dtype=float)
+        k_max = (n - m_abs) // 2
+        for k in range(k_max + 1):
+            num = factorial(n - k)
+            den = (
+                factorial(k)
+                * factorial((n + m_abs)//2 - k)
+                * factorial((n - m_abs)//2 - k)
+            )
+            R += ((-1)**k) * num / den * (RHO ** (n - 2*k))
+
+    # angular part
+    if m > 0:
+        Z = R * np.cos(m_abs * PHI)
+    elif m < 0:
+        Z = R * np.sin(m_abs * PHI)
+    else:
+        Z = R.copy()
+
+    # mask outside unit disk
+    Z = np.where(RHO <= 1.0, Z, 0.0)
+
+    return Z
+
 def radial_zernike(n, m, r, float_type=np.float32):
     """
     Compute the radial part R_{n,|m|}(r) of the Zernike polynomial
