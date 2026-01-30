@@ -8,7 +8,7 @@ from psf_models import *
 from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations
 import hpc_utils
 import pupil_functions
-from otf_fast import compute_3d_otf_fast
+from psf_models_fast import compute_3d_otf_fast
 # Add project paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))

@@ -29,6 +29,8 @@ from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
 import utils
 from windowing import make_mask_cosine_edge2d
+import multiprocessing as mp
+import psutil
 
 class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     """
@@ -466,6 +468,101 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
                          phase_modulation_patterns=phase_modulation_patterns,
                         )
         
+class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
+    #Slice by slice 3D reconstructor in spatial domain.
+
+    dimensionality = 3
+    def __init__(self,
+                illumination: IlluminationPlaneWaves2D,
+                optical_system: OpticalSystem3D = None,
+                kernel=None,
+                phase_modulation_patterns=None,
+                **kwargs
+                    ):
+        
+        if not isinstance(illumination, IlluminationPlaneWaves2D):
+            if not isinstance(illumination, IlluminationPlaneWaves3D):
+                raise TypeError("illumination must be an instance of IlluminationPlaneWaves2D")
+            else:
+                illumination = IlluminationPlaneWaves2D.init_from_3D(illumination)
+        
+        if not isinstance(optical_system, OpticalSystem2D):
+            if not isinstance(optical_system, OpticalSystem3D):
+                raise TypeError("optical_system must be an instance of OpticalSystem2D")
+            else: 
+                optical_system = OpticalSystem2D.init_from_3D(optical_system)
+        
+        super().__init__(illumination=illumination,
+                            optical_system=optical_system,
+                            kernel=kernel,
+                            phase_modulation_patterns=phase_modulation_patterns,
+                        )
+        
+    def _reconstruct_slice(self, sim_images_slice):
+        sliced_reconstructed_image = np.zeros(sim_images_slice.shape[2:], dtype=np.float64)
+        for r in range(sim_images_slice.shape[0]):
+            image1rotation = np.zeros(sim_images_slice.shape[2:], dtype=np.float64)
+            for n in range(sim_images_slice.shape[1]):
+                image_convolved = hpc_utils.convolve2d(
+                    sim_images_slice[r, n], self.kernel, mode='same', boundary='wrap'
+                )
+                image1rotation += self.illumination_patterns[r, n] * image_convolved
+            sliced_reconstructed_image += image1rotation
+        return sliced_reconstructed_image
+    
+    def reconstruct(self, sim_images, upsample_factor=1, backend='cpu'):
+        """
+        Explicitely performs SIM reconstruction in the spatial domain, but the filtering is happening slice by slice.
+        In other words, the convolution with the kernel is done in 2D for each slice independently.
+        """
+        if upsample_factor > 1:
+            sim_images = self.upsample(sim_images, upsample_factor)
+        reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
+
+        if backend == 'cpu':
+            hpc_utils.pick_backend('cpu') # In practice, multithreading slice by slice or GPU optimization may be better depending on the hardware.
+
+        elif backend == 'gpu':
+            hpc_utils.pick_backend('gpu')
+
+        if backend == 'cpu':
+            # Parallel reconstruction with memory check
+            # Calculate memory requirements per slice
+            dtype_size = sim_images.dtype.itemsize
+            memory_per_slice = (
+                sim_images.shape[0] * (sim_images.shape[1] + 1) * 
+                sim_images[0, 0].size * dtype_size * 1.5  # 1.5x safety margin
+            )
+            
+            # Check available memory
+            available_memory = psutil.virtual_memory().available
+            num_cores = mp.cpu_count()
+            print(f"Available memory: {available_memory / (1024**3):.2f} GB")
+            print(f"Memory per slice: {memory_per_slice / (1024**3):.2f} GB")
+            print(f"Number of CPU cores: {num_cores}")
+            
+            # Determine safe number of workers
+            max_workers_memory = max(1, int(available_memory * 0.7 / memory_per_slice))
+            num_workers = min(num_cores, max_workers_memory, sim_images.shape[-1])
+        
+            for z in range(sim_images.shape[-1]):
+                if num_workers > 1:
+                    # Parallel processing
+                    with mp.Pool(processes=num_workers) as pool:
+                        slice_args = [(sim_images[:, :, :, :, z],) for z in range(sim_images.shape[-1])]
+                        results = pool.starmap(self._reconstruct_slice, slice_args)
+                        for z, result in enumerate(results):
+                            reconstructed_image[:, :, z] = result
+                else:
+                    # Sequential fallback
+                    for z in range(sim_images.shape[-1]):
+                        reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
+
+        else:
+            for z in range(sim_images.shape[-1]):
+                reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
+
+        return reconstructed_image
 
 def estimate_gain_and_offset(sim_images, edge_pixels=30):
     # Shapes and constants

@@ -359,7 +359,23 @@ class OpticalSystem2D(OpticalSystem):
             x, y = self.psf_coordinates[0][centerx - self.computed_size // 2:centerx + self.computed_size // 2 + 1], self.psf_coordinates[1][centery - self.computed_size // 2:centery + self.computed_size // 2 + 1]
             grid = np.meshgrid(x, y, indexing='ij')
             return np.stack(grid, axis=-1)
+    
+    @classmethod
+    def init_from_3D(cls, optical_system_3d):
+        if optical_system_3d.dimensionality != 3:
+            raise AttributeError("The provided optical system is not 3D!")
         
+        new_system = OpticalSystem2D(
+            interpolation_method=optical_system_3d.interpolation_method,
+            normalize_otf=optical_system_3d.normalize_otf,
+            # computed_size=optical_system_3d.computed_size,
+        )
+
+        new_system.psf_coordinates = (optical_system_3d.psf_coordinates[0], optical_system_3d.psf_coordinates[1])
+        #Using the known connection of 2D and 3D OTFs: OTF_2D(qx, qy) = ∫ OTF_3D(qx, qy, qz) dqz
+        new_system.otf = np.sum(optical_system_3d.otf, axis=2)
+        return new_system
+    
 class OpticalSystem3D(OpticalSystem):
 
     dimensionality = 3

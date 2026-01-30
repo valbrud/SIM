@@ -21,7 +21,7 @@ from SIMulator import SIMulator2D, SIMulator3D
 from config.BFPConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D, IlluminationPlaneWaves3D
 import ShapesGenerator
-from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain3D, ReconstructorSpatialDomain3D
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain3D, ReconstructorSpatialDomain3DSliced
 from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel
 from WienerFiltering import filter_true_wiener_sim, filter_flat_noise_sim, filter_constant, filter_simulated_object_wiener
 import hpc_utils
@@ -426,19 +426,20 @@ class TesReconstruction3D(unittest.TestCase):
         cut_off_frequency_l = 1 / (2 * self.dx)
         import copy
         illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2d()
-        m1, m2 = 1, 1
+        # illumination_reconstruction = IlluminationPlaneWaves2D.init_from_3D(illumination_reconstruction)
+        m1, m2 = 10, 5
         for r in range(illumination_reconstruction.Mr):
             illumination_reconstruction.harmonics[(r, (1, 0, 0))].amplitude *= m1
             illumination_reconstruction.harmonics[(r, (-1, 0, 0))].amplitude *= m1
             illumination_reconstruction.harmonics[(r, (2, 0, 0))].amplitude *= m2
             illumination_reconstruction.harmonics[(r, (-2, 0, 0))].amplitude *= m2
 
-        kernel=kernels.psf_kernel2d(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)[..., None] * kernels.sinc_kernel1d(pixel_size=self.dz, first_zero_frequency=cut_off_frequency_l)[None, None, :]
-        spatial_reconstructor = ReconstructorFourierDomain3D(
+        kernel=kernels.psf_kernel2d(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)
+        spatial_reconstructor = ReconstructorSpatialDomain3DSliced(
             # illumination=self.illumination, 
             illumination=illumination_reconstruction,
             optical_system=self.optical_system,
-            kernel=kernel
+            kernel=kernel, 
         )
         illumination_widefield = BFPConfiguration(refraction_index=1.5).get_widefield(3)
 
@@ -457,17 +458,19 @@ class TesReconstruction3D(unittest.TestCase):
         apodization = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, self.illumination)
         apodization_filter = apodization.ideal_otf
 
-        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images) 
+        reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images, backend='gpu') 
         reconstructed_image_ft = hpc_utils.wrapped_fftn(reconstructed_image)
-        plt.imshow(np.where(np.abs(apodization_filter) > 10**-6, 1, 0)[:, :, self.N//2])
+        plt.imshow(np.log1p(np.abs(reconstructed_image_ft[:, self.N//2, :])))
         plt.show()
+        # plt.imshow(np.where(np.abs(apodization_filter) > 10**-6, 1, 0)[:, :, self.N//2])
+        # plt.show()
 
         # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image[:, :, self.N//2]))))
         # plt.show()
         ssnr_calc = SSNRCalculator.SSNRSIM3D(   
             illumination = self.illumination, 
             optical_system = self.optical_system,
-            kernel=kernel,
+            kernel=kernel[..., None],
             illumination_reconstruction=illumination_reconstruction
             )
 
@@ -480,7 +483,7 @@ class TesReconstruction3D(unittest.TestCase):
         # plt.plot(np.log1p(1 + 10**8 * np.real(ssnr_calc.dj[:, self.N//2, self.N//2].T)))
         # plt.show()
         apodization_widefield = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, illumination_widefield, plane_wave_wavevectors=[np.array((0, 0, 0))])
-        reconstructed_image_ft *= np.where(np.abs(apodization_filter) > 10**-6, 1, 0)
+        # reconstructed_image_ft *= np.where(np.abs(apodization_filter) > 10**-6, 1, 0)
         widefield_ft = hpc_utils.wrapped_fftn(widefield) * np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)
         # plt.imshow(np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)[:, self.N//2, :])
         # plt.show()
@@ -510,7 +513,7 @@ class TesReconstruction3D(unittest.TestCase):
         fig, axes = plt.subplots(2, 4)
         axes[0, 0].imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(self.image)[:, :, self.N//2])), cmap='gray')
         axes[0, 0].set_title("Ground truth FT")
-        axes[0, 1].imshow(np.log1p(np.abs(reconstructed_image_ft[:, :, self.N//2])), cmap='gray')
+        axes[0, 1].imshow(np.log1p(np.abs(reconstructed_image_ft[:, self.N//2, :])), cmap='gray')
         axes[0, 1].set_title("Reconstructed FT")
         axes[0, 2].imshow(np.log1p(np.abs(filtered_ft[:, :, self.N//2])), cmap='gray')
         axes[0, 2].set_title("Filtered FT")
