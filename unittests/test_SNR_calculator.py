@@ -122,38 +122,34 @@ class TestSSNRSIM(unittest.TestCase):
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
         dy = dx
-        N = 51
+        N = 101
         max_r = N // 2 * dx
         x = np.linspace(-max_r, max_r, N)
         fr = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         NA = np.sin(alpha)
         illumination = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3)
-        spatial_shifts_conventional2d = np.array(((0., 0., 0.), (1, 0, 0), (2, 0, 0)))
-        spatial_shifts_conventional2d /= (3 * np.sin(theta))
-        illumination.spatial_shifts = spatial_shifts_conventional2d
-
 
         fx_normalized = fr / (2 * NA)
         fy_normalized = fr / (2 * NA)
         fx_normalized = fr / (1 - np.cos(theta))
         # print(fw2z_illumination)
-        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32)
-        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1 / 2 ** 0.5, 0, Mt=64)
-        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64)
-        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
+        illumination_s_polarized = configurations.get_4_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=32, dimensionality=2)
+        illumination_circular = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1 / 2 ** 0.5, 0, Mt=64, dimensionality=2)
+        illumination_seven_waves = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 0, Mt=64, dimensionality=2)
+        illumination_3waves = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1, dimensionality=2)
         # illumination_two_triangles_not_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1,  Mt=32, mutually_rotated=False)
         # illumination_two_triangles_rotated = configurations.get_two_oblique_triangles_and_one_normal_wave(theta, 5/7, 1, 1, Mt=32, mutually_rotated=True)
         # illumination_two_squares_not_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=64, mutually_rotated=False)
         # illumination_two_squares_rotated = configurations.get_two_oblique_squares_and_one_normal_wave(theta, 1/2**0.5, 1, 1, Mt=1, mutually_rotated=True)
         # illumination_five_waves_two_angles = configurations.get_4_s_oblique_waves_at_2_angles_and_one_normal_s_wave(theta, 5/7, 1, 1)
-        illumination_widefield = configurations.get_widefield()
+        illumination_widefield = configurations.get_widefield(dimensionality=2)
 
         illumination_list = {
-            illumination_s_polarized: ("4 s-polarized oblique waves", "4s1c"),
-            illumination_circular: ("4 circularly polarized oblique waves", "5c"),
-            illumination_seven_waves: ("6 s-polarized oblique waves", "6s1c"),
-            illumination_3waves: ("State of Art SIM", "state_of_art"),
-            illumination_widefield: ("Widefield", "widefield"),
+            ("4 s-polarized oblique waves", "4s1c"): illumination_s_polarized,
+            ("4 circularly polarized oblique waves", "5c"): illumination_circular,
+            ("6 s-polarized oblique waves", "6s1c"): illumination_seven_waves,
+            ("State of Art SIM", "state_of_art"): illumination_3waves,
+            ("Widefield", "widefield"): illumination_widefield,
             # illumination_two_triangles_rotated : ("Two triangles crossed", "2tr"),
             # illumination_two_triangles_not_rotated : ("Two triangles parallel", "2tnr"),
             # illumination_two_squares_rotated : ("Two squares crossed", "2sr"),
@@ -161,14 +157,15 @@ class TestSSNRSIM(unittest.TestCase):
             # illumination_five_waves_two_angles : ("State of Art SIM with 5 waves", "state_of_art_5")
         }
 
-        optical_system = System4f2D(alpha=NA)
+        optical_system = System4f2D(alpha=NA, refractive_index=1)
 
         optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r), N))
 
         noise_estimator_wf = SSNRSIM2D(illumination_widefield, optical_system)
-        ssnr_wf = np.abs(noise_estimator_wf.compute_ssnr())
+        ssnr_wf = np.abs(noise_estimator_wf.ssnri)
 
-        for illumination in illumination_list:
+        for illumination_key in illumination_list:
+            illumination = illumination_list[illumination_key]
             noise_estimator = SSNRSIM2D(illumination, optical_system)
 
             ssnr = np.abs(noise_estimator.ssnri)
@@ -180,7 +177,7 @@ class TestSSNRSIM(unittest.TestCase):
 
             Fx, Fy = np.meshgrid(fr, fr)
             fig = plt.figure(figsize=(12, 6), constrained_layout=True)
-            fig.suptitle(illumination_list[illumination][0], fontsize=30)
+            fig.suptitle(illumination_key[0], fontsize=30)
             plt.subplots_adjust(left=0.1,
                                 bottom=0.1,
                                 right=0.9,
@@ -198,6 +195,7 @@ class TestSSNRSIM(unittest.TestCase):
             ax1.set_aspect(1. / ax1.get_data_ratio())
 
             plt.show()
+
     def test_ssnr(self):
         theta = np.pi/4
         NA = np.sin(theta)

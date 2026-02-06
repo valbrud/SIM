@@ -149,14 +149,14 @@ class TestAutoconvolutionSIM3D(unittest.TestCase):
         self.optical_system.compute_psf_and_otf((psf_size, N))
 
     def test_apodization_sim(self):
-        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1)
+        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 1, Mt=1)
         apodization = AutoconvolutionApodizationSIM3D(self.optical_system, conventional)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-        axes[0].imshow(apodization.ideal_ctf[self.N//2, :, :].real, cmap='gray')
+        axes[0].imshow(apodization.ideal_ctf[:, :, self.N//2].real, cmap='gray')
         axes[0].set_title('Ideal CTF')
-        axes[1].imshow(np.log(1 + 10**8 * apodization.ideal_otf[self.N//2, :, :].real), cmap='gray')
+        axes[1].imshow(np.log(1 + 10**8 * apodization.ideal_otf[:, :, self.N//2].real), cmap='gray')
         axes[1].set_title('Ideal OTF')
-        axes[2].imshow(apodization.ideal_psf[self.N//2, :, :].real, cmap='gray')
+        axes[2].imshow(apodization.ideal_psf[:, :, self.N//2].real, cmap='gray')
         plt.show()
         
         square = self.configurations.get_4_oblique_s_waves_and_s_normal_diagonal(self.theta, 1, 0, Mt=1)

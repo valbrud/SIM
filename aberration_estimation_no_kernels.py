@@ -112,13 +112,11 @@ def compute_loss_function(stack,
                           illumination: Illumination.IlluminationPlaneWaves2D,
                           zernieke: dict,
                           dG1: tuple[np.ndarray, np.ndarray],
-                          vectorial=False, 
-                          high_NA=True,
                           apodization_mask: np.ndarray = None, 
                           update_illumination: bool = False
                           ):
     
-    optical_system.compute_psf_and_otf(high_NA=high_NA, vectorial=vectorial, zernieke=zernieke)
+    optical_system.compute_psf_and_otf(zernieke=zernieke)
     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
     # plt.title("OTF with aberrations")
     # plt.show()
@@ -171,8 +169,6 @@ def estimate_true_otf(  stack,
                         NA_step: float = 0.005,
                         aberration_step: float = 0.0036, 
                         max_iterations: int = 50,
-                        vectorial=False, 
-                        high_NA=True,
                         dynamic_gradient_step=False, 
                         gradient_range = 10.0, 
                         gradient_step_decay = 0.5,
@@ -180,7 +176,7 @@ def estimate_true_otf(  stack,
                         apodization_mask: np.ndarray = None,
                         update_illumination: bool = False
 ):
-    optical_system.compute_psf_and_otf(high_NA=high_NA, vectorial=vectorial, zernieke=initial_aberrations)
+    optical_system.compute_psf_and_otf(zernieke=initial_aberrations)
     kernel = kernels.psf_kernel2d(1)
     # plt.imshow(kernel, origin='lower')
     # plt.show()
@@ -194,7 +190,7 @@ def estimate_true_otf(  stack,
     NA_old = optical_system.NA
     print("Starting NA:", NA_old)
     print("Starting aberrations:", zernieke_old )
-    loss_function_old = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, vectorial=vectorial, high_NA=high_NA, apodization_mask=apodization_mask, update_illumination=update_illumination)
+    loss_function_old = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
     if dynamic_gradient_step:
         aberration_step_stop_size = aberration_step / gradient_range**0.5
         print("Aberration step stop size:", aberration_step_stop_size)
@@ -214,13 +210,13 @@ def estimate_true_otf(  stack,
             print("   Computing directional derivative for aberration ", aberration)
             zernieke_adjacent = zernieke_old.copy()
             zernieke_adjacent[aberration] += aberration_step
-            loss_function_adjacent = compute_loss_function(stack, optical_system, illumination, zernieke_adjacent, dG1, vectorial=vectorial, high_NA=high_NA, apodization_mask=apodization_mask, update_illumination=update_illumination)
+            loss_function_adjacent = compute_loss_function(stack, optical_system, illumination, zernieke_adjacent, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
             directional_derivative_dict[aberration] = loss_function_adjacent - loss_function_old
             print("Directional derivative: ", directional_derivative_dict[aberration])
 
         if not fix_NA:
             optical_system.NA = NA_old + NA_step
-            loss_function_adjacent_NA = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, vectorial=vectorial, high_NA=high_NA, apodization_mask=apodization_mask, update_illumination=update_illumination)
+            loss_function_adjacent_NA = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
             print("Computing NA derivative", NA_old)
             directional_derivative_NA = loss_function_adjacent_NA - loss_function_old
             print("Directional derivative NA: ", directional_derivative_NA)
@@ -231,7 +227,7 @@ def estimate_true_otf(  stack,
         zernieke_new = {aberration: zernieke_old[aberration] - aberration_step * directional_derivative_dict[aberration] / total_change for aberration in initial_aberrations.keys()}
         NA_new = NA_old - NA_step * directional_derivative_NA / total_change
         optical_system.NA = NA_new
-        loss_function_new = compute_loss_function(stack, optical_system, illumination, zernieke_new, dG1, vectorial=vectorial, high_NA=high_NA, apodization_mask=apodization_mask, update_illumination=update_illumination)
+        loss_function_new = compute_loss_function(stack, optical_system, illumination, zernieke_new, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
         print(f" New loss function: {loss_function_new}")
 
         if loss_function_new > loss_function_old:

@@ -21,7 +21,7 @@ def compute_loss_function_multikernel(stack,
     
     start = time.time()
     # print(optical_system.NA)
-    optical_system.compute_psf_and_otf(high_NA=True, vectorial=False, zernieke=zernieke)
+    optical_system.compute_psf_and_otf( vectorial=False, zernieke=zernieke)
     end = time.time()
     # print(f"Computed PSF in {end - start} seconds.")
     start = time.time()
@@ -243,7 +243,7 @@ def estimate_sim_aberrations_and_NA_2d(stack,
     
 #     start = time.time()
 #     # print(optical_system.NA)
-#     optical_system.compute_psf_and_otf(high_NA=True, vectorial=vectorial, zernieke=zernieke)
+#     optical_system.compute_psf_and_otf( zernieke=zernieke)
 #     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
 #     # plt.title("OTF with aberrations")
 #     # plt.show()
@@ -346,7 +346,7 @@ def compute_loss_function(stack,
                           apodization_mask: np.ndarray = None, 
                           weighted: bool = False):
     
-    optical_system.compute_psf_and_otf(high_NA=True, vectorial=vectorial, zernieke=zernieke)
+    optical_system.compute_psf_and_otf( zernieke=zernieke)
     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
     # plt.title("OTF with aberrations")
     # plt.show()
@@ -472,7 +472,7 @@ def refine_sim_aberration_estimation(stack,
                                     fix_NA = False, 
                                     apodization_mask: np.ndarray = None 
 ):
-    optical_system.compute_psf_and_otf(high_NA=True, vectorial=vectorial, zernieke=initial_aberrations)
+    optical_system.compute_psf_and_otf( zernieke=initial_aberrations)
 
 
     reconstructor1 = Reconstructor.ReconstructorSpatialDomain2D(illumination, optical_system, kernel1)

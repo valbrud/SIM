@@ -444,15 +444,16 @@ class System4f2DCoherent(OpticalSystem2D):
                  refractive_index=1,
                  interpolation_method="linear", 
                  normalize_otf = False, 
-                 computed_size:int = 0):
+                 computed_size:int = 0, 
+                 high_NA=True):
         
         super().__init__(interpolation_method, normalize_otf, computed_size)
         self.nm = refractive_index
         self.alpha = alpha
         self.NA = self.nm * np.sin(self.alpha)
+        self.high_NA = high_NA
 
     def compute_psf_and_otf(self, parameters=None,
-                            high_NA=False,
                             pupil_element="",
                             pupil_function=None, 
                             zernieke={}, 
@@ -475,7 +476,7 @@ class System4f2DCoherent(OpticalSystem2D):
             NA=self.NA, 
             nmedium=self.nm, 
             pupil_function=pupil_function, 
-            high_NA=high_NA, 
+            high_NA=self.high_NA, 
             Nrho=Nrho, 
             Nphi=Nphi, 
         )
@@ -498,17 +499,17 @@ class System4f3DCoherent(OpticalSystem3D):
                  refractive_index_sample=1, 
                  refractive_index_medium=1, 
                  interpolation_method="linear", 
-                 normalize_otf = False):
+                 normalize_otf = False, 
+                 high_NA=True):
         
         super().__init__(interpolation_method, normalize_otf)
         self.ns = refractive_index_sample
         self.nm = refractive_index_medium
         self.alpha = alpha
         self.NA = self.nm * np.sin(self.alpha)
-
+        self.high_NA = high_NA
 
     def compute_psf_and_otf(self, parameters=None,
-                            high_NA=False,
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
@@ -534,7 +535,7 @@ class System4f3DCoherent(OpticalSystem3D):
             nsample=self.ns, 
             nmedium=self.nm, 
             pupil_function=pupil_function, 
-            high_NA=high_NA, 
+            high_NA=self.high_NA, 
             Nrho=Nrho, 
             Nphi=Nphi, 
         )
@@ -554,17 +555,19 @@ class System4f2D(System4f2DCoherent):
                  refractive_index=1,
                  interpolation_method="linear", 
                  normalize_otf=True, 
-                 computed_size:int = 0):
+                 computed_size:int = 0, 
+                 high_NA=True, 
+                 vectorial=False):
         
         super().__init__(alpha,
                  refractive_index,
                  interpolation_method, 
                  normalize_otf, 
-                 computed_size)
-    
+                 computed_size, 
+                 high_NA)
+        self.vectorial = vectorial
+
     def compute_psf_and_otf(self, parameters=None,
-                            high_NA=False,
-                            vectorial=False,
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
@@ -580,8 +583,8 @@ class System4f2D(System4f2DCoherent):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
         
-        if not vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, high_NA, pupil_element, pupil_function, zernieke, Nrho, Nphi)
+        if not self.vectorial:
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke, Nrho, Nphi)
             psf = np.abs(csf) ** 2
 
         else:
@@ -592,7 +595,7 @@ class System4f2D(System4f2DCoherent):
                 NA=self.NA,
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
-                high_NA=high_NA, 
+                high_NA=self.high_NA, 
                 Nrho=Nrho, 
                 Nphi=Nphi, 
             )
@@ -615,17 +618,19 @@ class System4f3D(System4f3DCoherent):
                  refractive_index_sample=1, 
                  refractive_index_medium=1, 
                  interpolation_method="linear", 
-                 normalize_otf = True):
+                 normalize_otf = True, 
+                 high_NA=True,
+                 vectorial=False):
         
         super().__init__(alpha, 
                  refractive_index_sample, 
                  refractive_index_medium, 
                  interpolation_method, 
-                 normalize_otf)
+                 normalize_otf, 
+                 high_NA=high_NA)
+        self.vectorial = vectorial
 
     def compute_psf_and_otf(self, parameters=None,
-                            high_NA=False,
-                            vectorial=False,
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
@@ -640,8 +645,8 @@ class System4f3D(System4f3DCoherent):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
-        if not vectorial:
-            csf, _ = super().compute_psf_and_otf(None, high_NA, pupil_element, pupil_function, zernieke, Nrho, Nphi)
+        if not self.vectorial:
+            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke, Nrho, Nphi)
             psf = np.abs(csf) ** 2
 
         else:
@@ -657,7 +662,7 @@ class System4f3D(System4f3DCoherent):
                 nsample=self.ns, 
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
-                high_NA=high_NA, 
+                high_NA=self.high_NA, 
                 Nrho=Nrho, 
                 Nphi=Nphi, 
             )

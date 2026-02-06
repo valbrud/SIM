@@ -221,6 +221,13 @@ class SSNRSIM(SSNRBase):
                  ):
         
         super().__init__(optical_system, readout_noise_variance)
+
+        if not isinstance(illumination, PlaneWavesSIM):
+            raise AttributeError("Illumination data is not of the valid type!")
+        
+        if self.dimensionality is not None: 
+            self._check_dimensionality(illumination, optical_system, illumination_reconstruction)
+
         self._illumination = illumination
         self._illumination_reconstruction = illumination_reconstruction if not illumination_reconstruction is None else illumination
         self.vj = None
@@ -251,7 +258,15 @@ class SSNRSIM(SSNRBase):
                 self._kernel = self.optical_system.psf
 
         self._compute_ssnri()
-
+    
+    def _check_dimensionality(self, illumination, optical_system, illumination_reconstruction):
+        if not illumination.dimensionality == self.dimensionality:
+            raise AttributeError("Illumination data is not of the valid dimension!")
+        if not optical_system.dimensionality == self.dimensionality:
+            raise AttributeError("Optical system data is not of the valid dimension!")
+        if not illumination_reconstruction is None and not illumination_reconstruction.dimensionality == self.dimensionality:
+            raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
+        
     @property
     def optical_system(self):
         return self._optical_system
@@ -440,21 +455,6 @@ class SSNRSIM(SSNRBase):
 
 class SSNRSIM2D(SSNRSIM):
     dimensionality = 2
-    def __init__(self,
-                 illumination: IlluminationPlaneWaves2D,
-                 optical_system,
-                 kernel=None,
-                 readout_noise_variance=0,
-                 save_memory=False,
-                 illumination_reconstruction=None):
-        if not isinstance(illumination, IlluminationPlaneWaves2D):
-            raise AttributeError("Illumination data is not of the valid dimension!")
-        if not isinstance(optical_system, OpticalSystems.OpticalSystem2D):
-            raise AttributeError("Optical system data is not of the valid dimension!")
-        if not isinstance(illumination_reconstruction, IlluminationPlaneWaves2D) and not illumination_reconstruction is None:
-            raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
-        
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
 
     def ssnri_like_sectorial_average(self,  mask=None, degree_of_symmetry=1, theta0=0.):
         """
@@ -530,20 +530,6 @@ class SSNRSIM2D(SSNRSIM):
 
 class SSNRSIM3D(SSNRSIM):
     dimensionality = 3
-    def __init__(self,
-                 illumination,
-                 optical_system,
-                 kernel=None,
-                 readout_noise_variance=0,
-                 save_memory=False, 
-                 illumination_reconstruction=None):
-        if not isinstance(illumination, IlluminationPlaneWaves3D):
-            raise AttributeError("Illumination data is not of the valid dimension!")
-        if not isinstance(optical_system, OpticalSystems.OpticalSystem3D):
-            raise AttributeError("Optical system data is not of the valid dimension!")
-        if not isinstance(illumination_reconstruction, IlluminationPlaneWaves3D) and not illumination_reconstruction is None:
-            raise AttributeError("Illumination reconstruction data is not of the valid dimension!")
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
 
     def ssnri_like_sectorial_average(self, number_of_samples=None, mask=None):
         """
@@ -565,3 +551,107 @@ class SSNRSIM3D(SSNRSIM):
             else:
                 averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
         return np.array(averaged_slices)
+
+class SSNRSIMVectorial(SSNRSIM):
+    def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False, illumination_reconstruction=None):
+        super().__init__(illumination, 
+                         optical_system, 
+                         kernel,
+                         readout_noise_variance,
+                         save_memory,
+                         illumination_reconstruction)
+
+    def _build_m_to_numbers_matrix(self):
+        Mr = self.illumination.Mr
+        block_size = self.effective_otfs.keys().__len__()//Mr
+        self._m_to_number_matrix = {}
+        m_r = [m[1] for m in self.effective_otfs.keys() if m[0] == 0]
+        for r in range(Mr):
+            for i in range(len(m_r)):
+                self._m_to_number_matrix[(r, m_r[i])] = r * block_size + i
+
+    def _compute_order_ccM(self):
+        Mr = self.illumination.Mr
+        center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
+        block_size = self.effective_otfs.keys().__len__()//Mr
+
+        #ccM - cross-correlation matrix
+        self._ccM = np.zeros((Mr * block_size, Mr * block_size), dtype=np.complex128)
+
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
+                    continue
+                r = idx1[0]
+                m1 = idx1[1]
+                m2 = idx2[1]
+                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
+                if (r, m21) not in self.illumination.rearranged_indices:
+                    continue
+                self._ccM[self._m_to_number_matrix[idx1], self._m_to_number_matrix[idx2]] = self.effective_otfs[(r, m21)][*center]
+
+    def _compute_inverse_ccM(self):
+        self._ccM_inv = np.linalg.inv(self._ccM)
+    
+    def _compute_diagonalizing_matrix(self):
+        self._diagonalizing_matrix = np.linalg.eigh(self._ccM)[1]
+
+    @property 
+    def m_to_number_matrix(self):
+        return self._m_to_number_matrix
+    
+    @property 
+    def ccM(self):
+        return self._ccM
+    
+    @property
+    def ccM_inv(self):
+        return self._ccM_inv
+    
+    @property
+    def diagonalizing_matrix(self):
+        return self._diagonalizing_matrix
+    
+    def _compute_effective_kernels_ft(self):
+        self._build_m_to_numbers_matrix()
+        self._compute_order_ccM()
+        self._compute_inverse_ccM()
+        self._compute_diagonalizing_matrix()
+
+        if np.isclose(self.kernel, self.optical_system.psf).all() and self.illumination_reconstruction is self.illumination:
+            effective_kernels_uncorrelated_ft = self.effective_otfs
+        else: 
+            effective_kernels_uncorrelated_ft = self.illumination_reconstruction.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)[1]
+        
+        for m in self.effective_otfs.keys():
+            row = self._m_to_number_matrix[m]
+            effective_kernel_ft = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+            for idx in self.effective_otfs.keys():
+                effective_kernel_ft += self._ccM_inv[row, self._m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
+            self.effective_kernels_ft[m] = effective_kernel_ft
+
+class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
+    dimensionality = 2
+    def __init__(self,
+                illumination: IlluminationPlaneWaves2D,
+                optical_system: OpticalSystems.OpticalSystem2D,
+                kernel=None,
+                readout_noise_variance=0,
+                save_memory=False,
+                illumination_reconstruction=None):
+
+        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
+
+
+class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
+    dimensionality = 3
+
+    def __init__(self,
+                illumination: IlluminationPlaneWaves3D,
+                optical_system: OpticalSystems.OpticalSystem3D,
+                kernel=None,
+                readout_noise_variance=0,
+                save_memory=False,
+                illumination_reconstruction=None):
+
+        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)

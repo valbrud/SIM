@@ -427,7 +427,7 @@ class TesReconstruction3D(unittest.TestCase):
         import copy
         illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2d()
         # illumination_reconstruction = IlluminationPlaneWaves2D.init_from_3D(illumination_reconstruction)
-        m1, m2 = 10, 5
+        m1, m2 = 1, 1
         for r in range(illumination_reconstruction.Mr):
             illumination_reconstruction.harmonics[(r, (1, 0, 0))].amplitude *= m1
             illumination_reconstruction.harmonics[(r, (-1, 0, 0))].amplitude *= m1
@@ -487,9 +487,12 @@ class TesReconstruction3D(unittest.TestCase):
         widefield_ft = hpc_utils.wrapped_fftn(widefield) * np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)
         # plt.imshow(np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)[:, self.N//2, :])
         # plt.show()
-        filtered_ft, _, _ = filter_simulated_object_wiener(
+        filtered_ft, w, ssnr = filter_true_wiener_sim(
             reconstructed_image_ft, ssnr_calc, hpc_utils.wrapped_fftn(self.image))
         
+        plt.imshow(np.log1p(np.abs(ssnr[:, self.N//2, :])))
+        plt.show()
+
         filtered_widefield_ft, _, _ = filter_simulated_object_wiener(
             widefield_ft, ssnr_widefield, hpc_utils.wrapped_fftn(self.image))
         

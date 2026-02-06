@@ -66,8 +66,8 @@ scaled_fz = fz / fz_max_diff
 multiplier = 10 ** 5
 ylim = 10 ** 2
 
-optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium)
-optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
+optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium, high_NA=True)
+optical_system.compute_psf_and_otf((psf_size, N))
 
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)

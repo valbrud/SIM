@@ -61,11 +61,17 @@ class TestOpticalSystems2D(unittest.TestCase):
         optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf_coordinates(np.array((2 * max_r, 2 * max_r)), N)
         fxn = optical_system.otf_frequencies[0] / (2 * np.sin(alpha))
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N), high_NA=False, vectorial=False)
+        optical_system.high_NA = False
+        optical_system.vectorial = False
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
         plt.plot(fxn, optical_system.otf[N//2, :], label='scalar paraxial')
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N), high_NA=True, vectorial=False)
+        optical_system.high_NA = True
+        optical_system.vectorial = False
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
         plt.plot(fxn, optical_system.otf[N//2, :], label='scalar high_NA')
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N), high_NA=True, vectorial=True) 
+        optical_system.high_NA = True
+        optical_system.vectorial = True
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N)) 
         plt.plot(fxn, optical_system.otf[N//2, :], label='vectorial high_NA')
         plt.plot(fxn, optical_system.otf_with_pixel_size_correction[N//2, :], label='vectorial high_NA + pixel correction')
         plt.gca().legend()
