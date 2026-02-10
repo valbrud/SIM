@@ -1,6 +1,7 @@
 from random import seed
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy
 import hpc_utils
 import Reconstructor
 import OpticalSystems
@@ -12,25 +13,28 @@ import SSNRCalculator
 import time
 from itertools import combinations
 
-def compute_guess_independent_dG_part(stack,
-                                      illumination: Illumination.IlluminationPlaneWaves2D,
+
+def compute_spatial_frequency_orders(stack,
+                                      illumination: Illumination.PlaneWavesSIM,
                                       effective_kernels_ft: dict,
                                       phase_modulation_patterns: dict,
-                                      apodization_mask: np.ndarray = None,
-                                    ) -> np.ndarray:
+                                      apodization_mask: np.ndarray = None,) -> dict[np.ndarray, tuple[int, ...]]:
     
-    RedG1 = np.zeros_like(stack[0, 0], dtype=np.float64)
-    ImdG1 = np.zeros_like(stack[0, 0], dtype=np.float64)
-
-    reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination, 
-                                                               effective_kernels=effective_kernels_ft, 
-                                                               phase_modulation_patterns=phase_modulation_patterns,
-                                                               return_ft = True)
+    reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if illumination.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D
+    reconstructor = reconstructor_class(illumination, 
+                                        effective_kernels=effective_kernels_ft, 
+                                        phase_modulation_patterns=phase_modulation_patterns,
+                                        return_ft = True)
+    
+    spatial_frequency_orders = {}
     for key in effective_kernels_ft.keys():
-        kernel_ft = effective_kernels_ft[key]
-        # im = plt.imshow(np.abs(kernel_ft), origin='lower')
-        # plt.colorbar(im)
-        # plt.title(f"Effective kernel FT for key {key}")
+        kernel_ft = effective_kernels_ft[key] + 1e-5
+        print(key, "eff kernel max", np.amax(np.abs(kernel_ft)))
+        # print(key, 'max', round(np.max(ReI**2 / np.abs(kernel_ft)**2)/10**12))
+        # fig, ax = plt.subplots(1,2)
+        # ax[0].imshow(np.log1p(ReI**2 / np.abs(kernel_ft)**2), origin='lower')
+        # im = ax[1].imshow(np.log1p(ImI**2 / np.abs(kernel_ft)**2), origin='lower')
+        # plt.colorbar(im, ax=ax[1])
         # plt.show()
         if not (np.abs(kernel_ft) > 0).all():
             raise ValueError("All values in the effective kernel FT must non-zero for this algorithm.")
@@ -39,41 +43,50 @@ def compute_guess_independent_dG_part(stack,
         Ikey = reconstructor.reconstruct(stack)
         if apodization_mask is not None:
             Ikey = Ikey * apodization_mask
-        ReI = Ikey.real
-        ImI = Ikey.imag
-        RedG1 += ReI**2 / np.abs(kernel_ft)**2
-        ImdG1 += ImI**2 / np.abs(kernel_ft)**2
-        # print(key, "eff kernel max", np.amax(np.abs(kernel_ft)))
-        # print(key, 'max', round(np.max(ReI**2 / np.abs(kernel_ft)**2)/10**12))
-        # fig, ax = plt.subplots(1,2)
-        # ax[0].imshow(np.log1p(ReI**2 / np.abs(kernel_ft)**2), origin='lower')
-        # im = ax[1].imshow(np.log1p(ImI**2 / np.abs(kernel_ft)**2), origin='lower')
-        # plt.colorbar(im, ax=ax[1])
-        # plt.show()
-    RedG1 /= illumination.Mr
-    ImdG1 /= illumination.Mr
-    # print(np.amax(RedG1)/10**9, np.amax(ImdG1)/10**9)
+        ReI = Ikey.real / np.abs(kernel_ft)
+        ImI = Ikey.imag / np.abs(kernel_ft)
+        spatial_frequency_orders[key] = (ReI, ImI)
+
+    return spatial_frequency_orders
+
+def compute_SSNR_ideal(spatial_frequency_orders, 
+                       illumination: Illumination.PlaneWavesSIM) -> np.ndarray:
+    
+    ReSSNR_ideal = np.zeros_like(next(iter(spatial_frequency_orders.values()))[0], dtype=np.float64)
+    ImSSNR_ideal = np.zeros_like(next(iter(spatial_frequency_orders.values()))[1], dtype=np.float64)
+
+    for key in spatial_frequency_orders.keys():
+        ReI = spatial_frequency_orders[key][0]
+        ImI = spatial_frequency_orders[key][1]
+        ReSSNR_ideal += ReI**2 
+        ImSSNR_ideal += ImI**2 
+    ReSSNR_ideal /= illumination.Mr
+    ImSSNR_ideal /= illumination.Mr
+
+    # print(np.amax(ReSSNR_ideal)/10**9, np.amax(ImSSNR_ideal)/10**9)
 
     # fig, axes = plt.subplots(1,2)
-    # axes[0].imshow(np.log1p(RedG1), origin='lower')
-    # im = axes[1].imshow(np.log1p(ImdG1), origin='lower')
+    # axes[0].imshow(np.log1p(ReSSNR_ideal), origin='lower')
+    # im = axes[1].imshow(np.log1p(ImSSNR_ideal), origin='lower')
     # plt.colorbar(im, ax=axes[1])    
     # plt.show() 
 
-    return (RedG1, ImdG1)
+    return (ReSSNR_ideal, ImSSNR_ideal)
 
-def compute_guess_dependent_dG_part(stack,
-                                    illumination: Illumination.IlluminationPlaneWaves2D,
-                                    optical_system: OpticalSystems.OpticalSystem2D,
-                                    apodization_mask: np.ndarray = None
-                                    ):
-    
-    RedG2 = np.zeros_like(stack[0, 0], dtype=np.float64)
-    ImdG2 = np.zeros_like(stack[0, 0], dtype=np.float64)
+def compute_SSNR_guess(stack,
+                        illumination: Illumination.PlaneWavesSIM,
+                        optical_system: OpticalSystems.OpticalSystem2D,
+                        apodization_mask: np.ndarray = None
+                        ):
 
+    ReSSNRg = np.zeros_like(stack[0, 0], dtype=np.float64)
+    ImSSNRg = np.zeros_like(stack[0, 0], dtype=np.float64)
+
+    reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D
+    ssnr_calc_class = SSNRCalculator.SSNRSIM2D if optical_system.dimensionality == 2 else SSNRCalculator.SSNRSIM3D
     # print("OTF max", np.amax(optical_system.otf.real))
-    reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination, optical_system=optical_system, return_ft = True)
-    ssnr_calc = SSNRCalculator.SSNRSIM2D(illumination, optical_system)
+    reconstructor = reconstructor_class(illumination, optical_system=optical_system, return_ft = True)
+    ssnr_calc = ssnr_calc_class(illumination, optical_system)
     # for key in ssnr_calc.effective_kernels_ft.keys():
         # kernel_ft = ssnr_calc.effective_kernels_ft[key]
         # print(key, "eff kernel max", np.amax(np.abs(kernel_ft)))
@@ -93,54 +106,110 @@ def compute_guess_dependent_dG_part(stack,
     # im = plt.imshow(noise_term, origin='lower')
     # plt.colorbar(im)
     # plt.show()
-    RedG2 = np.where(~np.isclose(dj, np.zeros_like(dj), atol=10**-10), ReI**2 / dj, noise_term)
-    ImdG2 = np.where(~np.isclose(dj, np.zeros_like(dj), atol=10**-10), ImI**2 / dj, noise_term)
-    # print('RedG2', 'max', round(np.amax(RedG2)/10**12))
+    ReSSNRg = np.where(~np.isclose(dj, np.zeros_like(dj), atol=10**-10), ReI**2 / dj, noise_term)
+    ImSSNRg = np.where(~np.isclose(dj, np.zeros_like(dj), atol=10**-10), ImI**2 / dj, noise_term)
+    # print('ReSSNRg', 'max', round(np.amax(ReSSNRg)/10**12))
 
     # fig, axes = plt.subplots(1,2)
     # plt.suptitle("Guess-dependent dG part")
-    # axes[0].imshow(np.log1p(RedG2), origin='lower')
-    # im = axes[1].imshow(np.log1p(ImdG2), origin='lower')
+    # axes[0].imshow(np.log1p(ReSSNRg), origin='lower')
+    # im = axes[1].imshow(np.log1p(ImSSNRg), origin='lower')
     # plt.colorbar(im, ax=axes[1])
     # plt.show() 
-    # print(np.amax(RedG2)/10**9, np.amax(ImdG2)/10**9)
-    return (RedG2, ImdG2)
+    # print(np.amax(ReSSNRg)/10**9, np.amax(ImSSNRg)/10**9)
+    return (ReSSNRg, ImSSNRg)
                                    
     
 def compute_loss_function(stack,
                           optical_system: OpticalSystems.OpticalSystem2D,
-                          illumination: Illumination.IlluminationPlaneWaves2D,
+                          illumination: Illumination.PlaneWavesSIM,
                           zernieke: dict,
-                          dG1: tuple[np.ndarray, np.ndarray],
+                          SSNR_ideal: tuple[np.ndarray, np.ndarray],
                           apodization_mask: np.ndarray = None, 
-                          update_illumination: bool = False
+                          estimate_amplitudes_dinamically: bool = False, 
+                          spatial_frequency_orders = None,
+                          interpolation=True
                           ):
     
     optical_system.compute_psf_and_otf(zernieke=zernieke)
     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
     # plt.title("OTF with aberrations")
     # plt.show()
-    end = time.time()
-    # print(f"Computed PSF in {end - start} seconds.")
-    start = time.time()
-    if update_illumination:
-        illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
-    # print(f"Estimated illumination in {end - start} seconds.")
-    # print(illumination.get_all_amplitudes()[0])
+    # end = time.time()
+    # # print(f"Computed PSF in {end - start} seconds.")
+    # start = time.time()
+    if estimate_amplitudes_dinamically:
+        if interpolation: 
+            am = illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
+            print('PEAK_HEIGHT', am)
+        else: 
+            illumination.equalize_amplitudes()
+            _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
+            for r in range(illumination.Mr):
+                key_zero = (r, tuple([0] * illumination.dimensionality))
+                
+                I0 = spatial_frequency_orders[key_zero][0] + 1j * spatial_frequency_orders[key_zero][1]
+                g0 = effective_otfs[key_zero]
+                # a0 = float(np.real(illumination.harmonics[key_zero].amplitude))
+                I0 = np.where(np.abs(g0) > 10**-3, I0, 0)
 
-    end = time.time()
-    ReG1, ImG1 = dG1
-    RedG2, ImdG2 =  compute_guess_dependent_dG_part(stack,
+                for key in spatial_frequency_orders.keys():
+                    if key[0] != r or key == key_zero:
+                        continue
+                    I = spatial_frequency_orders[key][0] + 1j * spatial_frequency_orders[key][1]
+                    g = effective_otfs[key]
+
+                    I0f = np.where(np.abs(g) > 10**-3, I0, 0)
+                    I = np.where(np.abs(g) > 10**-3, I , 0)
+                    I = np.where(np.abs(g0) > 10**-3, I, 0)
+
+                    a = 1  
+
+                    # Minimize L2: || a0*g0*I - a*g*I0f ||_2^2, with complex scalar a = a_re + 1j*a_im
+                    def obj(x):
+                        a = float(x[0])
+                        diff =  g0 * I - a * g * I0f
+                        return float(np.sum(np.abs(diff) ** 2))
+
+                    x0 = [float(np.real(a))]
+                    bounds = [(-10, 10)]
+                    optimizer = scipy.optimize.minimize(
+                        obj,
+                        x0=x0,
+                        method="L-BFGS-B",
+                        bounds=bounds,
+                    )
+
+                    a = float(optimizer.x[0])
+                    illumination.harmonics[key].amplitude = a
+                    # overlap1 = hpc_utils.wrapped_fftn(g * I0f)
+                    # overlap2 = hpc_utils.wrapped_fftn(g0 * I)
+
+                    # print(np.abs(np.sum(overlap2)/np.sum(overlap1)))
+
+                    # fig, ax = plt.subplots(1,2)
+                    # ax[0].imshow(np.log1p(np.abs(overlap1)), origin='lower')
+                    # ax[1].imshow(np.log1p(np.abs(overlap2)), origin='lower')
+                    # plt.show()
+                    # plt.imshow(np.log1p(np.abs(g0 * I - a * g* I0f)))
+                    # plt.show()
+
+            illumination.normalize_spatial_waves()
+            print('LS', illumination.get_all_amplitudes()[0])
+
+    ReSSNRi, ImSSNRi = SSNR_ideal
+    ReSSNRg, ImSSNRg =  compute_SSNR_guess(stack,
                                     illumination,
                                     optical_system, 
-                                    apodization_mask=apodization_mask
+                                    apodization_mask=apodization_mask, 
                                     )
     
-    # RedG2 /= np.amax(RedG2) / np.amax(ReG1)
-    # ImdG2 /= np.amax(ImdG2) / np.amax(ImG1)
+    # ReSSNRg /= np.amax(ReSSNRg) / np.amax(ReSSNRi)
+    # ImSSNRg /= np.amax(ImSSNRg) / np.amax(ImSSNRi)
 
-    ReD = ReG1 - RedG2
-    ImD = ImG1 - ImdG2
+    ReD = ReSSNRi - ReSSNRg
+    ImD = ImSSNRi - ImSSNRg
+
     # fig, axes = plt.subplots(1,2)
     # im = axes[0].imshow(np.log1p(ReD), origin='lower')
     # plt.colorbar(im, ax=axes[0])
@@ -148,10 +217,10 @@ def compute_loss_function(stack,
     # plt.colorbar(im, ax=axes[1])
     # plt.show()
     
-    f0 = np.sum(stack) / (stack.shape[0] * stack.shape[1])
-    K = illumination.Mr * (illumination.Mt//2)
+    # f0 = np.sum(stack) / (stack.shape[0] * stack.shape[1])
+    # K = illumination.Mr * (illumination.Mt//2)
 
-    log_likelihood = -1/2 * (2 * np.log(2 * np.pi * K * f0**2) + (ReD**2 + ImD**2) / (K * f0**2))
+    # log_likelihood = -1/2 * (2 * np.log(2 * np.pi * K * f0**2) + (ReD**2 + ImD**2) / (K * f0**2))
 
     # plt.title("Log-likelihood map")
     # plt.imshow(np.log1p(-log_likelihood.real), origin='lower')
@@ -164,7 +233,7 @@ def compute_loss_function(stack,
 
 def estimate_true_otf(  stack,
                         optical_system: OpticalSystems.OpticalSystem2D,
-                        illumination: Illumination.IlluminationPlaneWaves2D,
+                        illumination: Illumination.PlaneWavesSIM,
                         initial_aberrations: dict,
                         NA_step: float = 0.005,
                         aberration_step: float = 0.0036, 
@@ -174,23 +243,27 @@ def estimate_true_otf(  stack,
                         gradient_step_decay = 0.5,
                         fix_NA = False, 
                         apodization_mask: np.ndarray = None,
-                        update_illumination: bool = False
+                        estimate_amplitudes_dinamically: bool = False, 
+
 ):
     optical_system.compute_psf_and_otf(zernieke=initial_aberrations)
-    kernel = kernels.psf_kernel2d(1)
     # plt.imshow(kernel, origin='lower')
     # plt.show()
-    reconstructor1 = Reconstructor.ReconstructorFourierDomain2D(illumination, optical_system, kernel)
-    effective_kernels_ft = reconstructor1.effective_kernels
+    kernel = kernels.sinc_kernel2d(1) if illumination.dimensionality == 2 else kernels.sinc_kernel3d(1)
+    reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D 
+    reconstructor1 = reconstructor_class(illumination, optical_system, kernel)
+
+    effective_otfs = reconstructor1.effective_kernels
     phase_modulation_patterns= reconstructor1.phase_modulation_patterns
 
-    dG1 = compute_guess_independent_dG_part(stack, illumination, effective_kernels_ft, phase_modulation_patterns, apodization_mask=apodization_mask)
-
+    spatial_frequency_orders = compute_spatial_frequency_orders(stack, illumination, effective_otfs, phase_modulation_patterns, apodization_mask=apodization_mask)
+    SSNR_ideal = compute_SSNR_ideal(spatial_frequency_orders, illumination)
+    
     zernieke_old = initial_aberrations.copy()
     NA_old = optical_system.NA
     print("Starting NA:", NA_old)
     print("Starting aberrations:", zernieke_old )
-    loss_function_old = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
+    loss_function_old = compute_loss_function(stack, optical_system, illumination, zernieke_old, SSNR_ideal, apodization_mask=apodization_mask, estimate_amplitudes_dinamically=estimate_amplitudes_dinamically, spatial_frequency_orders=spatial_frequency_orders)
     if dynamic_gradient_step:
         aberration_step_stop_size = aberration_step / gradient_range**0.5
         print("Aberration step stop size:", aberration_step_stop_size)
@@ -210,13 +283,13 @@ def estimate_true_otf(  stack,
             print("   Computing directional derivative for aberration ", aberration)
             zernieke_adjacent = zernieke_old.copy()
             zernieke_adjacent[aberration] += aberration_step
-            loss_function_adjacent = compute_loss_function(stack, optical_system, illumination, zernieke_adjacent, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
+            loss_function_adjacent = compute_loss_function(stack, optical_system, illumination, zernieke_adjacent, SSNR_ideal, apodization_mask=apodization_mask, estimate_amplitudes_dinamically=estimate_amplitudes_dinamically, spatial_frequency_orders=spatial_frequency_orders)
             directional_derivative_dict[aberration] = loss_function_adjacent - loss_function_old
             print("Directional derivative: ", directional_derivative_dict[aberration])
 
         if not fix_NA:
             optical_system.NA = NA_old + NA_step
-            loss_function_adjacent_NA = compute_loss_function(stack, optical_system, illumination, zernieke_old, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
+            loss_function_adjacent_NA = compute_loss_function(stack, optical_system, illumination, zernieke_old, SSNR_ideal, apodization_mask=apodization_mask, estimate_amplitudes_dinamically=estimate_amplitudes_dinamically, spatial_frequency_orders=spatial_frequency_orders)
             print("Computing NA derivative", NA_old)
             directional_derivative_NA = loss_function_adjacent_NA - loss_function_old
             print("Directional derivative NA: ", directional_derivative_NA)
@@ -227,7 +300,7 @@ def estimate_true_otf(  stack,
         zernieke_new = {aberration: zernieke_old[aberration] - aberration_step * directional_derivative_dict[aberration] / total_change for aberration in initial_aberrations.keys()}
         NA_new = NA_old - NA_step * directional_derivative_NA / total_change
         optical_system.NA = NA_new
-        loss_function_new = compute_loss_function(stack, optical_system, illumination, zernieke_new, dG1, apodization_mask=apodization_mask, update_illumination=update_illumination)
+        loss_function_new = compute_loss_function(stack, optical_system, illumination, zernieke_new, SSNR_ideal, apodization_mask=apodization_mask, estimate_amplitudes_dinamically=estimate_amplitudes_dinamically, spatial_frequency_orders=spatial_frequency_orders)
         print(f" New loss function: {loss_function_new}")
 
         if loss_function_new > loss_function_old:

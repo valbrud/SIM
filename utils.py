@@ -195,9 +195,11 @@ def average_rings2d(array: np.ndarray, axes: tuple[np.ndarray] = None, degree_of
     for i, r in enumerate(ax-1e-9):
         theta_max = theta0 + 2 * np.pi / degree_of_symmetry
         samples = array[(R >= r) * (R < r + r_step) * (THETA >= theta0) * (THETA < theta_max)]
-
+        # plt.imshow((R >= r) * (R < r + r_step) * (THETA >= theta0) * (THETA < theta_max))
+        # plt.show()
         averaged[i] = np.mean(samples)
-            # Visualize the array and highlight the angular sector
+    
+    # Visualize the array and highlight the angular sector
     # fig, ax = plt.subplots()
     # ax.imshow(np.log1p(np.abs(array)), origin='lower', extent=[ax2[0], ax2[-1], ax1[0], ax1[-1]])
 

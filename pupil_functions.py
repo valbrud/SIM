@@ -49,7 +49,7 @@ def noll_to_nm(j):
 
     raise ValueError(f"No (n, m) pair found for Noll index j={j}")
 
-def zernike(n, m, RHO, PHI):
+def zernike_cartisian_one_aberration(n, m, RHO, PHI):
     """
     Evaluate Zernike polynomial Z_n^m on a grid (RHO, PHI).
     Values outside the unit disk (RHO > 1) are set to zero.
@@ -74,6 +74,8 @@ def zernike(n, m, RHO, PHI):
             )
             R += ((-1)**k) * num / den * (RHO ** (n - 2*k))
 
+        R *= np.sqrt(2 * (n + 1) / (1 + (m == 0)))
+
     # angular part
     if m > 0:
         Z = R * np.cos(m_abs * PHI)
@@ -84,14 +86,26 @@ def zernike(n, m, RHO, PHI):
 
     # mask outside unit disk
     Z = np.where(RHO <= 1.0, Z, 0.0)
-
+    
     return Z
+
+def zernike_cartisian(zernike_polynomials, RHO, PHI):
+    phase = np.zeros_like(RHO)
+    for (n, m), amplitude in zernike_polynomials.items():
+        Z_nm = zernike_cartisian_one_aberration(n, m, RHO, PHI)
+        phase += amplitude * Z_nm
+    return phase
+
 
 def radial_zernike(n, m, r, float_type=np.float32):
     """
     Compute the radial part R_{n,|m|}(r) of the Zernike polynomial
     for each r in the 1D array `r`.
     """
+
+    if (n - abs(m)) % 2 != 0:
+        return np.zeros_like(r, dtype=float_type)
+
     m_abs = abs(m)
     R = np.zeros_like(r, dtype=float_type)
 
@@ -144,11 +158,9 @@ def compute_pupil_plane_aberrations(zernieke_polynomials, Nrho, Nphi, float_type
     rho = setup_rho_legendre(Nrho, float_type)
 
     RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
-    # grid = PolarGrid(SeparatedCoords((rho, phi)))
     aberration = np.zeros((rho.size, phi.size))
 
     for (n, m), amplitude in zernieke_polynomials.items():
-        # aberration += amplitude * zernike(n, m, grid=grid)
         aberration += amplitude * radial_zernike(n, m, RHO, float_type) * azimuthal_zernike(m, PHI)
     return aberration
 

@@ -149,7 +149,7 @@ class TestAutoconvolutionSIM3D(unittest.TestCase):
         self.optical_system.compute_psf_and_otf((psf_size, N))
 
     def test_apodization_sim(self):
-        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 1, Mt=1)
+        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 3, 0, 1, Mt=1)
         apodization = AutoconvolutionApodizationSIM3D(self.optical_system, conventional)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf[:, :, self.N//2].real, cmap='gray')

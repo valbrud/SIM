@@ -407,7 +407,7 @@ class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
         if not isinstance(illumination, IlluminationPlaneWaves2D):
             raise TypeError("illumination must be an instance of IlluminationPlaneWaves2D")
         
-        if not isinstance(optical_system, OpticalSystem2D):
+        if not optical_system is None and not isinstance(optical_system, OpticalSystem2D):
             raise TypeError("optical_system must be an instance of OpticalSystem2D")
         
         super().__init__(illumination=illumination,
@@ -433,7 +433,7 @@ class ReconstructorFourierDomain3D(ReconstructorFourierDomain):
         if not isinstance(illumination, IlluminationPlaneWaves3D):
             raise TypeError("illumination must be an instance of IlluminationPlaneWaves3D")
         
-        if not isinstance(optical_system, OpticalSystem3D):
+        if not optical_system is None and not isinstance(optical_system, OpticalSystem3D):
             raise TypeError("optical_system must be an instance of OpticalSystem3D")
         
         super().__init__(illumination=illumination,
@@ -459,7 +459,7 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
         if not isinstance(illumination, IlluminationPlaneWaves3D):
             raise TypeError("illumination must be an instance of IlluminationPlaneWaves3D")
         
-        if not isinstance(optical_system, OpticalSystem3D):
+        if not optical_system is None and not isinstance(optical_system, OpticalSystem3D):
             raise TypeError("optical_system must be an instance of OpticalSystem3D")
         
         super().__init__(illumination=illumination,
@@ -486,7 +486,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
             else:
                 illumination = IlluminationPlaneWaves2D.init_from_3D(illumination)
         
-        if not isinstance(optical_system, OpticalSystem2D):
+        if not optical_system is None and not isinstance(optical_system, OpticalSystem2D):
             if not isinstance(optical_system, OpticalSystem3D):
                 raise TypeError("optical_system must be an instance of OpticalSystem2D")
             else: 

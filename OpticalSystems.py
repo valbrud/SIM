@@ -24,7 +24,7 @@ from VectorOperations import VectorOperations
 from Dimensions import DimensionMetaAbstract
 
 import pupil_functions
-import psf_models
+import psf_models_fast
 
 class OpticalSystem(metaclass=DimensionMetaAbstract):
     """
@@ -231,7 +231,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             self._psf /= np.sum(self.psf)
             self._otf /= np.max(np.abs(self.otf))
 
-    def _get_pupil_function(self, Nrho: int, Nphi: int, pupil_element, pupil_function, zernieke={}) -> ndarray[tuple[int, int], np.complex128]:
+    def _get_pupil_function(self, RHO, PHI, pupil_element, pupil_function, zernieke={}) -> ndarray[tuple[int, int], np.complex128]:
         
         if pupil_element and pupil_function is not None:
                 raise AttributeError("In the case of a custom pupil_function, pupil element is not accepted!")
@@ -240,20 +240,19 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             pupil_function = self._get_pupil_function_of_an_element(pupil_element)
             
         if pupil_function is not None:
-            if not pupil_function.shape == (Nrho, Nphi):
+            if not pupil_function.shape == (RHO.shape[0], PHI.shape[1]):
                 raise AttributeError("Dimensions of the pupil_function don't match integration dimensions! ")
 
         if zernieke:
-            aberration_phase = pupil_functions.compute_pupil_plane_aberrations(
-                zernieke_polynomials=zernieke, 
-                Nrho=Nrho, 
-                Nphi=Nphi, 
+            aberration_phase = pupil_functions.zernike_cartisian(
+                zernieke, RHO, PHI
             )
+
             aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
             if not pupil_function is None:
-                if pupil_function.shape == (Nrho):
+                if pupil_function.shape == (RHO.shape[0],):
                     pupil_function[:, None] *= aberration_function
-                elif pupil_function.shape == (Nrho, Nphi):
+                elif pupil_function.shape == (RHO.shape[0], PHI.shape[1]):
                     pupil_function *= aberration_function
             else:
                 pupil_function = aberration_function
@@ -270,14 +269,15 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         Returns:
             np.ndarray: Pupil function of the element.
         """
-        if not pupil_element: 
-            return None
+        raise AttributeError("Due to the refactoring of the outdated computational pipeline, getting pupil functions of known elements is temporarily not available.")
+        # if not pupil_element: 
+        #     return None
         
-        if not pupil_element in OpticalSystem.known_pupil_elements:
-            raise AttributeError("Pupil element ", pupil_element, " is not known to the OpticalSystem class. Compute" \
-            " pupil function manually instead or add the element to the known_pupil_elements.")
+        # if not pupil_element in OpticalSystem.known_pupil_elements:
+        #     raise AttributeError("Pupil element ", pupil_element, " is not known to the OpticalSystem class. Compute" \
+        #     " pupil function manually instead or add the element to the known_pupil_elements.")
 
-        return OpticalSystem.known_pupil_elements[pupil_element](Nrho, Nphi)
+        # return OpticalSystem.known_pupil_elements[pupil_element](Nrho, Nphi)
     
     @abstractmethod
     def get_uniform_pupil(self):
@@ -457,8 +457,7 @@ class System4f2DCoherent(OpticalSystem2D):
                             pupil_element="",
                             pupil_function=None, 
                             zernieke={}, 
-                            Nrho = 129, 
-                            Nphi = 129)\
+                            Nrho = 129)\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -469,16 +468,20 @@ class System4f2DCoherent(OpticalSystem2D):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
-        pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
+        rho = np.linspace(-1, 1, Nrho)
+        X, Y = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
 
-        psf = psf_models.compute_2d_psf_coherent(
-            grid=self.computational_grid, 
+        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+
+        psf = psf_models_fast.compute_2d_psf_coherent(
+            psf_coordinates=self.psf_coordinates, 
             NA=self.NA, 
+            RHO=RHO, 
+            PHI=PHI,
             nmedium=self.nm, 
             pupil_function=pupil_function, 
-            high_NA=self.high_NA, 
-            Nrho=Nrho, 
-            Nphi=Nphi, 
+            high_NA=self.high_NA,
         )
 
         if self.computed_size:
@@ -528,16 +531,14 @@ class System4f3DCoherent(OpticalSystem3D):
 
         pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
 
-        psf = psf_models.compute_3d_psf_coherent(
-            grid2d=grid2d, 
+        psf = psf_models_fast.compute_3d_psf_coherent(
+            psf_grid=self.psf_coordinates, 
             NA=self.NA,
             z_values=z_values, 
             nsample=self.ns, 
             nmedium=self.nm, 
             pupil_function=pupil_function, 
             high_NA=self.high_NA, 
-            Nrho=Nrho, 
-            Nphi=Nphi, 
         )
 
         self.psf = psf 
@@ -572,7 +573,6 @@ class System4f2D(System4f2DCoherent):
                             pupil_function=None, 
                             zernieke={}, 
                             Nrho = 129, 
-                            Nphi = 129, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -584,21 +584,24 @@ class System4f2D(System4f2DCoherent):
             self.compute_psf_and_otf_coordinates(psf_size, N)
         
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke, Nrho, Nphi)
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke, Nrho)
             psf = np.abs(csf) ** 2
 
         else:
-            pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
+            rho = np.linspace(-1, 1, Nrho)
+            X, Y = np.meshgrid(rho, rho, indexing='ij')
+            RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+
+            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
             
-            psf = psf_models.compute_2d_incoherent_vectorial_psf_free_dipole(
-                grid=self.computational_grid,
+            psf = psf_models_fast.compute_2d_incoherent_vectorial_psf_free_dipole(
+                psf_coordinates=self.psf_coordinates,
                 NA=self.NA,
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
                 high_NA=self.high_NA, 
-                Nrho=Nrho, 
-                Nphi=Nphi, 
-            )
+                RHO=RHO,
+                PHI=PHI,)
 
             if self.computed_size:
                 psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
@@ -655,7 +658,7 @@ class System4f3D(System4f3DCoherent):
 
             pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
 
-            psf = psf_models.compute_3d_incoherent_vectorial_psf_free_dipole(
+            psf = psf_models_fast.compute_3d_incoherent_vectorial_psf_free_dipole(
                 grid2d=grid2d, 
                 NA=self.NA,
                 z_values=z_values, 
@@ -704,8 +707,6 @@ class PointScanningImagingSystem(OpticalSystem):
         
         self.optical_system_excitation = optical_system_excitation
         self.optical_system_detection = optical_system_detection
-
-
 
 class Confocal(PointScanningImagingSystem):
     """

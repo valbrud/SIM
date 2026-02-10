@@ -6,7 +6,7 @@ project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
 
-from config.BFPConfigurations import *
+from config.BFPConfiguration import *
 import unittest
 from ShapesGenerator import generate_random_spherical_particles, generate_sphere_slices
 import matplotlib.pyplot as plt

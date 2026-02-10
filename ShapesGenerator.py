@@ -18,8 +18,17 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
+def _parse_point_number(point_number, dim: int) -> tuple[int, ...]:
+    if isinstance(point_number, int):
+        return (point_number,) * dim
+    shape = tuple(point_number)
+    if len(shape) != dim:
+        raise ValueError("`point_number` dimensionality does not match `image_size`.")
+    return shape
+
+
 def generate_random_spherical_particles(image_size: tuple[int, int, int],
-                                        point_number: int,
+                                        point_number: int | tuple[int, ...],
                                         radius: float = 0.1,
                                         num_particles: int = 10,
                                         intensity: int = 1000,
@@ -34,8 +43,9 @@ def generate_random_spherical_particles(image_size: tuple[int, int, int],
     ----------
     image_size : tuple[int, int, int]
         Physical size of the 3D volume in each dimension (sx, sy, sz).
-    point_number : int
+    point_number : int or (Nx, Ny[, Nz])
         Number of grid points along each dimension for discretization.
+        • If a single int is given it is used for *every* dimension.
     r : float, optional
         Radius of each sphere. Default is 0.1.
     N : int, optional
@@ -52,47 +62,32 @@ def generate_random_spherical_particles(image_size: tuple[int, int, int],
     if generate_default:
         np.random.seed(1234)
 
-    if image_size.size not in (2, 3):
+    dim = len(image_size)
+    if dim not in (2, 3):
         raise ValueError("Invalid dimensionality. Choose either 2 or 3.")
 
-    if image_size.size == 2:
-        indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                    indexing='ij'), axis=-1)
-        grid = (indices / point_number - 1 / 2)
-        shape = grid.shape[:2]
-        array = np.zeros(shape)
-        grid *= image_size[None, None, :]
-        sx, sy = image_size
-        cx = np.random.rand(num_particles) * sx - sx // 2
-        cy = np.random.rand(num_particles) * sy - sy // 2
-        centers = np.column_stack((cx, cy))
+    shape = _parse_point_number(point_number, dim)
+    axes = [np.arange(n) for n in shape]
+    indices = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1)  # (..., dim)
 
-        for i in range(num_particles):
-            dist2 = np.sum((grid - centers[None, None, i]) ** 2, axis=2)
-            array[dist2 < radius ** 2] += intensity
-        return array
+    grid = (indices / np.asarray(shape) - 1 / 2)
+    array = np.zeros(shape, dtype=np.float32)
+    grid = grid * np.asarray(image_size)
 
-    if image_size.size == 3:
-        indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                    np.arange(point_number), indexing='ij'), axis=-1)
-        grid = (indices / point_number - 1 / 2)
-        shape = grid.shape[:3]
-        array = np.zeros(shape)
-        grid *= image_size[None, None, None, :]
-        sx, sy, sz = image_size
-        cx = np.random.rand(num_particles) * sx - sx // 2
-        cy = np.random.rand(num_particles) * sy - sy // 2
-        cz = np.random.rand(num_particles) * sz - sz // 2
-        centers = np.column_stack((cx, cy, cz))
+    centers = np.column_stack([
+        np.random.rand(num_particles) * float(image_size[d]) - float(image_size[d]) / 2
+        for d in range(dim)
+    ])
 
-        for i in range(num_particles):
-            dist2 = np.sum((grid - centers[None, None, None, i]) ** 2, axis=3)
-            array[dist2 < radius ** 2] += intensity
-        return array
+    for i in range(num_particles):
+        dist2 = np.sum((grid - centers[(None,) * dim + (i,)]) ** 2, axis=dim)
+        array[dist2 < radius ** 2] += intensity
+
+    return array
 
 
 def generate_sphere_slices(image_size: tuple[int, int, int],
-                           point_number: int,
+                           point_number: int | tuple[int, int, int],
                            r: float = 0.1,
                            N: int = 10,
                            I: int = 1000,
@@ -108,8 +103,9 @@ def generate_sphere_slices(image_size: tuple[int, int, int],
     ----------
     image_size : tuple[int, int, int]
         Physical size of the 3D volume in each dimension (sx, sy, sz).
-    point_number : int
+    point_number : int or (Nx, Ny[, Nz])
         Number of grid points along each dimension for discretization.
+        • If a single int is given it is used for *every* dimension.
     r : float, optional
         Radius of each sphere. Default is 0.1.
     N : int, optional
@@ -125,22 +121,29 @@ def generate_sphere_slices(image_size: tuple[int, int, int],
     """
     if generate_default:
         np.random.seed(1234)
-    indices = np.stack(np.meshgrid(np.arange(point_number), np.arange(point_number),
-                                   np.arange(point_number), indexing='ij'), axis=-1)
-    grid = (indices / point_number - 1 / 2)
-    shape = grid.shape[:3]
-    array = np.zeros(shape)
-    grid *= image_size[None, None, None, :]
-    sx, sy, sz = image_size
-    cx = np.random.rand(N) * sx - sx // 2
-    cy = np.random.rand(N) * sy - sy // 2
-    # cz = (np.random.rand(N) * sz - sz//2)/sz * r
-    cz = np.zeros(N)
+
+    dim = len(image_size)
+    if dim != 3:
+        raise ValueError("`generate_sphere_slices` expects a 3-D `image_size`.")
+
+    shape = _parse_point_number(point_number, dim)
+    axes = [np.arange(n) for n in shape]
+    indices = np.stack(np.meshgrid(*axes, indexing="ij"), axis=-1)
+
+    grid = (indices / np.asarray(shape) - 1 / 2)
+    array = np.zeros(shape, dtype=np.float32)
+    grid = grid * np.asarray(image_size)
+
+    sx, sy, sz = map(float, image_size)
+    cx = np.random.rand(N) * sx - sx / 2
+    cy = np.random.rand(N) * sy - sy / 2
+    cz = np.zeros(N, dtype=np.float32)
     centers = np.column_stack((cx, cy, cz))
 
     for i in range(N):
         dist2 = np.sum((grid - centers[None, None, None, i]) ** 2, axis=3)
         array[dist2 < r ** 2] += I
+
     return array
 
 
@@ -165,21 +168,15 @@ def generate_random_lines(
     ----------
     image_size : (Dx, Dy) or (Dx, Dy, Dz)
         Physical size of the PSF support along each axis.
-    point_number : int or (Ny, Nx) or (Nz, Ny, Nx)
+    point_number : int or (Nx, Ny) or (Nx, Ny, Nz)
         Number of pixels/voxels along each axis of the output grid.
         • If a single int is given it is used for *every* dimension.
-    line_width : float or (σx, σy[, σz])
-        Standard deviation (in pixels) of the Gaussian blur that widens the
-        infinitely thin lines.  A scalar is replicated to all axes.
-    num_lines : int
-        How many line segments to draw.
-    intensity : float
-        Total integrated intensity of *each* line segment.
+
     Returns
     -------
     img : ndarray
-        • shape (Ny, Nx)               if `image_size` has length 2  
-        • shape (Nz, Ny, Nx)           if `image_size` has length 3
+        • shape (Nx, Ny)               if `image_size` has length 2  
+        • shape (Nx, Ny, Nz)           if `image_size` has length 3
     """
     if generate_default:
         np.random.seed(1234)
@@ -188,14 +185,7 @@ def generate_random_lines(
     if dim not in (2, 3):
         raise ValueError("Only 2-D and 3-D images are supported.")
 
-    # ------------- grid shape & spacing -------------------------------------
-    if isinstance(point_number, int):
-        shape = (point_number,) * dim
-    else:
-        if len(point_number) != dim:
-            raise ValueError("`point_number` dimensionality "
-                             "does not match `image_size`.")
-        shape = tuple(point_number)
+    shape = _parse_point_number(point_number, dim)
 
     spacings = tuple(s / n for s, n in zip(image_size, shape))   # dx, dy[, dz]
     sigmas = (line_width,) * dim if np.isscalar(line_width) else tuple(line_width)

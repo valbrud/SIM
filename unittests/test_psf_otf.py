@@ -1,18 +1,22 @@
 import os
 import sys
+# Add project paths
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(project_root)
+
+
 import numpy as np
+import utils
 import matplotlib.pyplot as plt
 import unittest
 import time
 from psf_models import *
-from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations
+import psf_models_fast
+from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations, zernike_cartisian, setup_rho_legendre
 import hpc_utils
 import pupil_functions
-from psf_models_fast import compute_3d_otf_fast
-# Add project paths
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..'))
-sys.path.append(project_root)
 
 alpha = 2 * np.pi / 5
 n = 1
@@ -102,7 +106,7 @@ class TestPSFOTF2D(unittest.TestCase):
         # --- TIME MARKER START ---
         t_start = time.time()
         E = compute_2d_psf_coherent(
-            x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nu=129, device='cpu'
+            x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nrho=129, device='cpu'
         )
         t_end = time.time()
         print(f"test_cpu_basic: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -123,7 +127,7 @@ class TestPSFOTF2D(unittest.TestCase):
         # --- TIME MARKER START ---
         t_start = time.time()
         E = compute_2d_psf_coherent(
-            x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nu=129, device='gpu'
+            x_grid2d, NA=n * np.sin(alpha), pupil_function=None, Nphi=256, Nrho=129, device='gpu'
         )
         t_end = time.time()
         print(f"test_gpu_basic: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -152,14 +156,14 @@ class TestPSFOTF2D(unittest.TestCase):
         # --- TIME MARKER START ---
         t_start = time.time()
         E = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nrho=Nrho, device='gpu'
         )
         t_end = time.time()
         print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
 
         t_start = time.time()
         E = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nrho=Nrho, device='gpu'
         )
         t_end = time.time()
         print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -167,7 +171,7 @@ class TestPSFOTF2D(unittest.TestCase):
         
         t_start = time.time()
         E = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nu=Nrho, device='gpu'
+            x_grid2d, NA, pupil_function=P_vortex, Nphi=Nphi, Nrho=Nrho, device='gpu'
         )
         t_end = time.time()
         print(f"test_nontrivial_pupil_vortex_like: compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -180,6 +184,82 @@ class TestPSFOTF2D(unittest.TestCase):
         I, OTF = compute_incoherent_psf_and_otf(E)
         plot_psf_otf_plot(I, OTF, "CPU, vortex-like pupil (radial proxy)")
 
+    def test_integration_vs_chirp_z_transform(self):
+        Nrho=201
+        Nphi=201
+
+        rho = np.linspace(-1, 1, Nrho)
+
+        X, Y = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+
+        zernike_coeff = {
+        }
+        aberration_phase = compute_pupil_plane_aberrations(zernike_coeff, Nrho, Nphi)
+        aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
+        cylindrical_ra = np.mean(aberration_phase, axis=1)
+        r = setup_rho_legendre(Nrho, float_type=np.float32)
+
+        aberration_phase_cartesian = zernike_cartisian(zernike_coeff, RHO, PHI)
+        aberration_function_cartesian = np.exp(1j * 2 * np.pi * aberration_phase_cartesian)
+        cartisian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
+        # plt.plot(r, cylindrical_ra, label="Cylindrical average")
+        # plt.plot(rho[Nrho//2:], cartisian_ra, label="Cartesian average")
+        # plt.legend()
+        # plt.show()
+
+        # --- TIME MARKER START ---
+        t_start = time.time()
+        E_integral = compute_2d_psf_coherent(
+            x_grid2d, NA, pupil_function=aberration_function, Nphi=Nphi, Nrho=Nrho, device='gpu'
+        )
+        t_end = time.time()
+        I_integral, OTF_integral = compute_incoherent_psf_and_otf(E_integral)
+        print(f"test_integration_vs_chirp_z_transform: compute_2d_psf_coherent (integral) took {t_end - t_start:.4f} seconds")
+        
+        t_start = time.time()
+        E_chirp_z = psf_models_fast.compute_2d_psf_coherent((x, y), NA, pupil_function=aberration_function_cartesian, device='gpu')
+        I_chirp_z, OTF_chirp_z = compute_incoherent_psf_and_otf(E_chirp_z)
+        t_end = time.time()
+        print(f"test_integration_vs_chirp_z_transform: compute_2d_psf_coherent (chirp-z) took {t_end - t_start:.4f} seconds")
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        axes[0, 0].imshow(I_integral, origin='lower')
+        axes[0, 0].set_title("PSF (integral)")
+        axes[0, 1].imshow(I_chirp_z, origin='lower')
+        axes[0, 1].set_title("PSF (chirp-z)")
+        axes[1, 0].imshow(OTF_integral, origin='lower')
+        axes[1, 0].set_title("OTF (integral)")
+        axes[1, 1].imshow(OTF_chirp_z, origin='lower')
+        axes[1, 1].set_title("OTF (chirp-z)")
+        plt.tight_layout()
+        plt.show()
+
+        plt.plot(x[Nl//2:], I_integral[Nl//2, Nl//2:], label="PSF cut (integral)")
+        plt.plot(x[Nl//2:], I_chirp_z[Nl//2, Nl//2:], label="PSF cut (chirp-z)")
+        plt.legend()
+        plt.title("PSF x cut (y=0)")
+        plt.show()
+
+        fc=2
+        OTF_ideal = (2/np.pi) * (np.arccos(fx/fc) - (fx/fc) * np.sqrt(1 - (fx/fc) **2))
+
+        plt.plot(fx[Nl//2:], OTF_ideal[Nl//2:], label="OTF cut (ideal)")
+        plt.plot(fx[Nl//2:], utils.average_rings2d(OTF_integral, (fx, fx)), label="OTF cut (integral)")
+        plt.plot(fx[Nl//2:], utils.average_rings2d(OTF_chirp_z, (fx, fx)), label="OTF cut (chirp-z)")
+        plt.legend()
+        plt.title("OTF x cut (y=0)")
+        plt.show()
+
+        # fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        # im1 = axes[0].imshow(OTF_chirp_z - OTF_integral, origin='lower', vmin=-1, vmax=1)
+        # axes[0].set_title("OTF difference (chirp-z - integral)")
+        # im2 = axes[1].imshow(np.abs(OTF_chirp_z - OTF_integral)/OTF_chirp_z, origin='lower', vmin=0, vmax=1)
+        # axes[1].set_title("Relative OTF difference")
+        # plt.colorbar(im1, ax=axes[0], fraction=0.046, pad=0.04)
+        # plt.colorbar(im2, ax=axes[1], fraction=0.046, pad=0.04)
+        # plt.tight_layout()
+        # plt.show()
+        
     def test_low_vs_high_quadrature(self):
         """CPU: compare low vs high integration settings (robustness + plots)."""
 
@@ -187,7 +267,7 @@ class TestPSFOTF2D(unittest.TestCase):
         # --- TIME MARKER START ---
         t_start = time.time()
         E_low = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=None, Nphi=64, Nu=33, device='gpu'
+            x_grid2d, NA, pupil_function=None, Nphi=64, Nrho=33, device='gpu'
         )
         t_end = time.time()
         print(f"test_low_vs_high_quadrature (low): compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -197,7 +277,7 @@ class TestPSFOTF2D(unittest.TestCase):
         # --- TIME MARKER START ---
         t_start = time.time()
         E_high = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=None, Nphi=129, Nu=129, device='gpu'
+            x_grid2d, NA, pupil_function=None, Nphi=129, Nrho=129, device='gpu'
         )
         t_end = time.time()
         print(f"test_low_vs_high_quadrature (high): compute_2d_psf_coherent took {t_end - t_start:.4f} seconds")
@@ -216,8 +296,8 @@ class TestPSFOTF2D(unittest.TestCase):
         I_low, OTF_low = compute_incoherent_psf_and_otf(E_low)
         I_high, OTF_high = compute_incoherent_psf_and_otf(E_high)
 
-        plot_psf_otf_plot(I_low, OTF_low, "CPU, low quadrature (Nphi=64, Nu=33)")
-        plot_psf_otf_plot(I_high, OTF_high, "CPU, high quadrature (Nphi=256, Nu=129)")
+        plot_psf_otf_plot(I_low, OTF_low, "CPU, low quadrature (Nphi=64, Nrho=33)")
+        plot_psf_otf_plot(I_high, OTF_high, "CPU, high quadrature (Nphi=256, Nrho=129)")
 
     def test_vectorial_vs_scalar(self):
         """Test scalar vs vectorial."""
@@ -229,7 +309,7 @@ class TestPSFOTF2D(unittest.TestCase):
             high_NA=True,
             pupil_function=None,
             Nphi=101,
-            Nu=101,
+            Nrho=101,
             device='gpu', 
             safety=0.9
         )
@@ -246,7 +326,7 @@ class TestPSFOTF2D(unittest.TestCase):
             high_NA=True,
             pupil_function=None,
             Nphi=101,
-            Nu=101,
+            Nrho=101,
             device='gpu', 
             safety=0.9
         )
@@ -272,12 +352,12 @@ class TestPSFOTF2D(unittest.TestCase):
 
         plt.show()
 
-    def test_vectorial_zernieke(self):
+    def test_vectorial_zernike(self):
         """Test high NA vs low NA."""
-        zernieke = {
+        zernike = {
             (2, -2): 0.072,  # Astigmatism Oblique
         }
-        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernieke, Nrho=129, Nphi=256)
+        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernike, Nrho=129, Nphi=256)
         aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
 
         t_start = time.time()
@@ -331,7 +411,7 @@ class TestPSFOTF3D(unittest.TestCase):
             high_NA=False,
             pupil_function=None,
             Nphi=201,
-            Nu=101,
+            Nrho=101,
             device='gpu'
         )
 
@@ -360,6 +440,72 @@ class TestPSFOTF3D(unittest.TestCase):
 
         plt.show()
 
+    def test_integration_vs_chirp_z_transform(self):
+        Nrho=201
+        Nphi=201
+
+        rho = np.linspace(-1, 1, Nrho)
+
+        X, Y = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+
+        zernike_coeff = {
+        }
+        aberration_phase = compute_pupil_plane_aberrations(zernike_coeff, Nrho, Nphi)
+        aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
+        cylindrical_ra = np.mean(aberration_phase, axis=1)
+        r = setup_rho_legendre(Nrho, float_type=np.float32)
+
+        aberration_phase_cartesian = zernike_cartisian(zernike_coeff, RHO, PHI)
+        aberration_function_cartesian = np.exp(1j * 2 * np.pi * aberration_phase_cartesian)
+        cartisian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
+        # plt.plot(r, cylindrical_ra, label="Cylindrical average")
+        # plt.plot(rho[Nrho//2:], cartisian_ra, label="Cartesian average")
+        # plt.legend()
+        # plt.show()
+
+        # --- TIME MARKER START ---
+        t_start = time.time()
+        E_integral = compute_3d_psf_coherent(
+            x_grid2d, NA, z, pupil_function=aberration_function, Nphi=Nphi, Nrho=Nrho, device='gpu'
+        )
+        t_end = time.time()
+        I_integral, OTF_integral = compute_incoherent_psf_and_otf(E_integral)
+        print(f"test_integration_vs_chirp_z_transform: compute_3d_psf_coherent (integral) took {t_end - t_start:.4f} seconds")
+        
+        t_start = time.time()
+        E_chirp_z = psf_models_fast.compute_3d_psf_coherent((x, y), NA, z, pupil_function=aberration_function_cartesian, device='gpu')
+        I_chirp_z, OTF_chirp_z = compute_incoherent_psf_and_otf(E_chirp_z)
+        t_end = time.time()
+        print(f"test_integration_vs_chirp_z_transform: compute_3d_psf_coherent (chirp-z) took {t_end - t_start:.4f} seconds")
+        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+        axes[0, 0].imshow(I_integral[Nl//2, :, :], origin='lower')
+        axes[0, 0].set_title("PSF (integral)")
+        axes[0, 1].imshow(I_chirp_z[Nl//2, :, :], origin='lower')
+        axes[0, 1].set_title("PSF (chirp-z)")
+        axes[1, 0].imshow(OTF_integral[Nl//2, :, :], origin='lower')
+        axes[1, 0].set_title("OTF (integral)")
+        axes[1, 1].imshow(OTF_chirp_z[Nl//2, :, :], origin='lower')
+        axes[1, 1].set_title("OTF (chirp-z)")
+        plt.tight_layout()
+        plt.show()
+
+        plt.plot(x[Nl//2:], I_integral[Nl//2, :, Nz//2], label="PSF cut (integral)")
+        plt.plot(x[Nl//2:], I_chirp_z[Nl//2, :, Nz//2], label="PSF cut (chirp-z)")
+        plt.legend()
+        plt.title("PSF x cut (y=0)")
+        plt.show()
+
+        # fc=2
+        # OTF_ideal = (2/np.pi) * (np.arccos(fx/fc) - (fx/fc) * np.sqrt(1 - (fx/fc) **2))
+
+        # plt.plot(fx[Nl//2:], OTF_ideal[Nl//2:], label="OTF cut (ideal)")
+        # plt.plot(fx[Nl//2:], utils.average_rings2d(OTF_integral, (fx, fx)), label="OTF cut (integral)")
+        # plt.plot(fx[Nl//2:], utils.average_rings2d(OTF_chirp_z, (fx, fx)), label="OTF cut (chirp-z)")
+        # plt.legend()
+        # plt.title("OTF x cut (y=0)")
+        # plt.show()
+
     def test_vectorial_vs_scalar(self):
         """Test high NA vs low NA."""
         t_start = time.time()
@@ -372,7 +518,7 @@ class TestPSFOTF3D(unittest.TestCase):
             high_NA=True,
             pupil_function=None,
             Nphi=101,
-            Nu=101,
+            Nrho=101,
             device='gpu', 
             safety=0.9
         )
@@ -391,7 +537,7 @@ class TestPSFOTF3D(unittest.TestCase):
             high_NA=True,
             pupil_function=None,
             Nphi=101,
-            Nu=101,
+            Nrho=101,
             device='gpu', 
             safety=0.9
         )
@@ -426,14 +572,14 @@ class TestPSFOTF3D(unittest.TestCase):
 class TestFastOTF3D(unittest.TestCase):
     def test_fast_otf(self):
         """Test high NA vs low NA."""
-        zernieke = {
+        zernike = {
             (2, -2): 0.072,  # Astigmatism Oblique
         }
-        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernieke, Nrho=129, Nphi=256)
+        aberration_phase = pupil_functions.compute_pupil_plane_aberrations(zernike, Nrho=129, Nphi=256)
         aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
     
         t_start = time.time()
-        OTF_fast = compute_3d_otf_fast(
+        OTF_fast = compute_3d_psf_coherent(
             q_grid=q_grid3d,
             NA=n * np.sin(alpha),
             z_values=z,
@@ -448,7 +594,7 @@ class TestFastOTF3D(unittest.TestCase):
             minimum_grid_point_number=512,
         )
         t_end = time.time()
-        print(f"fast OTF route: compute_3d_otf_fast took {t_end - t_start:.4f} s")
+        print(f"fast OTF route: compute_3d_psf_coherent took {t_end - t_start:.4f} s")
 
         # Reconstruct PSF from fast OTF for a rough comparison
         I_fast = np.fft.ifftn(OTF_fast).real

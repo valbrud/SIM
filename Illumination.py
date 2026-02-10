@@ -357,11 +357,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
          """
         amplitudes = []
         indices = []
+        amplitudes = [self.harmonics[index].amplitude for index in self.harmonics.keys()]
+        indices = [index for index in self.harmonics.keys()]
 
-        for r in range(self.Mr):
-            amplitudes_r, indices_r = self.get_amplitudes(r)
-            amplitudes.extend(amplitudes_r)
-            indices.extend(indices_r)
         return np.array(amplitudes), tuple(indices)
 
     def get_wavevectors(self, r: int) -> tuple[list[np.ndarray], list[tuple[int, ...]]]:
@@ -387,10 +385,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         """
         wavevectors = []
         indices = []
-        for r in range(self.Mr):
-            wavevectors_r, indices_r = self.get_wavevectors(r)
-            wavevectors.extend(wavevectors_r)
-            indices.extend(indices_r)
+        wavevectors = [self.harmonics[index].wavevector for index in self.harmonics.keys()]
+        indices = [index for index in self.harmonics.keys()]
         return np.array(wavevectors), tuple(indices)
 
     def get_wavevectors_projected(self, r: int) -> tuple[list[np.ndarray], list[tuple[int, ...]]]:
@@ -550,12 +546,37 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 for wavevector, index in zip(wavevectors, indices):
                     self.phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn, wavevector))
 
+    def equalize_amplitudes(self):
+        for key in self.harmonics.keys():
+            self.harmonics[key].amplitude = 1
+
+    def scale_modulation_coefficients_with_otf(self, psf, grid):
+        """
+        Computes how known modualtion coefficients are scaled by the OTF of the system. 
+
+        Args:
+            grid (np.ndarray): Grid of coordinates.
+            update (bool): If True, update the coefficients of the illumination harmonics.
+
+        Returns:
+            np.ndarray: Scaled modulation coefficients.
+        """
+        
+        am_scaled = {}
+        for harmonic in self.harmonics.keys():
+            am = self.harmonics[harmonic].amplitude
+            wavevector = self.harmonics[harmonic].wavevector
+            otf = off_grid_ft(psf, grid, wavevector / (2 * np.pi))
+            am_scaled[harmonic] = am * otf
+
+        return am_scaled
+    
     def estimate_modulation_coefficients(self, stack, psf, grid, update=False, method='least_squares'): 
         """
         Estimate the modulation coefficients from a given image.
 
         Args:
-            image (np.ndarray): Image.
+            stack (np.ndarray): SIM image stack.
             grid (np.ndarray): Grid of coordinates.
             update (bool): If True, update the coefficients of the illumination harmonics.
 
@@ -565,6 +586,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         
         flat_grid = grid.reshape(-1, self.dimensionality)
         am = {}
+
         for r in range(self.Mr):
             harmonics = {index[1]: harmonic for index, harmonic in self.harmonics.items() if index[0] == r}
             wavevectors = np.zeros((len(harmonics), self.dimensionality))

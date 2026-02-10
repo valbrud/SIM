@@ -1,34 +1,32 @@
 import numpy as np
 import hpc_utils
 
-
 # -----------------------------------------------------------------------------
 # Minimal pupil-grid helpers
 # -----------------------------------------------------------------------------
-def _make_xy_pupil_grid(N, xp):
+def _make_xy_pupil_grid(N, xp, float_type):
     """
-    Assumption: x[0]=-1, x[N//2]=0, x[N-1]=1 (same for y).
+    Assumption: pupil coordinates span [-1,1] in each axis, inclusive endpoints.
     """
-    x = xp.linspace(-1.0, 1.0, int(N), dtype=xp.float32)
+    x = xp.linspace(-1.0, 1.0, int(N), dtype=float_type)
     X, Y = xp.meshgrid(x, x, indexing="ij")
     return X, Y
 
 
-def _ensure_rho_phi(N, RHO, PHI, xp):
+def _ensure_rho_phi(N, RHO, PHI, xp, float_type):
     """
     Returns RHO, PHI on the backend (numpy/cupy), shape (N,N).
     If None, compute from the assumed [-1,1] pupil grid.
     """
     if RHO is None or PHI is None:
-        X, Y = _make_xy_pupil_grid(N, xp)
+        X, Y = _make_xy_pupil_grid(N, xp, float_type)
         rho = xp.sqrt(X * X + Y * Y)
         phi = xp.arctan2(Y, X)
-        # map to [0, 2π)
         phi = xp.mod(phi, 2.0 * xp.pi)
         return rho, phi
 
-    rho = xp.asarray(RHO)
-    phi = xp.asarray(PHI)
+    rho = xp.asarray(RHO).astype(float_type, copy=False)
+    phi = xp.asarray(PHI).astype(float_type, copy=False)
     if rho.shape != (N, N) or phi.shape != (N, N):
         raise ValueError(f"RHO and PHI must have shape {(N, N)}; got {rho.shape} and {phi.shape}.")
     return rho, phi
@@ -36,7 +34,7 @@ def _ensure_rho_phi(N, RHO, PHI, xp):
 
 def _as_scalar_or_grid(val, N, xp, dtype):
     """
-    Accept scalar or (N,N). (Also tolerates (1,1) etc via asarray broadcasting rules.)
+    Accept scalar or (N,N).
     """
     if val is None:
         return xp.ones((N, N), dtype=dtype)
@@ -48,9 +46,46 @@ def _as_scalar_or_grid(val, N, xp, dtype):
         return a.astype(dtype, copy=False)
     raise ValueError(f"Expected scalar or (N,N) array; got shape {a.shape}.")
 
-import numpy as np
-import hpc_utils
 
+def _ensure_psf_coords(psf_coordinates):
+    """
+    psf_coordinates must be a tuple/list of 1D arrays, length 2 for 2D PSFs:
+      (x_coords, y_coords)
+    They must be uniformly spaced for CZT.
+    """
+    if psf_coordinates is None:
+        raise ValueError("psf_coordinates must be provided as (x_coords, y_coords).")
+    if not isinstance(psf_coordinates, (tuple, list)) or len(psf_coordinates) != 2:
+        raise ValueError("psf_coordinates must be a tuple/list of two 1D arrays: (x_coords, y_coords).")
+    return psf_coordinates[0], psf_coordinates[1]
+
+
+def _pupil_coords_1d(N, xp, float_type):
+    """
+    1D pupil coordinate array u in [-1,1], used along each pupil axis.
+    """
+    return xp.linspace(-1.0, 1.0, int(N), dtype=float_type)
+
+
+def _coords_to_backend_1d(arr, xp, float_type):
+    a = xp.asarray(arr).astype(float_type, copy=False)
+    if a.ndim != 1:
+        raise ValueError("Coordinate arrays must be 1D.")
+    return a
+
+
+def _maybe_apply_2pi(q_coords, xp, float_type, use_2pi):
+    """
+    Our CZT kernel uses exp(-i q x). Many Fourier optics codes use exp(-i 2π f x).
+    To preserve your earlier sigma=2π... convention, default use_2pi=True.
+    """
+    q = _coords_to_backend_1d(q_coords, xp, float_type)
+    return (2.0 * xp.pi) * q if use_2pi else q
+
+
+# -----------------------------------------------------------------------------
+# Fresnel coefficients (unchanged output grid: pupil plane)
+# -----------------------------------------------------------------------------
 def get_fresnel_coefficients(
     ns,
     nm,
@@ -61,21 +96,11 @@ def get_fresnel_coefficients(
     device="auto",
     use_complex64=True,
 ):
-    """
-    Fresnel transmission coefficients (amplitude) for s and p polarization,
-    for an interface from medium nm (incident) -> sample ns (transmitted).
-
-    Returns
-    -------
-    ts, tp : np.ndarray
-        Real arrays of shape (N,N) on the pupil grid.
-    """
     hpc_utils.pick_backend(device)
     mode, xp = hpc_utils.get_backend()
     float_type = xp.float32 if use_complex64 else xp.float64
 
     if RHO is None or PHI is None:
-        # build rho/phi on assumed [-1,1] grid
         x = xp.linspace(-1.0, 1.0, int(N), dtype=float_type)
         X, Y = xp.meshgrid(x, x, indexing="ij")
         rho = xp.sqrt(X * X + Y * Y)
@@ -87,15 +112,11 @@ def get_fresnel_coefficients(
 
     inside = rho <= float_type(1.0)
 
-    # angle in incident medium (nm): sin(theta_m) = (NA/nm)*rho
     sin_t1 = (float_type(NA) / float_type(nm)) * rho
     sin_t1 = xp.clip(sin_t1, 0.0, 1.0)
-
     cos_t1 = xp.sqrt(xp.clip(1.0 - sin_t1 * sin_t1, 0.0, 1.0))
 
-    # Snell: nm*sin(t1) = ns*sin(t2)
     sin_t2 = (float_type(nm) / float_type(ns)) * sin_t1
-    # beyond critical angle -> evanescent; set transmission to 0 (pragmatic choice)
     propagating = sin_t2 <= float_type(1.0)
     sin_t2 = xp.clip(sin_t2, 0.0, 1.0)
     cos_t2 = xp.sqrt(xp.clip(1.0 - sin_t2 * sin_t2, 0.0, 1.0))
@@ -103,9 +124,6 @@ def get_fresnel_coefficients(
     n1 = float_type(nm)
     n2 = float_type(ns)
 
-    # amplitude transmission coefficients (field)
-    # ts = 2 n1 cos1 / (n1 cos1 + n2 cos2)
-    # tp = 2 n1 cos1 / (n2 cos1 + n1 cos2)
     denom_s = (n1 * cos_t1 + n2 * cos_t2)
     denom_p = (n2 * cos_t1 + n1 * cos_t2)
 
@@ -116,36 +134,36 @@ def get_fresnel_coefficients(
     ts = xp.where(mask, ts, float_type(0.0))
     tp = xp.where(mask, tp, float_type(0.0))
 
-    # return NumPy arrays
     ts_np = ts.get() if mode == "gpu" else np.asarray(ts)
     tp_np = tp.get() if mode == "gpu" else np.asarray(tp)
     return ts_np, tp_np
 
 
 # -----------------------------------------------------------------------------
-# Coherent PSF: now just an FFT of the Cartesian pupil
+# Coherent PSF: CZT-based FT of Cartesian pupil onto requested PSF coordinates
 # -----------------------------------------------------------------------------
 def compute_2d_psf_coherent(
+    psf_coordinates,
     NA,
     RHO=None,
     PHI=None,
     nmedium=1.0,
-    pupil_function=None,      # expected (N,N) complex (Cartesian pupil samples)
+    pupil_function=None,      # expected (..., N, N) complex (Cartesian pupil samples)
     high_NA=False,
     device="auto",
     use_complex64=True,
-
+    use_2pi=True,
 ):
     """
-    FFT-based coherent field from a Cartesian pupil.
+    CZT-based coherent field from a Cartesian pupil evaluated on the user grid.
 
-    Assumptions:
-      - pupil_function is sampled on an N×N Cartesian pupil grid spanning [-1,1]×[-1,1].
-      - outside the unit disk (rho>1) is ignored (forced to 0).
-      - output is the centered FFT (via hpc_utils.wrapped_fftn), returned as NumPy.
+    psf_coordinates: (x_coords, y_coords) 1D arrays specifying desired PSF-plane coordinates.
+    Convention: kernel exp(-i * (2π) * (u*x + v*y)) if use_2pi=True.
     """
     if pupil_function is None:
-        raise ValueError("FFT path requires pupil_function as an (N,N) array.")
+        raise ValueError("Requires pupil_function as an array (..., N, N).")
+
+    x_coords, y_coords = _ensure_psf_coords(psf_coordinates)
 
     hpc_utils.pick_backend(device)
     mode, xp = hpc_utils.get_backend()
@@ -154,53 +172,61 @@ def compute_2d_psf_coherent(
     float_type = xp.float32 if use_complex64 else xp.float64
 
     P = xp.asarray(pupil_function).astype(complex_type, copy=False)
-    if P.ndim != 2 or P.shape[0] != P.shape[1]:
-        raise ValueError(f"pupil_function must be a square (N,N) array; got {P.shape}.")
-    N = int(P.shape[0])
+    if P.ndim < 2 or P.shape[-1] != P.shape[-2]:
+        raise ValueError(f"pupil_function must end with (N,N); got {P.shape}.")
+    N = int(P.shape[-1])
 
-    rho, _phi = _ensure_rho_phi(N, RHO, PHI, xp)
+    rho, _phi = _ensure_rho_phi(N, RHO, PHI, xp, float_type)
     inside = rho <= float_type(1.0)
 
-    # High-NA apodization (same functional form you used, but on the Cartesian grid)
+    # High-NA apodization on Cartesian grid
     if high_NA:
         salpha = float_type(NA / nmedium)
-        # avoid negative due to numerical issues near edge
         arg = 1.0 - (rho * salpha) ** 2
         arg = xp.clip(arg, 0.0, 1.0)
-        A = (1.0 / (arg ** 0.25)).astype(float_type, copy=False)
-        P = P * A
+        A_apod = (1.0 / (arg ** 0.25)).astype(float_type, copy=False)
+        P = P * A_apod
 
     # enforce aperture
     P = xp.where(inside, P, complex_type(0.0))
 
-    # scale roughly like an integral over pupil plane
-    # if coordinates are linspace(-1,1,N), step is 2/(N-1)
-    du = float_type(2.0 / (N - 1))
-    dv = du
-    scale = (du * dv).astype(float_type, copy=False)
+    # Pupil coordinates (u,v) in [-1,1]
+    u = _pupil_coords_1d(N, xp, float_type)
+    v = u
 
-    E = scale * hpc_utils.wrapped_fftn(P, axes=(0, 1), norm=None)
-    # wrapped_fftn returns NumPy already
-    return np.asarray(E, dtype=(np.complex64 if use_complex64 else np.complex128))
+    # Requested PSF coordinates -> conjugate coordinates qx,qy
+    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
+    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+
+    # Compute 2D FT using separable CZT along last two axes
+    E = hpc_utils.czt_nd_fourier(P, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-4, atol=1e-4)
+
+    # Return NumPy
+    E_np = xp.asnumpy(E) if mode == "gpu" else np.asarray(E)
+    return E_np.astype(np.complex64 if use_complex64 else np.complex128, copy=False)
 
 
 # -----------------------------------------------------------------------------
-# Vectorial components: build 5 augmented pupils on Cartesian grid, FFT each
+# Vectorial components: build 5 augmented pupils on Cartesian grid, CZT each
 # -----------------------------------------------------------------------------
 def compute_2d_vectorial_components_free_dipole(
+    psf_coordinates,
     NA,
     RHO=None,
     PHI=None,
     nmedium=1.0,
-    pupil_function=None,     # expected (N,N) complex
+    pupil_function=None,     # expected (..., N, N) complex
     tp=1.0,                  # scalar or (N,N)
     ts=1.0,                  # scalar or (N,N)
     high_NA=True,
     device="auto",
     use_complex64=True,
+    use_2pi=True,
 ):
     if pupil_function is None:
-        raise ValueError("FFT path requires pupil_function as an (N,N) array.")
+        raise ValueError("Requires pupil_function as an array (..., N, N).")
+
+    x_coords, y_coords = _ensure_psf_coords(psf_coordinates)
 
     hpc_utils.pick_backend(device)
     mode, xp = hpc_utils.get_backend()
@@ -209,96 +235,101 @@ def compute_2d_vectorial_components_free_dipole(
     float_type = xp.float32 if use_complex64 else xp.float64
 
     P_base = xp.asarray(pupil_function).astype(complex_type, copy=False)
-    if P_base.ndim != 2 or P_base.shape[0] != P_base.shape[1]:
-        raise ValueError(f"pupil_function must be a square (N,N) array; got {P_base.shape}.")
-    N = int(P_base.shape[0])
+    if P_base.ndim < 2 or P_base.shape[-1] != P_base.shape[-2]:
+        raise ValueError(f"pupil_function must end with (N,N); got {P_base.shape}.")
+    N = int(P_base.shape[-1])
 
-    rho, phi = _ensure_rho_phi(N, RHO, PHI, xp)
+    rho, phi = _ensure_rho_phi(N, RHO, PHI, xp, float_type)
     inside = rho <= float_type(1.0)
 
-    # Fresnel factors
     tp_g = _as_scalar_or_grid(tp, N, xp, float_type)
     ts_g = _as_scalar_or_grid(ts, N, xp, float_type)
 
-    # Geometry
     salpha = float_type(NA / nmedium)
     sin_theta = xp.clip(salpha * rho, 0.0, 1.0).astype(float_type, copy=False)
     cos_theta = xp.sqrt(xp.clip(1.0 - sin_theta * sin_theta, 0.0, 1.0)).astype(float_type, copy=False)
 
-    # Radial weights
     F0 = (0.5 * (ts_g + tp_g * cos_theta)).astype(float_type, copy=False)
     F1 = ((tp_g / xp.sqrt(float_type(2.0))) * sin_theta).astype(float_type, copy=False)
     F2 = (0.5 * (ts_g - tp_g * cos_theta)).astype(float_type, copy=False)
 
-    # Angular harmonics
     c1 = xp.cos(phi).astype(float_type, copy=False)
     s1 = xp.sin(phi).astype(float_type, copy=False)
     c2 = xp.cos(2.0 * phi).astype(float_type, copy=False)
     s2 = xp.sin(2.0 * phi).astype(float_type, copy=False)
 
-    # Optional high-NA apodization applied to base pupil (common to all components)
     if high_NA:
         arg = 1.0 - (rho * salpha) ** 2
         arg = xp.clip(arg, 0.0, 1.0)
-        A = (1.0 / (arg ** 0.25)).astype(float_type, copy=False)
-        P0_base = P_base * A
+        A_apod = (1.0 / (arg ** 0.25)).astype(float_type, copy=False)
+        P0_base = P_base * A_apod
     else:
         P0_base = P_base
 
-    # enforce aperture
     P0_base = xp.where(inside, P0_base, complex_type(0.0))
 
-    # Build augmented pupils on Cartesian grid
     P0  = P0_base * F0
     P1c = P0_base * F1 * c1
     P1s = P0_base * F1 * s1
     P2c = P0_base * F2 * c2
     P2s = P0_base * F2 * s2
 
-    # FFT each (use the same scaling as coherent)
-    du = float_type(2.0 / (N - 1))
-    dv = du
-    scale = (du * dv).astype(float_type, copy=False)
+    # Pupil coords
+    u = _pupil_coords_1d(N, xp, float_type)
+    v = u
 
-    U0  = scale * hpc_utils.wrapped_fftn(P0,  axes=(0, 1), norm=None)
-    U1c = scale * hpc_utils.wrapped_fftn(P1c, axes=(0, 1), norm=None)
-    U1s = scale * hpc_utils.wrapped_fftn(P1s, axes=(0, 1), norm=None)
-    U2c = scale * hpc_utils.wrapped_fftn(P2c, axes=(0, 1), norm=None)
-    U2s = scale * hpc_utils.wrapped_fftn(P2s, axes=(0, 1), norm=None)
+    # Requested PSF coords -> q
+    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
+    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
 
-    # wrapped_fftn returns NumPy arrays
+    # CZT each component
+    U0  = hpc_utils.czt_nd_fourier(P0,  (u, v), (qx, qy), axes=(-2, -1))
+    U1c = hpc_utils.czt_nd_fourier(P1c, (u, v), (qx, qy), axes=(-2, -1))
+    U1s = hpc_utils.czt_nd_fourier(P1s, (u, v), (qx, qy), axes=(-2, -1))
+    U2c = hpc_utils.czt_nd_fourier(P2c, (u, v), (qx, qy), axes=(-2, -1))
+    U2s = hpc_utils.czt_nd_fourier(P2s, (u, v), (qx, qy), axes=(-2, -1))
+
     cplx = (np.complex64 if use_complex64 else np.complex128)
-    return (np.asarray(U0,  dtype=cplx),
+    if mode == "gpu":
+        return (xp.asnumpy(U0).astype(cplx, copy=False),
+                xp.asnumpy(U1c).astype(cplx, copy=False),
+                xp.asnumpy(U1s).astype(cplx, copy=False),
+                xp.asnumpy(U2c).astype(cplx, copy=False),
+                xp.asnumpy(U2s).astype(cplx, copy=False))
+    return (np.asarray(U0, dtype=cplx),
             np.asarray(U1c, dtype=cplx),
             np.asarray(U1s, dtype=cplx),
             np.asarray(U2c, dtype=cplx),
             np.asarray(U2s, dtype=cplx))
 
 
-
 def compute_2d_incoherent_vectorial_psf_free_dipole(
+    psf_coordinates,
     NA,
     RHO=None,
     PHI=None,
     nmedium=1.0,
-    pupil_function=None,     # expected (N,N) complex
-    tp=1.0,                  # scalar or (N,N)
-    ts=1.0,                  # scalar or (N,N)
+    pupil_function=None,
+    tp=1.0,
+    ts=1.0,
     high_NA=True,
     device="auto",
     use_complex64=True,
+    use_2pi=True,
 ):
     U0, U1c, U1s, U2c, U2s = compute_2d_vectorial_components_free_dipole(
-    NA,
-    RHO=None,
-    PHI=None,
-    nmedium=1.0,
-    pupil_function=None,     # expected (N,N) complex
-    tp=1.0,                  # scalar or (N,N)
-    ts=1.0,                  # scalar or (N,N)
-    high_NA=True,
-    device="auto",
-    use_complex64=True,
+        psf_coordinates=psf_coordinates,
+        NA=NA,
+        RHO=RHO,
+        PHI=PHI,
+        nmedium=nmedium,
+        pupil_function=pupil_function,
+        tp=tp,
+        ts=ts,
+        high_NA=high_NA,
+        device=device,
+        use_complex64=use_complex64,
+        use_2pi=use_2pi,
     )
 
     I = (np.abs(U0) ** 2 +
@@ -313,7 +344,11 @@ def compute_2d_incoherent_vectorial_psf_free_dipole(
     return I
 
 
+# -----------------------------------------------------------------------------
+# 3D coherent PSF: compute pupil phase per z, then 2D CZT each slice
+# -----------------------------------------------------------------------------
 def compute_3d_psf_coherent(
+    psf_coordinates,
     NA,
     z_values,
     nsample=1.0,
@@ -322,22 +357,17 @@ def compute_3d_psf_coherent(
     high_NA=False,
     device="auto",
     use_complex64=True,
+    use_2pi=True,
     RHO=None,
     PHI=None,
 ):
-    """
-    3D coherent field stack using FFT on a Cartesian pupil grid.
-
-    Returns
-    -------
-    E3D : np.ndarray (complex)
-        Shape (N, N, Nz): coherent field slices (FFT result for each z).
-    """
     hpc_utils.pick_backend(device)
     mode, xp = hpc_utils.get_backend()
 
     complex_type = xp.complex64 if use_complex64 else xp.complex128
     float_type   = xp.float32 if use_complex64 else xp.float64
+
+    x_coords, y_coords = _ensure_psf_coords(psf_coordinates)
 
     # Determine N and (rho,phi) grid
     if pupil_function is not None:
@@ -346,17 +376,15 @@ def compute_3d_psf_coherent(
             raise ValueError(f"pupil_function must be (N,N); got {P0.shape}.")
         N = int(P0.shape[0])
     else:
-        # infer N from RHO if possible, else default
         if RHO is not None:
             N = int(np.asarray(RHO).shape[0])
         else:
             N = 256
         P0 = None
 
-    # build rho/phi if needed
+    # build rho if needed
     if RHO is None or PHI is None:
-        x = xp.linspace(-1.0, 1.0, N, dtype=float_type)
-        X, Y = xp.meshgrid(x, x, indexing="ij")
+        X, Y = _make_xy_pupil_grid(N, xp, float_type)
         rho = xp.sqrt(X * X + Y * Y)
     else:
         rho = xp.asarray(RHO).astype(float_type, copy=False)
@@ -365,11 +393,9 @@ def compute_3d_psf_coherent(
 
     inside = rho <= float_type(1.0)
 
-    # base pupil: clear aperture if None
     if P0 is None:
         P0 = xp.where(inside, complex_type(1.0), complex_type(0.0))
 
-    # u(z) construction (kept from your earlier code)
     salpha = float_type(NA / nmedium)
     z = np.asarray(z_values, dtype=np.float64)
 
@@ -378,20 +404,22 @@ def compute_3d_psf_coherent(
     else:
         u_values = 4.0 * np.pi * z * nsample * (1.0 - np.sqrt(1.0 - float(NA / nmedium) ** 2))
 
-    # precompute geometry terms for high NA kernel
     if high_NA:
         cos_theta = xp.sqrt(xp.clip(1.0 - (rho * salpha) ** 2, 0.0, 1.0)).astype(float_type, copy=False)
         cos_alpha = float_type(np.sqrt(max(0.0, 1.0 - float(salpha) ** 2)))
         denom = (1.0 - cos_alpha) if (1.0 - float(cos_alpha)) != 0.0 else float_type(1.0)
 
-    # FFT scaling: pupil grid is assumed linspace(-1,1,N)
-    du = float_type(2.0 / (N - 1))
-    dv = du
-    scale = (du * dv).astype(float_type, copy=False)
+    # Pupil coords
+    u = _pupil_coords_1d(N, xp, float_type)
+    v = u
+
+    # Requested PSF coords -> q
+    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
+    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
 
     slices = []
-    for u in u_values:
-        u_xp = float_type(u)
+    for uval in u_values:
+        u_xp = float_type(uval)
         if not high_NA:
             K = xp.exp(1j * (u_xp / 2.0) * (rho * rho)).astype(complex_type, copy=False)
         else:
@@ -399,13 +427,15 @@ def compute_3d_psf_coherent(
 
         Pz = xp.where(inside, P0 * K, complex_type(0.0))
 
-        Ez = scale * hpc_utils.wrapped_fftn(Pz, axes=(0, 1), norm=None)
+        Ez = hpc_utils.czt_nd_fourier(Pz, (u, v), (qx, qy), axes=(0, 1), atol=1e-4, rtol=1e-4)
         slices.append(Ez)
 
-    # wrapped_fftn returns NumPy arrays; stack on host
-    return np.stack(slices, axis=2)
+    E3D = xp.stack(slices, axis=2)  # (Mx, My, Nz)
+    return xp.asnumpy(E3D) if mode == "gpu" else np.asarray(E3D)
+
 
 def compute_3d_incoherent_vectorial_psf_free_dipole(
+    psf_coordinates,
     NA,
     z_values,
     nsample=1.0,
@@ -416,20 +446,19 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
     high_NA=True,
     device="auto",
     use_complex64=True,
+    use_2pi=True,
     RHO=None,
     PHI=None,
 ):
-    """
-    3D incoherent vectorial PSF stack: sum of intensities of 5 Debye-like components.
-    Returns I of shape (N, N, Nz), normalized to sum=1.
-    """
     hpc_utils.pick_backend(device)
     mode, xp = hpc_utils.get_backend()
 
     complex_type = xp.complex64 if use_complex64 else xp.complex128
     float_type   = xp.float32 if use_complex64 else xp.float64
 
-    # Determine N and rho grid
+    x_coords, y_coords = _ensure_psf_coords(psf_coordinates)
+
+    # Determine N and rho/phi
     if pupil_function is not None:
         P0 = xp.asarray(pupil_function).astype(complex_type, copy=False)
         if P0.ndim != 2 or P0.shape[0] != P0.shape[1]:
@@ -442,10 +471,8 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
             N = 256
         P0 = None
 
-    # build rho/phi
     if RHO is None or PHI is None:
-        x = xp.linspace(-1.0, 1.0, N, dtype=float_type)
-        X, Y = xp.meshgrid(x, x, indexing="ij")
+        X, Y = _make_xy_pupil_grid(N, xp, float_type)
         rho = xp.sqrt(X * X + Y * Y)
         phi = xp.mod(xp.arctan2(Y, X), 2.0 * xp.pi)
     else:
@@ -456,27 +483,31 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
 
     inside = rho <= float_type(1.0)
 
-    # base pupil: clear aperture if None
     if P0 is None:
         P0 = xp.where(inside, complex_type(1.0), complex_type(0.0))
 
-    # u(z) construction (same as scalar code)
     salpha = float_type(NA / nmedium)
     z = np.asarray(z_values, dtype=np.float64)
+
     if NA <= nsample:
         u_values = 4.0 * np.pi * z * (nsample - np.sqrt(nsample**2 - NA**2))
     else:
         u_values = 4.0 * np.pi * z * nsample * (1.0 - np.sqrt(1.0 - float(NA / nmedium) ** 2))
 
-    # precompute high-NA geometry
     if high_NA:
         cos_theta = xp.sqrt(xp.clip(1.0 - (rho * salpha) ** 2, 0.0, 1.0)).astype(float_type, copy=False)
         cos_alpha = float_type(np.sqrt(max(0.0, 1.0 - float(salpha) ** 2)))
         denom = (1.0 - cos_alpha) if (1.0 - float(cos_alpha)) != 0.0 else float_type(1.0)
 
+    # Pupil coords and requested PSF coords -> q
+    u = _pupil_coords_1d(N, xp, float_type)
+    v = u
+    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
+    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+
     slices = []
-    for u in u_values:
-        u_xp = float_type(u)
+    for uval in u_values:
+        u_xp = float_type(uval)
         if not high_NA:
             K = xp.exp(1j * (u_xp / 2.0) * (rho * rho)).astype(complex_type, copy=False)
         else:
@@ -484,8 +515,8 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
 
         Pz = xp.where(inside, P0 * K, complex_type(0.0))
 
-        # Your 2D component function (FFT-based) should accept backend arrays fine
         U0, U1c, U1s, U2c, U2s = compute_2d_vectorial_components_free_dipole(
+            psf_coordinates=psf_coordinates,
             NA=NA,
             RHO=rho,
             PHI=phi,
@@ -496,6 +527,7 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
             high_NA=high_NA,
             device=device,
             use_complex64=use_complex64,
+            use_2pi=use_2pi,
         )
 
         I_z = (np.abs(U0) ** 2 +
@@ -504,9 +536,8 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
                np.abs(U2c) ** 2 +
                np.abs(U2s) ** 2)
         slices.append(I_z)
-        print(f"Computed z-slice with u={float(u):.3f}")
 
-    I = np.stack(slices, axis=2)  # (N, N, Nz)
+    I = np.stack(slices, axis=2)  # (Mx, My, Nz)
     s = I.sum()
     if s != 0:
         I /= s

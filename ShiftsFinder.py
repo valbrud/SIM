@@ -144,17 +144,17 @@ if __name__ == "__main__":
     pi = np.pi
     i = 1j
 
-    M1 = np.array([
-        [np.exp(0*i), np.exp(0*i), np.exp(0*i), 1, np.exp(0*i), np.exp(0*i), np.exp(0*i)],
-        [np.exp(-4*pi*i/5), np.exp(-2*pi*i/5), np.exp(-2*pi*i/5), 1, np.exp(2*pi*i/5), np.exp(2*pi*i/5), np.exp(4*pi*i/5)],
-        [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5), np.exp(-4*pi*i/5), 1, np.exp(4*pi*i/5), np.exp(4*pi*i/5), np.exp(8*pi*i/5)],
-        [np.exp(-12*pi*i/5), np.exp(-6*pi*i/5), np.exp(-6*pi*i/5), 1, np.exp(6*pi*i/5), np.exp(6*pi*i/5), np.exp(12*pi*i/5)],
-        [np.exp(-16*pi*i/5), np.exp(-8*pi*i/5), np.exp(-8*pi*i/5), 1, np.exp(8*pi*i/5), np.exp(8*pi*i/5), np.exp(16*pi*i/5)],
-        [np.exp(0*i), np.exp(0*i - 2*pi*i/4), np.exp(0*i + pi*i/2), 1, np.exp(0*i - pi*i/2), np.exp(0*i), np.exp(0*i)],
-        [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5 - pi*i/2), np.exp(-4*pi*i/5 + pi*i/2), 1, np.exp(4*pi*i/5 + pi*i/2), np.exp(4*pi*i/5), np.exp(8*pi*i/5)]
-    ], dtype=complex)
+    # M1 = np.array([
+    #     [np.exp(0*i), np.exp(0*i), np.exp(0*i), 1, np.exp(0*i), np.exp(0*i), np.exp(0*i)],
+    #     [np.exp(-4*pi*i/5), np.exp(-2*pi*i/5), np.exp(-2*pi*i/5), 1, np.exp(2*pi*i/5), np.exp(2*pi*i/5), np.exp(4*pi*i/5)],
+    #     [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5), np.exp(-4*pi*i/5), 1, np.exp(4*pi*i/5), np.exp(4*pi*i/5), np.exp(8*pi*i/5)],
+    #     [np.exp(-12*pi*i/5), np.exp(-6*pi*i/5), np.exp(-6*pi*i/5), 1, np.exp(6*pi*i/5), np.exp(6*pi*i/5), np.exp(12*pi*i/5)],
+    #     [np.exp(-16*pi*i/5), np.exp(-8*pi*i/5), np.exp(-8*pi*i/5), 1, np.exp(8*pi*i/5), np.exp(8*pi*i/5), np.exp(16*pi*i/5)],
+    #     [np.exp(0*i), np.exp(0*i - 2*pi*i/4), np.exp(0*i + pi*i/2), 1, np.exp(0*i - pi*i/2), np.exp(0*i), np.exp(0*i)],
+    #     [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5 - pi*i/2), np.exp(-4*pi*i/5 + pi*i/2), 1, np.exp(4*pi*i/5 + pi*i/2), np.exp(4*pi*i/5), np.exp(8*pi*i/5)]
+    # ], dtype=complex)
 
-    cond1 = np.linalg.cond(M1)
+    # cond1 = np.linalg.cond(M1)
 
     # ---------- Matrix 2 ----------
     phases3d = np.array([-4*np.pi/7, -6*np.pi/7, 2*np.pi/7, 0, -2*np.pi/7, 6*np.pi/7, 4*np.pi/7])
