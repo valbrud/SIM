@@ -244,7 +244,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
                 raise AttributeError("Dimensions of the pupil_function don't match integration dimensions! ")
 
         if zernieke:
-            aberration_phase = pupil_functions.zernike_cartisian(
+            aberration_phase = pupil_functions.zernike_cartesian(
                 zernieke, RHO, PHI
             )
 
@@ -256,7 +256,9 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
                     pupil_function *= aberration_function
             else:
                 pupil_function = aberration_function
-
+        if pupil_function is None:
+            pupil_function = np.ones_like(RHO, dtype=np.complex128)
+            
         return pupil_function
 
     def _get_pupil_function_of_an_element(self, Nrho: int, Nphi: int, pupil_element: str = "") -> ndarray[tuple[int, int], np.complex128]:
@@ -516,8 +518,7 @@ class System4f3DCoherent(OpticalSystem3D):
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
-                            Nrho = 129, 
-                            Nphi = 129,) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                            Nrho = 129,) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
@@ -529,10 +530,14 @@ class System4f3DCoherent(OpticalSystem3D):
         grid2d = np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
         z_values = self.psf_coordinates[2]
 
-        pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
+        rho = np.linspace(-1, 1, Nrho)
+        X, Y = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+
+        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
 
         psf = psf_models_fast.compute_3d_psf_coherent(
-            psf_grid=self.psf_coordinates, 
+            psf_coordinates=(self.psf_coordinates[0], self.psf_coordinates[1]),
             NA=self.NA,
             z_values=z_values, 
             nsample=self.ns, 
@@ -638,7 +643,6 @@ class System4f3D(System4f3DCoherent):
                             pupil_function=None, 
                             zernieke={}, 
                             Nrho = 129, 
-                            Nphi = 129, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
@@ -649,15 +653,19 @@ class System4f3D(System4f3DCoherent):
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke, Nrho, Nphi)
+            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke, Nrho)
             psf = np.abs(csf) ** 2
 
         else:
             grid2d = np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
             z_values = self.psf_coordinates[2]
 
-            pupil_function = self._get_pupil_function(Nrho, Nphi, pupil_element, pupil_function, zernieke)
+            rho = np.linspace(-1, 1, Nrho)
+            X, Y = np.meshgrid(rho, rho, indexing='ij')
+            RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
 
+            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+            
             psf = psf_models_fast.compute_3d_incoherent_vectorial_psf_free_dipole(
                 grid2d=grid2d, 
                 NA=self.NA,
@@ -666,9 +674,8 @@ class System4f3D(System4f3DCoherent):
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
                 high_NA=self.high_NA, 
-                Nrho=Nrho, 
-                Nphi=Nphi, 
-            )
+                RHO=RHO,
+                PHI=PHI,)
 
         self._otf = hpc_utils.wrapped_fftn(psf).real
         self._psf = psf.real

@@ -29,7 +29,7 @@ def compute_spatial_frequency_orders(stack,
     spatial_frequency_orders = {}
     for key in effective_kernels_ft.keys():
         kernel_ft = effective_kernels_ft[key] + 1e-5
-        print(key, "eff kernel max", np.amax(np.abs(kernel_ft)))
+        # print(key, "eff kernel max", np.amax(np.abs(kernel_ft)))
         # print(key, 'max', round(np.max(ReI**2 / np.abs(kernel_ft)**2)/10**12))
         # fig, ax = plt.subplots(1,2)
         # ax[0].imshow(np.log1p(ReI**2 / np.abs(kernel_ft)**2), origin='lower')
@@ -128,11 +128,12 @@ def compute_loss_function(stack,
                           apodization_mask: np.ndarray = None, 
                           estimate_amplitudes_dinamically: bool = False, 
                           spatial_frequency_orders = None,
-                          interpolation=True
+                          interpolation=False
                           ):
     
     optical_system.compute_psf_and_otf(zernieke=zernieke)
     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
+    # plt.gca().add_patch(plt.Circle((100, 100), 200/6, color='red', fill=False))
     # plt.title("OTF with aberrations")
     # plt.show()
     # end = time.time()
@@ -141,7 +142,7 @@ def compute_loss_function(stack,
     if estimate_amplitudes_dinamically:
         if interpolation: 
             am = illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
-            print('PEAK_HEIGHT', am)
+            # print('PEAK_HEIGHT', am)
         else: 
             illumination.equalize_amplitudes()
             _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
@@ -181,7 +182,9 @@ def compute_loss_function(stack,
                     )
 
                     a = float(optimizer.x[0])
-                    illumination.harmonics[key].amplitude = a
+                    for z_index in illumination.rearranged_indices[key]:
+                        index = illumination.glue_indices(key, z_index)
+                        illumination.harmonics[index].amplitude = a
                     # overlap1 = hpc_utils.wrapped_fftn(g * I0f)
                     # overlap2 = hpc_utils.wrapped_fftn(g0 * I)
 
@@ -195,7 +198,7 @@ def compute_loss_function(stack,
                     # plt.show()
 
             illumination.normalize_spatial_waves()
-            print('LS', illumination.get_all_amplitudes()[0])
+            # print('LS', illumination.get_all_amplitudes()[0])
 
     ReSSNRi, ImSSNRi = SSNR_ideal
     ReSSNRg, ImSSNRg =  compute_SSNR_guess(stack,
@@ -217,8 +220,8 @@ def compute_loss_function(stack,
     # plt.colorbar(im, ax=axes[1])
     # plt.show()
     
-    # f0 = np.sum(stack) / (stack.shape[0] * stack.shape[1])
-    # K = illumination.Mr * (illumination.Mt//2)
+    f0 = np.sum(stack) / (stack.shape[0] * stack.shape[1])
+    K = illumination.Mr * (illumination.Mt//2)
 
     # log_likelihood = -1/2 * (2 * np.log(2 * np.pi * K * f0**2) + (ReD**2 + ImD**2) / (K * f0**2))
 
@@ -249,7 +252,7 @@ def estimate_true_otf(  stack,
     optical_system.compute_psf_and_otf(zernieke=initial_aberrations)
     # plt.imshow(kernel, origin='lower')
     # plt.show()
-    kernel = kernels.sinc_kernel2d(1) if illumination.dimensionality == 2 else kernels.sinc_kernel3d(1)
+    kernel = kernels.sinc_kernel2d(1) if illumination.dimensionality == 2 else kernels.sinc_kernel3d(1, 1)
     reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D 
     reconstructor1 = reconstructor_class(illumination, optical_system, kernel)
 

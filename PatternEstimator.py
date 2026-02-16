@@ -36,7 +36,7 @@ IlluminationPatternEstimator classes return the Illumination object with estimat
 """
 
 from copy import deepcopy
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,6 +47,7 @@ from wrappers import wrapped_fftn, wrapped_ifftn
 from Dimensions import DimensionMetaAbstract
 from abc import abstractmethod
 from utils import off_grid_ft
+import hpc_utils
 
 from Illumination import (
     PlaneWavesSIM,
@@ -83,7 +84,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         self,
         stack: np.ndarray,
         peaks_estimation_method='interpolation', 
-        phase_estimation_method='cross_correlation',
+        phase_estimation_method='autocorrelation',
         modulation_coefficients_method='default',
         peak_search_area_size: int = 11,
         zooming_factor: int = 3, 
@@ -387,89 +388,163 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
     
         return illumination_3d
 
-
 class PeaksEstimator(metaclass=DimensionMetaAbstract):
     def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
         self.illumination = illumination
         self.optical_system = optical_system
-        if not self.illumination.dimensionality == self.optical_system.dimensionality:
+        if self.illumination.dimensionality != self.optical_system.dimensionality:
             raise ValueError(
-                f"Illumination and optical system dimensionality do not match: {self.illumination.dimensionality} != {self.optical_system.dimensionality}"
+                f"Illumination and optical system dimensionality do not match: "
+                f"{self.illumination.dimensionality} != {self.optical_system.dimensionality}"
             )
-    
+        self._m = self._select_m()
+
     @abstractmethod
-    def estimate_peaks(self, 
-                       stack, 
-                       peak_search_area_size, 
-                       zooming_factor, 
-                       max_iterations, 
-                       debug_info_level = 0) -> dict:
+    def estimate_peaks(
+        self,
+        stack: np.ndarray,
+        peak_search_area_size: int,
+        zooming_factor: int,
+        max_iterations: int,
+        debug_info_level: int = 0,
+    ):
         """
-        Estimate the peaks of the illumination pattern from the stack.
-
-        Parameters
-        ----------
-        stack : np.ndarray
-            The raw image stack.
-
-        Returns
-        -------
-        dict
-            The estimated peaks.
+        Implementations should return (refined_wavevectors, rotation_angles) like your existing API.
         """
-        pass     
+        ...
 
-    
-
-    def merit_function(self, Cmn1n2: Dict[Tuple[Tuple[int, ...], int, int], np.ndarray]) -> np.ndarray:
-        """
-        Compute the merit function for the base vector estimates"""
-
-        return sum([C * C.conjugate() for C in Cmn1n2.values()])  # sum over m,n1,n2
-    
+    # ----------------------------
+    # Shared utilities
+    # ----------------------------
+    def _select_m(self):
+        m_unique = set()
+        for m in self.illumination.harmonics.keys():
+            if np.isclose(np.sum(np.abs(np.array(m[1]))), 0):
+                continue
+            if m not in m_unique:
+                m_inv = (m[0], tuple(-np.array(m[1])))
+                if m_inv not in m_unique:
+                    m_unique.add(m)
+        return tuple(m_unique)
 
     def get_stack_ft(self, stack: np.ndarray) -> np.ndarray:
+        return np.array([np.array([wrapped_fftn(image) for image in stack[r]]) for r in range(stack.shape[0])])
+
+    def merit_function(self, Cmn1n2: Dict[Tuple[Tuple[int, ...], int, int], np.ndarray]) -> np.ndarray:
+        return sum([C * C.conjugate() for C in Cmn1n2.values()])
+
+    def _czt_nd(self, sig_stack: np.ndarray, q_coords_cycles: tuple[np.ndarray, ...]) -> np.ndarray:
         """
-        Compute the Fourier transform of the stack.
+        Minimal CZT wrapper used by multiple estimators.
+        - q_coords_cycles: tuple of 1D coordinate arrays in cycles / unit
+        - returns numpy array
         """
-        stack_ft = np.array([np.array([wrapped_fftn(image) for image in stack[r]]) for r in range(stack.shape[0])])
-        # for one_r in stack_ft:
-        #     for image in one_r:
-        #         plt.imshow(np.log1p(np.abs(image)), cmap='gray')
-        #         plt.show()
-        return stack_ft
+        x_coords = self.optical_system.psf_coordinates
+        q_coords_rad = tuple((2.0 * np.pi) * np.asarray(qc) for qc in q_coords_cycles)
+
+        D = self.optical_system.dimensionality
+        spatial_axes = tuple(range(sig_stack.ndim - D, sig_stack.ndim))
+
+        out = hpc_utils.czt_nd_fourier(
+            np.asarray(sig_stack),
+            x_coords,
+            q_coords_rad,
+            axes=spatial_axes,
+            rtol=1e-6,
+            atol=1e-12,
+        )
+        return hpc_utils._to_numpy(out)
+
+    def _argmax_coords(self, arr: np.ndarray, q_coords: tuple[np.ndarray, ...]) -> np.ndarray:
+        idx = np.unravel_index(np.argmax(np.abs(arr)), arr.shape)
+        return np.array([q_coords[d][idx[d]] for d in range(len(q_coords))], dtype=np.float64)
+
+    def _zoom_coords(
+        self,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        zooming_factor: int,
+        center: np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """
+        CZT-uniform zoom/refine (2D):
+
+        Assumptions:
+        - q_coords axes are uniform (linspace-like), as used for CZT evaluation.
+
+        Behavior:
+        - Let dq_x, dq_y be the uniform steps of the current grid.
+        - Shrink the coordinate span to one-step neighborhood around center:
+                [cx - dq_x, cx + dq_x], [cy - dq_y, cy + dq_y]
+        - Increase sampling density by returning:
+                n = 2*zooming_factor + 1 samples per axis
+            meaning: insert zooming_factor points between center and each neighbor.
+        """
+        qx = np.asarray(q_coords[0], dtype=np.float64)
+        qy = np.asarray(q_coords[1], dtype=np.float64)
+
+        z = int(zooming_factor)
+        if z < 1:
+            raise ValueError(f"zooming_factor must be >= 1, got {zooming_factor}")
+
+        if center is None:
+            cx, cy = 0.0, 0.0
+        else:
+            cx, cy = float(center[0]), float(center[1])
+
+        # Degenerate grids: nothing to refine
+        if qx.size < 2 or qy.size < 2:
+            return (qx.copy(), qy.copy())
+
+        dq_x = float(qx[1] - qx[0])
+        dq_y = float(qy[1] - qy[0])
+
+        n = 2 * z + 1
+        qx_new = np.linspace(cx - dq_x, cx + dq_x, n, dtype=np.float64)
+        qy_new = np.linspace(cy - dq_y, cy + dq_y, n, dtype=np.float64)
+        return (qx_new, qy_new)
     
+    def _q_window_around(self, q0: np.ndarray, size: int) -> tuple[np.ndarray, ...]:
+        """
+        Build coordinate tuple by taking a window on each otf_frequencies axis
+        around the nearest bin to q0[d].
+        """
+        half = size // 2
+        out = []
+        for d, axis in enumerate(self.optical_system.otf_frequencies):
+            idx = int(np.argmin(np.abs(axis - q0[d])))
+            lo = max(0, idx - half)
+            hi = min(axis.size, idx + half + 1)
+            out.append(axis[lo:hi])
+        return tuple(out)
+
+    # ----------------------------
+    # Post-estimation refinement (shared)
+    # ----------------------------
     def estimate_rotation_angles(self, estimated_peaks: dict) -> np.ndarray:
-        """
-        Estiamate rotation angles of the SIM pattern.
-        """
-        #We axpect N to be the same for all rotations, but it is easy to preserve generality
         N = np.zeros(self.illumination.Mr, dtype=np.float64)
         sum_expected = np.zeros(self.illumination.Mr, dtype=np.float64)
         sum_observed = np.zeros(self.illumination.Mr, dtype=np.float64)
         angles = np.zeros(self.illumination.Mr, dtype=np.float64)
+
         for index in estimated_peaks.keys():
             r = index[0]
             m = index[1][:2]
-            angle_expected = math.atan2(m[1], m[0]) 
+            angle_expected = math.atan2(m[1], m[0])
             wavevector = np.copy(estimated_peaks[index])[:2]
             angle_observed = math.atan2(wavevector[1], wavevector[0])
             sum_expected[r] += angle_expected
             sum_observed[r] += angle_observed
             N[r] += 1
-        
+
         for r in range(self.illumination.Mr):
             angles[r] = (sum_observed[r] - sum_expected[r]) / N[r]
         return angles
-    
-    def refine_base_vectors(self, averaged_maxima: dict, angles: np.ndarray) -> np.ndarray:
-        """
-        Refine the base vectors using the averaged maxima.
-        """
 
+    def refine_base_vectors(self, averaged_maxima: dict, angles: np.ndarray) -> np.ndarray:
         refined_base_vectors = np.zeros((self.illumination.Mr, self.dimensionality))
         base_vectors_sum = np.zeros((self.illumination.Mr, self.dimensionality), dtype=np.float64)
-        index_sum  = np.zeros((self.illumination.Mr, self.optical_system.dimensionality), dtype=np.int16)
+        index_sum = np.zeros((self.illumination.Mr, self.optical_system.dimensionality), dtype=np.int16)
+
         for index in averaged_maxima.keys():
             r, m = index[0], index[1][:2]
             base_vectors_sum[r] += averaged_maxima[index]
@@ -477,191 +552,497 @@ class PeaksEstimator(metaclass=DimensionMetaAbstract):
 
         for r in range(self.illumination.Mr):
             vector_sum_aligned = VectorOperations.rotate_vector2d(base_vectors_sum[r], -angles[r])
-            refined_base_vectors[r] = vector_sum_aligned / np.where(index_sum[r], index_sum[r], np.inf)            
-        
+            refined_base_vectors[r] = vector_sum_aligned / np.where(index_sum[r], index_sum[r], np.inf)
+
         return refined_base_vectors
-    
+
     def refine_wavevectors(self, refined_base_vectors: np.ndarray, angles) -> dict[tuple[int, ...], np.ndarray]:
         refined_wavevectors = {}
-        for sim_index in self.illumination.rearranged_indices.keys():  
+        for sim_index in self.illumination.rearranged_indices.keys():
             r = sim_index[0]
             base_vectors = refined_base_vectors[r]
-            wavevector_aligned = np.array([2 * np.pi * sim_index[1][dim] * base_vectors[dim] for dim in range(len(sim_index[1]))])
+            wavevector_aligned = np.array(
+                [2 * np.pi * sim_index[1][dim] * base_vectors[dim] for dim in range(len(sim_index[1]))]
+            )
             refined_wavevectors[sim_index] = VectorOperations.rotate_vector2d(wavevector_aligned, angles[r])
         return refined_wavevectors
-    
 
-class PeaksEstimatorCrossCorrelation(PeaksEstimator): 
-    def estimate_peaks(self, 
-                        stack: np.ndarray,
-                        peak_search_area_size: int,
-                        zooming_factor: int,
-                        max_iterations: int, 
-                        debug_info_level: int = 0) -> dict:
+class PeaksEstimatorIterative(PeaksEstimator):
+    """
+    2D-only inside estimator.
+    - Tracks all peak positions in cycles/unit.
+    - Parent owns the whole window->iterate->zoom cycle + debug logic.
+    - Children implement: one iteration update + debug payload for debug>=3.
+    """
 
-        Mr = self.illumination.Mr 
-        q_grid = self.optical_system.q_grid
-        shape = self.optical_system.otf.shape
-        slices = []
-        for dim in range(len(shape)):
-            center = shape[dim] // 2
-            half_span = peak_search_area_size // 2
-            start = center - half_span
-            stop = center + half_span + 1
-            slices.append(slice(start, stop))
-        q_grid = q_grid[tuple(slices)]
+    def estimate_peaks(
+        self,
+        stack: np.ndarray,
+        peak_search_area_size: int,
+        zooming_factor: int,
+        max_iterations: int,
+        debug_info_level: int = 0,
+    ):
+        peak_guesses = self._initial_peak_guesses_cycles()
+        state = self._init_global_state(stack, peak_guesses)
 
-        peaks = {}
+        estimated_cycles: dict = {}
+        initial_cycles: dict = {}
 
-        # Split is r is not required but saves memory 
-        for r in range(Mr):
-            grid = q_grid
-            wavevectors, indices = self.illumination.get_wavevectors_projected(r)
-            peaks_approximated = {}
-            for index, wavevector in zip(indices, wavevectors):
-                peaks_approximated[index] = wavevector
-            i = 0
-            while i < max_iterations:
-                i += 1
-                estimated_modualtion_patterns = self.phase_modulation_patterns(self.optical_system, peaks_approximated)
-                correlation_matrix = self.cross_correlation_matrix(self.optical_system, self.illumination, stack, r, estimated_modualtion_patterns, grid)
-                maxima = self._find_maxima(correlation_matrix, grid)
-                averaged_maxima = self._average_maxima(maxima)
-                peaks_approximated = self._refine_peaks(peaks_approximated, averaged_maxima)
-                if debug_info_level > 3:
-                    plt.imshow(np.log1p(np.abs(correlation_matrix[tuple(*[0]*self.optical_system.dimensionality, 0, 0)])), cmap='gray')
-                    plt.show()
-                print(i, 'new', peaks_approximated)
-                dq = grid[1, 1] - grid[0, 0]
-                print('dq', dq)
-                grid = self._fine_q_grid(grid, zooming_factor)
-                # merit_function = self._merit_function(correlation_matrix)
-                # max_index = np.unravel_index(np.argmax(merit_function, axis=0), merit_function.shape)
+        for peak in self._m:
+            r = peak[0]
 
-            peaks.update({key:peaks_approximated[key] / (2 * np.pi) for key in peaks_approximated.keys() if key[0] == r})
+            q_coords = self._q_window_around(peak_guesses[peak], peak_search_area_size)
+            peak_state = self._init_peak_state(stack, r, peak, peak_guesses, state)
 
-        rotation_angles = self.estimate_rotation_angles(peaks)
-        refined_base_vectors = self.refine_base_vectors(peaks, rotation_angles)
+            initial_cycles[peak] = np.array(peak_state["q"], dtype=np.float64)
+
+            for it in range(1, max_iterations + 1):
+                peak_state, q_coords, dbg = self._iterate_one(
+                    stack=stack,
+                    r=r,
+                    peak=peak,
+                    q_coords=q_coords,
+                    peak_state=peak_state,
+                    zooming_factor=zooming_factor,
+                    debug_info_level=debug_info_level,
+                )
+
+                # Preserve your printing behavior
+                if debug_info_level > 0:
+                    if debug_info_level > 1:
+                        dqs = [float(q_coords[d][1] - q_coords[d][0]) for d in range(2)]
+                        print("iteration", it, peak, dbg, "dq", dqs)
+                    else:
+                        print("iteration", it, peak, dbg)
+
+                # debug>=3: show per-iteration per-peak image on the interpolated q-grid
+                if debug_info_level >= 3:
+                    self._debug_show_iteration_surface_2d(
+                        stack=stack,
+                        r=r,
+                        peak=peak,
+                        q_coords=q_coords,
+                        peak_state=peak_state,
+                        it=it,
+                    )
+
+            estimated_cycles[peak] = self._final_peak_cycles(peak_state)
+
+        estimated_cycles = self._postprocess_estimated_cycles(estimated_cycles, stack)
+
+        # debug>=2: show initial & final peak positions on top of averaged stack FT
+        if debug_info_level >= 2:
+            self._debug_show_initial_final_on_avg_ft_2d(stack, initial_cycles, estimated_cycles)
+
+        rotation_angles = self.estimate_rotation_angles(estimated_cycles)
+        refined_base_vectors = self.refine_base_vectors(estimated_cycles, rotation_angles)
         refined_wavevectors = self.refine_wavevectors(refined_base_vectors, rotation_angles)
-
         return refined_wavevectors, rotation_angles
 
+    # ----------------------------
+    # Initial guesses (parent)
+    # ----------------------------
+    def _initial_peak_guesses_cycles(self) -> dict:
+        """
+        Default initial guesses from illumination.
+        Returns dict[peak_index -> q_guess(2,)] in cycles/unit.
+        """
+        wavevectors, indices = self.illumination.get_all_wavevectors_projected()
+        return {idx: (wv / (2 * np.pi)) for idx, wv in zip(indices, wavevectors)}
+
+    # ----------------------------
+    # Hooks for children
+    # ----------------------------
+    def _init_global_state(self, stack: np.ndarray, peak_guesses: dict) -> dict[str, Any]:
+        return {}
+
+    def _init_peak_state(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        peak_guesses: dict,
+        global_state: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {"q": np.array(peak_guesses[peak], dtype=np.float64)}
+
+    @abstractmethod
+    def _iterate_one(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        peak_state: dict[str, Any],
+        zooming_factor: int,
+        debug_info_level: int,
+    ) -> tuple[dict[str, Any], tuple[np.ndarray, np.ndarray], str]:
+        """One refinement iteration for one peak."""
+        ...
+
+    def _final_peak_cycles(self, peak_state: dict[str, Any]) -> np.ndarray:
+        return np.array(peak_state["q"], dtype=np.float64)
+
+    def _postprocess_estimated_cycles(self, estimated_cycles: dict, stack: np.ndarray) -> dict:
+        return estimated_cycles
+
+    # ----------------------------
+    # Debug: debug>=2
+    # ----------------------------
+    def _debug_show_initial_final_on_avg_ft_2d(self, stack: np.ndarray, initial_cycles: dict, final_cycles: dict):
+        import matplotlib.pyplot as plt
+
+        qx, qy = self.optical_system.otf_frequencies  # 1D axes in cycles/unit
+        q_coords = (np.asarray(qx), np.asarray(qy))
+
+        # Cache avg|FT| per r once (avoid recomputing per peak)
+        ft_avg_per_r: dict[int, np.ndarray] = {}
+        for r in range(self.illumination.Mr):
+            ft_stack = self._czt_nd(stack[r], q_coords)   # (Mt, qx, qy)
+            ft_avg_per_r[r] = np.mean(np.abs(ft_stack), axis=0)
+
+        for peak in self._m:
+            r = peak[0]
+            ft_avg = ft_avg_per_r[r]
+
+            q0 = initial_cycles[peak]
+            q1 = final_cycles[peak]
+
+            fig, ax = plt.subplots()
+            ax.set_title(f"r={r}, peak={peak}: avg |FT| (initial x, final o)")
+            ax.imshow(
+                ft_avg.T,
+                origin="lower",
+                aspect="auto",
+                extent=[q_coords[0].min(), q_coords[0].max(), q_coords[1].min(), q_coords[1].max()],
+            )
+            ax.plot(q0[0], q0[1], marker="x", linestyle="None")
+            ax.plot(q1[0], q1[1], marker="o", linestyle="None")
+            ax.set_xlabel("qx (cycles/unit)")
+            ax.set_ylabel("qy (cycles/unit)")
+            plt.show()
+
+    # ----------------------------
+    # Debug: debug>=3
+    # ----------------------------
+    def _debug_show_iteration_surface_2d(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        peak_state: dict[str, Any],
+        it: int,
+    ):
+        import matplotlib.pyplot as plt
+
+        payload = self._debug_iteration_payload(stack, r, peak, q_coords, peak_state)
+        if not payload:
+            return
+
+        img = payload["image"]
+        qmax = payload.get("max_q", None)
+        title = payload.get("title", f"r={r}, peak={peak}, it={it}")
+
+        qc = payload.get("q_coords", None)
+        if qc is None:
+            qc = q_coords
+
+        fig, ax = plt.subplots()
+        ax.set_title(title)
+        ax.imshow(
+            img.T,
+            origin="lower",
+            aspect="auto",
+            extent=[qc[0].min(), qc[0].max(), qc[1].min(), qc[1].max()],
+        )
+        if qmax is not None:
+            ax.plot(qmax[0], qmax[1], marker="o", linestyle="None")
+        ax.set_xlabel("qx (cycles/unit)")
+        ax.set_ylabel("qy (cycles/unit)")
+        plt.show()
+        
+    @abstractmethod
+    def _debug_iteration_payload(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        peak_state: dict[str, Any],
+    ) -> dict | None:
+        """
+        Return a dict like:
+          {'image': (qx,qy) array, 'max_q': (2,) optional, 'title': str optional}
+        for debug>=3, or None to skip.
+        """
+        ...
+
+class PeaksEstimatorInterpolation(PeaksEstimatorIterative):
+    """
+    2D-only estimator.
+    Peak positions are tracked in cycles/unit.
+    """
+
+    def _iterate_one(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        peak_state: dict[str, Any],
+        zooming_factor: int,
+        debug_info_level: int,
+    ):
+        # Evaluate FT of each image on current q-grid
+        ft_stack = self._czt_nd(stack[r], q_coords)       # (Mt, qx, qy)
+        ft_avg = np.mean(np.abs(ft_stack), axis=0)        # (qx, qy)
+
+        # Peak estimate is argmax of mean magnitude
+        q_center = self._argmax_coords(ft_avg, q_coords)  # (2,) cycles/unit
+        peak_state["q"] = q_center
+
+        # Debug>=3: stash the surface + argmax
+        if debug_info_level >= 3:
+            peak_state["_dbg_img"] = ft_avg
+            peak_state["_dbg_qmax"] = q_center
+
+        # Zoom around the found maximum (Interpolation behavior)
+        q_coords = self._zoom_coords(q_coords, zooming_factor, center=q_center)
+
+        return peak_state, q_coords, f"max {q_center}"
+
+    def _debug_iteration_payload(
+        self,
+        stack: np.ndarray,
+        r: int,
+        peak: tuple,
+        q_coords: tuple[np.ndarray, np.ndarray],
+        peak_state: dict[str, Any],
+    ) -> dict | None:
+        img = peak_state.get("_dbg_img", None)
+        if img is None:
+            return None
+        return {
+            "title": f"Interpolation: r={r}, peak={peak}, mean |FT| on current grid",
+            "image": img,
+            "max_q": peak_state.get("_dbg_qmax", None),
+        }
+
+    def _postprocess_estimated_cycles(self, estimated_cycles: dict, stack: np.ndarray) -> dict:
+        # Optional correction step you already had in your design
+        return self._correct_peak_position(estimated_cycles, stack)
+    
+    def _sample_stack_mean_abs(self, stack_r: np.ndarray, q_values: np.ndarray) -> np.ndarray:
+        """
+        stack_r: (Mt, H, W)
+        q_values: (..., 2) in cycles/unit OR radians/unit depending on off_grid_ft convention
+        returns: mean_n |FT(image_n)(q_values)| with shape q_values.shape[:-1]
+        """
+        grid = self.optical_system.x_grid
+        vals = [off_grid_ft(img, grid, q_values) for img in stack_r]
+        return np.mean(np.abs(np.array(vals)), axis=0)
+
+    def _sample_otf_abs(self, q_values: np.ndarray) -> np.ndarray:
+        """
+        q_values: (..., 2)
+        returns: |OTF(q_values)| with shape q_values.shape[:-1]
+        """
+        grid = self.optical_system.x_grid
+        psf = self.optical_system.psf
+        return np.abs(off_grid_ft(psf, grid, q_values))
+    
+    @abstractmethod
+    def _correct_peak_position(self, estimated_peaks: dict, stack: np.ndarray, dk: float = 1e-4) -> dict:
+        """
+        Account for non-uniform OTF to correct peak positions, assuming
+        estimate is close to the true illumination wavevectors.
+        Input/Output: dict[peak_index -> q_cycles(2,)].
+        """
+        ...
+
+class PeaksEstimatorCrossCorrelation(PeaksEstimatorIterative):
+    """
+    2D-only estimator.
+    Tracks peaks in cycles/unit.
+    CC refinement updates q by subtracting the mean argmax location in q-space
+    and then zooms the q-grid towards 0 (center=None), matching your CC logic.
+    """
+
+    def _initial_peak_guesses_cycles(self) -> dict:
+        # make parent center the q-window at 0 (shift-search)
+        wvs, idxs = self.illumination.get_all_wavevectors_projected()
+        z = np.zeros(2, dtype=np.float64)
+        return {idx: z.copy() for idx in idxs}
+
+    def _init_global_state(self, stack: np.ndarray, peak_guesses: dict) -> dict[str, Any]:
+        # store absolute initial guesses (cycles/unit) for peak-state init
+        wvs, idxs = self.illumination.get_all_wavevectors_projected()
+        abs_guesses = {idx: (wv / (2.0 * np.pi)) for idx, wv in zip(idxs, wvs)}
+        return {"abs_guesses_cycles": abs_guesses}
+
+    def _init_peak_state(self, stack, r, peak, peak_guesses, global_state):
+        return {
+            "q": np.array(global_state["abs_guesses_cycles"][peak], dtype=np.float64),  # absolute (cycles/unit)
+        }
+
+    def _iterate_one(self, stack, r, peak, q_coords, peak_state, zooming_factor, debug_info_level):
+        # --- update modulation pattern from CURRENT absolute estimate ---
+        k_rad = (2.0 * np.pi) * peak_state["q"]  # radians/unit
+        phase = np.einsum("...l,l->...", self.optical_system.x_grid, k_rad)
+        esimtated_pattern_refined = {peak: np.exp(1j * phase)}
+
+        # --- compute CC only for this peak m (not all m) ---
+        C = self.cross_correlation_matrix(
+            self.optical_system,
+            self.illumination,
+            images=stack,
+            r=r,
+            estimated_modulation_patterns=esimtated_pattern_refined,
+            q_coords_cycles=q_coords,
+        )
+
+        # robust surface: S(q)=sum_{n1,n2} |C_{n1n2}(q)|^2
+        Sm = None
+        for _, arr in C.items():
+            a2 = np.abs(arr) ** 2
+            Sm = a2 if Sm is None else (Sm + a2)
+
+        dq = self._argmax_coords(Sm, q_coords)     # shift in cycles/unit
+        peak_state["q"] = peak_state["q"] - dq     # update absolute estimate
+
+        if debug_info_level >= 3:
+            peak_state["_dbg_img"] = Sm
+            peak_state["_dbg_qmax"] = dq
+            peak_state["_dbg_q_coords"] = q_coords  # must be used by parent plotter (see point 1)
+
+        # refine shift-grid around 0
+        q_coords = self._zoom_coords(q_coords, zooming_factor, center=None)
+        return peak_state, q_coords, f"shift {dq} -> q {peak_state['q']}"
+
+    def _debug_iteration_payload(self, stack, r, peak, q_coords, peak_state):
+        img = peak_state.get("_dbg_img", None)
+        if img is None:
+            return None
+        return {
+            "title": f"CC: r={r}, peak={peak}, S(q)=sum|C|^2 (shift grid)",
+            "image": img,
+            "max_q": peak_state.get("_dbg_qmax", None),
+            "q_coords": peak_state.get("_dbg_q_coords", None),
+        }
+    
     @staticmethod
-    def phase_modulation_patterns(optical_system: OpticalSystem, illumination_vectors: dict[tuple(int, ...) : np.array((3), dtype=np.float64)]) -> np.ndarray:
-        # Compute the phase modulation patterns for the estimated illumination vectors.
+    def phase_modulation_patterns(optical_system: OpticalSystem, illumination_vectors_rad: dict) -> dict:
+        """
+        illumination_vectors_rad: dict[index -> k_rad] where k_rad is radians/unit
+        returns dict[index -> exp(1j * x·k)]
+        """
         phase_modulation_patterns = {}
-        for index in illumination_vectors.keys():
-            wavevector = np.copy(illumination_vectors[index])
-            if optical_system.dimensionality == 2:
-                phase_modulation_pattern = np.exp(1j * np.einsum('ijl,l ->ij', optical_system.x_grid, wavevector))
-            if optical_system.dimensionality == 3:
-                phase_modulation_pattern = np.exp(1j * np.einsum('ijk,l ->ij', optical_system.x_grid, wavevector))
-            phase_modulation_patterns[index] = phase_modulation_pattern
+        for index, wavevector_rad in illumination_vectors_rad.items():
+            phase = np.einsum("...l,l->...", optical_system.x_grid, wavevector_rad)
+            phase_modulation_patterns[index] = np.exp(1j * phase)
         return phase_modulation_patterns
     
     @staticmethod
-    def cross_correlation_matrix(optical_system: OpticalSystem,
-                                illumination: PlaneWavesSIM,
-                                images: np.ndarray, 
-                                r: int,
-                                estimated_modualtion_patterns: np.ndarray,
-                                fine_q_grid: np.ndarray) -> Dict[int, np.ndarray]:
+    def cross_correlation_matrix(
+        optical_system: OpticalSystem,
+        illumination: PlaneWavesSIM,
+        images: np.ndarray,
+        r: int,
+        estimated_modulation_patterns: dict,
+        q_coords_cycles: tuple[np.ndarray, np.ndarray],
+    ) -> dict:
         """
-        Build the image-correlation matrix C^{m}_{n1 n2}(q).
+        C^{m}_{n1 n2}(q) via CZT (2D).
+        Returns dict[(m, n1, n2)] -> ndarray(qx, qy).
 
+        Keys follow: (m_index, n1, n2) where m_index is the illumination harmonic index.
         """
-        Cmn1n2 = {}
-        x_grid_flat = optical_system.x_grid.reshape(-1, optical_system.dimensionality)
-        q_grid_flat = fine_q_grid.reshape(-1, optical_system.dimensionality)
-        phase_matrix = q_grid_flat @ x_grid_flat.T
-        fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
-        for m in illumination.harmonics.keys():
-            if np.isclose(np.sum(np.abs(np.array(m[1]))), 0):
-                continue
+        keys, sigs = [], []
+        Mt = int(illumination.spatial_shifts.shape[1])
+
+        for m, pat in estimated_modulation_patterns.items():
             if m[0] != r:
                 continue
-            if m[1][0] >= 0:
-                for n1 in range(illumination.spatial_shifts.shape[1]):
-                    for n2 in range(illumination.spatial_shifts.shape[1]):
-                        signal_function = (images[r, n1] * images[r, n2] * estimated_modualtion_patterns[m]).flatten()
-                        Cmn1n2[(m, n1, n2)] = fourier_exponents @ signal_function
-                        if n1 == n2:
-                            noise_function = (images[r, n1] *  estimated_modualtion_patterns[m]).flatten()
-                            Cmn1n2[(m, n1, n2)] -= fourier_exponents @ noise_function
-                        Cmn1n2[(m, n1, n2)] = Cmn1n2[(m, n1, n2)].reshape(fine_q_grid.shape[:-1])
-        return Cmn1n2
-    
+            for n1 in range(Mt):
+                for n2 in range(Mt):
+                    sig = images[r, n1] * images[r, n2] * pat
+                    if n1 == n2:
+                        sig = sig - (images[r, n1] * pat)
+                    keys.append((m, n1, n2))
+                    sigs.append(sig)
+
+        sig_stack = np.stack(sigs, axis=0)  # (K, H, W)
+
+        # CZT on the stack (convert cycles->radians inside the call)
+        x_coords = optical_system.psf_coordinates
+        q_coords_rad = tuple((2.0 * np.pi) * np.asarray(qc) for qc in q_coords_cycles)
+        D = optical_system.dimensionality
+        spatial_axes = tuple(range(sig_stack.ndim - D, sig_stack.ndim))
+
+        out = hpc_utils.czt_nd_fourier(
+            np.asarray(sig_stack),
+            x_coords,
+            q_coords_rad,
+            axes=spatial_axes,
+            rtol=1e-6,
+            atol=1e-12,
+        )
+        out_np = hpc_utils._to_numpy(out)  # (K, qx, qy)
+
+        return {keys[i]: out_np[i] for i in range(len(keys))}
+
     @staticmethod
-    def autocorrealtion_matrix(optical_system: OpticalSystem,
-                                illumination: PlaneWavesSIM,
-                                images: np.ndarray, r: int,
-                                estimated_modualtion_patterns: np.ndarray,
-                                fine_q_grid: np.ndarray) -> Dict[int, np.ndarray]:
-        Amn = {}
-        x_grid_flat = optical_system.x_grid.reshape(-1, optical_system.dimensionality)
-        q_grid_flat = fine_q_grid.reshape(-1, optical_system.dimensionality)
-        phase_matrix = q_grid_flat @ x_grid_flat.T
-        fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
-        for m in illumination.harmonics.keys():
-            if np.isclose(np.sum(np.abs(np.array(m[1]))), 0):
-                continue
+    def autocorrelation_matrix(
+        optical_system: OpticalSystem,
+        illumination: PlaneWavesSIM,
+        images: np.ndarray,
+        r: int,
+        estimated_modulation_patterns: dict,
+        q_coords_cycles: tuple[np.ndarray, np.ndarray],
+    ) -> dict:
+        """
+        A^{m}_{n}(q) via CZT (2D), returned in the SAME KEY/SHAPE convention
+        as cross_correlation_matrix:
+
+            dict[(m, n1, n2)] -> ndarray(qx, qy)
+
+        but only diagonal entries exist (n1 == n2 == n).
+
+        Uses your original autocorrelation definition:
+            sig = I_n*I_n*pat - I_n*pat
+        """
+        keys, sigs = [], []
+        Mt = int(illumination.spatial_shifts.shape[1])
+
+        for m, pat in estimated_modulation_patterns.items():
             if m[0] != r:
                 continue
-            if m[1][0] >= 0:
-                for n in range(illumination.Mt):
-                    signal_function = (images[r, n] * images[r, n] * estimated_modualtion_patterns[m]).flatten()
-                    noise_function = (images[r, n] *  estimated_modualtion_patterns[m]).flatten()
-                    Amn[(m, n)] = fourier_exponents @ (signal_function - noise_function)
-                    Amn[(m, n)] = Amn[(m, n)].reshape(fine_q_grid.shape[:-1])
-        return Amn        
+            for n in range(Mt):
+                sig = images[r, n] * images[r, n] * pat
+                sig = sig - (images[r, n] * pat)
+                keys.append((m, n))
+                sigs.append(sig)
 
+        sig_stack = np.stack(sigs, axis=0)  # (K, H, W)
 
-    def _fine_q_grid(self, q_grid, zooming_factor) -> np.ndarray:
-        """
-        Build a fine q-grid for the correlation matrix.
-        """
-        fine_q_coordinates = []
-        for dim in range (len(q_grid.shape)-1):
-            q_max, q_min = q_grid[..., dim].max(), q_grid[..., dim].min()
-            fine_q_coordinates.append(np.linspace(q_min/ zooming_factor, q_max / zooming_factor, q_grid.shape[dim]))
-        fine_q_grid = np.stack(np.meshgrid(*tuple(fine_q_coordinates), indexing='ij'), axis=-1)
-        return fine_q_grid
-    
+        x_coords = optical_system.psf_coordinates
+        q_coords_rad = tuple((2.0 * np.pi) * np.asarray(qc) for qc in q_coords_cycles)
+        D = optical_system.dimensionality
+        spatial_axes = tuple(range(sig_stack.ndim - D, sig_stack.ndim))
 
-    def _find_maxima(self, Cmat: Dict[int, np.ndarray], grid: np.ndarray) -> dict:
-        """
-        Find the maxima in the correlation matrix.
-        """
-        maxima = {}
-        for index in Cmat.keys():
-            max_index = np.unravel_index(np.argmax(np.abs(Cmat[index])), Cmat[index].shape)
-            # print(index, round(np.abs(Cmat[index][max_index])), round(np.angle(Cmat[index][max_index])* 180/np.pi, 1), grid[max_index])
-            q = grid[max_index]
-            maxima[index] = q
-        return maxima
-    
-    def _average_maxima(self, maxima: dict[int, np.ndarray]) -> dict:
-        """
-        Average the maxima to get a new guess for the peaks. 
-        """
+        out = hpc_utils.czt_nd_fourier(
+            np.asarray(sig_stack),
+            x_coords,
+            q_coords_rad,
+            axes=spatial_axes,
+            rtol=1e-6,
+            atol=1e-12,
+        )
+        out_np = hpc_utils._to_numpy(out)  # (K, qx, qy)
 
-        averaged_maxima = {}
-        for index in maxima.keys():
-            m, n1, n2 = index
-            if m in averaged_maxima.keys():
-                averaged_maxima[m] += maxima[index]
-            else:
-                averaged_maxima[m] = np.copy(maxima[index])
-        for m in averaged_maxima.keys():
-            averaged_maxima[m] /= self.illumination.Mt ** 2
-        return averaged_maxima
-
-    def _refine_peaks(self, peaks, averaged_maxima: dict) -> dict:
-        refined_peaks = {}
-        for index in averaged_maxima.keys():
-            refined_peaks[index] = peaks[index] - 2 * np.pi * averaged_maxima[index]
-
-        return refined_peaks
+        return {keys[i]: out_np[i] for i in range(len(keys))}
     
 
 class PeaksEstimatorCrossCorrelation2D(PeaksEstimatorCrossCorrelation):
@@ -670,241 +1051,12 @@ class PeaksEstimatorCrossCorrelation2D(PeaksEstimatorCrossCorrelation):
     def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system: OpticalSystem2D):
         super().__init__(illumination, optical_system)
 
-class PeaksEstimatorCrossCorrelation3D(PeaksEstimatorCrossCorrelation):
+
+class PeaksEstimatorCrossCorrelation3D(PeaksEstimatorInterpolation):
     dimensionality = 3
 
-    def __init__(self, illumination: IlluminationPlaneWaves3D, optical_system: OpticalSystem3D):
+    def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system: OpticalSystem2D):
         super().__init__(illumination, optical_system)
- 
-class PeaksEstimatorInterpolation(PeaksEstimator):
-    def estimate_peaks(self,
-                        stack: np.ndarray,
-                        peak_search_area_size: int = 31,
-                        zooming_factor: int = 3,
-                        max_iterations: int = 3,
-                        debug_info_level: int = 0,
-                        ) -> np.ndarray:
-
-        if len(stack.shape[2:]) != self.dimensionality:
-            if len(self.illumination.dimensions) != len(stack.shape[2:]):
-                raise ValueError(f"Stack dimensions {stack.shape[2:]} do not match illumination dimensions {self.illumination.dimensions}")
-
-        wavevectors, indices = self.illumination.get_all_wavevectors_projected()
-        peak_guesses = {index: wavevector / (2 * np.pi) for index, wavevector in zip(indices, wavevectors)}
-        peak_search_areas  = self._locate_peaks(peak_guesses, peak_search_area_size)
-        stack_ft = self.get_stack_ft(stack)
-        # for r in range(stack.shape[0]):
-        #     plt.imshow(np.log1p(np.abs(stack_ft[r, 0])), cmap='gray')
-        #     plt.show()
-
-        stacks_ft = self._crop_stacks(stack_ft, peak_search_areas, debug_info_level=debug_info_level)
-        grids = self._crop_grids(peak_search_areas)
-        stacks_ft_averaged = self._average_ft_stacks(stacks_ft)
-        averaged_maxima = self._find_maxima(stacks_ft_averaged, grids)
-        for i in range(1, max_iterations+1):
-            coarse_peak_grids = self._get_coarse_grids(stacks_ft_averaged, grids, zooming_factor)
-            interpolated_grids = self._get_fine_grids(coarse_peak_grids, zooming_factor)
-            off_grid_ft_stacks, off_grid_otfs = self._off_grid_ft_stacks(stack, interpolated_grids)
-            off_grid_ft_averaged = self._average_ft_stacks(off_grid_ft_stacks)
-            grids = interpolated_grids
-            if debug_info_level > 3:
-                key = next(iter(off_grid_ft_averaged.keys()))
-                plt.imshow(np.log1p(np.abs(off_grid_ft_averaged[key])), cmap='gray')
-                plt.show()
-            stacks_ft_averaged = off_grid_ft_averaged
-            averaged_maxima = self._find_maxima(off_grid_ft_averaged, grids)
-            print('iteration', i, 'averaged_maxima', averaged_maxima)
-
-        if debug_info_level > 0:
-            print('before correction', averaged_maxima[(0, (2, 0))] / 2)
-
-        averaged_maxima=self._correct_peak_position(averaged_maxima, stack)
-
-        if debug_info_level > 0:
-            print('corrected maxima', averaged_maxima)
-
-        rotation_angles = self.estimate_rotation_angles(averaged_maxima)
-        refined_base_vectors = self.refine_base_vectors(averaged_maxima, rotation_angles)
-        refined_wavevectors = self.refine_wavevectors(refined_base_vectors, rotation_angles)
-
-        return refined_wavevectors, rotation_angles
-    
-    def _locate_peaks(self, approximate_peaks: dict[tuple[int], float], peak_search_area: int) -> np.ndarray:
-        """
-        Label the area around the peaks in the Fourier space.
-        """
-        peak_search_areas = {}
-        for peak in approximate_peaks.keys():
-            if np.isclose(np.sum(np.abs(np.array(peak[1]))), 0):
-                continue
-            if peak[1][0] > 0 or (peak[1][0] == 0 and all(val > 0 for val in peak[1][1:])):
-                grid = self.optical_system.q_grid
-                dq = grid[*([1]*self.dimensionality)] - grid[*([0]*self.dimensionality)]
-                approximate_peak = approximate_peaks[peak]
-                labeling_array = (np.abs(grid - approximate_peak[None, None, :]) <= peak_search_area * dq[None, None, :]).all(axis=-1)
-                peak_search_areas[peak] = labeling_array
-        return peak_search_areas
-
-    def _crop_stacks(self, stack_ft: np.ndarray, peak_search_areas: np.ndarray, debug_info_level: int = 0) -> np.ndarray:
-        """
-        Crop the stacks to get small regions around the peaks.
-        """
-        cropped_stacks = {}
-        if debug_info_level > 2:
-            masked_peaks = np.zeros((stack_ft.shape[2:]), dtype=np.complex128)
-
-        for peak in peak_search_areas.keys():
-            r = peak[0]
-            mask = peak_search_areas[peak]
-            if debug_info_level > 2:
-                masked_peaks += mask * stack_ft[r, 0]
-            coords = np.argwhere(mask)
-            top_left = coords.min(axis=0)
-            bottom_right = coords.max(axis=0) + 1  # slice end is exclusive
-            cropped_stacks[peak] = np.array([image_ft[top_left[0]:bottom_right[0], top_left[1]:bottom_right[1]] for image_ft in stack_ft[r]])
-
-        if debug_info_level > 2:
-            for peak in peak_search_areas.keys():   
-                qx, qy = self.optical_system.otf_frequencies
-                sizex, sizey = qx.size, qy.size
-                approximate_peak = self.illumination.harmonics[peak].wavevector / (2 * np.pi)
-                plt.plot(approximate_peak[0]/qx[-1] * sizex//2 + sizex//2, approximate_peak[1]/qx[-1] * sizey//2 + sizey//2, 'rx')
-            plt.imshow(np.log1p(np.abs(masked_peaks)).T, cmap='gray')
-            plt.show()
-                
-        return cropped_stacks
-    
-    def _crop_grids(self, peak_search_areas: np.ndarray) -> np.ndarray:
-        """
-        Crop the global grid to get small regions around the peaks.
-        """
-        cropped_grids = {}
-        for peak in peak_search_areas.keys():
-            grid = self.optical_system.q_grid
-            mask = peak_search_areas[peak]
-            coords = np.argwhere(mask)
-            top_left = coords.min(axis=0)
-            bottom_right = coords.max(axis=0) + 1  # slice end is exclusive
-            grid = grid[top_left[0]:bottom_right[0], top_left[1]:bottom_right[1], ...]
-            cropped_grids[peak] = grid
-        return cropped_grids
-    
-    def _crop_otf(self, peak_search_areas: np.ndarray) -> np.ndarray:
-        """
-        Crop the OTF to get small regions around the peaks.
-        """
-        cropped_otfs = {}
-        for peak in peak_search_areas.keys():
-            otf = self.optical_system.otf
-            otf *= peak_search_areas[peak][...]
-            cropped_otfs[peak] = np.abs(otf)
-        return cropped_otfs
-    
-
-    def _get_coarse_grids(self, stack_ft_averages: np.ndarray, grids: dict[np.ndarray], peak_interpolation_area_size: int) -> np.ndarray:
-        """
-        Coarse grid around the peaks. 
-        """
-        coarse_grids = {}
-        for peak in grids.keys():
-            stack = stack_ft_averages[peak]
-            grid = grids[peak]
-            max_index = np.unravel_index(np.argmax(stack), stack.shape)
-            print('max_index', max_index)
-            refined_peak = grid[max_index]
-            print('refined peak', refined_peak)
-            print('peak_value', stack[max_index])
-
-            slices = tuple([slice(max_index[dim] - peak_interpolation_area_size // 2, max_index[dim] + peak_interpolation_area_size // 2 + 1) for dim in range(len(max_index))])
-            coarse_grids[peak] = grid[slices + (slice(None),)]
-            dq = grid[*([1] * self.dimensionality)] - grid[*([0]*self.dimensionality)]
-            coarse_coords = tuple([np.linspace(refined_peak[dim] - peak_interpolation_area_size//2 * dq[dim],  
-                                                refined_peak[dim] + (peak_interpolation_area_size + 1)//2 * dq[dim],
-                                                peak_interpolation_area_size) for dim in range(self.dimensionality)])
-            coarse_grid = np.stack(np.meshgrid(*coarse_coords), -1)
-            coarse_grids[peak] = coarse_grid
-            # plt.imshow(np.abs(stack), cmap='gray')
-            # plt.plot(max_index[1], max_index[0], 'rx')
-            # plt.show()
-        return coarse_grids
-
-    def _get_fine_grids(self, peak_interpolation_areas, interpolation_factor: int) -> np.ndarray:
-        """
-        Interpolate coarse grids to get finer grids aroun the peaks. 
-        """
-        interpolated_grids = {}
-        for peak in peak_interpolation_areas.keys():
-            fine_grid = self._get_fine_grid(peak_interpolation_areas[peak], interpolation_factor)
-            interpolated_grids[peak] = fine_grid
-        return interpolated_grids
-    
-    def _get_fine_grid(self, coarse_grid: np.ndarray, interpolation_factor: int) -> np.ndarray:
-        fine_q_coordinates = []
-        for dim in range (len(coarse_grid.shape)-1):
-            q_max, q_min = coarse_grid[..., dim].max(), coarse_grid[..., dim].min()
-            fine_q_coordinates.append(np.linspace(q_min, q_max, (coarse_grid.shape[dim] - 1) * interpolation_factor + 1))
-        fine_q_grid = np.stack(np.meshgrid(*tuple(fine_q_coordinates), indexing='ij'), axis=-1)
-        return fine_q_grid
-    
-    def _off_grid_ft_stacks(self, stack: np.ndarray, fine_q_grids: np.ndarray) -> np.ndarray:
-        """
-        Compute the Fourier transform of the stacks on the fine q-grids to interpolate them arount the peaks. 
-        Nyquist and Dirichlet theorems ensure that this is the only correct way to do it.
-        """
-        x_grid_flat = self.optical_system.x_grid.reshape(-1, self.optical_system.dimensionality)
-        images_ft_dict = {}
-        otfs_dict = {}
-        for index in fine_q_grids.keys():
-            r = index
-            fine_q_grid = fine_q_grids[index]
-            q_grid_flat = fine_q_grid.reshape(-1, self.optical_system.dimensionality)
-            phase_matrix = q_grid_flat @ x_grid_flat.T
-            fourier_exponents = np.exp(-1j * 2 * np.pi * phase_matrix)
-            new_stack = []
-            for image in stack[r]:
-                image = image.flatten()
-                image_ft = fourier_exponents @ image
-                new_stack.append(image_ft.reshape(fine_q_grid.shape[:-1]))
-            images_ft_dict[index] = np.array(new_stack)
-                
-            psf = self.optical_system.psf.flatten()
-            otf = fourier_exponents @ psf
-            otfs_dict[index] = np.abs(otf.reshape(fine_q_grid.shape[:-1]))
-            # plt.imshow(np.abs(otfs_dict[index]), cmap='gray')
-            # plt.show()
-            # plt.imshow(np.abs(otfs_dict[index]), cmap='gray')
-            # plt.show()
-        return images_ft_dict, otfs_dict
-    
-    def _average_ft_stacks(self, stacks_ft_dict: dict[np.ndarray]) -> np.ndarray:
-        """
-        Average the absolute values of Fourier transforms of the raw images for more precise peak estimation.
-        """
-        averaged_images_ft_dict = {}
-        for index in stacks_ft_dict.keys():
-            stack = stacks_ft_dict[index]
-            averaged_images_ft_dict[index] = np.mean(np.abs(stack), axis=0)
-        return averaged_images_ft_dict
-
-    def _find_maxima(self, image_dict: dict[np.ndarray], fine_q_grids: dict[np.ndarray]) -> np.ndarray:
-        """
-        Find the maxima (i. e., peak approximations) in the image stacks.
-        """
-        max_dict = {}
-        for index in image_dict.keys():
-            grid = fine_q_grids[index]
-            image = image_dict[index]
-            # plt.imshow(image, cmap='gray')
-            # plt.show()
-            max_index = np.unravel_index(np.argmax(image), image.shape)
-            max_dict[index] = grid[max_index]
-        return max_dict
-    
-    @abstractmethod
-    def _correct_peak_position(self, estimated_peaks: dict[np.ndarray[3, np.float64]], stack: np.ndarray, dk: float = 10**-4) -> np.ndarray:
-        """
-        Account for the non-uniform OTF to correct the peaks position assuming it is not far from actual illumination wavevectros. 
-        """
 
 class PeaksEstimatorInterpolation2D(PeaksEstimatorInterpolation):
     dimensionality = 2
@@ -912,57 +1064,68 @@ class PeaksEstimatorInterpolation2D(PeaksEstimatorInterpolation):
     def __init__(self, illumination: IlluminationPlaneWaves2D, optical_system: OpticalSystem2D):
         super().__init__(illumination, optical_system)
 
-    def _correct_peak_position(self, estimated_peaks: dict[np.ndarray[2, np.float64]], stack: np.ndarray, dk: float = 10**-4) -> np.ndarray:
-        """
-        Account for the non-uniform OTF to correct the peaks position assuming it is not far from actual illumination wavevectros. 
-        """
-        otf_dict = {}
-        otf_grad_dict = {}
-        grid = self.optical_system.x_grid
-        for key in estimated_peaks.keys():
-            peak = estimated_peaks[key]
-            psf = self.optical_system.psf
-            q_values = np.array([peak,
-                                 peak - np.array((dk, 0)),
-                                 peak + np.array((dk, 0)),
-                                 peak - np.array((0, dk)),
-                                 peak + np.array((0, dk))])
+    def _correct_peak_position(self, estimated_peaks: dict, stack: np.ndarray, dk: float = 10**-4) -> dict:
+        otf0 = {}
+        otf_grad = {}
 
-            otf_values = off_grid_ft(psf, grid, q_values)
-            otf_values = np.abs(otf_values)
-            otf_dict[key] = otf_values[0]
+        for key, peak in estimated_peaks.items():
+            q = np.array(
+                [
+                    peak,
+                    peak - np.array((dk, 0.0)),
+                    peak + np.array((dk, 0.0)),
+                    peak - np.array((0.0, dk)),
+                    peak + np.array((0.0, dk)),
+                ],
+                dtype=np.float64,
+            )
+            otf = self._sample_otf_abs(q)
+            otf0[key] = otf[0]
+            otf_grad[key] = np.array([otf[2] - otf[1], otf[4] - otf[3]], dtype=np.float64) / (2.0 * dk)
 
-            otf_grad = np.array([otf_values[2] - otf_values[1], otf_values[4] - otf_values[3]]) / (2 * dk)
-            otf_grad_dict[key] = otf_grad
+        # shared local f(q) model around 0-offset (as in your original code)
+        q0 = np.array(
+            [
+                (0.0, 0.0),                          # 0
+                (-dk, 0.0), (dk, 0.0),               # 1,2
+                (0.0, -dk), (0.0, dk),               # 3,4
+                (-dk, -dk), (-dk, dk),               # 5,6
+                (dk, -dk), (dk, dk),                 # 7,8
+            ],
+            dtype=np.float64,
+        )
 
-        q_grid_dict = {(0, (0, 0)): np.array([np.array((0, 0)),
-                                         np.array((-dk, 0)), np.array((dk, 0)),
-                                         np.array((0, -dk)), np.array((0, dk)),
-                                         np.array((-dk, -dk)), np.array((-dk, dk)),
-                                         np.array((dk, -dk)), np.array((dk, dk))])}
-        
-        I_values, otf_values = self._off_grid_ft_stacks(stack, q_grid_dict)
-        I_values = self._average_ft_stacks(I_values)
-        f_values = I_values[(0,(0, 0))] / np.abs(otf_values[(0, (0, 0))])
-        f_grad = np.array([f_values[2] - f_values[1], f_values[4] - f_values[3]]) / (2 * dk)
+        I = self._sample_stack_mean_abs(stack[0], q0)               # (K,)
+        O = self._sample_otf_abs(q0)                                # (K,)
 
-        f_hessian = np.array((
-                             np.array([f_values[2] - 2 * f_values[0] + f_values[2],
-                                       (f_values[8] - f_values[7] - f_values[6] + f_values[5])/2]),
-                             np.array([(f_values[8] - f_values[7] - f_values[6] + f_values[5])/2, 
-                                      f_values[4] - 2 * f_values[0] + f_values[3]]),        
-                             )) / (dk**2)
-        
-        corrected_peaks = {}
-        for key in otf_grad_dict.keys():
-            otf = otf_dict[key]
-            otf_grad = otf_grad_dict[key]
-            delta_k = f_values[0] / otf * (1  + f_values[0]/(2 * otf **2) * otf_grad.T @ np.linalg.inv(f_hessian) @ otf_grad) * np.linalg.inv(f_hessian) @ otf_grad 
-            print('correction ', delta_k)
-            corrected_peaks[key] = estimated_peaks[key] + delta_k
+        f = I / O
+        f_grad = np.array([f[2] - f[1], f[4] - f[3]], dtype=np.float64) / (2.0 * dk)
 
-        return corrected_peaks
+        f_hessian = (
+            np.array(
+                [
+                    [f[2] - 2.0 * f[0] + f[1], (f[8] - f[7] - f[6] + f[5]) / 2.0],
+                    [(f[8] - f[7] - f[6] + f[5]) / 2.0, f[4] - 2.0 * f[0] + f[3]],
+                ],
+                dtype=np.float64,
+            )
+            / (dk**2)
+        )
+        invH = np.linalg.inv(f_hessian)
 
+        corrected = {}
+        for key, peak in estimated_peaks.items():
+            otf = otf0[key]
+            g = otf_grad[key]
+            delta_k = (
+                f[0] / otf
+                * (1.0 + f[0] / (2.0 * otf**2) * (g.T @ invH @ g))
+                * (invH @ g)
+            )
+            print("correction", delta_k)
+            corrected[key] = peak + delta_k
+
+        return corrected
 
 class PeaksEstimatorInterpolation3D(PeaksEstimatorInterpolation):
     dimensionality = 3
@@ -970,68 +1133,80 @@ class PeaksEstimatorInterpolation3D(PeaksEstimatorInterpolation):
     def __init__(self, illumination: IlluminationPlaneWaves3D, optical_system: OpticalSystem3D):
         super().__init__(illumination, optical_system)
 
+    def _correct_peak_position(self, estimated_peaks: dict, stack: np.ndarray, dk: float = 10**-4) -> dict:
+        otf0 = {}
+        otf_grad = {}
 
-    def _correct_peak_position(self, estimated_peaks: dict[np.ndarray[2, np.float64]], stack: np.ndarray, dk: float = 10**-4) -> np.ndarray:
-        """
-        Account for the non-uniform OTF to correct the peaks position assuming it is not far from actual illumination wavevectros. 
-        """
-        otf_dict = {}
-        otf_grad_dict = {}
-        grid = self.optical_system.x_grid
-        for key in estimated_peaks.keys():
-            peak = estimated_peaks[key]
-            psf = self.optical_system.psf
-            q_values = np.array([peak, peak - np.array((dk, 0, 0)), peak + np.array((dk, 0, 0)), peak - np.array((0, dk, 0)), peak + np.array((0, dk, 0)),
-                                 peak - np.array((0, 0, dk)), peak + np.array((0, 0, dk))])
+        for key, peak in estimated_peaks.items():
+            q = np.array(
+                [
+                    peak,
+                    peak - np.array((dk, 0.0, 0.0)),
+                    peak + np.array((dk, 0.0, 0.0)),
+                    peak - np.array((0.0, dk, 0.0)),
+                    peak + np.array((0.0, dk, 0.0)),
+                    peak - np.array((0.0, 0.0, dk)),
+                    peak + np.array((0.0, 0.0, dk)),
+                ],
+                dtype=np.float64,
+            )
+            otf = self._sample_otf_abs(q)
+            otf0[key] = otf[0]
+            otf_grad[key] = np.array(
+                [otf[2] - otf[1], otf[4] - otf[3], otf[6] - otf[5]],
+                dtype=np.float64,
+            ) / (2.0 * dk)
 
-            otf_values = off_grid_ft(psf, grid, q_values)
-            otf_values = np.abs(otf_values)
-            otf_dict[key] = otf_values[0]
+        # shared local f(q) model around 0-offset
+        q0 = np.array(
+            [
+                (0.0, 0.0, 0.0),                      # 0
+                (-dk, 0.0, 0.0), (dk, 0.0, 0.0),       # 1,2
+                (0.0, -dk, 0.0), (0.0, dk, 0.0),       # 3,4
+                (0.0, 0.0, -dk), (0.0, 0.0, dk),       # 5,6
+                (-dk, -dk, 0.0), (-dk, dk, 0.0),       # 7,8
+                (dk, -dk, 0.0), (dk, dk, 0.0),         # 9,10
+                (0.0, -dk, -dk), (0.0, -dk, dk),       # 11,12
+                (0.0, dk, -dk), (0.0, dk, dk),         # 13,14
+                (-dk, 0.0, -dk), (dk, 0.0, -dk),       # 15,16
+                (-dk, 0.0, dk), (dk, 0.0, dk),         # 17,18
+            ],
+            dtype=np.float64,
+        )
 
-            otf_grad = np.array([otf_values[2] - otf_values[1], otf_values[4] - otf_values[3]], otf[6] - otf[5]) / (2 * dk)
-            otf_grad_dict[key] = otf_grad
+        I = self._sample_stack_mean_abs(stack[0], q0)               # (K,)
+        O = self._sample_otf_abs(q0)                                # (K,)
 
-        q_grid_dict = {(0, (0, 0)): np.array([np.array((0, 0)), #0
-                                         np.array((-dk, 0, 0)), np.array((dk, 0, 0)), #1, 2
-                                         np.array((0, -dk, 0)), np.array((0, dk, 0)), #3, 4
-                                         np.array((0, 0, -dk)), np.array((0, 0, dk)), #5, 6
-                                         np.array((-dk, -dk, 0)), np.array((-dk, dk, 0)), #7, 8
-                                         np.array((dk, -dk, 0)), np.array((dk, dk, 0)), #9, 10
-                                         np.array((0, -dk, -dk)), np.array((0, -dk, dk)), #11, 12
-                                         np.array((0, dk, -dk)), np.array((0, dk, dk)), #13, 14
-                                         np.array((-dk, 0, -dk)), np.array((dk, dk, 0)), #15, 16
-                                         np.array((-dk, 0, dk)), np.array((-dk, 0, dk))])} #17, 18
-        
-        I_values, otf_values = self._off_grid_ft_stacks(stack, q_grid_dict)
-        I_values = self._average_ft_stacks(I_values)
-        f_values = I_values[(0,(0, 0))] / np.abs(otf_values[(0, (0, 0))])
-        f_grad = np.array([f_values[2] - f_values[1], f_values[4] - f_values[3]], f_values[6] - f_values[5]) / (2 * dk)
+        f = I / O
+        f_grad = np.array([f[2] - f[1], f[4] - f[3], f[6] - f[5]], dtype=np.float64) / (2.0 * dk)
 
-        f_hessian = np.array((
-                             np.array([f_values[2] - 2 * f_values[0] + f_values[2],                   #fxx
-                                       (f_values[7] - f_values[8] - f_values[9] + f_values[9])/2,     #fxy
-                                        (f_values[15] - f_values[16] - f_values[17] + f_values[18])/2 #fxz
-                                       ]),
-                             np.array([(f_values[7] - f_values[8] - f_values[9] + f_values[9])/2,    #fxy
-                                        f_values[4] - 2 * f_values[0] + f_values[3],                  #fyy
-                                        (f_values[11] - f_values[12] - f_values[13] + f_values[14])/2 #fyz
-                                        ]),
-                            np.array([(f_values[15] - f_values[16] - f_values[17] + f_values[18])/2,  #fxz
-                                      (f_values[11] - f_values[12] - f_values[13] + f_values[14])/2,  #fyz
-                                      f_values[5] - 2 * f_values[0] + f_values[6]/2                  #fzz
-                                      ]),
-                             )) / (dk**2)
-        
-        corrected_peaks = {}
-        for key in otf_grad_dict.keys():
-            otf = otf_dict[key]
-            otf_grad = otf_grad_dict[key]
-            delta_k = f_values[0] / otf * (1  + f_values[0]/(2 * otf **2) * otf_grad.T @ np.linalg.inv(f_hessian) @ otf_grad) * np.linalg.inv(f_hessian) @ otf_grad 
-            print('correction ', delta_k)
-            corrected_peaks[key] = estimated_peaks[key] + delta_k
+        f_hessian = (
+            np.array(
+                [
+                    [f[2] - 2.0 * f[0] + f[1], (f[10] - f[9] - f[8] + f[7]) / 2.0, (f[16] - f[15] - f[17] + f[18]) / 2.0],
+                    [(f[10] - f[9] - f[8] + f[7]) / 2.0, f[4] - 2.0 * f[0] + f[3], (f[14] - f[13] - f[12] + f[11]) / 2.0],
+                    [(f[16] - f[15] - f[17] + f[18]) / 2.0, (f[14] - f[13] - f[12] + f[11]) / 2.0, f[6] - 2.0 * f[0] + f[5]],
+                ],
+                dtype=np.float64,
+            )
+            / (dk**2)
+        )
+        invH = np.linalg.inv(f_hessian)
 
-        return corrected_peaks
-    
+        corrected = {}
+        for key, peak in estimated_peaks.items():
+            otf = otf0[key]
+            g = otf_grad[key]
+            delta_k = (
+                f[0] / otf
+                * (1.0 + f[0] / (2.0 * otf**2) * (g.T @ invH @ g))
+                * (invH @ g)
+            )
+            print("correction", delta_k)
+            corrected[key] = peak + delta_k
+
+        return corrected
+
 class PhasesEstimator: 
     @staticmethod
     def compute_spatial_shifts(illumination: PlaneWavesSIM, phase_matrix: np.ndarray, refined_wavevectors: np.ndarray) -> np.ndarray:
@@ -1061,8 +1236,8 @@ class PhasesEstimator:
         phase_matrix = {}
         for r in range(self.illumination.Mr):
             wavevectors = {index: refined_wavevectors[index] for index in refined_wavevectors.keys() if index[0] == r}
-            estimated_modualtion_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(self.optical_system, wavevectors)
-            Amn = PeaksEstimatorCrossCorrelation.autocorrealtion_matrix(self.optical_system, self.illumination, stack, r, estimated_modualtion_patterns, grid)
+            estimated_modulation_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(self.optical_system, wavevectors)
+            Amn = PeaksEstimatorCrossCorrelation.autocorrelation_matrix(self.optical_system, self.illumination, stack, r, estimated_modulation_patterns, grid)
             for n in range(self.illumination.Mt):
                 phase_matrix[(r, n, (0, 0))] = 1. + 0.j
                 for m in wavevectors.keys():
@@ -1078,12 +1253,11 @@ class PhasesEstimator:
     
     @staticmethod
     def phase_matrix_autocorrelation(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
-        grid = np.zeros((1, 1, optical_system.dimensionality), dtype=np.float64)
         phase_matrix = {}
         for r in range(illumination.Mr):
             wavevectors = {index: refined_wavevectors[index] for index in refined_wavevectors.keys() if index[0] == r}
-            estimated_modualtion_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(optical_system, wavevectors)
-            Amn = PeaksEstimatorCrossCorrelation.autocorrealtion_matrix(optical_system, illumination, stack, r, estimated_modualtion_patterns, grid)
+            phase_modulation_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(optical_system, wavevectors)
+            Amn = PeaksEstimatorCrossCorrelation.autocorrelation_matrix(optical_system, illumination, stack, r, phase_modulation_patterns, optical_system.otf_frequencies)
             for n in range(illumination.Mt):
                 phase_matrix[(r, n, (0, 0))] = 1. + 0.j
                 for m in wavevectors.keys():

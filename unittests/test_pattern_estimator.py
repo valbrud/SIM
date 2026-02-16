@@ -42,7 +42,7 @@ def build_experimental_illumination_2d():
 def build_theoretical_illumination_2d():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        0.98 * theta, 1, 0, Mr=3,
+        0.95 * theta, 1, 0, Mr=3,
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -81,14 +81,14 @@ class TestPatternEstimator2D(unittest.TestCase):
         """Estimator recovers phases and modulation depth on clean data."""
         raw_stack = self.simulator.generate_noiseless_sim_images(self.sample)
         raw_stack = self.simulator.add_noise(raw_stack)  # (3, 3, N, N)
-        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[0, 0]))).T, cmap='gray', origin='lower')
-        plt.show()
-        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[1, 0]))).T, cmap='gray', origin='lower')
-        plt.show()
-        plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[2, 0]))).T, cmap='gray', origin='lower')
-        plt.show()
+        # plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[0, 0]))).T, cmap='gray', origin='lower')
+        # plt.show()
+        # plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[1, 0]))).T, cmap='gray', origin='lower')
+        # plt.show()
+        # plt.imshow(np.log1p(np.abs(wrapped_fftn(raw_stack[2, 0]))).T, cmap='gray', origin='lower')
+        # plt.show()
 
-        base_vectors = np.array(self.theoretical_illumination.get_base_vectors(0))/(2 * np.pi)
+        base_vectors = np.array(self.theoretical_illumination.get_base_vectors(0)) / (2 * np.pi)
         true_vectors = np.array(self.experimenatal_illumination.get_base_vectors(0)) / (2  * np.pi)
         dq = self.estimator.optical_system.otf_frequencies[0][1] - self.estimator.optical_system.otf_frequencies[0][0]
         print('dq size = ', dq )
@@ -99,19 +99,23 @@ class TestPatternEstimator2D(unittest.TestCase):
 
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
-            zooming_factor=1.3,
-            peak_neighborhood_size=7, 
-            max_iterations=10,             
+            peaks_estimation_method='cross_correlation', 
+            phase_estimation_method='autocorrelation',
+            modulation_coefficients_method='default',
+            zooming_factor=100,
+            peak_search_area_size=21, 
+            max_iterations=2,
+            debug_info_level=4          
         )
 
         print(f"rotation_angles,  {np.round(illumination_estimated.angles * 180 / np.pi, 1)} degrees")
-        print("refined_vectors", illumination_estimated.get_all_wavevectors()[0])
+        print("refined_vectors", illumination_estimated.get_base_vectors(2) * 2)
         print('true_wavevectors =', np.array(true_vectors) * 4 * np.pi)
         # print('phase_matrix = ', illumination_estimated.phase_matrix)
         # precision = (true_vectors -  illumination_estimated.get_all_wavevectors()[0]) / dq
         # print('achieved_precision = ', precision, 'pixels')
-        am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system.psf, self.optical_system.x_grid)
-        print("modulation_coefficients", am)
+        # am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system.psf, self.optical_system.x_grid, method='peak_height_ratio')
+        # print("modulation_coefficients", am)
 
     def test_interpolation_estimate(self):
         self.estimator = IlluminationPatternEstimator2D(
@@ -146,8 +150,8 @@ class TestPatternEstimator2D(unittest.TestCase):
             phase_estimation_method='autocorrelation',
             modulation_coefficients_method='default',
             peak_search_area_size = 5,
-            zooming_factor = 3, 
-            max_iterations = 10,
+            zooming_factor = 100, 
+            max_iterations = 3,
             ssnr_estimation_iters=100, 
             debug_info_level=2
         )
@@ -157,7 +161,7 @@ class TestPatternEstimator2D(unittest.TestCase):
         phase_matrix = illumination_estimated.phase_matrix
         modulation_coefficients = illumination_estimated.get_all_amplitudes()
         print(f"rotation_angles,  {np.round(np.array(rotation_angles) * 180 / np.pi, 1)} degrees")
-        print("refined_vectors", refined_wavevectors / (2 * np.pi))
+        print("refined_base_vectors", illumination_estimated.get_base_vectors(0) / (2 * np.pi))
         print('true_wavevectors =', np.array(true_vectors))
         # print('phase_matrix = ', phase_matrix)
         print('modulation_coefficients = ', modulation_coefficients)

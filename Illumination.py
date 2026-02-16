@@ -269,9 +269,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         pass
 
     @staticmethod
-    def glue_indices(sim_index, projected_index, dimensions) -> tuple[int, ...]:
-        index = tuple([sim_index[1][i] if dimensions[i] else projected_index[i] for i in range(len(dimensions))])
-        return (sim_index[0], tuple(index))
+    def glue_indices(sim_index, projected_index) -> tuple[int, ...]:
+        index = tuple(np.array(sim_index[1]) + np.array(projected_index))
+        return (sim_index[0], index)
 
     # def fill_projected_dimensions_with_zeros(self, wavevectors):
     #     wavevectors_extended = np.zeros((len(wavevectors), len(self.dimensions)))
@@ -402,7 +402,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         sim_indices = [key for key in self.rearranged_indices.keys() if key[0] == r]
         wavevectors_projected = []
         for sim_index in sim_indices:
-            index = self.glue_indices(sim_index, self.rearranged_indices[sim_index][0], self.dimensions)
+            index = self.glue_indices(sim_index, self.rearranged_indices[sim_index][0])
             wavevector = self.harmonics[index].wavevector
             wavevectors_projected.append(wavevector * np.array(self.dimensions))
         return np.array(wavevectors_projected), tuple(sim_indices)
@@ -461,7 +461,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         for sim_index in indices:
             effective_kernel = 0
             for projected_index in indices[sim_index]:
-                index = self.glue_indices(sim_index, projected_index, self.dimensions)
+                index = self.glue_indices(sim_index, projected_index)
                 wavevector = harmonics[index].wavevector.copy()
                 amplitude = harmonics[index].amplitude
                 if self.dimensionality == 2:
@@ -595,7 +595,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             
             amr = np.zeros((len(harmonics)), dtype=np.complex128)
             otfs = off_grid_ft(psf, grid, wavevectors / (2 * np.pi))
-
+            print(otfs)
+            
             if method == 'least_squares':
                 phases = flat_grid @ wavevectors.T
 
@@ -613,6 +614,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 for n in range(self.Mt):
                     ft = off_grid_ft(stack[r, n], grid, np.array(wavevectors / (2 * np.pi)))
                     amr = np.abs(ft)
+                    print(harmonic, amr)
 
             amr /= np.abs((otfs))
             amr /= np.amax(np.abs(amr)) 
@@ -745,7 +747,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         for sim_index in self.rearranged_indices:
             off_plane_count = len(self.rearranged_indices[sim_index])
             for off_plane_index in self.rearranged_indices[sim_index]:
-                index = self.glue_indices(sim_index, off_plane_index, self.dimensions)
+                index = self.glue_indices(sim_index, off_plane_index)
                 harmonic = copy.deepcopy(self.harmonics[index])
                 harmonic.amplitude = np.abs(harmonic.amplitude)
                 harmonic.phase = 0

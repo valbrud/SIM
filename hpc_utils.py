@@ -172,7 +172,7 @@ def _is_uniform_grid_1d(x, rtol=1e-4, atol=1e-4):
     return False, float(xn[0]), float(dx0)
 
 
-def precompute_czt_1d_from_coords(x_coords, q_coords, rtol=1e-6, atol=1e-10):
+def precompute_czt_1d_from_coords(x_coords, q_coords, rtol=1e-4, atol=1e-4):
     """
     Precompute chirp-factors and chirp-kernel FFT for a 1D CZT that evaluates
     the Fourier sum on a uniformly spaced q-grid given uniformly spaced x-grid.

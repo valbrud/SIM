@@ -14,12 +14,12 @@ import unittest
 import time
 from psf_models import *
 import psf_models_fast
-from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations, zernike_cartisian, setup_rho_legendre
+from pupil_functions import make_vortex_pupil, compute_pupil_plane_aberrations, zernike_cartesian, setup_rho_legendre
 import hpc_utils
 import pupil_functions
 
 alpha = 2 * np.pi / 5
-n = 1
+n = 1.5
 NA = n * np.sin(alpha)
 dx = 1 / (8 * NA)  
 dy = dx
@@ -194,31 +194,32 @@ class TestPSFOTF2D(unittest.TestCase):
         RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
 
         zernike_coeff = {
+            (2, 2): 0.05,  # Coma Horizontal
         }
         aberration_phase = compute_pupil_plane_aberrations(zernike_coeff, Nrho, Nphi)
         aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
         cylindrical_ra = np.mean(aberration_phase, axis=1)
         r = setup_rho_legendre(Nrho, float_type=np.float32)
 
-        aberration_phase_cartesian = zernike_cartisian(zernike_coeff, RHO, PHI)
+        aberration_phase_cartesian = zernike_cartesian(zernike_coeff, RHO, PHI)
         aberration_function_cartesian = np.exp(1j * 2 * np.pi * aberration_phase_cartesian)
-        cartisian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
+        cartesian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
         # plt.plot(r, cylindrical_ra, label="Cylindrical average")
-        # plt.plot(rho[Nrho//2:], cartisian_ra, label="Cartesian average")
+        # plt.plot(rho[Nrho//2:], cartesian_ra, label="Cartesian average")
         # plt.legend()
         # plt.show()
 
         # --- TIME MARKER START ---
         t_start = time.time()
         E_integral = compute_2d_psf_coherent(
-            x_grid2d, NA, pupil_function=aberration_function, Nphi=Nphi, Nrho=Nrho, device='gpu'
+            x_grid2d, NA, n,  pupil_function=aberration_function, Nphi=Nphi, Nrho=Nrho, device='gpu'
         )
         t_end = time.time()
         I_integral, OTF_integral = compute_incoherent_psf_and_otf(E_integral)
         print(f"test_integration_vs_chirp_z_transform: compute_2d_psf_coherent (integral) took {t_end - t_start:.4f} seconds")
         
         t_start = time.time()
-        E_chirp_z = psf_models_fast.compute_2d_psf_coherent((x, y), NA, pupil_function=aberration_function_cartesian, device='gpu')
+        E_chirp_z = psf_models_fast.compute_2d_psf_coherent((x, y), NA, nmedium=n, pupil_function=aberration_function_cartesian, device='gpu')
         I_chirp_z, OTF_chirp_z = compute_incoherent_psf_and_otf(E_chirp_z)
         t_end = time.time()
         print(f"test_integration_vs_chirp_z_transform: compute_2d_psf_coherent (chirp-z) took {t_end - t_start:.4f} seconds")
@@ -456,11 +457,11 @@ class TestPSFOTF3D(unittest.TestCase):
         cylindrical_ra = np.mean(aberration_phase, axis=1)
         r = setup_rho_legendre(Nrho, float_type=np.float32)
 
-        aberration_phase_cartesian = zernike_cartisian(zernike_coeff, RHO, PHI)
+        aberration_phase_cartesian = zernike_cartesian(zernike_coeff, RHO, PHI)
         aberration_function_cartesian = np.exp(1j * 2 * np.pi * aberration_phase_cartesian)
-        cartisian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
+        cartesian_ra = utils.average_rings2d(aberration_phase_cartesian, (rho, rho))
         # plt.plot(r, cylindrical_ra, label="Cylindrical average")
-        # plt.plot(rho[Nrho//2:], cartisian_ra, label="Cartesian average")
+        # plt.plot(rho[Nrho//2:], cartesian_ra, label="Cartesian average")
         # plt.legend()
         # plt.show()
 

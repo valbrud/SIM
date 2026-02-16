@@ -74,13 +74,20 @@ def _coords_to_backend_1d(arr, xp, float_type):
     return a
 
 
-def _maybe_apply_2pi(q_coords, xp, float_type, use_2pi):
+def _scale_coordinates(q_coords, xp, float_type, use_2pi, n_over_l=1.0):
     """
-    Our CZT kernel uses exp(-i q x). Many Fourier optics codes use exp(-i 2π f x).
-    To preserve your earlier sigma=2π... convention, default use_2pi=True.
+    Map user PSF coordinates to the CZT 'q' parameter in exp(-i q x).
+
+    Many Fourier optics codes use exp(-i 2π f x). In a medium, effective
+    wavenumber scales with n, so the PSF shrinks ~1/n if x is in real units.
+    We include an explicit multiplicative factor n_over_l (typically nmedium),
+    and optionally 2π.
+
+    Result: q = (2π if use_2pi else 1) * n_over_l * q_coords
     """
     q = _coords_to_backend_1d(q_coords, xp, float_type)
-    return (2.0 * xp.pi) * q if use_2pi else q
+    scale = (2.0 * xp.pi) if use_2pi else float_type(1.0)
+    return (scale * float_type(n_over_l)) * q
 
 
 # -----------------------------------------------------------------------------
@@ -195,11 +202,11 @@ def compute_2d_psf_coherent(
     v = u
 
     # Requested PSF coordinates -> conjugate coordinates qx,qy
-    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
-    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
 
     # Compute 2D FT using separable CZT along last two axes
-    E = hpc_utils.czt_nd_fourier(P, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-4, atol=1e-4)
+    E = hpc_utils.czt_nd_fourier(P, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
 
     # Return NumPy
     E_np = xp.asnumpy(E) if mode == "gpu" else np.asarray(E)
@@ -279,15 +286,15 @@ def compute_2d_vectorial_components_free_dipole(
     v = u
 
     # Requested PSF coords -> q
-    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
-    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
 
     # CZT each component
-    U0  = hpc_utils.czt_nd_fourier(P0,  (u, v), (qx, qy), axes=(-2, -1))
-    U1c = hpc_utils.czt_nd_fourier(P1c, (u, v), (qx, qy), axes=(-2, -1))
-    U1s = hpc_utils.czt_nd_fourier(P1s, (u, v), (qx, qy), axes=(-2, -1))
-    U2c = hpc_utils.czt_nd_fourier(P2c, (u, v), (qx, qy), axes=(-2, -1))
-    U2s = hpc_utils.czt_nd_fourier(P2s, (u, v), (qx, qy), axes=(-2, -1))
+    U0  = hpc_utils.czt_nd_fourier(P0,  (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
+    U1c = hpc_utils.czt_nd_fourier(P1c, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
+    U1s = hpc_utils.czt_nd_fourier(P1s, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
+    U2c = hpc_utils.czt_nd_fourier(P2c, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
+    U2s = hpc_utils.czt_nd_fourier(P2s, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
 
     cplx = (np.complex64 if use_complex64 else np.complex128)
     if mode == "gpu":
@@ -414,8 +421,8 @@ def compute_3d_psf_coherent(
     v = u
 
     # Requested PSF coords -> q
-    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
-    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
 
     slices = []
     for uval in u_values:
@@ -502,8 +509,8 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
     # Pupil coords and requested PSF coords -> q
     u = _pupil_coords_1d(N, xp, float_type)
     v = u
-    qx = _maybe_apply_2pi(x_coords, xp, float_type, use_2pi)
-    qy = _maybe_apply_2pi(y_coords, xp, float_type, use_2pi)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
 
     slices = []
     for uval in u_values:

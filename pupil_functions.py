@@ -49,7 +49,7 @@ def noll_to_nm(j):
 
     raise ValueError(f"No (n, m) pair found for Noll index j={j}")
 
-def zernike_cartisian_one_aberration(n, m, RHO, PHI):
+def zernike_cartesian_one_aberration(n, m, RHO, PHI):
     """
     Evaluate Zernike polynomial Z_n^m on a grid (RHO, PHI).
     Values outside the unit disk (RHO > 1) are set to zero.
@@ -89,10 +89,10 @@ def zernike_cartisian_one_aberration(n, m, RHO, PHI):
     
     return Z
 
-def zernike_cartisian(zernike_polynomials, RHO, PHI):
-    phase = np.zeros_like(RHO)
+def zernike_cartesian(zernike_polynomials, RHO, PHI):
+    phase = np.zeros_like(RHO, dtype=np.float32)
     for (n, m), amplitude in zernike_polynomials.items():
-        Z_nm = zernike_cartisian_one_aberration(n, m, RHO, PHI)
+        Z_nm = zernike_cartesian_one_aberration(n, m, RHO, PHI)
         phase += amplitude * Z_nm
     return phase
 

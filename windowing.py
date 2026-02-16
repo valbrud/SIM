@@ -134,3 +134,19 @@ if __name__=="__main__":
     slider_ssnr.on_changed(update)
 
     plt.show()
+
+def gaussian_attenuation(shape: tuple[int, int], sigma: float) -> np.ndarray:
+    """
+    2D Gaussian attenuation mask.
+
+    Args:
+        shape (tuple[int, int]): Shape of the mask.
+        sigma (float): Standard deviation of the Gaussian.
+
+    Returns:
+        np.ndarray: The mask.
+    """
+    x = np.arange(shape[1]) - shape[1] / 2
+    y = np.arange(shape[0]) - shape[0] / 2
+    xx, yy = np.meshgrid(x, y)
+    return np.exp(-(xx**2 + yy**2) / (2 * sigma**2))
