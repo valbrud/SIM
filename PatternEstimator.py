@@ -712,7 +712,7 @@ class PeaksEstimatorIterative(PeaksEstimator):
             fig, ax = plt.subplots()
             ax.set_title(f"r={r}, peak={peak}: avg |FT| (initial x, final o)")
             ax.imshow(
-                ft_avg.T,
+                np.log1p(10**4 * ft_avg.T),
                 origin="lower",
                 aspect="auto",
                 extent=[q_coords[0].min(), q_coords[0].max(), q_coords[1].min(), q_coords[1].max()],
@@ -762,7 +762,7 @@ class PeaksEstimatorIterative(PeaksEstimator):
         ax.set_xlabel("qx (cycles/unit)")
         ax.set_ylabel("qy (cycles/unit)")
         plt.show()
-        
+
     @abstractmethod
     def _debug_iteration_payload(
         self,
@@ -877,47 +877,72 @@ class PeaksEstimatorCrossCorrelation(PeaksEstimatorIterative):
         return {idx: z.copy() for idx in idxs}
 
     def _init_global_state(self, stack: np.ndarray, peak_guesses: dict) -> dict[str, Any]:
-        # store absolute initial guesses (cycles/unit) for peak-state init
+        """
+        CC global state:
+        - abs initial guesses (only to initialize peak_state["q"], not used as "global fit")
+        - caches for first-iteration (original-grid) CC results per peak
+        """
         wvs, idxs = self.illumination.get_all_wavevectors_projected()
-        abs_guesses = {idx: (wv / (2.0 * np.pi)) for idx, wv in zip(idxs, wvs)}
-        return {"abs_guesses_cycles": abs_guesses}
+        abs_guesses_cycles = {idx: (wv / (2.0 * np.pi)) for idx, wv in zip(idxs, wvs)}
+
+        return {
+            "abs_guesses_cycles": abs_guesses_cycles,
+            # first-iteration "fit" caches (on original neighbourhood grid)
+            "C0": {},      # peak -> dict[(m,n1,n2)] -> array (optional, heavy)
+            "S0": {},      # peak -> S(q) array
+            "dq0": {},     # peak -> dq argmax on original grid
+            "q0": {},      # peak -> (qx,qy) coords used for S0
+        }
 
     def _init_peak_state(self, stack, r, peak, peak_guesses, global_state):
         return {
-            "q": np.array(global_state["abs_guesses_cycles"][peak], dtype=np.float64),  # absolute (cycles/unit)
+            "q": np.array(global_state["abs_guesses_cycles"][peak], dtype=np.float64),  # absolute estimate
+            "_first_iter": True,  # tells _iterate_one to cache C/S on the original grid
+            "_global_state": global_state,
         }
 
     def _iterate_one(self, stack, r, peak, q_coords, peak_state, zooming_factor, debug_info_level):
         # --- update modulation pattern from CURRENT absolute estimate ---
-        k_rad = (2.0 * np.pi) * peak_state["q"]  # radians/unit
+        k_rad = (2.0 * np.pi) * peak_state["q"]
         phase = np.einsum("...l,l->...", self.optical_system.x_grid, k_rad)
-        esimtated_pattern_refined = {peak: np.exp(1j * phase)}
+        estimated_pattern_refined = {peak: np.exp(1j * phase)}  # consider sign flip if needed
 
-        # --- compute CC only for this peak m (not all m) ---
+        # --- compute CC for this peak on the CURRENT grid (first time: original neighbourhood grid) ---
         C = self.cross_correlation_matrix(
             self.optical_system,
             self.illumination,
             images=stack,
             r=r,
-            estimated_modulation_patterns=esimtated_pattern_refined,
+            estimated_modulation_patterns=estimated_pattern_refined,
             q_coords_cycles=q_coords,
         )
 
-        # robust surface: S(q)=sum_{n1,n2} |C_{n1n2}(q)|^2
+        # S(q)=sum_{n1,n2} |C_{n1n2}(q)|^2  (only entries are for this 'peak' anyway)
         Sm = None
         for _, arr in C.items():
             a2 = np.abs(arr) ** 2
             Sm = a2 if Sm is None else (Sm + a2)
 
-        dq = self._argmax_coords(Sm, q_coords)     # shift in cycles/unit
-        peak_state["q"] = peak_state["q"] - dq     # update absolute estimate
+        dq = self._argmax_coords(Sm, q_coords)
+        peak_state["q"] = peak_state["q"] - dq
 
+        # --- cache first-iteration "fit" on original grid ---
+        if peak_state.get("_first_iter", False):
+            gs = peak_state["_global_state"]  # we’ll inject this below; see note
+            gs["S0"][peak] = Sm
+            gs["dq0"][peak] = dq
+            gs["q0"][peak] = q_coords
+            # Optional: cache C0 too (can be huge). Keep off unless you really need it.
+            # gs["C0"][peak] = C
+            peak_state["_first_iter"] = False
+
+        # debug surface (use coords that generated Sm!)
         if debug_info_level >= 3:
             peak_state["_dbg_img"] = Sm
             peak_state["_dbg_qmax"] = dq
-            peak_state["_dbg_q_coords"] = q_coords  # must be used by parent plotter (see point 1)
+            peak_state["_dbg_q_coords"] = q_coords
 
-        # refine shift-grid around 0
+        # refine shift grid around 0 (your zoom_coords already does the correct thing now)
         q_coords = self._zoom_coords(q_coords, zooming_factor, center=None)
         return peak_state, q_coords, f"shift {dq} -> q {peak_state['q']}"
 

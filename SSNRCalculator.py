@@ -531,7 +531,7 @@ class SSNRSIM2D(SSNRSIM):
 class SSNRSIM3D(SSNRSIM):
     dimensionality = 3
 
-    def ssnri_like_sectorial_average(self, number_of_samples=None, mask=None):
+    def ssnr_like_sectorial_average(self, number_of_samples=None, mask=None):
         """
         Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
         """
@@ -551,6 +551,108 @@ class SSNRSIM3D(SSNRSIM):
             else:
                 averaged_slices.append(average_rings2d(dj[i]**2, q_axes, number_of_samples=number_of_samples) / average_rings2d(vj[i], q_axes, number_of_samples=number_of_samples))
         return np.array(averaged_slices)
+
+    def ssnr_like_sectorial_average_from_image(self, image_ft, degree_of_symmetry=1, theta0=0., axis=2):
+        """
+        Compute the SSNR-like sectorial average from an image, processing slice by slice.
+
+        The 3-D volume is traversed one 2-D plane at a time, where each plane is
+        orthogonal to *axis*.  For every plane the same formula as in the 2-D
+        version is applied:
+
+            SSNR_sa = (<|B_j|²>_sa - noise_power_sa) / noise_power_sa
+
+        where the averages are sectorial ring averages computed with
+        ``average_rings2d``.
+
+        Parameters
+        ----------
+        image_ft : np.ndarray, shape (Nx, Ny, Nz)
+            Fourier transform of the observed image.
+        degree_of_symmetry : int, optional
+            Rotational degree of symmetry passed to ``average_rings2d`` (default 1).
+        theta0 : float, optional
+            Starting angle (radians) of the sector passed to ``average_rings2d``
+            (default 0.).
+        axis : int {0, 1, 2} or str {'x', 'y', 'z'}, optional
+            Axis along which the volume is sliced.  The two remaining axes form
+            the lateral plane on which the ring average is computed (default 2 / 'z').
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape ``(N_slices, N_rings)`` where ``N_slices`` is the
+            length of *image_ft* along *axis* and ``N_rings`` is the number of
+            radial bins returned by ``average_rings2d``.
+        """
+        if image_ft.ndim != self.dimensionality:
+            raise ValueError("The image and SSNR calculator dimensions do not match.")
+        _axis_aliases = {'x': 0, 'y': 1, 'z': 2}
+        if isinstance(axis, str):
+            if axis not in _axis_aliases:
+                raise ValueError(f"axis string must be 'x', 'y', or 'z', got {axis!r}.")
+            axis = _axis_aliases[axis]
+        if axis not in (0, 1, 2):
+            raise ValueError("axis must be 0, 1, or 2 (or 'x', 'y', 'z').")
+
+        q_axes = self.optical_system.otf_frequencies  # tuple of 3 frequency arrays
+        # Pick the two transverse frequency axes (the ones NOT sliced along)
+        lateral_axes_idx = [i for i in range(3) if i != axis]
+        q_lateral = (q_axes[lateral_axes_idx[0]], q_axes[lateral_axes_idx[1]])
+
+        # Move the averaging axis to the last position for uniform indexing
+        img = np.moveaxis(image_ft, axis, -1)
+        dj = np.moveaxis(np.copy(self.dj), axis, -1)
+        vj = np.moveaxis(np.copy(self.vj), axis, -1)
+
+        n_slices = img.shape[-1]
+        center_full = np.array(image_ft.shape) // 2
+        # Centre of the full 3-D array, used to estimate f0 from the DC component
+        center_slice = (center_full[lateral_axes_idx[0]], center_full[lateral_axes_idx[1]])
+        center_along_axis = center_full[axis]
+
+        numeric_noise = 1e-12
+
+        # Estimate the total photon count f0 from the DC component of the
+        # centre slice — same approach as the 2-D version.  Done once before
+        # the loop so every slice (including those before centre_along_axis)
+        # can use it.
+        dc_dj = dj[:, :, center_along_axis][center_slice]
+        dc_img = img[:, :, center_along_axis][center_slice]
+        f0 = dc_img / dc_dj if np.abs(dc_dj) > numeric_noise else 0.0
+
+        averaged_slices = []
+
+        for i in range(n_slices):
+            img_sl = img[:, :, i]
+            dj_sl = dj[:, :, i]
+            vj_sl = vj[:, :, i]
+
+            bj2 = np.abs(img_sl) ** 2
+
+            obj2sa = average_rings2d(bj2, q_lateral,  degree_of_symmetry, theta0)
+            djsa = average_rings2d(dj_sl, q_lateral, degree_of_symmetry, theta0)
+            vjsa = average_rings2d(vj_sl, q_lateral, degree_of_symmetry, theta0)
+
+            noise_power = vjsa * f0 + image_ft.size * self.readout_noise_variance ** 2 * djsa
+            ssnr_sa = ((obj2sa - noise_power) / noise_power).real
+            ssnr_sa = np.nan_to_num(ssnr_sa)
+            ssnr_sa = np.where(np.abs(djsa) > numeric_noise, ssnr_sa, 0)
+
+            averaged_slices.append(ssnr_sa)
+
+        return np.array(averaged_slices).T
+
+
+    def plot_effective_kernel_and_otf(self, m=(0, (0, 0, 0))):
+        fig, ax = plt.subplots(1, 2)
+        ax[0].set_title("Kernel")
+        ax[1].set_title("OTF")
+        ax[0].set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
+        ax[1].set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
+        ax[0].set_ylabel("$f_r, \\frac{2NA}{\lambda}$")
+        slider = utils.wrap_axes3d(ax, [self.effective_kernels_ft[m], self.effective_otfs[m]], mode='abs',  extent=[-4, 4, -4, 4])
+        return slider         
 
 class SSNRSIMVectorial(SSNRSIM):
     def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False, illumination_reconstruction=None):

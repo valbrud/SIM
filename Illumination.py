@@ -464,17 +464,14 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 index = self.glue_indices(sim_index, projected_index)
                 wavevector = harmonics[index].wavevector.copy()
                 amplitude = harmonics[index].amplitude
-                if self.dimensionality == 2:
-                    phase_shifted = np.exp(-1j * np.einsum('ijl,l ->ij', grid, wavevector)) * kernel
-                elif self.dimensionality == 3:
-                    phase_shifted = np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector)) * kernel
+                phase_shifted = np.exp(-1j * np.einsum('...l,l ->...', grid, wavevector)) * kernel
                 effective_kernel += amplitude * phase_shifted
             
             # effective_kernel /= np.sum(np.abs(effective_kernel))
             effective_kernels[sim_index] = effective_kernel
             effective_kernels_ft[sim_index] = hpc_utils.wrapped_fftn(effective_kernel)
             # effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
-            # plt.imshow(np.abs(effective_kernels_ft[sim_index]).T, cmap='gray', origin='lower')
+            # plt.imshow(np.log1p(10**3 * np.abs(effective_kernels_ft[sim_index][:, :, 15])).T, cmap='gray', origin='lower')
             # plt.title(f"Effective kernel {sim_index}")
             # plt.show()
         return effective_kernels, effective_kernels_ft
@@ -484,10 +481,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), axis=-1)
         wavevectors, indices = self.get_all_wavevectors_projected()
         for sim_index, wavevector in zip(indices, wavevectors):
-            if self.dimensionality == 2:
-                phase_modulation = np.exp(-1j * np.einsum('ijl,l ->ij', grid, wavevector))
-            elif self.dimensionality == 3:
-                phase_modulation = np.exp(-1j * np.einsum('ijkl,l ->ijk', grid, wavevector))
+            phase_modulation = np.exp(-1j * np.einsum('...l,l ->...', grid, wavevector))
             phase_modulation_patterns[sim_index] = phase_modulation
         # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
         # plt.show()

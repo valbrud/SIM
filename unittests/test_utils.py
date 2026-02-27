@@ -205,3 +205,86 @@ class TestMiscellaneous(unittest.TestCase):
         axes[1].imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(upsampled_image))), cmap='gray')
         axes[1].axis('off')
         plt.show()
+
+
+class TestVisualisation(unittest.TestCase):
+    def test_axis3d_wrappers(self):
+        """
+        Demonstrate imshow3D (single panel) and wrap_axes3d (multi-panel).
+
+        Two synthetic 3-D volumes are created:
+          vol_a  – a sphere whose radius grows along z
+          vol_b  – a Gaussian blob centred at the middle z-slice
+
+        Part 1: imshow3D on a single axes.
+        Part 2: wrap_axes3d on a 2×2 subplot grid, skipping one panel.
+        """
+        N = 64
+
+        # --- build two synthetic volumes ---
+        lin = np.linspace(-1, 1, N)
+        X, Y, Z = np.meshgrid(lin, lin, lin, indexing='ij')
+        R = np.sqrt(X**2 + Y**2)
+
+        # vol_a: disk whose radius shrinks from 0.8 (z=0) to 0.2 (z=N-1)
+        z_norm = np.linspace(0, 1, N)            # 0 … 1 along z-axis
+        radius = 0.8 - 0.6 * z_norm              # shape (N,) broadcast over [x,y,z]
+        vol_a = (R < radius[np.newaxis, np.newaxis, :]).astype(np.float64)
+
+        # vol_b: Gaussian blob, centre drifts in x as z increases
+        x_centre = np.linspace(-0.5, 0.5, N)
+        vol_b = np.exp(-((X - x_centre[np.newaxis, np.newaxis, :]) ** 2
+                         + Y ** 2) / 0.1)
+
+        # ------------------------------------------------------------------ #
+        # Part 1 – imshow3D: single interactive panel                         #
+        # ------------------------------------------------------------------ #
+        fig1, ax1, slider1 = utils.imshow3D(
+            vol_a,
+            mode='abs',
+            axis='z',
+            cmap='hot',
+            vmin=0,
+            vmax=1,
+            origin='lower',
+        )
+        ax1.set_title("imshow3D demo – shrinking disk (z-scan)")
+        ax1.set_xlabel("y")
+        ax1.set_ylabel("x")
+
+        # ------------------------------------------------------------------ #
+        # Part 2 – wrap_axes3d: retrofit an existing 2×2 grid                 #
+        # ------------------------------------------------------------------ #
+        fig2, axes2 = plt.subplots(2, 2, figsize=(9, 8))
+
+        # Populate each panel with a static 2-D slice (index 0) – the usual
+        # workflow before handing off to wrap_axes3d.
+        axes2[0, 0].imshow(vol_a[:, :, 0], cmap='gray', vmin=0, vmax=1,
+                            origin='lower')
+        axes2[0, 0].set_title("vol_a  (|array|) – z-scan")
+        axes2[0, 0].set_xlabel("y")
+        axes2[0, 0].set_ylabel("x")
+
+        axes2[0, 1].imshow(vol_b[:, :, 0], cmap='hot', vmin=0, vmax=1,
+                            origin='lower')
+        axes2[0, 1].set_title("vol_b  (|array|) – z-scan")
+
+        # axes2[1, 0] – intentionally left as a line plot; pass None to skip
+        axes2[1, 0].plot(lin, vol_a[:, N // 2, N // 2], label="vol_a mid-y")
+        axes2[1, 0].plot(lin, vol_b[:, N // 2, N // 2], label="vol_b mid-y")
+        axes2[1, 0].set_title("x-cuts at z=0 (not wrapped)")
+        axes2[1, 0].legend()
+
+        axes2[1, 1].imshow(np.log1p(5 * vol_b[:, :, 0]), cmap='viridis',
+                            origin='lower')
+        axes2[1, 1].set_title("log1p(5 · vol_b) – z-scan")
+
+        # Hand off to wrap_axes3d – None skips the line-plot panel
+        slider2 = utils.wrap_axes3d(
+            axes2,
+            [vol_a, vol_b, None, vol_b],
+            mode='abs',
+            axis='z',
+        )
+
+        plt.show()

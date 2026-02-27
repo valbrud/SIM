@@ -86,7 +86,7 @@ class SIMulator(metaclass=DimensionMetaAbstract):
             self.effective_psfs = effective_psfs
         self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
-    def generate_noiseless_sim_images(self, ground_truth):
+    def generate_noiseless_sim_images(self, ground_truth, debug=False):
         """
         Generate noiseless SIM images from ground truth data.
 
@@ -109,6 +109,8 @@ class SIMulator(metaclass=DimensionMetaAbstract):
         # sim_images_ft = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
         for sim_index in self.illumination.rearranged_indices:
             for n in range(self.illumination.Mt):
+                if debug:
+                    print(sim_index, n)
                 total_phase_modulation = self.phase_modulation_patterns[sim_index] * self.illumination.phase_matrix[(sim_index[0], n, sim_index[1])]
                 sim_images[sim_index[0], n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[sim_index].conjugate() * self.effective_psfs[sim_index], mode='same')
                     

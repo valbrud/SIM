@@ -210,10 +210,10 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
         qz_dense = np.linspace(qz_min, qz_max, N_dense)
 
         q_grid_dense = np.stack(np.meshgrid(qx_dense, qy_dense, qz_dense, indexing='ij'), axis=-1)
-        ideal_otf_dense = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
+        # ideal_otf_dense = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
+        ideal_pupil_function = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
 
         for Mr in range(self._illumination.Mr):
-            ideal_pupil_function = np.zeros((N_dense, N_dense, N_dense), dtype=np.float64)
             # print(self._illumination.angles[Mr])
             for wavevector in self.plane_wave_wavevectors:
                 wavevector_rotated = np.copy(wavevector)
@@ -230,7 +230,7 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
                 # plt.show()
         # plt.imshow(np.flip(ideal_pupil_function)[:, N_dense//2, :], cmap='gray')
         # plt.show()
-            ideal_otf_dense += np.flip(scipy.signal.convolve(ideal_pupil_function, np.flip(ideal_pupil_function).conjugate(), mode='same'))
+        ideal_otf_dense = np.flip(scipy.signal.convolve(ideal_pupil_function, np.flip(ideal_pupil_function).conjugate(), mode='same'))
         
         # plt.imshow(np.log1p(ideal_otf_dense[:, :, N_dense//2]), cmap='gray')
         # plt.title('Ideal OTF Dense')

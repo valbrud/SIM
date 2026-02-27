@@ -8,8 +8,9 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-import scipy
+import scipy    
 import hpc_utils
+from matplotlib.widgets import Slider
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
@@ -484,6 +485,250 @@ def expand_kernel(kernel: np.ndarray, target_shape: tuple[int]) -> np.ndarray:
         kernel_expanded[tuple(slices)] = kernel
         kernel = kernel_expanded
     return kernel
+
+def imshow3D(array: np.ndarray, *imshow_args,
+            mode=None, scaling=1, axis='z', **imshow_kwargs):
+    """
+    Display a 3-D array as an interactive 2-D image with a slider that scans
+    through one axis.
+
+    Parameters
+    ----------
+    array : np.ndarray
+        3-D array to display.
+    *imshow_args :
+        Positional arguments forwarded to ``ax.imshow`` (e.g. ``cmap``).
+    mode : {None, "real", "imag", "abs", "log1p"}, optional
+        Transform applied to ``scaling * slice`` before plotting.
+        - None    → no transform (the raw slice is shown as-is)
+        - "real"  → np.real
+        - "imag"  → np.imag
+        - "abs"   → np.abs
+        - "log1p" → np.log1p(np.abs(...))
+    scaling : float, optional
+        Multiplicative factor applied to each slice before ``mode``. Default 1.
+    axis : {'z', 'x', 'y'}, optional
+        Axis to scan with the slider.  Default 'z'.
+        - 'z' → scans axis 2  (shows array[:, :, idx])
+        - 'x' → scans axis 0  (shows array[idx, :, :])
+        - 'y' → scans axis 1  (shows array[:, idx, :])
+    **imshow_kwargs :
+        Keyword arguments forwarded to ``ax.imshow`` (e.g. ``vmin``, ``vmax``,
+        ``origin``, ``cmap``).
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    ax  : matplotlib.axes.Axes
+    slider : matplotlib.widgets.Slider
+    """
+
+    _AXIS_MAP = {'z': 2, 'x': 0, 'y': 1}
+    if axis not in _AXIS_MAP:
+        raise ValueError(f"axis must be one of {list(_AXIS_MAP)}, got {axis!r}")
+    ax_idx = _AXIS_MAP[axis]
+    n_slices = array.shape[ax_idx]
+
+    _MODE_FN = {
+        None:    lambda a: a,
+        'real':  np.real,
+        'imag':  np.imag,
+        'abs':   np.abs,
+        'log1p': lambda a: np.log1p(np.abs(a)),
+    }
+    if mode not in _MODE_FN:
+        raise ValueError(f"mode must be one of {list(_MODE_FN)}, got {mode!r}")
+    transform = _MODE_FN[mode]
+
+    def _get_slice(idx: int) -> np.ndarray:
+        idx = int(idx)
+        if ax_idx == 0:
+            sl = array[idx, :, :]
+        elif ax_idx == 1:
+            sl = array[:, idx, :]
+        else:
+            sl = array[:, :, idx]
+        return transform(scaling * sl)
+
+    fig, ax = plt.subplots(1, 1)
+    plt.subplots_adjust(bottom=0.12)
+
+    init_slice = _get_slice(0)
+    im = ax.imshow(init_slice, *imshow_args, **imshow_kwargs)
+    ax.set_title(f"{axis}-slice  0 / {n_slices - 1}")
+
+    slider_ax = plt.axes([0.2, 0.03, 0.65, 0.03])
+    slider = Slider(slider_ax, axis, 0, n_slices - 1, valinit=0, valstep=1)
+
+    def _update(val):
+        idx = int(slider.val)
+        im.set_data(_get_slice(idx))
+        ax.set_title(f"{axis}-slice  {idx} / {n_slices - 1}")
+        fig.canvas.draw_idle()
+
+    slider.on_changed(_update)
+    return fig, ax, slider
+
+
+def wrap_axes3d(axes, arrays, mode=None, scaling=1, axis='z', **imshow_kwargs):
+    """
+    Retrofit an existing figure's subplot grid with a shared slider that scans
+    through a 3-D axis of the supplied arrays.
+
+    The function replaces the image data in each subplot when the slider moves,
+    while preserving every property already set on the axes (title, xlabel,
+    ylabel, legend, colormap, norm, origin, etc.).
+
+    Parameters
+    ----------
+    axes : matplotlib.axes.Axes  |  1-D or 2-D array-like of Axes
+        The existing subplot axes, exactly as returned by ``plt.subplots()``.
+        A single Axes object is also accepted.
+    arrays : sequence of (np.ndarray or None)
+        3-D arrays, one per subplot in row-major (C) order.  Pass ``None`` for
+        a subplot that should not be touched.  All non-None arrays must have the
+        same size along the scanned axis.
+    mode : {None, "real", "imag", "abs", "log1p"}, optional
+        Transform applied to ``scaling * slice`` before display.
+    scaling : float, optional
+        Scalar multiplied into each slice before ``mode``.  Default 1.
+    axis : {'z', 'x', 'y'}, optional
+        Which array dimension the slider scans.
+        - 'z' → axis 2  (shows arr[:, :, idx])
+        - 'x' → axis 0  (shows arr[idx, :, :])
+        - 'y' → axis 1  (shows arr[:, idx, :])
+    **imshow_kwargs :
+        Extra keyword arguments forwarded to every ``ax.imshow`` call
+        (these override per-axis defaults when provided).
+
+    Returns
+    -------
+    slider : matplotlib.widgets.Slider
+        Keep a reference to this object; if it is garbage-collected the slider
+        stops responding.
+
+    Examples
+    --------
+    >>> fig, axes = plt.subplots(2, 2)
+    >>> axes[0, 0].imshow(vol[:, :, 0], cmap='gray')
+    >>> axes[0, 0].set_title("Channel A")
+    >>> # … set up the other subplots the same way …
+    >>> slider = wrap_axes3d(axes, [vol_a, vol_b, vol_c, None],
+    ...                      mode='abs', axis='z')
+    >>> plt.show()
+    """
+
+    _AXIS_MAP = {'z': 2, 'x': 0, 'y': 1}
+    if axis not in _AXIS_MAP:
+        raise ValueError(f"axis must be one of {list(_AXIS_MAP)}, got {axis!r}")
+    ax_idx = _AXIS_MAP[axis]
+
+    _MODE_FN = {
+        None:    lambda a: a,
+        'real':  np.real,
+        'imag':  np.imag,
+        'abs':   np.abs,
+        'log1p': lambda a: np.log1p(np.abs(a)),
+    }
+    if mode not in _MODE_FN:
+        raise ValueError(f"mode must be one of {list(_MODE_FN)}, got {mode!r}")
+    transform = _MODE_FN[mode]
+
+    # ------------------------------------------------------------------ #
+    # Flatten axes to a 1-D list, mirroring the flat order of `arrays`   #
+    # ------------------------------------------------------------------ #
+    axes_arr = np.asarray(axes)
+    flat_axes = axes_arr.flatten().tolist() if axes_arr.ndim > 0 else [axes]
+
+    arrays = list(arrays)
+    if len(arrays) != len(flat_axes):
+        raise ValueError(
+            f"Number of arrays ({len(arrays)}) must equal number of "
+            f"subplots ({len(flat_axes)})."
+        )
+
+    # Determine n_slices from the first non-None array
+    n_slices = None
+    for arr in arrays:
+        if arr is not None:
+            if arr.ndim != 3:
+                raise ValueError("All non-None arrays must be 3-D.")
+            n_slices = arr.shape[ax_idx]
+            break
+    if n_slices is None:
+        raise ValueError("At least one array must be non-None.")
+
+    # ------------------------------------------------------------------ #
+    # Helper: extract a 2-D slice from a 3-D array                       #
+    # ------------------------------------------------------------------ #
+    def _get_slice(arr, idx):
+        idx = int(idx)
+        if ax_idx == 0:
+            sl = arr[idx, :, :]
+        elif ax_idx == 1:
+            sl = arr[:, idx, :]
+        else:
+            sl = arr[:, :, idx]
+        return transform(scaling * sl)
+
+    # ------------------------------------------------------------------ #
+    # Snapshot per-axes properties we want to preserve, then call imshow  #
+    # ------------------------------------------------------------------ #
+    im_objects = []   # list parallel to flat_axes / arrays
+
+    for ax, arr in zip(flat_axes, arrays):
+        if arr is None:
+            im_objects.append(None)
+            continue
+
+        # Collect properties from the first existing AxesImage (if any)
+        existing_kwargs = {}
+        existing_images = ax.get_images()
+        if existing_images:
+            im0 = existing_images[0]
+            existing_kwargs['cmap']          = im0.get_cmap()
+            existing_kwargs['origin']        = im0.origin
+            existing_kwargs['extent']        = im0.get_extent()
+            existing_kwargs['interpolation'] = im0.get_interpolation()
+            # Snapshot colour limits as vmin/vmax only (never pass norm + vmin/vmax
+            # simultaneously – matplotlib raises ValueError in that case).
+            clim = im0.get_clim()
+            if clim[0] is not None:
+                existing_kwargs['vmin'] = clim[0]
+            if clim[1] is not None:
+                existing_kwargs['vmax'] = clim[1]
+
+        # Caller-supplied kwargs take priority
+        merged = {**existing_kwargs, **imshow_kwargs}
+
+        # Clear existing images from the axes (leave lines/patches intact)
+        for img in list(ax.get_images()):
+            img.remove()
+
+        init_data = _get_slice(arr, 0)
+        im = ax.imshow(init_data, **merged)
+        im_objects.append(im)
+
+    # ------------------------------------------------------------------ #
+    # Add slider to the figure                                            #
+    # ------------------------------------------------------------------ #
+    fig = flat_axes[0].get_figure()
+    fig.subplots_adjust(bottom=0.12)
+
+    slider_ax = fig.add_axes([0.2, 0.03, 0.65, 0.03])
+    slider = Slider(slider_ax, axis, 0, n_slices - 1, valinit=0, valstep=1)
+
+    def _update(val):
+        idx = int(slider.val)
+        for ax, arr, im in zip(flat_axes, arrays, im_objects):
+            if arr is None or im is None:
+                continue
+            im.set_data(_get_slice(arr, idx))
+        fig.canvas.draw_idle()
+
+    slider.on_changed(_update)
+    return slider
+
 
 def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray:
     # Compute new shape after upsampling

@@ -511,59 +511,62 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
         return sliced_reconstructed_image
     
     def reconstruct(self, sim_images, upsample_factor=1, backend='cpu'):
-        """
-        Explicitely performs SIM reconstruction in the spatial domain, but the filtering is happening slice by slice.
-        In other words, the convolution with the kernel is done in 2D for each slice independently.
-        """
         if upsample_factor > 1:
             sim_images = self.upsample(sim_images, upsample_factor)
+
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
 
         if backend == 'cpu':
-            hpc_utils.pick_backend('cpu') # In practice, multithreading slice by slice or GPU optimization may be better depending on the hardware.
-
+            hpc_utils.pick_backend('cpu')
         elif backend == 'gpu':
             hpc_utils.pick_backend('gpu')
 
-        if backend == 'cpu':
-            # Parallel reconstruction with memory check
-            # Calculate memory requirements per slice
-            dtype_size = sim_images.dtype.itemsize
-            memory_per_slice = (
-                sim_images.shape[0] * (sim_images.shape[1] + 1) * 
-                sim_images[0, 0].size * dtype_size * 1.5  # 1.5x safety margin
-            )
-            
-            # Check available memory
-            available_memory = psutil.virtual_memory().available
-            num_cores = mp.cpu_count()
-            print(f"Available memory: {available_memory / (1024**3):.2f} GB")
-            print(f"Memory per slice: {memory_per_slice / (1024**3):.2f} GB")
-            print(f"Number of CPU cores: {num_cores}")
-            
-            # Determine safe number of workers
-            max_workers_memory = max(1, int(available_memory * 0.7 / memory_per_slice))
-            num_workers = min(num_cores, max_workers_memory, sim_images.shape[-1])
-        
-            for z in range(sim_images.shape[-1]):
-                if num_workers > 1:
-                    # Parallel processing
-                    with mp.Pool(processes=num_workers) as pool:
-                        slice_args = [(sim_images[:, :, :, :, z],) for z in range(sim_images.shape[-1])]
-                        results = pool.starmap(self._reconstruct_slice, slice_args)
-                        for z, result in enumerate(results):
-                            reconstructed_image[:, :, z] = result
-                else:
-                    # Sequential fallback
-                    for z in range(sim_images.shape[-1]):
-                        reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
-
-        else:
+        if backend != 'cpu':
+            # GPU or other non-cpu path
             for z in range(sim_images.shape[-1]):
                 reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
+            return reconstructed_image
+
+        # ---- CPU multiprocessing path ----
+        dtype_size = sim_images.dtype.itemsize
+        memory_per_slice = (
+            sim_images.shape[0] * (sim_images.shape[1] + 1) *
+            sim_images[0, 0].size * dtype_size * 1.5
+        )
+        available_memory = psutil.virtual_memory().available
+        num_cores = mp.cpu_count()
+
+        max_workers_memory = max(1, int(available_memory * 0.7 / memory_per_slice))
+        num_workers = min(num_cores, max_workers_memory, sim_images.shape[-1])
+
+        print(f"Available memory: {available_memory / (1024**3):.2f} GB")
+        print(f"Memory per slice: {memory_per_slice / (1024**3):.2f} GB")
+        print(f"Number of CPU cores: {num_cores}")
+        print(f"Using workers: {num_workers}")
+
+        if num_workers <= 1:
+            for z in range(sim_images.shape[-1]):
+                reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
+            return reconstructed_image
+
+        # Build args ONCE
+        slice_args = [(sim_images[:, :, :, :, zi],) for zi in range(sim_images.shape[-1])]
+
+        pool = mp.Pool(processes=num_workers)
+        try:
+            results = pool.starmap(self._reconstruct_slice, slice_args)  # exception propagates here
+            for zi, result in enumerate(results):
+                reconstructed_image[:, :, zi] = result
+            pool.close()
+            pool.join()
+        except Exception:
+            # This is the “stop everything NOW” path.
+            pool.terminate()
+            pool.join()
+            raise
 
         return reconstructed_image
-
+        
 def estimate_gain_and_offset(sim_images, edge_pixels=30):
     # Shapes and constants
     H, W = sim_images.shape[-2:]

@@ -149,7 +149,7 @@ def filter_true_wiener_sim(image_ft,
     # plt.legend()
     # plt.show()
 
-    unfiltered_image = hpc_utils.wrapped_ifftn(image_ft)
+    # unfiltered_image = hpc_utils.wrapped_ifftn(image_ft)
 
     
     w = dja / ssnr 
@@ -167,8 +167,8 @@ def filter_true_wiener_sim(image_ft,
     filtered = image_ft  / (ssnr_calculator.dj + w)
 
     filtered = np.nan_to_num(filtered)
-    filtered = np.where(ssnr < 1, 0, filtered)
-    filtered_image = hpc_utils.wrapped_ifftn(filtered)
+    # filtered = np.where(ssnr < 1, 0, filtered)
+    # filtered_image = hpc_utils.wrapped_ifftn(filtered)
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
     # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 50], cmap='viridis')
     # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 50], cmap='viridis')

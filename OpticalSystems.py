@@ -305,8 +305,8 @@ class OpticalSystem2D(OpticalSystem):
             if len(N) != 2:
                 raise AttributeError("N should be integer or a tuple of two integers")
             
-        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0])
-        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0], endpoint=N[0]%2)
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1], endpoint=N[1]%2)
 
         self.psf_coordinates = (x, y)
 
@@ -317,8 +317,8 @@ class OpticalSystem2D(OpticalSystem):
         Nx, Ny = x.size, y.size
         Lx, Ly = 2 * new_coordinates[0][-1], 2 * new_coordinates[1][-1]
 
-        fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx)
-        fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
+        fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx, endpoint=Nx%2)
+        fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny, endpoint=Ny%2)
         self._otf_frequencies = (fx, fy)
         self._x_grid = None
         self._q_grid = None
@@ -392,9 +392,9 @@ class OpticalSystem3D(OpticalSystem):
             if len(N) != 3:
                 raise AttributeError("N should be integer or a tuple of three integers")
 
-        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0])
-        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1])
-        z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2, N[2])
+        x = np.linspace(-psf_size[0] / 2, psf_size[0] / 2, N[0], endpoint=N[0]%2)
+        y = np.linspace(-psf_size[1] / 2, psf_size[1] / 2, N[1], endpoint=N[1]%2)
+        z = np.linspace(-psf_size[2] / 2, psf_size[2] / 2, N[2], endpoint=N[2]%2)
 
         self.psf_coordinates = (x, y, z)
 
@@ -405,9 +405,9 @@ class OpticalSystem3D(OpticalSystem):
         Nx, Ny, Nz = x.size, y.size, z.size
         Lx, Ly, Lz = 2 * new_coordinates[0][-1], 2 * new_coordinates[1][-1], 2 * new_coordinates[2][-1]
 
-        fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx)
-        fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny)
-        fz = np.linspace(-Nz / (2 * Lz), Nz / (2 * Lz), Nz)
+        fx = np.linspace(-Nx / (2 * Lx), Nx / (2 * Lx), Nx, endpoint=Nx%2)
+        fy = np.linspace(-Ny / (2 * Ly), Ny / (2 * Ly), Ny, endpoint=Ny%2)
+        fz = np.linspace(-Nz / (2 * Lz), Nz / (2 * Lz), Nz, endpoint=Nz%2)
         self._otf_frequencies = (fx, fy, fz)
 
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> np.ndarray[tuple[int, int, int], np.float64]:
@@ -527,7 +527,6 @@ class System4f3DCoherent(OpticalSystem3D):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
-        grid2d = np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
         z_values = self.psf_coordinates[2]
 
         rho = np.linspace(-1, 1, Nrho)
@@ -657,7 +656,6 @@ class System4f3D(System4f3DCoherent):
             psf = np.abs(csf) ** 2
 
         else:
-            grid2d = np.stack(np.meshgrid(self.psf_coordinates[0], self.psf_coordinates[1], indexing='ij'), axis=-1)
             z_values = self.psf_coordinates[2]
 
             rho = np.linspace(-1, 1, Nrho)
@@ -667,7 +665,7 @@ class System4f3D(System4f3DCoherent):
             pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
             
             psf = psf_models_fast.compute_3d_incoherent_vectorial_psf_free_dipole(
-                grid2d=grid2d, 
+                psf_coordinates=(self.psf_coordinates[0], self.psf_coordinates[1]),
                 NA=self.NA,
                 z_values=z_values, 
                 nsample=self.ns, 
