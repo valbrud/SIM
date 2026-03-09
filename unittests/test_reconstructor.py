@@ -425,7 +425,7 @@ class TesReconstruction3D(unittest.TestCase):
     def test_reconstruction_spatial_domain_2d_kernel(self):
         cut_off_frequency_l = 1 / (2 * self.dx)
         import copy
-        illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2d()
+        illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2D()
         # illumination_reconstruction = IlluminationPlaneWaves2D.init_from_3D(illumination_reconstruction)
         m1, m2 = 1, 1
         for r in range(illumination_reconstruction.Mr):

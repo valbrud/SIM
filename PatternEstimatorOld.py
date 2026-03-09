@@ -87,10 +87,10 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         phase_estimation_method='autocorrelation',
         modulation_coefficients_method='default',
         peak_search_area_size: int = 11,
-        zooming_factor: int = 100, 
-        max_iterations: int = 2, 
-        debug_info_level = 0,
-        correct_peak_position: bool = True,
+        zooming_factor: int = 3, 
+        max_iterations: int = 20,
+        ssnr_estimation_iters: int = 10, 
+        debug_info_level = 0 
     ) -> PlaneWavesSIM:
         
         """Return a **new illumination object** whose amplitudes and phases come
@@ -119,7 +119,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                 f"Unknown method of modulation coefficients estimation {modulation_coefficients_method}. Available methods are {self.modulation_coefficients_methods}"
             )
     
-        peaks, rotation_angles = self.estimate_peaks(peak_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations, debug_info_level=debug_info_level, correct_peak_position=correct_peak_position)
+        peaks, rotation_angles = self.estimate_peaks(peak_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations, debug_info_level=debug_info_level)
         
         if debug_info_level > 0:
             for r in range(Mr):
@@ -169,36 +169,28 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         Estimate the peaks postitions of the illumination pattern from the stack.
         """
 
-    def _make_phase_estimator(
-        self,
-        illumination: PlaneWavesSIM,
-        optical_system: OpticalSystem,
-        method_name: str,
-    ) -> callable:
+    def select_phase_esimation_method(self, 
+                                      phase_estimation_method: str = 'autocorrelation') -> callable:
+        
         """
-        Instantiate the correct PhasesEstimator subclass for the given
-        illumination / optical_system pair and return the bound method
-        that corresponds to *method_name*.
-
-        The caller receives a plain callable ``fn(stack, refined_wavevectors)``
-        and never has to pass illumination or optical_system explicitly.
+        Select the phase estimation method.
         """
-        if optical_system.dimensionality == 3 and illumination.dimensions[2] == 1:
-            estimator = PhasesEstimator3D(illumination, optical_system)
+        # Determine appropriate Estimator class
+        if self.dimensionality == 3 and self.illumination.dimensions[2] == 1:
+            Estimator = PhasesEstimator3D
         else:
-            estimator = PhasesEstimator2D(illumination, optical_system)
+            Estimator = PhasesEstimator2D
 
-        match method_name:
+        match phase_estimation_method:
             case 'peak_phases':
-                return estimator.phase_matrix_peak_values
+                return Estimator.phase_matrix_peak_values
             case 'autocorrelation':
-                return estimator.phase_matrix_autocorrelation
-            case 'cross_correlation':
-                return estimator.phase_matrix_cross_correlation
+                return Estimator.phase_matrix_autocorrelation
+            case 'cross_correlation':	
+                return Estimator.phase_matrix_cross_correlation
             case _:
                 raise ValueError(
-                    f"Unknown method of phase estimation '{method_name}'. "
-                    f"Available methods are {self.phase_estimation_methods}"
+                    f"Unknown method of phase estimation {phase_estimation_method}. Available methods are {self.phase_estimation_methods}"
                 )
 
     @abstractmethod
@@ -290,9 +282,7 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
                         peak_search_area_size: int,
                         zooming_factor: int,
                         max_iterations: int,
-                        debug_info_level: int = 0,
-                        correct_peak_position: bool = True,
-                        ) -> Tuple[np.ndarray, dict]:
+                        debug_info_level: int = 0) -> Tuple[np.ndarray, dict]:
 
         if peak_estimation_method == 'cross_correlation':
             PeaksEstimator = PeaksEstimatorCrossCorrelation2D
@@ -306,8 +296,7 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
                                                                peak_search_area_size,
                                                                zooming_factor,
                                                                max_iterations,
-                                                               debug_info_level=debug_info_level,
-                                                               correct_peak_position=correct_peak_position)
+                                                               debug_info_level=debug_info_level)
         return peaks, rotation_angles
 
     def build_phase_matrix(self,
@@ -319,8 +308,8 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
         Build the phase matrix from the image stack and estimated peak positions.
         Direct 2-D call: the whole stack is a single 2-D image per (r, n).
         """
-        phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method)
-        return phase_fn(stack, peaks)
+        phase_estimation_function = self.select_phase_esimation_method(phase_estimation_method)
+        return phase_estimation_function(self.optical_system, self.illumination, stack, peaks)
 
 
 class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
@@ -339,9 +328,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                         max_iterations: int,
                         debug_info_level: int = 0, 
                         estimation_strategy: str = "plane_by_plane", 
-                        reference_expansion: tuple = (1, 0, 1),
-                        correct_peak_position: bool = True,
-                        ) -> Tuple[np.ndarray, dict]:
+                        reference_expansion: tuple = (1, 0, 1)) -> Tuple[np.ndarray, dict]:
 
         if not estimation_strategy in self.estimation_strategies:
             raise ValueError(f"Unknown estimation strategy: {estimation_strategy}")
@@ -366,7 +353,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                                                                 zooming_factor, 
                                                                 max_iterations, 
                                                                 debug_info_level=debug_info_level, 
-                                                                correct_peak_position=correct_peak_position)
+                                                                )
 
         else:
             if debug_info_level:
@@ -378,8 +365,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                                                         peak_search_area_size, 
                                                         zooming_factor, 
                                                         max_iterations, 
-                                                        debug_info_level=debug_info_level, 
-                                                        correct_peak_position=correct_peak_position)
+                                                        debug_info_level=debug_info_level)
             print(peaks2d, rotation_angles)
             for peak in peaks2d: 
                 illumination2d.harmonics[peak].wavevector = peaks2d[peak]
@@ -450,16 +436,15 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
         If dimensions[2] == 0, build a quasi 2D 'superimage' (by summing complex FTs), create a quasi-2D illumination, and compute
         using 2D estimators along with projected peaks.
         """
+        phase_estimation_function = self.select_phase_esimation_method(phase_estimation_method)
         if self.illumination.dimensions[2]:
-            phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method)
-            return phase_fn(stack, peaks)
-        else:
+            return phase_estimation_function(self.optical_system, self.illumination, stack, peaks)
+        else: 
             optical_system2d = self.optical_system.project_in_2D()
             illumination2d = IlluminationPlaneWaves2D.init_from_3D(self.illumination.project_in_quasi_2D())
             projected_stack = self._project_stack(stack)
             peaks2d = {(peak[0], peak[1][:2]): peaks[peak][:2] for peak in peaks.keys()}
-            phase_fn = self._make_phase_estimator(illumination2d, optical_system2d, phase_estimation_method)
-            phase_matrix2d = phase_fn(projected_stack, peaks2d)
+            phase_matrix2d = phase_estimation_function(optical_system2d, illumination2d, projected_stack, peaks2d)
             phase_matrix3d = {}
             for peak in self.illumination.project_in_quasi_2D().harmonics.keys():
                 r, m = peak
@@ -486,7 +471,6 @@ class PeaksEstimator(metaclass=DimensionMetaAbstract):
         zooming_factor: int,
         max_iterations: int,
         debug_info_level: int = 0,
-        **kwargs,
     ):
         """
         Implementations should return (refined_wavevectors, rotation_angles) like your existing API.
@@ -658,7 +642,7 @@ class PeaksEstimatorIterative(PeaksEstimator):
     - Parent owns the whole window->iterate->zoom cycle + debug logic.
     - Children implement: one iteration update + debug payload for debug>=3.
     """
-    
+
     def estimate_peaks(
         self,
         stack: np.ndarray,
@@ -666,9 +650,7 @@ class PeaksEstimatorIterative(PeaksEstimator):
         zooming_factor: int,
         max_iterations: int,
         debug_info_level: int = 0,
-        **kwargs,
     ):
-        correct_peak_position = kwargs.get("correct_peak_position", False)
         peak_guesses = self._initial_peak_guesses_cycles()
         state = self._init_global_state(stack, peak_guesses)
 
@@ -712,8 +694,8 @@ class PeaksEstimatorIterative(PeaksEstimator):
                     )
 
             estimated_cycles[peak] = self._final_peak_cycles(peak_state)
-        if correct_peak_position:
-            estimated_cycles = self._postprocess_estimated_cycles(estimated_cycles, stack)
+
+        estimated_cycles = self._postprocess_estimated_cycles(estimated_cycles, stack)
 
         # debug>=2: show initial & final peak positions on top of averaged stack FT
         if debug_info_level >= 2:
@@ -761,7 +743,6 @@ class PeaksEstimatorIterative(PeaksEstimator):
         peak_state: dict[str, Any],
         zooming_factor: int,
         debug_info_level: int,
-        **kwargs,
     ) -> tuple[dict[str, Any], tuple[np.ndarray, np.ndarray], str]:
         """One refinement iteration for one peak."""
         ...
@@ -879,7 +860,6 @@ class PeaksEstimatorInterpolation(PeaksEstimatorIterative):
         peak_state: dict[str, Any],
         zooming_factor: int,
         debug_info_level: int,
-        **kwargs,
     ):
         # Evaluate FT of each image on current q-grid
         ft_stack = self._czt_nd(stack[r], q_coords)       # (Mt, qx, qy)
@@ -1318,160 +1298,113 @@ class PeaksEstimatorInterpolation3D(PeaksEstimatorInterpolation):
 
         return corrected
 
-class PhasesEstimator:
-    """
-    Estimate phase offsets from a raw SIM stack.
-
-    Interface mirrors PeaksEstimator:
-    - constructed with ``(illumination, optical_system)``
-    - canonical half of m-values pre-computed once in ``__init__`` via ``_select_m()``
-    - public methods are regular instance methods that take only
-      ``(stack, refined_wavevectors)``
-
-    Design notes
-    ------------
-    * **One peak at a time** – ``phase_matrix_autocorrelation`` evaluates the
-      autocorrelation matrix for each canonical peak independently.  GPU memory
-      is therefore bounded by a single image-sized array at a time rather than
-      scaling with ``Mpeaks × Mt``.
-    * **Symmetry** – ``_select_m`` (identical contract to
-      ``PeaksEstimator._select_m``) returns only the canonical (positive)
-      representative of every conjugate-symmetric pair.  The conjugate partner
-      is then filled analytically as ``exp(−iφ)``.
-    * **Dimension-agnostic** – the array-centre index is derived from the
-      output shape at runtime, so the same code path handles 2-D and 3-D stacks
-      without any hardcoded ``Nx//2, Ny//2`` indices.
-    """
-
-    def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
-        self.illumination = illumination
-        self.optical_system = optical_system
-        if self.illumination.dimensionality != self.optical_system.dimensionality:
-            raise ValueError(
-                f"Illumination and optical system dimensionality do not match: "
-                f"{self.illumination.dimensionality} != {self.optical_system.dimensionality}"
-            )
-        self._m = self._select_m()
-
-    # ------------------------------------------------------------------
-    # Canonical m-selection  (identical contract to PeaksEstimator._select_m)
-    # ------------------------------------------------------------------
-
-    def _select_m(self):
+class PhasesEstimator2D: 
+    @staticmethod
+    def compute_spatial_shifts(illumination: PlaneWavesSIM, phase_matrix: np.ndarray, refined_wavevectors: np.ndarray) -> np.ndarray:
         """
-        Return a deterministically-ordered tuple of the canonical (positive)
-        representative for every conjugate-symmetric harmonic pair, skipping
-        the zero-order term.  Mirrors PeaksEstimator._select_m exactly.
+        Compute the spatial shifts from the phase matrix.
         """
-        m_unique = set()
-        for m in self.illumination.harmonics.keys():
-            if np.isclose(np.sum(np.abs(np.array(m[1]))), 0):
-                continue
-            m_inv = (m[0], tuple(-np.array(m[1])))
-            canonical_m = m if m > m_inv else m_inv
-            m_unique.add(canonical_m)
-        return tuple(sorted(list(m_unique), key=lambda x: (x[0], sum(abs(v) for v in x[1]), x[1])))
+        raise NotImplementedError("This method is not implemented yet.")
+        spatial_shifts = np.zeros((self.illumination.Mr, self.illumination.Mt, self.dimensionality), dtype=np.float64)
+        for r in range(self.illumination.Mr):
+            phase_array = np.zeros((self.illumination.Mt, self.dimensionality), dtype=np.float64)
+            for n in range(self.illumination.Mt):
+                for index in refined_wavevectors.keys():
+                    m = index[1]
+                    wavevector = refined_wavevectors[index]
+                    phase = phase_matrix[(r, n, m)]
+                    spatial_shifts[r, n] += np.angle(phase) / (2 * np.pi) * wavevector
 
-    # ------------------------------------------------------------------
-    # Public estimation methods
-    # ------------------------------------------------------------------
-
-    def phase_matrix_cross_correlation(
-        self,
-        stack: np.ndarray,
-        refined_wavevectors: dict,
-    ) -> dict:
+        return spatial_shifts
+        
+    @staticmethod
+    def phase_matrix_cross_correlation(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
         """
-        Estimate phase shifts via cross-correlation (Gustafsson 2000).
+        Estimate phase shifts as the phase of the cross-correlation function following Gustaffson
         """
         raise NotImplementedError("Full cross-correlation method is not implemented yet")
-
-    def phase_matrix_autocorrelation(
-        self,
-        stack: np.ndarray,
-        refined_wavevectors: dict,
-    ) -> dict:
-        """
-        Estimate phases from the per-peak autocorrelation matrix.
-
-        Memory optimisation: the autocorrelation matrix is evaluated
-        **one canonical peak at a time**, so the CZT batch never exceeds
-        ``Mt`` images regardless of how many harmonics are present.
-        The conjugate-symmetric partner is filled analytically.
-        """
+    
+    @staticmethod
+    def phase_matrix_autocorrelation(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
         phase_matrix = {}
-        D = self.optical_system.dimensionality
-        zero_m = tuple([0] * D)
-
-        # Zero-order phase is always unity for every (r, n)
-        for r in range(self.illumination.Mr):
-            for n in range(self.illumination.Mt):
-                phase_matrix[(r, n, zero_m)] = 1.0 + 0.0j
-
-        # Iterate over canonical half only — conjugate is set by symmetry
-        for m_idx in self._m:
-            r = m_idx[0]
-            single_pattern = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(
-                self.optical_system, {m_idx: refined_wavevectors[m_idx]}
-            )
-            Amn = PeaksEstimatorCrossCorrelation.autocorrelation_matrix(
-                self.optical_system,
-                self.illumination,
-                stack,
-                r,
-                single_pattern,
-                self.optical_system.otf_frequencies,
-            )
-
-            # Centre index derived from array shape — works for 2-D and 3-D
-            sample_arr = next(iter(Amn.values()))
-            center = tuple(s // 2 for s in sample_arr.shape)
-
-            for n in range(self.illumination.Mt):
-                phase_val = np.angle(Amn[(m_idx, n)][center])
-                phase_matrix[(r, n, m_idx[1])]                    = np.exp( 1j * phase_val)
-                phase_matrix[(r, n, tuple(-v for v in m_idx[1]))] = np.exp(-1j * phase_val)
+        for r in range(illumination.Mr) :
+            wavevectors = {index: refined_wavevectors[index] for index in refined_wavevectors.keys() if index[0] == r}
+            phase_modulation_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(optical_system, wavevectors)
+            Amn = PeaksEstimatorCrossCorrelation.autocorrelation_matrix(optical_system, illumination, stack, r, phase_modulation_patterns, optical_system.otf_frequencies)
+            Nx, Ny = len(optical_system.otf_frequencies[0]), len(optical_system.otf_frequencies[1]) 
+            for n in range(illumination.Mt):
+                phase_matrix[(r, n, (0, 0))] = 1. + 0.j
+                for m in wavevectors.keys():
+                    if m[1] != (0, 0):
+                        if m[1][0] >= 0:
+                            phase = np.angle(Amn[(m, n)])
+                            phase_matrix[(r, n, m[1])] = np.exp(1. * 1j * phase[Nx//2, Ny//2])
+                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(-1. * 1j * phase[Nx//2, Ny//2])
 
         return phase_matrix
 
-    def phase_matrix_peak_values(
-        self,
-        stack: np.ndarray,
-        refined_wavevectors: dict,
-    ) -> dict:
+    @staticmethod
+    def phase_matrix_peak_values(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: np.ndarray) -> np.ndarray:
         """
-        Estimate phase shifts as ``arg F[I_n](k_m)``.
-
-        This works because at ``k = k_m`` the sample spectrum
-        ``f(k − k_m) = f(0)`` is real and positive, so the phase of
-        ``I(k_m)`` equals the phase of the modulation coefficient ``a_m``.
+        Estimate phase shifts as the phase of the Fourier transform of the image stack on the peaks positions. 
+        It is working because if k = km, then f(k - km) = f(0), which is real and positive. The phase shift hence comes from 
+        the phase of the modulation coefficient am. 
         """
         phase_matrix = {}
-        grid = self.optical_system.x_grid
+        grid = optical_system.x_grid
         for n in range(stack.shape[1]):
             for index in refined_wavevectors.keys():
                 r = index[0]
                 m = index[1]
                 wavevector = refined_wavevectors[index] / (2 * np.pi)
-                ft = off_grid_ft(stack[r, n], grid, np.array((wavevector,)))
-                phase_matrix[(r, n, m)] = np.exp(-1j * np.angle(ft))
+                ft = off_grid_ft(stack[r, n], grid, np.array((wavevector, )))
+                phase = np.angle(ft)
+                phase_matrix[(r, n, m)] = np.exp(-1j * phase)
+
         return phase_matrix
 
-    def compute_spatial_shifts(
-        self,
-        phase_matrix: np.ndarray,
-        refined_wavevectors: np.ndarray,
-    ) -> np.ndarray:
-        raise NotImplementedError("compute_spatial_shifts is not implemented yet.")
+class PhasesEstimator3D: 
+    @staticmethod
+    def phase_matrix_cross_correlation(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
+        raise NotImplementedError("Full cross-correlation method is not implemented yet")
+    
+    @staticmethod
+    def phase_matrix_autocorrelation(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: dict) -> np.ndarray: 
+        phase_matrix = {}
+        for r in range(illumination.Mr) :
+            wavevectors = {index: refined_wavevectors[index] for index in refined_wavevectors.keys() if index[0] == r}
+            phase_modulation_patterns = PeaksEstimatorCrossCorrelation.phase_modulation_patterns(optical_system, wavevectors)
+            Amn = PeaksEstimatorCrossCorrelation.autocorrelation_matrix(optical_system, illumination, stack, r, phase_modulation_patterns, optical_system.otf_frequencies)
+            Nx, Ny, Nz = len(optical_system.otf_frequencies[0]), len(optical_system.otf_frequencies[1]), len(optical_system.otf_frequencies[2])
+            for n in range(illumination.Mt):
+                phase_matrix[(r, n, (0, 0, 0))] = 1. + 0.j
+                for m in wavevectors.keys():
+                    if m[1] != tuple([0] * optical_system.dimensionality):
+                        if m[1][0] >= 0:
+                            phase = np.angle(Amn[(m, n)])
+                            index = (m, n)
+                            phase_matrix[(r, n, m[1])] = np.exp(1. * 1j * phase[Nx//2, Ny//2, Nz//2])
+                            phase_matrix[(r, n, tuple([-mi for mi in m[1]]))] = np.exp(-1. * 1j * phase[Nx//2, Ny//2, Nz//2])
 
+        return phase_matrix
 
-class PhasesEstimator2D(PhasesEstimator):
-    """2-D phase estimator.  All logic lives in PhasesEstimator."""
-    pass
+    @staticmethod
+    def phase_matrix_peak_values(optical_system: OpticalSystem, illumination: PlaneWavesSIM, stack: np.ndarray, refined_wavevectors: np.ndarray) -> np.ndarray:
+        """
+        Estimate phase shifts as the phase of the Fourier transform of the image stack on the peaks positions. 
+        It is working because if k = km, then f(k - km) = f(0), which is real and positive. The phase shift hence comes from 
+        the phase of the modulation coefficient am. 
+        """
+        phase_matrix = {}
+        grid = optical_system.x_grid
+        for n in range(stack.shape[1]):
+            for index in refined_wavevectors.keys():
+                r = index[0]
+                m = index[1]
+                wavevector = refined_wavevectors[index] / (2 * np.pi)
+                ft = off_grid_ft(stack[r, n], grid, np.array((wavevector, )))
+                phase = np.angle(ft)
+                phase_matrix[(r, n, m)] = np.exp(-1j * phase)
 
-
-class PhasesEstimator3D(PhasesEstimator):
-    """3-D phase estimator.  All logic lives in PhasesEstimator."""
-    pass
-
+        return phase_matrix
 

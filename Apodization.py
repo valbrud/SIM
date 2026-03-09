@@ -120,9 +120,9 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metacla
             self.plane_wave_wavevectors = plane_wave_wavevectors
         else: 
             self.plane_wave_wavevectors = []
-            if not illumination.electric_field_plane_waves and not plane_wave_wavevectors:
+            if not illumination.source_electromagnetic_plane_waves and not plane_wave_wavevectors:
                 raise ValueError("Plane wave wavevectors required.")
-            for plane_wave in illumination.electric_field_plane_waves:
+            for plane_wave in illumination.source_electromagnetic_plane_waves:
                 self.plane_wave_wavevectors.append(plane_wave.wavevector)
         
         self._optical_system = optical_system

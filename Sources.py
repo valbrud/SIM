@@ -194,6 +194,16 @@ class IntensityHarmonic(IntensitySource):
                 f"  phase: {self.phase} \n"
                 )
 
+class IntensityHarmonic2D(IntensityHarmonic):
+    @classmethod
+    def init_from_3D(cls, harmonic: 'IntensityHarmonic3D'):
+        return cls(harmonic.amplitude, harmonic.phase, harmonic.wavevector[:2])
+
+    def get_intensity(self, grid: np.float64, rotated_angle=0.):
+        wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector2d(self.wavevector, -rotated_angle)
+        intensity = self.amplitude * np.exp(1j * (np.einsum('ijl,l ->ij', grid, wavevector)
+                                                  + self.phase))
+        return intensity
 
 class IntensityHarmonic3D(IntensityHarmonic):
     def get_intensity(self, grid: np.float64, rotated_frame_vector=np.array((0, 0, 1)), rotated_angle=0.):
@@ -202,14 +212,8 @@ class IntensityHarmonic3D(IntensityHarmonic):
                                                   + self.phase))
         return intensity
 
-
-class IntensityHarmonic2D(IntensityHarmonic):
     @classmethod
-    def init_from_3D(cls, harmonic: IntensityHarmonic3D):
-        return cls(harmonic.amplitude, harmonic.phase, harmonic.wavevector[:2])
+    def init_from_2D(cls, harmonic: IntensityHarmonic2D):
+        return cls(harmonic.amplitude, harmonic.phase, np.array([harmonic.wavevector[0], harmonic.wavevector[1], 0]))
 
-    def get_intensity(self, grid: np.float64, rotated_angle=0.):
-        wavevector = self.wavevector if not rotated_angle else VectorOperations.rotate_vector2d(self.wavevector, -rotated_angle)
-        intensity = self.amplitude * np.exp(1j * (np.einsum('ijl,l ->ij', grid, wavevector)
-                                                  + self.phase))
-        return intensity
+

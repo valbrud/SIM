@@ -440,6 +440,13 @@ class OpticalSystem3D(OpticalSystem):
         pupil_function = np.where(rho <= self.NA, 1., 0.)
         return pupil_function
 
+
+    def project_in_2D(self):
+        new_system = OpticalSystem2D(self.interpolation_method, self.normalize_otf)
+        new_system.psf_coordinates = (self.psf_coordinates[0], self.psf_coordinates[1])
+        new_system.otf = np.sum(self.otf, axis=2)
+        return new_system        
+
 class System4f2DCoherent(OpticalSystem2D): 
     def __init__(self,
                  alpha=np.pi / 4,
@@ -553,6 +560,11 @@ class System4f3DCoherent(OpticalSystem3D):
         # self._prepare_interpolator()
         return self.psf, self.otf
 
+    def project_in_2D(self):
+        new_system = System4f2DCoherent(alpha=self.alpha, refractive_index=self.nm, interpolation_method=self.interpolation_method, normalize_otf=self.normalize_otf, high_NA=self.high_NA)
+        new_system.psf_coordinates = (self.psf_coordinates[0], self.psf_coordinates[1])
+        new_system.otf = np.sum(self.otf, axis=2)
+        return new_system       
 
 class System4f2D(System4f2DCoherent):
     def __init__(self,
@@ -683,6 +695,11 @@ class System4f3D(System4f3DCoherent):
         # self._prepare_interpolator()
         return self.psf, self.otf
 
+    def project_in_2D(self):
+        new_system = System4f2D(alpha=self.alpha, refractive_index=self.nm, interpolation_method=self.interpolation_method, normalize_otf=self.normalize_otf, high_NA=self.high_NA, vectorial=self.vectorial)
+        new_system.psf_coordinates = (self.psf_coordinates[0], self.psf_coordinates[1])
+        new_system.otf = np.sum(self.otf, axis=2)
+        return new_system    
 
 class PointScanningImagingSystem(OpticalSystem):
     """
@@ -712,6 +729,14 @@ class PointScanningImagingSystem(OpticalSystem):
         
         self.optical_system_excitation = optical_system_excitation
         self.optical_system_detection = optical_system_detection
+
+class PointScanningImagingSystem2D(PointScanningImagingSystem):
+    ... 
+
+class PointScanningImagingSystem3D(PointScanningImagingSystem):
+    def project_in_2D(self):
+        new_system = PointScanningImagingSystem2D(self.optical_system_excitation.project_in_2D(), self.optical_system_detection.project_in_2D(), self.aperture, self.interpolation_method, self.normalize_otf)
+        return new_system
 
 class Confocal(PointScanningImagingSystem):
     """
@@ -743,11 +768,11 @@ class ISM(PointScanningImagingSystem):
     ...
 
 
-class Confocal2D(Confocal): ...
-class Confocal3D(Confocal): ... 
+class Confocal2D(Confocal, PointScanningImagingSystem2D): ...
+class Confocal3D(Confocal, PointScanningImagingSystem3D): ... 
 
-class RCM2D(RCM): ...
-class RCM3D(RCM): ...
+class RCM2D(RCM, PointScanningImagingSystem2D): ...
+class RCM3D(RCM, PointScanningImagingSystem3D): ...
 
-class ISM2D(ISM): ...
-class ISM3D(ISM): ...
+class ISM2D(ISM, PointScanningImagingSystem2D): ...
+class ISM3D(ISM, PointScanningImagingSystem3D): ...

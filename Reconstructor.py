@@ -349,7 +349,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             sim_images = self.upsample(sim_images, upsample_factor)
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
         for r in range(sim_images.shape[0]):
-            image1rotation = np.zeros(sim_images.shape[2:], dtype=np.float64)
+            image1rotation = np.zeros(sim_images.shape[2:], dtype=np.complex128)
             for n in range(sim_images.shape[1]):
 
                 image_convolved = hpc_utils.convolve2d(
@@ -359,7 +359,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
 
             # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation))))
             # plt.show() 
-            reconstructed_image += image1rotation
+            reconstructed_image += image1rotation.real
         # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)
         # reconstructed_image *= mask
         return reconstructed_image

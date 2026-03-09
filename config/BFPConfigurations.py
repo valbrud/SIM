@@ -45,8 +45,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = Mr, 
-                                                                      angles=angles,
-                                                                      store_plane_waves=True)
+                                                                      angles=angles)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -80,7 +79,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0),
                                                                       Mr=1,
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -115,7 +114,7 @@ class BFPConfiguration:
                                                                       dimensions=(1, 1, 0),
                                                                       Mr=1,
                                                                       angles=(alpha0, ),
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -170,7 +169,7 @@ class BFPConfiguration:
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
                                                                       angles=(alpha0, ),
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -238,7 +237,7 @@ class BFPConfiguration:
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
                                                                       angles=(alpha0, ),
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
@@ -308,7 +307,7 @@ class BFPConfiguration:
         vec_x = np.array((k1, 0, k2))
         vec_mx = np.array((-k1, 0, k2))
         ax_z = np.array((0, 0, 1))
-        illumination.electric_field_plane_waves = sources = [
+        illumination.source_electromagnetic_plane_waves = sources = [
             Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, vec_x),
             Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, vec_mx),
             Sources.PlaneWave(b/a0**0.5, 1j * b/a0**0.5, 0, 0, VectorOperations.rotate_vector3d(vec_x, ax_z, 2 * np.pi/3)),
@@ -359,7 +358,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
         return illumination
@@ -398,7 +397,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
         return illumination
@@ -441,7 +440,7 @@ class BFPConfiguration:
                                                                       base_vectors,
                                                                       dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
-                                                                      store_plane_waves=True)
+                                                                      )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
         return illumination

@@ -18,7 +18,7 @@ sys.path.append(current_dir)
 
 
 from typing import Dict, Tuple, Any, List
-from warnings import warn
+import warnings
 
 import numpy as np
 from numpy import ndarray, dtype
@@ -96,6 +96,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                  Mr=1,
                  spatial_shifts=None,
                  angles=None,
+                 source_electromagnetic_plane_waves=None
                  ):
         """
         Collect the information describing the SIM experiment
@@ -124,9 +125,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         self.rearranged_indices = self._rearrange_indices(dimensions)
 
         self._phase_matrix = {}
-        self.compute_phase_matrix()
+        self.compute_phase_matrix_from_phase_shifts()
 
-        self.electric_field_plane_waves = []
+        self.source_electromagnetic_plane_waves = source_electromagnetic_plane_waves
 
     def _compute_harmonics_for_all_rotations(self, intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic]) -> dict[tuple[int, tuple[int, ...]], Sources.IntensityHarmonic]:
         """
@@ -158,6 +159,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                        Mr=1,
                        spatial_shifts=None, 
                        angles=None,
+                       source_electromagnetic_plane_waves=None
                        ) -> 'PlaneWavesSIM':
         """
         Class method to initialize Illumination from a list of illumination harmonics.
@@ -174,7 +176,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             Illumination: Initialized Illumination object.
         """
         intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
-        return cls(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles)
+        return cls(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
     
     @property
     def Mr(self):
@@ -210,7 +212,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self._spatial_shifts[i] = new_spatial_shifts
 
         self.normalize_spatial_waves()
-        self.compute_phase_matrix()
+        self.compute_phase_matrix_from_phase_shifts()
     
     @property
     def dimensions(self):
@@ -430,14 +432,18 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             tuple: Base vectors of the illumination Fourier space Bravais lattice.
         """
         base_vectors = np.zeros(self.dimensionality)
+        # Ensure deterministic iteration. Prefer simpler harmonics (e.g. (1,0) before (1,1))
+        sorted_keys = sorted(
+            [k for k in self.harmonics.keys() if k[0] == r],
+            key=lambda k: (sum(abs(x) for x in k[1]), k[1])
+        )
         for i in range(self.dimensionality):
-            for index in self.harmonics.keys():
-                if index[0] == r:
-                    wavevector = np.copy(self.harmonics[index].wavevector)
-                    wavevector[:2] = VectorOperations.rotate_vector2d(wavevector[:2], -self.angles[r])
-                    if index[1][i] != 0:
-                        base_vectors[i] = wavevector[i] / index[1][i]
-                        break
+            for index in sorted_keys:
+                wavevector = np.copy(self.harmonics[index].wavevector)
+                wavevector[:2] = VectorOperations.rotate_vector2d(wavevector[:2], -self.angles[r])
+                if index[1][i] != 0:
+                    base_vectors[i] = wavevector[i] / index[1][i]
+                    break
         return base_vectors
 
     def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray], preserve_order_structure=True) -> tuple[
@@ -527,7 +533,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             spatial_shifts[r] = np.array([shift_rotated * i for i in range(base)])
         self.spatial_shifts = spatial_shifts
 
-    def compute_phase_matrix(self):
+    def compute_phase_matrix_from_phase_shifts(self):
         """
         Compute the dictionary of all the relevant phase shifts
          (products of spatial shifts and illumination pattern spatial frequencies).
@@ -539,6 +545,89 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 urn = self.spatial_shifts[r, n]
                 for wavevector, index in zip(wavevectors, indices):
                     self.phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn, wavevector))
+        
+    def estimate_spatial_shifts_from_phase_matrix(self) -> np.ndarray:
+        estimated_shifts = np.zeros((self.Mr, self.Mt, self.dimensionality))
+        active_dims = [i for i in range(self.dimensionality) if self.dimensions[i] == 1]
+
+        if not active_dims:
+            warnings.warn("No active dimensions found. All shifts are zero by construction.")
+            return estimated_shifts
+
+        for r in range(self.Mr):
+            wavevectors, indices = self.get_wavevectors_projected(r)
+
+            non_zero_mask = ~np.all(np.isclose(wavevectors, 0), axis=-1)
+            wavevectors_nz = wavevectors[non_zero_mask]
+            indices_nz = [idx for idx, keep in zip(indices, non_zero_mask) if keep]
+
+            if len(wavevectors_nz) == 0:
+                continue
+
+            A = wavevectors_nz[:, active_dims]
+
+            # Determine observable basis (same logic as before)
+            _, S, _ = np.linalg.svd(A, full_matrices=False)
+            rank = np.sum(S > S[0] * 1e-10)
+
+            if rank == len(active_dims):
+                observable_basis = np.eye(len(active_dims))
+            else:
+                warnings.warn(
+                    f"r={r}: illumination spans only {rank}/{len(active_dims)} "
+                    f"active dimensions. Using angles[r] to construct observable subspace."
+                )
+                angle = self.angles[r]
+                full_directions = [np.zeros(self.dimensionality) for _ in range(rank)]
+                full_directions[0][0] = np.cos(angle)
+                if 1 in active_dims:
+                    full_directions[0][1] = np.sin(angle)
+                higher_active_dims = [d for d in active_dims if d > 1]
+                for k, dim in enumerate(higher_active_dims[:rank - 1]):
+                    full_directions[k + 1][dim] = 1.0
+                basis_active = np.array([[d[dim] for dim in active_dims]
+                                        for d in full_directions])
+                observable_basis, _ = np.linalg.qr(basis_active.T)
+                observable_basis = observable_basis.T[:rank]
+
+            A_obs = A @ observable_basis.T  # shape (num_harmonics, rank)
+
+            # Find fundamental harmonics: those with smallest non-zero index magnitude
+            # These are least likely to be wrapped and give a safe initial estimate
+            index_magnitudes = np.array([
+                sum(abs(idx[1][d]) for d in active_dims) for idx in indices_nz
+            ])
+            min_magnitude = np.min(index_magnitudes)
+            fundamental_mask = np.isclose(index_magnitudes, min_magnitude)
+
+            A_fundamental = A_obs[fundamental_mask]
+
+            for n in range(self.Mt):
+                b_raw = np.array([
+                    -np.angle(self.phase_matrix[r, n, idx[1]])
+                    for idx in indices_nz
+                ])
+
+                # Step 1: rough estimate from fundamentals only (safe, no wrapping issues
+                # since these have the smallest phases by construction)
+                coeffs_rough, _, _, _ = np.linalg.lstsq(A_fundamental, b_raw[fundamental_mask], rcond=None)
+                urn_rough_active = observable_basis.T @ coeffs_rough
+
+                # Step 2: predict phases for all harmonics from rough estimate,
+                # then unwrap each measured phase relative to its prediction.
+                # This corrects for 2pi jumps in higher-order harmonics.
+                phases_predicted = A_obs @ coeffs_rough  # shape (num_harmonics,)
+                b_unwrapped = b_raw + 2 * np.pi * np.round(
+                    (phases_predicted - b_raw) / (2 * np.pi)
+                )
+
+                # Step 3: final fit using all harmonics with unwrapped phases
+                coeffs, _, _, _ = np.linalg.lstsq(A_obs, b_unwrapped, rcond=None)
+                shift_active = observable_basis.T @ coeffs
+                for i, dim in enumerate(active_dims):
+                    estimated_shifts[r, n, dim] = shift_active[i]
+
+        return estimated_shifts
 
     def equalize_amplitudes(self):
         for key in self.harmonics.keys():
@@ -651,7 +740,10 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         """
         harmonics_str = "\n    ".join(
             f"{k}: {repr(h)}" for k, h in self.harmonics.items()
-        ) or "∅"                       # fallback if dict is empty
+        ) or "∅"   
+        phase_matrix_str = "\n    ".join(
+            f"{k}: {np.round(np.angle(self.harmonics[k].phase) / np.pi * 180, 1)} degrees" for k in sorted(self.harmonics.keys())
+        )
 
         return (
         "PlaneWavesSIM:\n"
@@ -662,6 +754,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         f"  spatial_shifts: {self.spatial_shifts}\n"
         f"  harmonics ({len(self.harmonics)}):\n"
         f"  {harmonics_str}\n"
+        f"  phase_matrix:\n"
+        f"  {phase_matrix_str}\n"
     )
     
     __str__ = __repr__
@@ -692,8 +786,9 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                  dimensions: tuple[bool, bool, bool] = (1, 1, 0),
                  Mr: int = 1,
                  spatial_shifts=None,
-                 angles=None):
-        super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles)
+                 angles=None,
+                 source_electromagnetic_plane_waves=None):
+        super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
     @classmethod
     def init_from_list(cls,
@@ -703,8 +798,8 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                        Mr: int = 1,
                        spatial_shifts=None,
                        angles=None,
-                       ):
-        return super().init_from_list(intensity_harmonics_list, base_vector_lengths, dimensions, Mr, spatial_shifts, angles)
+                       source_electromagnetic_plane_waves=None):
+        return super().init_from_list(intensity_harmonics_list, base_vector_lengths, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
     @classmethod
     def init_from_plane_waves(cls, 
@@ -713,8 +808,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                               dimensions,
                               Mr=1,
                               spatial_shifts=None,
-                              angles=None, 
-                              store_plane_waves=False):
+                              angles=None):
         """
         Class method to initialize Illumination from a list of plane waves.
 
@@ -731,13 +825,12 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         """
         intensity_harmonics_list = IlluminationPlaneWaves3D.find_ipw_from_pw(plane_waves)
         intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
-        illumination = cls(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles)
-        if store_plane_waves:
-            illumination.electric_field_plane_waves = plane_waves
+        illumination = cls(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles, plane_waves)
         return illumination
     
-    def project_in_quasi_2d(self):
+    def project_in_quasi_2D(self):
         new_harmonics_dict = {}
+        # new_phase_matrix = {}
         for sim_index in self.rearranged_indices:
             off_plane_count = len(self.rearranged_indices[sim_index])
             for off_plane_index in self.rearranged_indices[sim_index]:
@@ -750,9 +843,15 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                     new_harmonics_dict[sim_index] = harmonic
                 else:
                     new_harmonics_dict[sim_index].amplitude += harmonic.amplitude
+                
+                # if self.phase_matrix is not None:   
+                    # for n in range(self.Mt):
+                        # new_phase_matrix[(sim_index[0], n, sim_index[1])] = self.phase_matrix[(index[0], n, index[1])]
             new_harmonics_dict[sim_index].amplitude /= off_plane_count
+        illumination_projected = IlluminationPlaneWaves3D(new_harmonics_dict, self.dimensions, self.Mr, self.spatial_shifts, self.angles, self.source_electromagnetic_plane_waves)
+        illumination_projected.phase_matrix = self.phase_matrix
         
-        illumination_projected = IlluminationPlaneWaves3D(new_harmonics_dict, self.dimensions, self.Mr, self.spatial_shifts, self.angles)
+        # illumination_projected.phase_matrix = new_phase_matrix
         return illumination_projected
 
     @staticmethod
@@ -810,14 +909,14 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         if grid is None and coordinates is None:
             raise ValueError("Either grid or coordinates must be provided!")
         if grid is None and not coordinates is None:
-            X, Y, Z = np.meshgrid(*coordinates)
+            X, Y, Z = np.meshgrid(*coordinates, indexing='ij')
             grid = np.stack((X, Y, Z), axis=-1)   
         grid[:, :, :, 2] -= depth
 
         illumination_density = np.zeros(grid.shape[:3], dtype=np.complex128)
         wavevectors, indices = self.get_wavevectors(r)
         for i in range(len(wavevectors)):
-            phase = self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))]
+            phase = np.angle(self._phase_matrix[(r, n, tuple(np.array(indices[i][1]) * np.array(self.dimensions)))])
             amplitude = self.harmonics[indices[i]].amplitude
             wavevector = wavevectors[i]
             illumination_density += Sources.IntensityHarmonic3D(amplitude, phase, wavevector).get_intensity(grid)
@@ -838,8 +937,9 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
                  dimensions: tuple[int, int] = (1, 1),
                  Mr: int = 1,
                  spatial_shifts=None, 
-                 angles=None):
-        super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles)
+                 angles=None, 
+                 source_electromagnetic_plane_waves=None):
+        super().__init__(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
     @classmethod
     def init_from_3D(cls, illumination_3d: IlluminationPlaneWaves3D, dimensions: tuple[int, int] = (1, 1), force=False):
@@ -850,16 +950,43 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
                 raise ValueError("The 3D illumination pattern cannot be converted to 2D unless it's not changing in z direction!")
             elif harmonic[1][2] != 0 and not warning_raised:
                 warning_raised = True
-                warn(f"3D illumination with non-zero axial wavevectors is forcefully converted to 2D! The kz-component of the wavevector is ignored!")
+                warnings.warn(f"3D illumination with non-zero axial wavevectors is forcefully converted to 2D! The kz-component of the wavevector is ignored!")
         
         intensity_harmonics_dict = {(harmonic[0], tuple(harmonic[1][:2])): Sources.IntensityHarmonic2D.init_from_3D(illumination_3d.harmonics[harmonic])
                                     for harmonic in illumination_3d.harmonics}
         spatial_shifts = illumination_3d.spatial_shifts[:, :, :2]
-        illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts, angles=illumination_3d.angles)
-        if illumination_3d.electric_field_plane_waves:
-            illumination.electric_field_plane_waves = illumination_3d.electric_field_plane_waves
+        phase_matrix_old = illumination_3d.phase_matrix
+        illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts, angles=illumination_3d.angles, source_electromagnetic_plane_waves=illumination_3d.source_electromagnetic_plane_waves)
+        illumination.Mt = illumination_3d.Mt
+        for phase_shift_index in phase_matrix_old:
+            phase_shift_index_2d = (phase_shift_index[0], phase_shift_index[1], tuple(phase_shift_index[2][:2]))
+            illumination.phase_matrix[phase_shift_index_2d] = phase_matrix_old[phase_shift_index]
         return illumination
     
+    def lift_to_quasi_2D(self):
+        new_dimensions = tuple([dimension for dimension in self.dimensions] + [0])
+        new_harmonics_dict = {}
+        new_phase_matrix = {}
+        for sim_index in self.indices:
+            r, m = sim_index[0], sim_index[1]
+            m_lifted = tuple([m_i for m_i in m] + [0])
+            index = (r, m_lifted)
+            harmonic = copy.deepcopy(self.harmonics[sim_index])
+            harmonic3d = Sources.IntensityHarmonic3D.init_from_2D(harmonic)
+            if not sim_index in new_harmonics_dict:
+                new_harmonics_dict[sim_index] = harmonic
+
+        if self.phase_matrix is not None:   
+            for n in range(self.Mt):
+                new_phase_matrix[(sim_index[0], n, sim_index[1])] = self.phase_matrix[(index[0], n, index[1])]
+        
+        illumination_lifted = IlluminationPlaneWaves3D(new_harmonics_dict, new_dimensions, self.Mr, self.spatial_shifts, self.angles, self.source_electromagnetic_plane_waves)
+        illumination_lifted.phase_matrix = new_phase_matrix
+        
+        # illumination_projected.phase_matrix = new_phase_matrix
+        return illumination_lifted
+
+
     @staticmethod
     def index_harmonics(waves_list: list[Sources.IntensityHarmonic2D], base_vector_lengths: tuple[float, float]) -> dict[tuple[int, int], Sources.IntensityHarmonic2D]:
         intensity_harmonics_dict = {}
@@ -911,7 +1038,8 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
                  dimensions: tuple[int, ...],
                  Mr: int=1,
                  spatial_shifts=None, 
-                 angles: tuple[float, ...]=None):
+                 angles: tuple[float, ...]=None, 
+                 source_electromagnetic_plane_waves=None):
         """
         Same as in linear case, but with extra nonlinear_expansion_coefficients.
 
@@ -934,7 +1062,7 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
 
 
         
-        super().__init__(harmonics_nonlinear, dimensions, Mr, spatial_shifts, angles)
+        super().__init__(harmonics_nonlinear, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
     @staticmethod
     def convolve_harmonics_expansions(harmonics_dict1, harmonics_dict2):
@@ -1003,9 +1131,9 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
                        spatial_shifts=None,
                        angles=None,
                        nonlinear_expansion_coefficients: tuple[float, ...] = (0, 1),
-                       ):
+                       source_electromagnetic_plane_waves=None):
         intensity_harmonics_dict = cls.index_harmonics(intensity_harmonics_list, base_vector_lengths)
-        return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles)
+        return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
     @classmethod
     def init_from_linear_illumination(cls,
@@ -1019,7 +1147,7 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
         Args:
           nonlinear_expansion_coefficients (tuple[float, ...]): Coefficients for the nonlinear expansion, showing how the non-linear response is modeled.
         """
-        return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, illumination.dimensions, illumination.Mr, illumination.spatial_shifts, illumination.angles)
+        return cls(intensity_harmonics_dict, nonlinear_expansion_coefficients, illumination.dimensions, illumination.Mr, illumination.spatial_shifts, illumination.angles, illumination.source_electromagnetic_plane_waves)
 
     @classmethod
     def init_from_linear_illumination_no_taylor(cls,
@@ -1042,9 +1170,9 @@ class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2
                  dimensions: tuple[int, ...],
                  Mr=1,
                  spatial_shifts=None, 
-                 angles=None
-                 ):
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles)
+                 angles=None,
+                 source_electromagnetic_plane_waves=None):
+        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
 
 class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3D):
@@ -1055,23 +1183,23 @@ class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3
                  dimensions: tuple[int, ...],
                  Mr=1,
                  spatial_shifts=None, 
-                 angles=None
-        ):
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles)
+                 angles=None,
+                 source_electromagnetic_plane_waves=None):
+        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
 
 class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
     dimensionality=2
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
-                 nphoton: int,
+                 nphoton: int,  
                  dimensions: tuple[int, int],
                  Mr=1,
                  spatial_shifts=None, 
-                 angles=None
-                 ):
+                 angles=None,
+                 source_electromagnetic_plane_waves=None):
         nonlinear_expansion_coefficients = tuple([0] * (nphoton - 1) + [1])
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles)
+        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
 
 class IlluminationNPhotonSIM3D(IlluminationNonLinearSIM3D):
@@ -1082,9 +1210,9 @@ class IlluminationNPhotonSIM3D(IlluminationNonLinearSIM3D):
                  dimensions: tuple[int, ...],
                  Mr=1,
                  spatial_shifts=None, 
-                 angles=None
-                 ):
+                 angles=None,       
+                 source_electromagnetic_plane_waves=None):
         if nphoton < 1:
             raise ValueError("The number of photons absorbed must be greater than 0!")
         nonlinear_expansion_coefficients = tuple([0] * nphoton + [1])
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles)
+        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
