@@ -176,6 +176,14 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         """
         self._x_grid=np.stack(np.meshgrid(*self.psf_coordinates, indexing='ij'), axis=-1)
     
+    def _czt_sampled_Nrho(self):
+        dfx = self.otf_frequencies[0][1] - self.otf_frequencies[0][0]
+        dfy = self.otf_frequencies[1][1] - self.otf_frequencies[1][0]
+        dfmin = min(dfx, dfy)
+        Nrho = int(2 * self.NA / dfmin) + 1
+        print("CZT Nrho", Nrho)
+        return max(Nrho, 51)
+
     def compute_pixel_correction(self):
         x_grid = self.x_grid
         dx = x_grid[*([1] * self.dimensionality)] - x_grid[*([0]*self.dimensionality)]
@@ -323,7 +331,6 @@ class OpticalSystem2D(OpticalSystem):
         self._x_grid = None
         self._q_grid = None
 
-
     def interpolate_otf(self, k_shift: ndarray[3, np.float64]) -> ndarray[tuple[int, int, int], np.float64]:
         if self.interpolation_method == "Fourier":
             raise AttributeError("Due to the major code refactoring, Fourier interpolation is temporarily not available")
@@ -465,8 +472,7 @@ class System4f2DCoherent(OpticalSystem2D):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element="",
                             pupil_function=None, 
-                            zernieke={}, 
-                            Nrho = 129)\
+                            zernieke={})\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -477,17 +483,19 @@ class System4f2DCoherent(OpticalSystem2D):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
+        Nrho = self._czt_sampled_Nrho()
+
         rho = np.linspace(-1, 1, Nrho)
-        X, Y = np.meshgrid(rho, rho, indexing='ij')
-        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+        Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
         pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
 
         psf = psf_models_fast.compute_2d_psf_coherent(
             psf_coordinates=self.psf_coordinates, 
             NA=self.NA, 
-            RHO=RHO, 
-            PHI=PHI,
+            RHO=RHO * self.NA, 
+            PHI=PHI * self.NA,
             nmedium=self.nm, 
             pupil_function=pupil_function, 
             high_NA=self.high_NA,
@@ -524,8 +532,7 @@ class System4f3DCoherent(OpticalSystem3D):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element=None,
                             pupil_function=None, 
-                            zernieke={}, 
-                            Nrho = 129,) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                            zernieke={},) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
@@ -533,6 +540,8 @@ class System4f3DCoherent(OpticalSystem3D):
         elif parameters:
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
+
+        Nrho = self._czt_sampled_Nrho()
 
         z_values = self.psf_coordinates[2]
 
@@ -588,7 +597,6 @@ class System4f2D(System4f2DCoherent):
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
-                            Nrho = 129, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -599,25 +607,28 @@ class System4f2D(System4f2DCoherent):
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
         
+
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke, Nrho)
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke)
             psf = np.abs(csf) ** 2
 
         else:
-            rho = np.linspace(-1, 1, Nrho)
+            Nrho = self._czt_sampled_Nrho()
+            rho = np.linspace(-1, 1, Nrho, endpoint=Nrho%2)
             X, Y = np.meshgrid(rho, rho, indexing='ij')
             RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
 
             pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
             
+            print(self.NA)
             psf = psf_models_fast.compute_2d_incoherent_vectorial_psf_free_dipole(
                 psf_coordinates=self.psf_coordinates,
                 NA=self.NA,
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
                 high_NA=self.high_NA, 
-                RHO=RHO,
-                PHI=PHI,)
+                RHO=RHO * self.NA,
+                PHI=PHI * self.NA,)
 
             if self.computed_size:
                 psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
@@ -653,7 +664,6 @@ class System4f3D(System4f3DCoherent):
                             pupil_element=None,
                             pupil_function=None, 
                             zernieke={}, 
-                            Nrho = 129, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
@@ -664,11 +674,13 @@ class System4f3D(System4f3DCoherent):
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke, Nrho)
+            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke)
             psf = np.abs(csf) ** 2
 
         else:
             z_values = self.psf_coordinates[2]
+
+            Nrho = self._czt_sampled_Nrho()
 
             rho = np.linspace(-1, 1, Nrho)
             X, Y = np.meshgrid(rho, rho, indexing='ij')

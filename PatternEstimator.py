@@ -90,6 +90,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         zooming_factor: int = 100, 
         max_iterations: int = 2, 
         debug_info_level = 0,
+        first_order_phases_only: bool = True,
         correct_peak_position: bool = True,
     ) -> PlaneWavesSIM:
         
@@ -174,6 +175,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         illumination: PlaneWavesSIM,
         optical_system: OpticalSystem,
         method_name: str,
+        first_order_phases_only: bool = True,
     ) -> callable:
         """
         Instantiate the correct PhasesEstimator subclass for the given
@@ -184,9 +186,9 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         and never has to pass illumination or optical_system explicitly.
         """
         if optical_system.dimensionality == 3 and illumination.dimensions[2] == 1:
-            estimator = PhasesEstimator3D(illumination, optical_system)
+            estimator = PhasesEstimator3D(illumination, optical_system, first_order_phases_only)
         else:
-            estimator = PhasesEstimator2D(illumination, optical_system)
+            estimator = PhasesEstimator2D(illumination, optical_system, first_order_phases_only)
 
         match method_name:
             case 'peak_phases':
@@ -292,6 +294,7 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
                         max_iterations: int,
                         debug_info_level: int = 0,
                         correct_peak_position: bool = True,
+                        first_order_phases_only: bool = True,
                         ) -> Tuple[np.ndarray, dict]:
 
         if peak_estimation_method == 'cross_correlation':
@@ -314,12 +317,13 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
                            phase_estimation_method: str = 'autocorrelation',
                            stack: np.ndarray = None,
                            peaks: dict = None,
+                           first_order_phases_only: bool = True,
                            debug_info_level: int = 0) -> dict:
         """
         Build the phase matrix from the image stack and estimated peak positions.
         Direct 2-D call: the whole stack is a single 2-D image per (r, n).
         """
-        phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method)
+        phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method, first_order_phases_only)
         return phase_fn(stack, peaks)
 
 
@@ -341,6 +345,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                         estimation_strategy: str = "plane_by_plane", 
                         reference_expansion: tuple = (1, 0, 1),
                         correct_peak_position: bool = True,
+                        first_order_phases_only: bool = True,
                         ) -> Tuple[np.ndarray, dict]:
 
         if not estimation_strategy in self.estimation_strategies:
@@ -442,6 +447,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                            phase_estimation_method: str = 'autocorrelation',
                            stack: np.ndarray = None,
                            peaks: dict = None,
+                           first_order_phases_only: bool = True,
                            debug_info_level: int = 0) -> dict:
         """
         Build the phase matrix for a 3-D stack. 
@@ -451,14 +457,14 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
         using 2D estimators along with projected peaks.
         """
         if self.illumination.dimensions[2]:
-            phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method)
+            phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method, first_order_phases_only)
             return phase_fn(stack, peaks)
         else:
             optical_system2d = self.optical_system.project_in_2D()
             illumination2d = IlluminationPlaneWaves2D.init_from_3D(self.illumination.project_in_quasi_2D())
             projected_stack = self._project_stack(stack)
             peaks2d = {(peak[0], peak[1][:2]): peaks[peak][:2] for peak in peaks.keys()}
-            phase_fn = self._make_phase_estimator(illumination2d, optical_system2d, phase_estimation_method)
+            phase_fn = self._make_phase_estimator(illumination2d, optical_system2d, phase_estimation_method, first_order_phases_only)
             phase_matrix2d = phase_fn(projected_stack, peaks2d)
             phase_matrix3d = {}
             for peak in self.illumination.project_in_quasi_2D().harmonics.keys():
@@ -1343,7 +1349,7 @@ class PhasesEstimator:
       without any hardcoded ``Nx//2, Ny//2`` indices.
     """
 
-    def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
+    def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem, first_order_phases_only: bool = True):
         self.illumination = illumination
         self.optical_system = optical_system
         if self.illumination.dimensionality != self.optical_system.dimensionality:
@@ -1351,11 +1357,23 @@ class PhasesEstimator:
                 f"Illumination and optical system dimensionality do not match: "
                 f"{self.illumination.dimensionality} != {self.optical_system.dimensionality}"
             )
+        self.first_order_phases_only = first_order_phases_only
         self._m = self._select_m()
+        if first_order_phases_only:
+            self._filter_first_orders()
 
-    # ------------------------------------------------------------------
-    # Canonical m-selection  (identical contract to PeaksEstimator._select_m)
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------------------------
+    # Leave only first orders which typically ensures more robust phase estimation 
+    # -------------------------------------------------------------------------------    
+    def _filter_first_orders(self):
+        m_first_orders = set()
+        non_degenerate_dimensions = self.illumination.find_non_degenerate_dimensions()
+        for r in range(self.illumination.Mr):
+            harmonics_r_filtered = list(filter(lambda m: m[0] == r, self._m))
+            for i in non_degenerate_dimensions:
+                harmonics_i_filtered = sorted(filter(lambda m: m[1][i] > 0, harmonics_r_filtered), key=lambda m: 10 ** 8 * (m[1][i]-1) + np.sum(np.abs(np.array(m[1]))))
+                m_first_orders.add(harmonics_i_filtered[0])
+        self._m = m_first_orders
 
     def _select_m(self):
         """
@@ -1372,6 +1390,29 @@ class PhasesEstimator:
             m_unique.add(canonical_m)
         return tuple(sorted(list(m_unique), key=lambda x: (x[0], sum(abs(v) for v in x[1]), x[1])))
 
+    def _compute_full_phase_matrix_from_first_order_phases(self, phase_matrix: dict) -> dict:
+        """
+        Compute the full phase matrix from the first order phases.
+        """
+        non_degenerate_dimensions = self.illumination.find_non_degenerate_dimensions()
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                vec_m = []
+                vec_phases = []
+                for index in phase_matrix:
+                    m = index[2]
+                    if index[0] == r and index[1] == n and tuple([r, m]) in self._m:
+                        vec_m.append(np.array([m[i] for i in non_degenerate_dimensions]))
+                        vec_phases.append(np.angle(phase_matrix[index]))
+                base_phase_vectors = np.linalg.solve(np.array(vec_m), np.array(vec_phases))
+                
+                for harmonic in self.illumination.harmonics:
+                    r_, m = harmonic
+                    if r_ == r:
+                        phase = np.dot(np.array([m[i] for i in non_degenerate_dimensions]), np.array(base_phase_vectors))
+                        # print(r, m, phase)
+                        phase_matrix[r, n, m] = np.exp(1j * phase)
+        return phase_matrix
     # ------------------------------------------------------------------
     # Public estimation methods
     # ------------------------------------------------------------------
@@ -1432,6 +1473,9 @@ class PhasesEstimator:
                 phase_matrix[(r, n, m_idx[1])]                    = np.exp( 1j * phase_val)
                 phase_matrix[(r, n, tuple(-v for v in m_idx[1]))] = np.exp(-1j * phase_val)
 
+        if self.first_order_phases_only:
+            phase_matrix = self._compute_full_phase_matrix_from_first_order_phases(phase_matrix)
+
         return phase_matrix
 
     def phase_matrix_peak_values(
@@ -1449,12 +1493,15 @@ class PhasesEstimator:
         phase_matrix = {}
         grid = self.optical_system.x_grid
         for n in range(stack.shape[1]):
-            for index in refined_wavevectors.keys():
+            for index in self._m:
                 r = index[0]
                 m = index[1]
                 wavevector = refined_wavevectors[index] / (2 * np.pi)
                 ft = off_grid_ft(stack[r, n], grid, np.array((wavevector,)))
                 phase_matrix[(r, n, m)] = np.exp(-1j * np.angle(ft))
+        
+        if self.first_order_phases_only:
+            phase_matrix = self._compute_full_phase_matrix_from_first_order_phases(phase_matrix)
         return phase_matrix
 
     def compute_spatial_shifts(
@@ -1468,7 +1515,6 @@ class PhasesEstimator:
 class PhasesEstimator2D(PhasesEstimator):
     """2-D phase estimator.  All logic lives in PhasesEstimator."""
     pass
-
 
 class PhasesEstimator3D(PhasesEstimator):
     """3-D phase estimator.  All logic lives in PhasesEstimator."""

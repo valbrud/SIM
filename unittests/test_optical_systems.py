@@ -16,7 +16,7 @@ from matplotlib import colors
 import OpticalSystems
 import hpc_utils
 from config.BFPConfigurations import *
-from OpticalSystems import System4f3D, System4f2D
+from OpticalSystems import System4f3D, System4f2D, System4f2DCoherent
 from matplotlib.widgets import Slider
 from config.BFPConfigurations import BFPConfiguration
 configurations = BFPConfiguration()
@@ -40,7 +40,7 @@ class TestOpticalSystems2D(unittest.TestCase):
         plt.show()
 
         # Twice oversampled
-        dx = 1 / (8 * np.sin(alpha))
+        dx = 1 / (16 * np.sin(alpha))
         N = 101
         max_r = N // 2 * dx
         optical_system = System4f2D(alpha=alpha)
@@ -159,10 +159,10 @@ class TestOpticalSystems2D(unittest.TestCase):
 class TestOpticalSystems3D(unittest.TestCase):
     def test_OTF(self):
         alpha = 2 * np.pi / 5
-        dx = 1 / (4 * np.sin(alpha))
+        dx = 1 / (8 * np.sin(alpha))
         dy = dx
         dz = 1 / (2 * (1 - np.cos(alpha)))
-        N = 51
+        N = 101
         max_r = N // 2 * dx
         max_z = N // 2 * dz
         x = np.linspace(-max_r, max_r, N)
@@ -170,7 +170,8 @@ class TestOpticalSystems3D(unittest.TestCase):
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
         optical_system = System4f3D(alpha=alpha)
         low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
-        high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True)
+        optical_system.high_NA = True
+        high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
         normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
         normalized_high_NA_psf = high_NA_psf / np.amax(low_NA_psf)
         print(np.sum(low_NA_psf), np.sum(high_NA_psf))

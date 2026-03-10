@@ -509,6 +509,19 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 filtered_shift_ratios[base_key] = valid
         return filtered_shift_ratios
     
+    def find_non_degenerate_dimensions(self):
+        non_degenerate_dimensions = set()
+        for i in range(self.dimensionality):
+            if not self.dimensions[i]:
+                continue
+            else:
+                for index in self.harmonics:
+                    r, m = index
+                    if m[i] !=0:
+                        non_degenerate_dimensions.add(i)
+                        break
+        return non_degenerate_dimensions
+
     def set_spatial_shifts_diagonally(self, number: int = 0):
         """ 
         Find the spatial shifts, that satisfy the orthogonality constraint. 

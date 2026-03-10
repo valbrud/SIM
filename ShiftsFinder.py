@@ -125,7 +125,8 @@ def build_phase_matrix(shift_number, shift_ratios, m_vectors):
 # Example Usage
 if __name__ == "__main__":
     from config.BFPConfigurations import *
-    illumination = BFPConfiguration().get_2_oblique_s_waves_and_s_normal(np.pi / 4, 1)
+    illumination = BFPConfiguration().get_4_circular_oblique_waves_and_circular_normal(np.pi / 4, 1, 1, dimensionality=3).project_in_quasi_2D()
+
     expanded_lattice = illumination.compute_expanded_lattice(ignore_projected_dimensions=False)
 
     # 2D Shift Finder
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     shift_ratios_3d = ShiftsFinder3d.get_shift_ratios(expanded_lattice)
     print("3D Shift Ratios:", shift_ratios_3d)
 
-    ratios_selected = shift_ratios_3d[7]
+    ratios_selected = shift_ratios_3d[13]
     print("Selected Ratios:", ratios_selected)
 
 
