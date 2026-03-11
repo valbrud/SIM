@@ -75,9 +75,8 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
 
     @psf.setter
     def psf(self, new_psf):
-        self._psf = new_psf
-        self._psf /= np.sum(self._psf)
-        self._otf = hpc_utils.wrapped_fftn(new_psf)
+        self._psf = new_psf / np.sum(new_psf)   # copy, don't mutate
+        self._otf = hpc_utils.wrapped_fftn(self._psf)
 
     @property
     def otf(self):
@@ -180,7 +179,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         dfx = self.otf_frequencies[0][1] - self.otf_frequencies[0][0]
         dfy = self.otf_frequencies[1][1] - self.otf_frequencies[1][0]
         dfmin = min(dfx, dfy)
-        Nrho = int(2 * self.NA / dfmin) + 1
+        Nrho = int(2* self.NA / dfmin) + 1
         print("CZT Nrho", Nrho)
         return max(Nrho, 51)
 
@@ -209,7 +208,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
                                                                       bounds_error=False,
                                                                       fill_value=0.)
 
-    def upsample(self, factor=1, include_coordinates=True):
+    def upsample(self, factor=1, include_coordinates=True, naxes=2):
         """
         Upsample the PSF by zero-padding the OTF.
         Coordinates are changed accordingly.
@@ -217,8 +216,12 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         if factor == 1:
             return
         if include_coordinates:
-            self.psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates)
-        self.psf = utils.upsample(self.psf, factor)
+            if not naxes:
+                self.psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates)
+            else:
+                psf_coordinates = tuple(np.linspace(coord[0], coord[-1], coord.size * factor - coord.size % 2) for coord in self.psf_coordinates[:naxes])
+                self.psf_coordinates = psf_coordinates + self.psf_coordinates[naxes:]
+        self.psf = utils.upsample(self.psf, factor, naxes=naxes)
         self._x_grid = None
         self._q_grid = None
 
@@ -494,8 +497,8 @@ class System4f2DCoherent(OpticalSystem2D):
         psf = psf_models_fast.compute_2d_psf_coherent(
             psf_coordinates=self.psf_coordinates, 
             NA=self.NA, 
-            RHO=RHO * self.NA, 
-            PHI=PHI * self.NA,
+            RHO=RHO, 
+            PHI=PHI,
             nmedium=self.nm, 
             pupil_function=pupil_function, 
             high_NA=self.high_NA,
@@ -540,14 +543,14 @@ class System4f3DCoherent(OpticalSystem3D):
         elif parameters:
             psf_size, N = parameters
             self.compute_psf_and_otf_coordinates(psf_size, N)
+        
+        z_values = self.psf_coordinates[2]
 
         Nrho = self._czt_sampled_Nrho()
 
-        z_values = self.psf_coordinates[2]
-
         rho = np.linspace(-1, 1, Nrho)
-        X, Y = np.meshgrid(rho, rho, indexing='ij')
-        RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+        Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
+        RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
         pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
 
@@ -559,6 +562,8 @@ class System4f3DCoherent(OpticalSystem3D):
             nmedium=self.nm, 
             pupil_function=pupil_function, 
             high_NA=self.high_NA, 
+            RHO=RHO, 
+            PHI=PHI
         )
 
         self.psf = psf 
@@ -627,8 +632,8 @@ class System4f2D(System4f2DCoherent):
                 nmedium=self.nm, 
                 pupil_function=pupil_function, 
                 high_NA=self.high_NA, 
-                RHO=RHO * self.NA,
-                PHI=PHI * self.NA,)
+                RHO=RHO,
+                PHI=PHI,)
 
             if self.computed_size:
                 psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
@@ -674,7 +679,7 @@ class System4f3D(System4f3DCoherent):
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(None, pupil_element, pupil_function, zernieke)
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke)
             psf = np.abs(csf) ** 2
 
         else:
@@ -683,8 +688,8 @@ class System4f3D(System4f3DCoherent):
             Nrho = self._czt_sampled_Nrho()
 
             rho = np.linspace(-1, 1, Nrho)
-            X, Y = np.meshgrid(rho, rho, indexing='ij')
-            RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
+            Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
+            RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
             pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
             

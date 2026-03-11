@@ -128,9 +128,9 @@ def filter_true_wiener_sim(image_ft,
     noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
 
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    # ax[0].plot(np.log1p(1 + 10**8 * (np.abs(obj2ra)))[:, 50], label='total power')
-    # ax[0].plot(np.log1p(1 + 10**8 * (noise_power_ra).real)[:, 50], label='noise power') 
-    # ax[1].plot(np.log1p(1 + 10**8 * ((np.abs(obj2ra) - noise_power_ra).real))[:, 50], label='signal power')
+    # ax[0].plot(np.log1p(1 + 10**8 * (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
+    # ax[0].plot(np.log1p(1 + 10**8 * (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+    # ax[1].plot(np.log1p(1 + 10**8 * ((np.abs(obj2ra) - noise_power_ra).real / noise_power_ra.real))[:, obj2ra.shape[1]//2], label='SSNR')
     # plt.show()
 
     ssnr = np.abs((obj2a - noise_power ))/ noise_power
@@ -162,11 +162,13 @@ def filter_true_wiener_sim(image_ft,
     # ax[2].set_title('Regularization w')
     # plt.show()
 
-    # w = np.where(ssnr < 0.01, 10**9, w)
+    w = np.where(ssnr < 0.1, 10**9, w)
     # w = noise_power 
-    filtered = image_ft  / (ssnr_calculator.dj + w)
+    filtered = image_ft  / (ssnr_calculator.dj + w + numeric_noise)
 
     filtered = np.nan_to_num(filtered)
+    filtered = np.where(ssnr_calculator.dj < 10**-6, 0, filtered)
+    ssnr = np.where(ssnr_calculator.dj < 10**-6, 0, ssnr)
     # filtered = np.where(ssnr < 1, 0, filtered)
     # filtered_image = hpc_utils.wrapped_ifftn(filtered)
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
@@ -210,9 +212,28 @@ def filter_simulated_object_wiener(image_ft,
     # plt.imshow(np.log1p(np.abs(w[20:-20, 20:-20, 50])), cmap='gray')
     # plt.show()
 
-    filtered = image_ft / (ssnr_calculator.dj + w)
+    filtered = image_ft / (ssnr_calculator.dj + w + numeric_noise)
 
-    filtered = np.where(ssnr_calculator.dj > 10**-12, filtered, 0)
+    filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
     filtered = np.nan_to_num(filtered)
 
     return filtered, w, ssnr
+
+
+def filter_self_consistent_wiener(image_ft,
+                              ssnr_calculator: SSNRBase,
+                              numeric_noise=10**-12):
+    f0 = np.amax(image_ft).real
+    nomenator = np.abs(image_ft) ** 2 
+    denominator = ssnr_calculator.vj * f0 
+    ssnr_measured =  nomenator / (denominator + numeric_noise) 
+
+    w = ssnr_calculator.dj / ssnr_measured
+    
+    filtered = image_ft / (ssnr_calculator.dj + w    + numeric_noise)
+
+    filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
+    filtered = np.nan_to_num(filtered)
+
+    return filtered, w, ssnr_measured
+

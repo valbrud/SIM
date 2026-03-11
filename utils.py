@@ -730,10 +730,14 @@ def wrap_axes3d(axes, arrays, mode=None, scaling=1, axis='z', **imshow_kwargs):
     return slider
 
 
-def upsample(image, factor: int = 2, add_shot_noize: bool = False) -> np.ndarray:
+def upsample(image, factor: int = 2, add_shot_noize: bool = False, naxes: int = 2) -> np.ndarray:
     # Compute new shape after upsampling
     original_shape = np.array(image.shape, dtype=np.int32)
-    new_shape = np.round(original_shape * factor).astype(int)
+    if not naxes:
+        new_shape = np.round(original_shape * factor).astype(int)
+    else:
+        new_shape = np.round(original_shape[:naxes] * factor).astype(int)
+        new_shape = np.concatenate((new_shape, original_shape[naxes:]), axis=0)
 
     # Compute Fourier transform of the image
     image_ft = hpc_utils.wrapped_fftn(image)

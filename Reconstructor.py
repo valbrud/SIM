@@ -16,7 +16,7 @@ Classes:
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
+import scipy, cupy
 from abc import abstractmethod
 from OpticalSystems import OpticalSystem, OpticalSystem2D, OpticalSystem3D
 import Sources
@@ -506,25 +506,25 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 image_convolved = hpc_utils.convolve2d(
                     sim_images_slice[r, n], self.kernel, mode='same', boundary='wrap'
                 )
-                image1rotation += self.illumination_patterns[r, n] * image_convolved
+                temp = self.illumination_patterns[r, n] * image_convolved
+                image1rotation += temp
+                del image_convolved, temp  # free intermediates immediately
             sliced_reconstructed_image += image1rotation
+            del image1rotation
         return sliced_reconstructed_image
-    
+
     def reconstruct(self, sim_images, upsample_factor=1, backend='cpu'):
         if upsample_factor > 1:
             sim_images = self.upsample(sim_images, upsample_factor)
 
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
 
-        if backend == 'cpu':
-            hpc_utils.pick_backend('cpu')
-        elif backend == 'gpu':
-            hpc_utils.pick_backend('gpu')
+        hpc_utils.pick_backend('cpu' if backend == 'cpu' else 'gpu')
 
         if backend != 'cpu':
-            # GPU or other non-cpu path
             for z in range(sim_images.shape[-1]):
                 reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
+                cupy.get_default_memory_pool().free_all_blocks()
             return reconstructed_image
 
         # ---- CPU multiprocessing path ----
@@ -539,31 +539,16 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
         max_workers_memory = max(1, int(available_memory * 0.7 / memory_per_slice))
         num_workers = min(num_cores, max_workers_memory, sim_images.shape[-1])
 
-        print(f"Available memory: {available_memory / (1024**3):.2f} GB")
-        print(f"Memory per slice: {memory_per_slice / (1024**3):.2f} GB")
-        print(f"Number of CPU cores: {num_cores}")
-        print(f"Using workers: {num_workers}")
-
         if num_workers <= 1:
             for z in range(sim_images.shape[-1]):
                 reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
             return reconstructed_image
 
-        # Build args ONCE
-        slice_args = [(sim_images[:, :, :, :, zi],) for zi in range(sim_images.shape[-1])]
-
-        pool = mp.Pool(processes=num_workers)
-        try:
-            results = pool.starmap(self._reconstruct_slice, slice_args)  # exception propagates here
-            for zi, result in enumerate(results):
+        # Use context manager; stream slices via imap to avoid materializing all at once
+        with mp.Pool(processes=num_workers) as pool:
+            slices = (sim_images[:, :, :, :, zi] for zi in range(sim_images.shape[-1]))
+            for zi, result in enumerate(pool.imap(self._reconstruct_slice, slices, chunksize=1)):
                 reconstructed_image[:, :, zi] = result
-            pool.close()
-            pool.join()
-        except Exception:
-            # This is the “stop everything NOW” path.
-            pool.terminate()
-            pool.join()
-            raise
 
         return reconstructed_image
         

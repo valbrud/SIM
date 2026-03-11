@@ -323,6 +323,11 @@ class SSNRSIM(SSNRBase):
 
     def _compute_effective_otfs(self):
         _, self.effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+        # for otf_key in self.effective_otfs:
+            # plt.imshow(np.log1p(np.abs(self.effective_otfs[otf_key][:, :, self.optical_system.otf.shape[2] // 2])))
+            # plt.title(otf_key)
+            # plt.show()
+
         self._compute_otf_sim()
 
     def _compute_otf_sim(self):
@@ -646,12 +651,17 @@ class SSNRSIM3D(SSNRSIM):
 
     def plot_effective_kernel_and_otf(self, m=(0, (0, 0, 0))):
         fig, ax = plt.subplots(1, 2)
+
+        # plt.imshow(np.log1p(np.abs(self.effective_kernels_ft[m][:, :, self.optical_system.otf.shape[2] // 2])))
+        # plt.show()
+        # plt.imshow(np.log1p(np.abs(self.effective_otfs[m][:, :, self.optical_system.otf.shape[2] // 2])))
+        # plt.show()
         ax[0].set_title("Kernel")
         ax[1].set_title("OTF")
         ax[0].set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
         ax[1].set_xlabel("$f_r, \\frac{2NA}{\lambda}$")
         ax[0].set_ylabel("$f_r, \\frac{2NA}{\lambda}$")
-        slider = utils.wrap_axes3d(ax, [self.effective_kernels_ft[m], self.effective_otfs[m]], mode='abs',  extent=[-4, 4, -4, 4])
+        slider = utils.wrap_axes3d(ax, [self.effective_kernels_ft[m], self.effective_otfs[m]], mode='log1p',  extent=[-4, 4, -4, 4])
         return slider         
 
 class SSNRSIMVectorial(SSNRSIM):

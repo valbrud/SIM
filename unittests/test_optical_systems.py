@@ -30,7 +30,7 @@ class TestOpticalSystems2D(unittest.TestCase):
         dx = 1 / (4 * np.sin(alpha))
         N = 101
         max_r = N // 2 * dx
-        optical_system = System4f2D(alpha=alpha)
+        optical_system = System4f2D(alpha=alpha * 0.5)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
         optical_system.compute_pixel_correction()
         fxn = optical_system.otf_frequencies[0] / (2 * np.sin(alpha))
@@ -168,7 +168,7 @@ class TestOpticalSystems3D(unittest.TestCase):
         x = np.linspace(-max_r, max_r, N)
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
-        optical_system = System4f3D(alpha=alpha)
+        optical_system = System4f3D(alpha=alpha, high_NA=False)
         low_NA_psf, low_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
         optical_system.high_NA = True
         high_NA_psf, high_NA_otf = optical_system.compute_psf_and_otf((psf_size, N))
@@ -426,7 +426,6 @@ class TestConstructPupilAberration(unittest.TestCase):
         zernike_dict = {(4, 0): 1}
         rho = np.linspace(0, 1, 99)
         phi = np.linspace(0, 2 * np.pi, 100, endpoint=False)
-        result = OpticalSystems.OpticalSystem.compute_pupil_plane_abberations(zernike_dict, rho, phi)
         # plt.plot(result[5, :])
         # plt.show()
         RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
@@ -558,9 +557,9 @@ class TestConstructPupilAberration(unittest.TestCase):
         NA = nmedium * np.sin(alpha)
         theta = np.asin(0.9 * np.sin(alpha))
         fz_max_diff = nmedium * (1 - np.cos(alpha))
-        dx = 1 / (4 * NA)
+        dx = 1 / (6 * NA)
         dy = dx
-        dz = 1 / (2 * fz_max_diff)
+        dz = 1 / (3 * fz_max_diff)
         N = 101
         max_r = N // 2 * dx
         max_z = N // 2 * dz
@@ -588,13 +587,13 @@ class TestConstructPupilAberration(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         psf_size = np.array((2 * max_r, 2 * max_r, 2 * max_z))
 
-        non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True)
-        aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
-                                                                          zernieke={(4, 0): 0.072})
-        aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
-                                                                          zernieke={(3, 1): 0.072})
-        aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N), high_NA=True, integrate_rho=True,
-                                                                          zernieke={(2, 2): 0.072})
+        non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
+        aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
+                                                                          zernieke={(4, 0): 0.144})
+        aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
+                                                                          zernieke={(3, 1): 0.144})
+        aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N), 
+                                                                          zernieke={(2, 2): 0.144})
         # normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
         # normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
         # print(np.sum(low_NA_psf), np.sum(high_NA_psf))

@@ -60,11 +60,11 @@ def _ensure_psf_coords(psf_coordinates):
     return psf_coordinates[0], psf_coordinates[1]
 
 
-def _pupil_coords_1d(N, NA, xp, float_type):
+def _pupil_coords_1d(N, xp, float_type):
     """
     1D pupil coordinate array u in [-1,1], used along each pupil axis.
     """
-    return xp.linspace(-NA, NA, int(N), dtype=float_type)
+    return xp.linspace(-1.0, 1.0, int(N), dtype=float_type)
 
 
 def _coords_to_backend_1d(arr, xp, float_type):
@@ -184,10 +184,8 @@ def compute_2d_psf_coherent(
     N = int(P.shape[-1])
 
     rho, _phi = _ensure_rho_phi(N, RHO, PHI, xp, float_type)
-    inside = rho <= float_type(NA)
-    # import matplotlib.pyplot as plt
-    # plt.imshow(xp.asnumpy(inside))
-    # plt.show()
+    inside = rho <= float_type(1.0)
+
     # High-NA apodization on Cartesian grid
     if high_NA:
         salpha = float_type(NA / nmedium)
@@ -200,12 +198,12 @@ def compute_2d_psf_coherent(
     P = xp.where(inside, P, complex_type(0.0))
 
     # Pupil coordinates (u,v) in [-1,1]
-    u = _pupil_coords_1d(N, NA, xp, float_type)
+    u = _pupil_coords_1d(N, xp, float_type)
     v = u
 
     # Requested PSF coordinates -> conjugate coordinates qx,qy
-    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
-    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=NA)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=NA)
 
     # Compute 2D FT using separable CZT along last two axes
     E = hpc_utils.czt_nd_fourier(P, (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
@@ -284,12 +282,12 @@ def compute_2d_vectorial_components_free_dipole(
     P2s = P0_base * F2 * s2
 
     # Pupil coords
-    u = _pupil_coords_1d(N, NA, xp, float_type)
+    u = _pupil_coords_1d(N, xp, float_type)
     v = u
 
     # Requested PSF coords -> q
-    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
-    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=NA)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=NA)
 
     # CZT each component
     U0  = hpc_utils.czt_nd_fourier(P0,  (u, v), (qx, qy), axes=(-2, -1), rtol=1e-3, atol=1e-3)
@@ -419,12 +417,12 @@ def compute_3d_psf_coherent(
         denom = (1.0 - cos_alpha) if (1.0 - float(cos_alpha)) != 0.0 else float_type(1.0)
 
     # Pupil coords
-    u = _pupil_coords_1d(N, NA, xp, float_type)
+    u = _pupil_coords_1d(N, xp, float_type)
     v = u
 
     # Requested PSF coords -> q
-    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
-    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=NA)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=NA)
 
     slices = []
     for uval in u_values:
@@ -509,10 +507,10 @@ def compute_3d_incoherent_vectorial_psf_free_dipole(
         denom = (1.0 - cos_alpha) if (1.0 - float(cos_alpha)) != 0.0 else float_type(1.0)
 
     # Pupil coords and requested PSF coords -> q
-    u = _pupil_coords_1d(N, NA, xp, float_type)
+    u = _pupil_coords_1d(N, xp, float_type)
     v = u
-    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=nmedium)
-    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=nmedium)
+    qx = _scale_coordinates(x_coords, xp, float_type, use_2pi, n_over_l=NA)
+    qy = _scale_coordinates(y_coords, xp, float_type, use_2pi, n_over_l=NA)
 
     slices = []
     for uval in u_values:
