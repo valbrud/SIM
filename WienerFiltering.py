@@ -42,7 +42,8 @@ def filter_constant(image_ft, otf, w):
     if not w is None:
         filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
     
-    return filtered, w
+    
+    return filtered, w, None
 
 def filter_flat_noise_sim(image_ft, ssnr_calculator): 
     """
@@ -62,8 +63,8 @@ def filter_flat_noise_sim(image_ft, ssnr_calculator):
     
     w = ssnr_calculator.vj ** 0.5 - ssnr_calculator.dj
     # filtered = image_ft * otf.conjugate() / (otf * otf.conjugate() + w)
-    filtered = image_ft * ssnr_calculator.dj.conjugate() / (ssnr_calculator.dj * ssnr_calculator.dj.conjugate() + w)
-    return filtered, w
+    filtered = image_ft / (ssnr_calculator.dj + w)
+    return filtered, w, None
 
 def filter_true_wiener_sim(image_ft,
                     ssnr_calculator,

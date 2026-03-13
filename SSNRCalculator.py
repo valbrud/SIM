@@ -673,15 +673,6 @@ class SSNRSIMVectorial(SSNRSIM):
                          save_memory,
                          illumination_reconstruction)
 
-    def _build_m_to_numbers_matrix(self):
-        Mr = self.illumination.Mr
-        block_size = self.effective_otfs.keys().__len__()//Mr
-        self._m_to_number_matrix = {}
-        m_r = [m[1] for m in self.effective_otfs.keys() if m[0] == 0]
-        for r in range(Mr):
-            for i in range(len(m_r)):
-                self._m_to_number_matrix[(r, m_r[i])] = r * block_size + i
-
     def _compute_order_ccM(self):
         Mr = self.illumination.Mr
         center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
@@ -700,7 +691,7 @@ class SSNRSIMVectorial(SSNRSIM):
                 m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
                 if (r, m21) not in self.illumination.rearranged_indices:
                     continue
-                self._ccM[self._m_to_number_matrix[idx1], self._m_to_number_matrix[idx2]] = self.effective_otfs[(r, m21)][*center]
+                self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] = self.effective_otfs[(r, m21)][*center]
 
     def _compute_inverse_ccM(self):
         self._ccM_inv = np.linalg.inv(self._ccM)
@@ -708,10 +699,6 @@ class SSNRSIMVectorial(SSNRSIM):
     def _compute_diagonalizing_matrix(self):
         self._diagonalizing_matrix = np.linalg.eigh(self._ccM)[1]
 
-    @property 
-    def m_to_number_matrix(self):
-        return self._m_to_number_matrix
-    
     @property 
     def ccM(self):
         return self._ccM
@@ -725,7 +712,6 @@ class SSNRSIMVectorial(SSNRSIM):
         return self._diagonalizing_matrix
     
     def _compute_effective_kernels_ft(self):
-        self._build_m_to_numbers_matrix()
         self._compute_order_ccM()
         self._compute_inverse_ccM()
         self._compute_diagonalizing_matrix()
@@ -736,10 +722,10 @@ class SSNRSIMVectorial(SSNRSIM):
             effective_kernels_uncorrelated_ft = self.illumination_reconstruction.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)[1]
         
         for m in self.effective_otfs.keys():
-            row = self._m_to_number_matrix[m]
+            row = self.illumination.m_to_number_matrix[m]
             effective_kernel_ft = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
             for idx in self.effective_otfs.keys():
-                effective_kernel_ft += self._ccM_inv[row, self._m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
+                effective_kernel_ft += self._ccM_inv[row, self.illumination.m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
             self.effective_kernels_ft[m] = effective_kernel_ft
 
 class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):

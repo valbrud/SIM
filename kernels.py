@@ -73,7 +73,7 @@ def sinc_kernel3d(kernel_r_size: int = 0, kernel_z_size: int = 0, pixel_size: tu
     kernel = sinc_kernel1d(kernel_r_size, pixel_size[0], first_zero_frequency_r)[:, None,  None] * sinc_kernel1d(kernel_r_size, pixel_size[1], first_zero_frequency_r)[None, :, None] * sinc_kernel1d(kernel_z_size, pixel_size[2], first_zero_frequency_z)[None, None, :]
     return kernel / np.sum(kernel)
 
-def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0., N = 511) -> np.ndarray:
+def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0.) -> np.ndarray:
     """
     Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).
     Remark: Historically it take 2d pixel size, but it is assumed to be isotropic.
@@ -110,6 +110,11 @@ def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1
     kernel /= np.sum(kernel) 
     return kernel
 
+def finite_notch_kernel(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0.):
+    return 1 - psf_kernel2d(kernel_size, pixel_size, first_zero_frequency)
+
+def combined_low_pass_notch_kernel(kernel_size_low_pass: int = 0, kernel_size_notch: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency_low_pass: float = 0., first_zero_frequency_notch: float = 0.):
+    return psf_kernel2d(kernel_size_low_pass, pixel_size, first_zero_frequency_low_pass) * finite_notch_kernel(kernel_size_notch, pixel_size, first_zero_frequency_notch)
 
 def angular_notch_kernel( 
     kernel_size_px: int, 

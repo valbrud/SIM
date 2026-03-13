@@ -119,13 +119,18 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.harmonics = self._compute_harmonics_for_all_rotations(intensity_harmonics_dict)
 
         self._spatial_shifts = spatial_shifts if not spatial_shifts is None else self._get_zero_shifts()
-        self.Mt = self.spatial_shifts.shape[1]
+        self.Mt = self.spatial_shifts.shape[1] 
 
         self._dimensions = dimensions
         self.rearranged_indices = self._rearrange_indices(dimensions)
 
+        self._m_to_numbers_matrix = {}
+        self._build_m_to_numbers_matrix()
+
         self._phase_matrix = {}
-        self.compute_phase_matrix_from_phase_shifts()
+        self._phase_matrix_inv = {}
+        if not self.spatial_shifts is None:
+            self.compute_phase_matrix_from_phase_shifts()
 
         self.source_electromagnetic_plane_waves = source_electromagnetic_plane_waves
 
@@ -231,10 +236,24 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
     
     @phase_matrix.setter
     def phase_matrix(self, phase_matrix_new):
+        if not phase_matrix_new:
+            self._phase_matrix = {}
+            self._phase_matrix_inverse = {}
+            return
+
         shift_indices = set(index[1] for index in phase_matrix_new.keys())
         self.Mt = len(shift_indices)
         self._phase_matrix = phase_matrix_new
-
+        self._phase_matrix_inverse = self.compute_phase_matrix_inverse()
+    
+    @property 
+    def phase_matrix_inverse(self):
+        return self._phase_matrix_inverse
+    
+    @property 
+    def m_to_number_matrix(self):
+        return self._m_to_number_matrix
+    
     def _rearrange_indices(self, dimensions) -> dict[tuple[int, ...], tuple[tuple[int, ...]]]:
         """
         Rearrange indices for the computation of effective OTFs, required in SIM.
@@ -254,6 +273,15 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             result_dict[key].append(value)
         result_dict = {key: tuple(values) for key, values in result_dict.items()}
         return result_dict
+
+    def _build_m_to_numbers_matrix(self):
+        _, sim_indices = self.get_all_wavevectors_projected()
+        block_size = len(sim_indices) // self.Mr
+        self._m_to_number_matrix = {}
+        m_r = [m[1] for m in sim_indices]
+        for r in range(self.Mr):
+            for i in range(block_size):
+                self._m_to_number_matrix[(r, m_r[i])] = r * block_size + i
 
     @staticmethod
     @abstractmethod
@@ -557,8 +585,43 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             for n in range(self.Mt):
                 urn = self.spatial_shifts[r, n]
                 for wavevector, index in zip(wavevectors, indices):
-                    self.phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn, wavevector))
-        
+                    self._phase_matrix[r, n, index[1]] = np.exp(-1j * np.dot(urn, wavevector))
+        self._phase_matrix_inverse = self.compute_phase_matrix_inverse()
+
+    def compute_phase_matrix_inverse(self):
+        """
+        Compute the inverse of the phase matrix.
+        """
+        phase_matrix_inverse = {}
+
+        sim_indices = self.get_all_wavevectors_projected()[1]
+        Mh = len(sim_indices) // self.Mr
+
+        #ccM - cross-correlation matrix
+        phase_matrix_array_form = np.zeros((self.Mr * Mh, self.Mr * self.Mt), dtype=np.complex128)
+        inverse_phase_matrix_array_form = np.zeros((self.Mr * self.Mt, self.Mr * Mh), dtype=np.complex128)
+
+        for index in sim_indices:
+            r, m = index
+            for n in range(self.Mt):
+                row = self.m_to_number_matrix[r, m]
+                col = r * self.Mt + n
+                phase_matrix_array_form[row, col] = self._phase_matrix[r, n, m]
+
+        inverse_phase_matrix_array_form = np.linalg.pinv(phase_matrix_array_form)
+        # print(phase_matrix_array_form)
+        # print(inverse_phase_matrix_array_form)
+        # print(phase_matrix_array_form @ inverse_phase_matrix_array_form)
+
+        for index in sim_indices:
+            r, m = index
+            for n in range(self.Mt):
+                row = r * self.Mt + n
+                col = self.m_to_number_matrix[r, m]
+                phase_matrix_inverse[r, n, m] = inverse_phase_matrix_array_form[row, col]
+
+        return phase_matrix_inverse
+    
     def estimate_spatial_shifts_from_phase_matrix(self) -> np.ndarray:
         estimated_shifts = np.zeros((self.Mr, self.Mt, self.dimensionality))
         active_dims = [i for i in range(self.dimensionality) if self.dimensions[i] == 1]

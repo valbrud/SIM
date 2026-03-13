@@ -56,6 +56,7 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                  optical_system: OpticalSystem = None,
                  kernel=None,
                  phase_modulation_patterns=None,
+                 unitary=False,
                  **kwargs
                  ):
         """
@@ -79,6 +80,7 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
 
         self._kernel = kernel
         self.phase_modulation_patterns = phase_modulation_patterns
+        self.unitary = unitary
 
         if phase_modulation_patterns:
             self.phase_modulation_patterns = phase_modulation_patterns
@@ -103,7 +105,7 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         return self._kernel
 
     @abstractmethod
-    def reconstruct(self, sim_images, upsample_factor=1):
+    def reconstruct(self, sim_images):
         """
         Generate a row reconstructed image from SIM data.
 
@@ -117,46 +119,12 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         ----------
         sim_images : numpy.ndarray
             The SIM images to reconstruct from.
-        upsample_factor: int
-            The factor by which to upsample the reconstructed image.
         Returns
         -------
         numpy.ndarray
             The reconstructed image.
         """
         ...
-    
-    def upsample(self, sim_images, upsample_factor=1):
-        """
-        Upsample the SIM images by the given factor.
-
-        Parameters
-        ----------
-        sim_images : numpy.ndarray
-            The SIM images to upsample.
-        factor : int, optional
-            The upsampling factor. Default is 2.
-
-        Returns
-        -------
-        numpy.ndarray
-            The upsampled SIM images.
-        """
-        # plt.title("Before upsampling")
-        # plt.imshow(sim_images[0,0], cmap='gray')
-        # plt.show()
-        upsampled = np.array([np.array([utils.upsample(image, factor=upsample_factor, add_shot_noize=True) for image in  one_rotation]) for one_rotation in sim_images], dtype=np.float32)
-        # plt.title("After upsampling")
-        # plt.imshow(upsampled[0,0], cmap='gray')
-        # plt.show()
-        # for i in range(upsampled.shape[0]):
-        #     for j in range(upsampled.shape[1]):
-        #         plt.imshow(np.log1p(10**8 * np.abs(hpc_utils.wrapped_fftn(upsampled[i,j]))), cmap='gray')
-        #         plt.show()
-        # # plt.show()
-        # plt.plot(np.log1p(10**8 * np.mean(hpc_utils.wrapped_fftn(upsampled[0,0]), axis=1)))
-        # plt.show()
-        return upsampled
     
     def get_widefield(self, sim_images):
         """
@@ -198,6 +166,7 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                  phase_modulation_patterns=None,
                  effective_kernels=None,
                  return_ft=False,
+                 unitary=False,
                  **kwargs
                  ):
         """
@@ -216,7 +185,8 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         super().__init__(illumination,
                          optical_system,
                          kernel=kernel,
-                         phase_modulation_patterns=phase_modulation_patterns)
+                         phase_modulation_patterns=phase_modulation_patterns, 
+                         unitary=unitary)
         
         if kernel is not None: 
             self.kernel = utils.expand_kernel(kernel, self.optical_system.otf.shape)
@@ -256,19 +226,17 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         numpy.ndarray
             The Fourier transform of the phase-shifted image.
         """
-        phase_shifted = image * self.phase_modulation_patterns[r, m]
+        phase_shifted = image * self.phase_modulation_patterns[r, m].conjugate()
         shifted_image_ft = hpc_utils.wrapped_fftn(phase_shifted)
         # plt.imshow(np.log1p(10**8 * np.abs(shifted_image_ft)), cmap='gray')
         # plt.title(f'FT of image r={r}, m={m}')
         # plt.show()
         return shifted_image_ft
 
-    def reconstruct(self, sim_images, upsample_factor=1):
+    def reconstruct(self, sim_images):
         """
         Explicitely performs SIM reconstruction in the Fourier domain.
         """
-        if upsample_factor > 1:
-            sim_images = self.upsample(sim_images, upsample_factor)
         # Notations are as in C. Smith et al., "Structured illumination microscopy with noise-controlled image reconstructions", 2021
         reconstructed_image_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
         for r in range(sim_images.shape[0]):
@@ -279,7 +247,11 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 for n in range(sim_images.shape[1]):
                     image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
-                    sum_shifts += self.illumination.phase_matrix[(r, n, m)] * image_shifted_ft
+                    #replace with inverse
+                    if self.unitary:
+                        sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * image_shifted_ft
+                    else:
+                        sum_shifts += self.illumination.Mt * self.illumination.phase_matrix_inverse[(r, n, m)] * image_shifted_ft
                 # plt.imshow(np.log(1 + 10**8 * np.abs(sum_shifts)))
                 # plt.show()
                 # plt.title(f'R={r}, m={m}')
@@ -309,13 +281,15 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                  optical_system: OpticalSystem = None,
                  kernel=None,
                  phase_modulation_patterns=None,
+                 unitary=False,
                  **kwargs
                  ):
         
         super().__init__(illumination,
                          optical_system,
                          kernel=kernel,
-                         phase_modulation_patterns=phase_modulation_patterns
+                         phase_modulation_patterns=phase_modulation_patterns,
+                         unitary=unitary
                          )
 
         if kernel is None:
@@ -333,33 +307,38 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                 r = harmonic[0]
                 # self.illumination_patterns[r, n] = self.illumination.get_illumination_density(self.optical_system.x_grid, r=r, n=n)
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
-                self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude * self.illumination.phase_matrix[(r, n, m)] * self.phase_modulation_patterns[harmonic])
 
+                if self.unitary:
+                    self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix[(r, n, m)].conjugate() * self.phase_modulation_patterns[harmonic].conjugate())
+                else:
+                    self.illumination_patterns[r, n] += (self.illumination.Mt * self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix_inverse[(r, n, m)] * self.phase_modulation_patterns[harmonic].conjugate())
+                
         self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
 
     @ReconstructorSIM.kernel.setter
     def kernel(self, new_kernel):
         self._kernel = new_kernel
 
-    def reconstruct(self, sim_images, upsample_factor=1):
+    def reconstruct(self, sim_images):
         """
         Explicitely performs SIM reconstruction in the spatial domain.
         """
-        if upsample_factor > 1:
-            sim_images = self.upsample(sim_images, upsample_factor)
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
         for r in range(sim_images.shape[0]):
             image1rotation = np.zeros(sim_images.shape[2:], dtype=np.complex128)
             for n in range(sim_images.shape[1]):
 
                 image_convolved = hpc_utils.convolve2d(
-                    sim_images[r, n], self.kernel, mode='same', boundary='wrap'
+                    sim_images[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
                 image1rotation += self.illumination_patterns[r, n] * image_convolved
+                del image_convolved
 
             # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation))))
             # plt.show() 
             reconstructed_image += image1rotation.real
+            del image1rotation
+
         # mask = make_mask_cosine_edge2d(image1rotation.shape, 50)
         # reconstructed_image *= mask
         return reconstructed_image
@@ -504,7 +483,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
             image1rotation = np.zeros(sim_images_slice.shape[2:], dtype=np.float64)
             for n in range(sim_images_slice.shape[1]):
                 image_convolved = hpc_utils.convolve2d(
-                    sim_images_slice[r, n], self.kernel, mode='same', boundary='wrap'
+                    sim_images_slice[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
                 temp = self.illumination_patterns[r, n] * image_convolved
                 image1rotation += temp
@@ -513,10 +492,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
             del image1rotation
         return sliced_reconstructed_image
 
-    def reconstruct(self, sim_images, upsample_factor=1, backend='cpu'):
-        if upsample_factor > 1:
-            sim_images = self.upsample(sim_images, upsample_factor)
-
+    def reconstruct(self, sim_images, backend='cpu'):
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
 
         hpc_utils.pick_backend('cpu' if backend == 'cpu' else 'gpu')
