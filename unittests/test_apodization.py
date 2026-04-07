@@ -15,7 +15,7 @@ import hpc_utils
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 import scipy
 import matplotlib.pyplot as plt
-from Apodization import AutoconvolutuionApodizationSIM2D, AutoconvolutionApodizationSIM3D
+from Apodization import AutoconvolutionApodizationSIM2D, AutoconvolutionApodizationSIM3D
 
 
 class TestAutoconvolutionSIM2D(unittest.TestCase):
@@ -78,7 +78,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
     def test_apodization_sim(self):
         conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1, angles=(0 + np.pi/4, np.pi/3 + np.pi/4, 2*np.pi/3 + np.pi/4))
         conventional = IlluminationPlaneWaves2D.init_from_3D(conventional)    
-        apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, conventional)
+        apodization = AutoconvolutionApodizationSIM2D(self.optical_system, conventional)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf, cmap='gray')
         axes[0].set_title('Ideal CTF')
@@ -89,7 +89,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
 
         square = self.configurations.get_4_oblique_s_waves_and_s_normal_diagonal(self.theta, 1, 0, Mt=1)
         square = IlluminationPlaneWaves2D.init_from_3D(square)    
-        apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, square)
+        apodization = AutoconvolutionApodizationSIM2D(self.optical_system, square)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf, cmap='gray')
         axes[0].set_title('Ideal CTF')
@@ -109,7 +109,7 @@ class TestAutoconvolutionSIM2D(unittest.TestCase):
 
         sim_psf = np.real(hpc_utils.wrapped_ifftn(sim_otf))
         sim_psf /= np.sum(sim_psf)
-        apodization = AutoconvolutuionApodizationSIM2D(self.optical_system, square)
+        apodization = AutoconvolutionApodizationSIM2D(self.optical_system, square)
         fig, axes = plt.subplots(1, 2, figsize=(10, 5))
         axes[0].imshow(np.log(1 + 10 **8 * sim_otf.real), cmap='gray')
         axes[1].imshow(np.log(1 + 10 **8 * apodization.ideal_otf.real), cmap='gray')

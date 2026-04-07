@@ -144,7 +144,7 @@ class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metacla
 
   
 
-class AutoconvolutuionApodizationSIM2D(AutoconvolutionApodizationSIM):
+class AutoconvolutionApodizationSIM2D(AutoconvolutionApodizationSIM):
     dimensionality = 2
     def __init__(self, optical_system: OpticalSystem2D, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray] = None):
         super().__init__(optical_system, illumination, plane_wave_wavevectors)

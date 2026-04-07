@@ -61,13 +61,13 @@ class ShiftsFinder2d(ShiftsFinder):
         return combinations
 
     @staticmethod
-    def get_shift_ratios(expanded_lattice, highest_base_number=25):
+    def get_shift_ratios(expanded_lattice, lowest_base_number=1, highest_base_number=25):
         if len(expanded_lattice.pop()) != 2:
             raise ValueError("This method is for 2D lattices only.")
         funcs = ShiftsFinder2d.generate_conditions(expanded_lattice)
-        bases = np.arange(1, highest_base_number)
+        bases = np.arange(lowest_base_number, highest_base_number+1)
         table = ShiftsFinder2d.generate_table(funcs, bases)
-        return ShiftsFinder2d.find_pairs(table, np.arange(1, highest_base_number, 1))
+        return ShiftsFinder2d.find_pairs(table, np.arange(lowest_base_number, highest_base_number+1, 1))
 
 
 class ShiftsFinder3d(ShiftsFinder):
@@ -106,13 +106,13 @@ class ShiftsFinder3d(ShiftsFinder):
         return combinations
 
     @staticmethod
-    def get_shift_ratios(expanded_lattice, highest_base_number=25):
+    def get_shift_ratios(expanded_lattice, lowest_base_number=1, highest_base_number=25):
         if len(expanded_lattice.pop()) != 3:
             raise ValueError("This method is for 3D lattices only.")
         funcs = ShiftsFinder3d.generate_conditions(expanded_lattice)
-        bases = np.arange(1, highest_base_number)
+        bases = np.arange(lowest_base_number, highest_base_number+1)
         table = ShiftsFinder3d.generate_table(funcs, bases)
-        return ShiftsFinder3d.find_pairs(table, np.arange(1, highest_base_number, 1))
+        return ShiftsFinder3d.find_pairs(table, np.arange(lowest_base_number, highest_base_number+1, 1))
 
 def build_phase_matrix(shift_number, shift_ratios, m_vectors):
     phase_matrix = np.zeros((shift_number, len(m_vectors)), dtype=complex)
@@ -126,8 +126,14 @@ def build_phase_matrix(shift_number, shift_ratios, m_vectors):
 if __name__ == "__main__":
     from config.BFPConfigurations import BFPConfiguration
     from Illumination import IlluminationPlaneWaves2D
-    illumination = IlluminationPlaneWaves2D.init_from_3D(BFPConfiguration().get_4_circular_oblique_waves_and_circular_normal(np.pi / 4, 1, 1, dimensionality=3), force=True)
+    illumination = BFPConfiguration().get_6_oblique_s_waves_and_circular_normal(np.pi / 4, 1, 1, dimensionality=2, dimensions=(1, 1,0))
+    # illumination = BFPConfiguration().get_3_oblique_s_waves_and_circular_normal(np.pi / 4, 1, 0, dimensionality=2)
 
+    # illumination.set_spatial_shifts_diagonally(Mt=10, ratios=(1, 3))
+    # print(np.angle(illumination.phase_matrix_array_form))
+    # print(np.round(illumination.phase_matrix_array_form @ illumination.phase_matrix_inverse_array_form, 2))
+    # print(np.linalg.cond(illumination.phase_matrix_array_form))
+    illumination.set_spatial_shifts_diagonally()
     expanded_lattice = illumination.compute_expanded_lattice(ignore_projected_dimensions=True)
 
     # 2D Shift Finder
@@ -137,14 +143,16 @@ if __name__ == "__main__":
 
     # 3D Shift Finder
     shift_ratios_3d = ShiftsFinder2d.get_shift_ratios(expanded_lattice)
+    # shift_ratios_3d = ShiftsFinder3d.get_shift_ratios(expanded_lattice, lowest_base_number=1, highest_base_number=20)
     print("3D Shift Ratios:", shift_ratios_3d)
 
-    ratios_selected = shift_ratios_3d[13]
-    print("Selected Ratios:", ratios_selected)
+    # ratios_selected = shift_ratios_3d[19]
+    # print("Selected Ratios:", ratios_selected)
 
 
     pi = np.pi
     i = 1j
+
 
     # M1 = np.array([
     #     [np.exp(0*i), np.exp(0*i), np.exp(0*i), 1, np.exp(0*i), np.exp(0*i), np.exp(0*i)],
@@ -156,6 +164,7 @@ if __name__ == "__main__":
     #     [np.exp(-8*pi*i/5), np.exp(-4*pi*i/5 - pi*i/2), np.exp(-4*pi*i/5 + pi*i/2), 1, np.exp(4*pi*i/5 + pi*i/2), np.exp(4*pi*i/5), np.exp(8*pi*i/5)]
     # ], dtype=complex)
 
+    
     # cond1 = np.linalg.cond(M1)
 
     # ---------- Matrix 2 ----------

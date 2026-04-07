@@ -52,8 +52,8 @@ class TestReconstruction2D(unittest.TestCase):
             image_size=self.psf_size,
             point_number=self.N,
             line_width=0.4,
-            num_lines=500,
-            intensity=10**2
+            num_lines=100,
+            intensity=10**4
         )
 
         # self.image = 100 * ShapesGenerator.make_circle_grid(self.N, radius=1)
@@ -141,9 +141,10 @@ class TestReconstruction2D(unittest.TestCase):
         fourier_reconstructor = ReconstructorFourierDomain2D(
             illumination=self.illumination,
             optical_system=self.optical_system,
-            kernel=psf_kernel2d(9, (self.dx, self.dx)),
+            # kernel=psf_kernel2d(9, (self.dx, self.dx)),
             # regularization_filter=self.optical_system.otf**2 + 0.01
             # apodization_filter =
+            unitary=True
         )
         # Reconstruct the image.
         reconstructed_image = fourier_reconstructor.reconstruct(self.sim_images_distorted)
@@ -156,7 +157,7 @@ class TestReconstruction2D(unittest.TestCase):
             illumination=self.illumination,
             optical_system=self.optical_system,
             readout_noise_variance=1,
-            kernel = psf_kernel2d(9, (self.dx, self.dx))
+            # kernel = psf_kernel2d(9, (self.dx, self.dx))
         )            
         filtered, *_  = filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed_image), calc)
         fig, axes = plt.subplots(1, 2)
@@ -166,7 +167,7 @@ class TestReconstruction2D(unittest.TestCase):
         axes[1].set_title("Filtered FT")
         plt.show()
         fig, axes = plt.subplots(1, 2)
-        axes[0].imshow(np.abs(reconstructed_image[self.N//2 - 100:self.N//2 + 100, self.N//2 - 100:self.N//2 + 100]))
+        axes[0].imshow(np.abs(reconstructed_image))
         axes[0].set_title("Reconstructed")
         axes[1].imshow(np.abs(hpc_utils.wrapped_ifftn(filtered)))
         axes[1].set_title("Filtered")

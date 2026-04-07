@@ -129,6 +129,9 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
         self._phase_matrix = {}
         self._phase_matrix_inv = {}
+        self.phase_matrix_array_form = None
+        self.phase_matrix_inverse_array_form = None
+
         if not self.spatial_shifts is None:
             self.compute_phase_matrix_from_phase_shifts()
 
@@ -474,6 +477,17 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                     break
         return base_vectors
 
+    def get_phase_modulation_patterns(self, coordinates):
+        phase_modulation_patterns = {}
+        grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), axis=-1)
+        wavevectors, indices = self.get_all_wavevectors_projected()
+        for sim_index, wavevector in zip(indices, wavevectors):
+            phase_modulation = np.exp(1j * np.einsum('...l,l ->...', grid, wavevector))
+            phase_modulation_patterns[sim_index] = phase_modulation
+        # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
+        # plt.show()
+        return phase_modulation_patterns
+    
     def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray], preserve_order_structure=True) -> tuple[
         dict[tuple[int, tuple[int, ...]], np.ndarray], dict[tuple[int, tuple[int, ...]], np.ndarray]]:
         """
@@ -487,40 +501,30 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         Returns:
             tuple: Effective kernels and their Fourier transform.
         """
+
+        phase_modulation_patterns = self.get_phase_modulation_patterns(coordinates)
         harmonics = self.harmonics
         effective_kernels = {}
         effective_kernels_ft = {}
-        grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), -1)
         indices = self.rearranged_indices
-        for sim_index in indices:
+        for sim_index in phase_modulation_patterns:
             effective_kernel = 0
             for projected_index in indices[sim_index]:
                 index = self.glue_indices(sim_index, projected_index)
-                wavevector = harmonics[index].wavevector.copy()
                 amplitude = harmonics[index].amplitude
-                phase_shifted = np.exp(-1j * np.einsum('...l,l ->...', grid, wavevector)) * kernel
+                phase_shifted = phase_modulation_patterns[sim_index].conjugate() * kernel
                 effective_kernel += amplitude * phase_shifted
             
             # effective_kernel /= np.sum(np.abs(effective_kernel))
             effective_kernels[sim_index] = effective_kernel
             effective_kernels_ft[sim_index] = hpc_utils.wrapped_fftn(effective_kernel)
-            # effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
-            # plt.imshow(np.log1p(10**3 * np.abs(effective_kernels_ft[sim_index][:, :, 15])).T, cmap='gray', origin='lower')
+            effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
+            # plt.imshow(np.log1p(10**3 * np.abs(effective_kernels_ft[sim_index])).T, cmap='gray', origin='lower')
             # plt.title(f"Effective kernel {sim_index}")
             # plt.show()
         return effective_kernels, effective_kernels_ft
 
-    def get_phase_modulation_patterns(self, coordinates):
-        phase_modulation_patterns = {}
-        grid = np.stack(np.meshgrid(*coordinates, indexing='ij'), axis=-1)
-        wavevectors, indices = self.get_all_wavevectors_projected()
-        for sim_index, wavevector in zip(indices, wavevectors):
-            phase_modulation = np.exp(-1j * np.einsum('...l,l ->...', grid, wavevector))
-            phase_modulation_patterns[sim_index] = phase_modulation
-        # plt.imshow(np.real(phase_modulation_patterns[r, sim_index].real), cmap='gray')
-        # plt.show()
-        return phase_modulation_patterns
-    
+
     def _filter_shift_ratios(self, shift_ratios):
         """
         Only leave those shifts that correspond to the movement in the non-projective dimensions. 
@@ -550,21 +554,25 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                         break
         return non_degenerate_dimensions
 
-    def set_spatial_shifts_diagonally(self, number: int = 0):
+    def set_spatial_shifts_diagonally(self, Mt: int = 0, ratios=()):
         """ 
         Find the spatial shifts, that satisfy the orthogonality constraint. 
         """
-        expanded_lattice = self.compute_expanded_lattice()
-        ShiftsFinder = ShiftsFinder2d if self.dimensionality == 2 else ShiftsFinder3d
-        shift_ratios = ShiftsFinder.get_shift_ratios(expanded_lattice, len(expanded_lattice) + 5)
-        shift_ratios = self._filter_shift_ratios(shift_ratios)
-        if len(shift_ratios) == 0:
-            raise ValueError("No shift ratios found!")
-        if number == 0:
-            bases = sorted(list(shift_ratios.keys()))
-            base, ratios = bases[number], list(shift_ratios[bases[number]])[0]
+        if not ratios:
+            expanded_lattice = self.compute_expanded_lattice()
+            ShiftsFinder = ShiftsFinder2d if self.dimensionality == 2 else ShiftsFinder3d
+            shift_ratios = ShiftsFinder.get_shift_ratios(expanded_lattice,1, len(expanded_lattice) + 5)
+            shift_ratios = self._filter_shift_ratios(shift_ratios)
+            if len(shift_ratios) == 0:
+                raise ValueError("No shift ratios found!")
+            if Mt == 0:
+                bases = sorted(list(shift_ratios.keys()))
+                base, ratios = bases[Mt], list(shift_ratios[bases[Mt]])[0]
+            else:
+                base, ratios = Mt, list(shift_ratios[Mt])[0]
         else:
-            base, ratios = number, list(shift_ratios[number])[0]
+            base = Mt
+            
         spatial_shifts = np.zeros((self.Mr, base, self.dimensionality))
         for r in range(self.Mr):
             base_vectors = self.get_base_vectors(r)
@@ -609,6 +617,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 phase_matrix_array_form[row, col] = self._phase_matrix[r, n, m]
 
         inverse_phase_matrix_array_form = np.linalg.pinv(phase_matrix_array_form)
+        self.phase_matrix_inverse_array_form = inverse_phase_matrix_array_form
+        self.phase_matrix_array_form = phase_matrix_array_form
         # print(phase_matrix_array_form)
         # print(inverse_phase_matrix_array_form)
         # print(phase_matrix_array_form @ inverse_phase_matrix_array_form)

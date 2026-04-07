@@ -23,7 +23,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mr=3, Mt=1, angles=None, dimensionality=3):
+    def get_2_oblique_s_waves_and_s_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mr=3, Mt=1, angles=None, dimensionality=3, dimensions=(1, 1, 0)):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -43,18 +43,18 @@ class BFPConfiguration:
         base_vectors = (k1, k1, k2)
         illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
-                                                                      dimensions=(1, 1, 0), 
+                                                                      dimensions=dimensions, 
                                                                       Mr = Mr, 
                                                                       angles=angles)
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1))
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions[:2])
 
         return illumination
 
-    def get_3_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3):
+    def get_3_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3, dimensions=(1, 1, 0)):
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
         k2 = self.k * (np.cos(theta) - 1)
@@ -88,7 +88,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_4_oblique_s_waves_and_s_normal_diagonal(self, angle_oblique, strength_oblique, strength_s_normal=1, alpha0 = 0, Mt=1, dimensionality=3):
+    def get_4_oblique_s_waves_and_s_normal_diagonal(self, angle_oblique, strength_oblique, strength_s_normal=1, alpha0 = 0, Mt=1, dimensionality=3, dimensions=(1, 1, 0)):
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
         k2 = self.k * (np.cos(theta) - 1)
@@ -111,7 +111,7 @@ class BFPConfiguration:
         ]
         illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
-                                                                      dimensions=(1, 1, 0),
+                                                                      dimensions=dimensions,
                                                                       Mr=1,
                                                                       angles=(alpha0, ),
                                                                       )
@@ -119,11 +119,11 @@ class BFPConfiguration:
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1), force=True)
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=dimensions[:2], force=True)
 
         return illumination
 
-    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, alpha0=0, phase_shift=0, dimensionality=3):
+    def get_4_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, alpha0=0, phase_shift=0, dimensionality=3, dimensions=(1, 1, 0)):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -166,19 +166,19 @@ class BFPConfiguration:
         base_vectors = (k1, k1, k2)
         illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
-                                                                      dimensions=(1, 1, 0), 
                                                                       Mr = 1, 
                                                                       angles=(alpha0, ),
+                                                                      dimensions=dimensions
                                                                       )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1), force=True)
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=dimensions[:2], force=True)
 
         return illumination
 
-    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift=0, alpha0=0, dimensionality=3):
+    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift=0, alpha0=0, dimensionality=3, dimensions=(1, 1,1)):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -234,7 +234,7 @@ class BFPConfiguration:
         base_vectors = (k1, k1, k2)
         illumination = IlluminationPlaneWaves3D.init_from_plane_waves(sources,
                                                                       base_vectors,
-                                                                      dimensions=(1, 1, 0), 
+                                                                      dimensions=dimensions, 
                                                                       Mr = 1, 
                                                                       angles=(alpha0, ),
                                                                       )
@@ -242,11 +242,11 @@ class BFPConfiguration:
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1), force=True)
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=dimensions[:2], force=True)
 
         return illumination
 
-    def get_6_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3):
+    def get_6_oblique_s_waves_and_circular_normal(self, angle_oblique, strength_oblique, strength_s_normal=1, Mt=1, dimensionality=3, dimensions=(1, 1, 0)):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)
@@ -301,7 +301,7 @@ class BFPConfiguration:
         base_vectors = (k1 / 2, 3 ** 0.5 / 2 * k1, k2)
         illumination = IlluminationPlaneWaves3D.init_from_list(sources,
                                                                       base_vectors,
-                                                                      dimensions=(1, 1, 0), 
+                                                                      dimensions=dimensions, 
                                                                       Mr = 1)
         
         vec_x = np.array((k1, 0, k2))
@@ -322,7 +322,7 @@ class BFPConfiguration:
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, (1, 1))
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions[:2], force=True)
         
         return illumination
     

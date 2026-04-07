@@ -5,6 +5,7 @@ project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
 sys.path.append(current_dir)
 
+import copy
 import Box
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
@@ -15,7 +16,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import IlluminationPlaneWaves3D
-from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase, SSNRSIMVectorial2D, SSNRSIMVectorial3D
 from OpticalSystems import System4f3D, System4f2D
 import utils
 from Sources import IntensityHarmonic3D

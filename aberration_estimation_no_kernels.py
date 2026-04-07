@@ -132,6 +132,7 @@ def compute_loss_function(stack,
                           ):
     
     optical_system.compute_psf_and_otf(zernieke=zernieke)
+
     # plt.imshow(np.log1p(10**4 * optical_system.otf.real), origin='lower')
     # plt.gca().add_patch(plt.Circle((100, 100), 200/6, color='red', fill=False))
     # plt.title("OTF with aberrations")

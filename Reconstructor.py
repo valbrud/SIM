@@ -193,6 +193,10 @@ class ReconstructorFourierDomain(ReconstructorSIM):
 
         if effective_kernels:
             self.effective_kernels = effective_kernels
+            # for sim_index in self.effective_kernels:
+                # plt.imshow(np.log1p(10**3 * np.abs(self.effective_kernels[sim_index])).T, cmap='gray', origin='lower')
+                # plt.title(f"Effective kernel in the reconstructor {sim_index}")
+                # plt.show()
         else:
             if self.optical_system is None:
                 raise AttributeError("If effective kernels are not provided, optical system must be provided to compute them.")
@@ -228,8 +232,11 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         """
         phase_shifted = image * self.phase_modulation_patterns[r, m].conjugate()
         shifted_image_ft = hpc_utils.wrapped_fftn(phase_shifted)
-        # plt.imshow(np.log1p(10**8 * np.abs(shifted_image_ft)), cmap='gray')
-        # plt.title(f'FT of image r={r}, m={m}')
+        # fig, ax = plt.subplots(1, 2)
+        # ax[0].imshow(np.log1p(10**8 * np.abs(shifted_image_ft.T)), cmap='gray', origin='lower')
+        # ax[0].set_title(f'FT of image r={r}, m={m}')
+        # ax[1].imshow(np.log1p(10**8 * np.abs(self.effective_kernels[r, m].T)), cmap='gray', origin='lower')
+        # ax[1].set_title(f'Effective kernel r={r}, m={m}')
         # plt.show()
         return shifted_image_ft
 
@@ -245,19 +252,31 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                 m = sim_index[1]
                 # Jrm = np.zeros(sim_images.shape[2:], dtype=np.complex128)
                 sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
-                for n in range(sim_images.shape[1]):
-                    image_shifted_ft = self._compute_shifted_image_ft(sim_images[r, n], r, m)
+                    # plt.imshow(np.log1p(10**8 * np.abs(image_shifted_ft)), cmap='gray')
+                    # plt.title(f'FT of image r={r}, m={m}')
+                    # plt.show()
                     #replace with inverse
+                for n in range(sim_images.shape[1]):
                     if self.unitary:
-                        sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * image_shifted_ft
+                        sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * sim_images[r, n]
                     else:
-                        sum_shifts += self.illumination.Mt * self.illumination.phase_matrix_inverse[(r, n, m)] * image_shifted_ft
-                # plt.imshow(np.log(1 + 10**8 * np.abs(sum_shifts)))
+                        sum_shifts += self.illumination.Mt * self.illumination.phase_matrix_inverse[(r, n, m)] * sim_images[r, n]
+                sum_shifts_ft = self._compute_shifted_image_ft(sum_shifts, r, m)
+
+                        # fig, ax = plt.subplots(1, 2)
+                        # ax[0].imshow(np.log1p(10**8 * np.abs(image_shifted_ft.T)), cmap='gray', origin='lower')
+                        # ax[0].set_title(f'FT of image r={r}, m={m}')
+                        # ax[1].imshow(np.log1p(10**8 * np.abs(self.effective_kernels[r, m].T)), cmap='gray', origin='lower')
+                        # ax[1].set_title(f'Effective kernel r={r}, m={m}')
+                        # plt.show()
+                # m_inv = tuple([-mi for mi in m])
+                # fig, ax = plt.subplots(1, 2)
+                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft).T), cmap='gray', origin='lower')
+                # ax[0].set_title(f'R={r}, m={m}')
+                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)].T)), cmap='gray', origin='lower')
+                # ax[1].set_title(f'kernel in the rec R={r}, m={m}')
                 # plt.show()
-                # plt.title(f'R={r}, m={m}')
-                # plt.imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)])))
-                # plt.show()
-                image1rotation_ft += sum_shifts * self.effective_kernels[(r, m)].conjugate()
+                image1rotation_ft += sum_shifts_ft * self.effective_kernels[(r, m)].conjugate()
 
             reconstructed_image_ft += image1rotation_ft
         # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
@@ -301,19 +320,19 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
         if phase_modulation_patterns is None:
             self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
-        self.illumination_patterns = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        self.modulation_patterns = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
         for n in range(self.illumination.Mt):
             for harmonic in self.illumination.harmonics:
                 r = harmonic[0]
-                # self.illumination_patterns[r, n] = self.illumination.get_illumination_density(self.optical_system.x_grid, r=r, n=n)
+                # self.modulation_patterns[r, n] = self.illumination.get_illumination_density(self.optical_system.x_grid, r=r, n=n)
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
 
                 if self.unitary:
-                    self.illumination_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix[(r, n, m)].conjugate() * self.phase_modulation_patterns[harmonic].conjugate())
+                    self.modulation_patterns[r, n] += (self.illumination.harmonics[harmonic]* self.illumination.phase_matrix[(r, n, m)].conjugate() * self.phase_modulation_patterns[harmonic].conjugate())
                 else:
-                    self.illumination_patterns[r, n] += (self.illumination.Mt * self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix_inverse[(r, n, m)] * self.phase_modulation_patterns[harmonic].conjugate())
+                    self.modulation_patterns[r, n] += (self.illumination.Mt * self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix_inverse[(r, n, m)] * self.phase_modulation_patterns[harmonic].conjugate())
                 
-        self.illumination_patterns = np.array(self.illumination_patterns, dtype=np.float64)
+        self.modulation_patterns = np.array(self.modulation_patterns, dtype=np.float64)
 
     @ReconstructorSIM.kernel.setter
     def kernel(self, new_kernel):
@@ -331,7 +350,7 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                 image_convolved = hpc_utils.convolve2d(
                     sim_images[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
-                image1rotation += self.illumination_patterns[r, n] * image_convolved
+                image1rotation += self.modulation_patterns[r, n] * image_convolved
                 del image_convolved
 
             # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation))))
@@ -485,14 +504,14 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 image_convolved = hpc_utils.convolve2d(
                     sim_images_slice[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
-                temp = self.illumination_patterns[r, n] * image_convolved
+                temp = self.modulation_patterns[r, n] * image_convolved
                 image1rotation += temp
                 del image_convolved, temp  # free intermediates immediately
             sliced_reconstructed_image += image1rotation
             del image1rotation
         return sliced_reconstructed_image
 
-    def reconstruct(self, sim_images, backend='cpu'):
+    def reconstruct(self, sim_images, backend='gpu'):
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
 
         hpc_utils.pick_backend('cpu' if backend == 'cpu' else 'gpu')

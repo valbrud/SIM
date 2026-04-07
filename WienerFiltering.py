@@ -71,8 +71,9 @@ def filter_true_wiener_sim(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-12, 
-                    mask = None):    
+                    numeric_noise=10**-9, 
+                    mask = None, 
+                    watershed_confidence_interval=20):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -127,18 +128,26 @@ def filter_true_wiener_sim(image_ft,
     # print('total_counts', f0)
     noise_power = vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
     noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
+ 
+
+    # if noise_power_ra.ndim == 1:
+    #     signal_power_ra = utils.comparative_watershed_filter(np.abs((obj2ra - noise_power_ra )), noise_power_ra)
+    # else:
+    #     signal_power_ra = np.zeros(noise_power_ra.shape)
+    #     for i in range(noise_power_ra.shape[1]):
+    #         signal_power_ra[:, i] = utils.comparative_watershed_filter(np.abs((obj2ra[:, i] - noise_power_ra[:, i])), noise_power_ra[:, i])
+
+    signal_power_ra = np.abs((obj2ra - noise_power_ra ))
+    ssnr_ra = signal_power_ra / noise_power_ra
+    ssnr_ra = np.nan_to_num(ssnr_ra)
+    
+    ssnr = expand_ring_averages(ssnr_ra, ssnr_calculator.optical_system.otf_frequencies)
 
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    # ax[0].plot(np.log1p(1 + 10**8 * (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
-    # ax[0].plot(np.log1p(1 + 10**8 * (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
-    # ax[1].plot(np.log1p(1 + 10**8 * ((np.abs(obj2ra) - noise_power_ra).real / noise_power_ra.real))[:, obj2ra.shape[1]//2], label='SSNR')
+    # ax[0].plot(np.log1p(1+ (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
+    # ax[0].plot(np.log1p(1 + (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+    # ax[1].plot(np.log1p(1  + ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
     # plt.show()
-
-    ssnr = np.abs((obj2a - noise_power ))/ noise_power
-    ssnr = np.nan_to_num(ssnr)
-
-
-
 
     # ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
     # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
@@ -163,15 +172,15 @@ def filter_true_wiener_sim(image_ft,
     # ax[2].set_title('Regularization w')
     # plt.show()
 
-    w = np.where(ssnr < 0.1, 10**9, w)
+    w = np.where(ssnr < 1, 10**9, w)
     # w = noise_power 
     filtered = image_ft  / (ssnr_calculator.dj + w + numeric_noise)
 
     filtered = np.nan_to_num(filtered)
-    filtered = np.where(ssnr_calculator.dj < 10**-6, 0, filtered)
-    ssnr = np.where(ssnr_calculator.dj < 10**-6, 0, ssnr)
+    filtered = np.where(ssnr_calculator.dj < numeric_noise, 0, filtered)
+    ssnr = np.where(ssnr_calculator.dj < numeric_noise, 0, ssnr)
     # filtered = np.where(ssnr < 1, 0, filtered)
-    # filtered_image = hpc_utils.wrapped_ifftn(filtered)
+    filtered_image = hpc_utils.wrapped_ifftn(filtered)
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
     # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 50], cmap='viridis')
     # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 50], cmap='viridis')
@@ -231,7 +240,7 @@ def filter_self_consistent_wiener(image_ft,
 
     w = ssnr_calculator.dj / ssnr_measured
     
-    filtered = image_ft / (ssnr_calculator.dj + w    + numeric_noise)
+    filtered = image_ft / (ssnr_calculator.dj + w + numeric_noise)
 
     filtered = np.where(ssnr_calculator.dj > numeric_noise, filtered, 0)
     filtered = np.nan_to_num(filtered)

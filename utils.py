@@ -729,7 +729,6 @@ def wrap_axes3d(axes, arrays, mode=None, scaling=1, axis='z', **imshow_kwargs):
     slider.on_changed(_update)
     return slider
 
-
 def upsample(image, factor: int = 2, add_shot_noize: bool = False, naxes: int = 2) -> np.ndarray:
     # Compute new shape after upsampling
     original_shape = np.array(image.shape, dtype=np.int32)
@@ -763,3 +762,68 @@ def upsample(image, factor: int = 2, add_shot_noize: bool = False, naxes: int = 
     # plt.show()
     upsampled = hpc_utils.wrapped_ifftn(ft_padded)
     return upsampled
+
+def low_pass_adaptive_watershed_filter(array: np.ndarray, confidence_interval: int=10) -> np.ndarray:
+    """
+    Filters a 1D array representing a monotonically or near-monotonically decaying function with noise.
+    
+    Finds a point 'i' such that all values on the right are smaller than array[i] (water level),
+    and at least `confidence_interval` proportion of points on the left are higher than this level.
+    Then filters out (sets to 0) all points with values lower than this water level.
+    
+    Args:
+        array: 1D numpy array.
+        confidence_interval: threshold (e.g. 0.95) for the proportion of points on the left 
+                             that must be higher than the water level.
+        
+    Returns:
+        Filtered 1D numpy array.
+    """
+
+    filtered_array = array.copy()
+    n = len(array)
+    
+    if n < 2:
+        return filtered_array
+        
+    
+    # Traverse from right to left to find the closest point to the right border
+    for i in range(n - 1, 0, -1):
+        water_level = array[i]
+        if (array[i:] <= water_level).all():
+            left_boundary = max(i - confidence_interval, 0)
+            if (array[left_boundary:i] > water_level).all():
+                filtered_array[filtered_array < water_level] = 0
+                break
+        
+    return filtered_array
+
+
+def comparative_watershed_filter(array1: np.ndarray, array2: np.ndarray) -> np.ndarray:
+    """
+    Filters a 1D monotonically-decaying signal (array1) by comparison with a
+    reference / noise floor (array2).
+
+    As soon as any element of array2 becomes >= the corresponding element of
+    array1, all values of array1 from that index onward are set to 0.
+
+    Args:
+        array1: 1D numpy array – the signal (expected to be monotonically
+                decreasing and element-wise >= array2 in the clean region).
+        array2: 1D numpy array of the same length – the reference / noise floor.
+
+    Returns:
+        A filtered copy of array1 with the noisy tail zeroed out.
+    """
+    if len(array1) != len(array2):
+        raise ValueError("array1 and array2 must have the same length")
+
+    filtered = array1.copy()
+    crossover = np.argmax(array2 >= array1)
+    # np.argmax returns 0 when no element satisfies the condition;
+    # distinguish that from a genuine crossover at index 0.
+    if crossover == 0 and array2[0] < array1[0]:
+        return filtered          # no crossover found – signal is clean
+
+    filtered[crossover:] = 0
+    return filtered

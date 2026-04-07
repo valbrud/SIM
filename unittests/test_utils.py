@@ -288,3 +288,138 @@ class TestVisualisation(unittest.TestCase):
         )
 
         plt.show()
+
+
+class TestWatershedFilter(unittest.TestCase):
+    """Tests for utils.low_pass_adaptive_watershed_filter."""
+
+    def test_clean_decaying_signal_unchanged(self):
+        """A purely decaying signal with no noise should stay untouched."""
+        x = np.arange(100, 0, -1, dtype=np.float64)  # 100, 99, …, 1
+        filtered = utils.low_pass_adaptive_watershed_filter(x, confidence_interval=10)
+
+        plt.figure()
+        plt.title("Clean decaying signal (should be unchanged)")
+        plt.plot(x, label='original')
+        plt.plot(filtered, '--', label='filtered')
+        plt.legend()
+        plt.show()
+
+        np.testing.assert_array_equal(filtered, x)
+
+    def test_decaying_with_noisy_tail(self):
+        """Signal decays from 100 to ~20, then a noisy tail of small values.
+        The noisy tail should be zeroed out."""
+        n_signal = 60
+        n_noise = 40
+        signal = np.linspace(100, 20, n_signal)
+        noise = np.random.RandomState(42).uniform(0, 2, n_noise)  # values in [0, 2)
+        array = np.concatenate([signal, noise])
+
+        filtered = utils.low_pass_adaptive_watershed_filter(array, confidence_interval=10)
+
+        plt.figure()
+        plt.title("Decaying signal + noisy tail")
+        plt.plot(array, label='original')
+        plt.plot(filtered, '--', label='filtered')
+        plt.axvline(n_signal, color='gray', linestyle=':', label='signal/noise boundary')
+        plt.legend()
+        plt.show()
+
+        # The first part of the signal should be preserved (values >> noise)
+        self.assertTrue((filtered[:n_signal] > 0).all(),
+                        "Signal region should not be zeroed out")
+        # The noise tail should be zeroed
+        self.assertTrue((filtered[n_signal:] == 0).all(),
+                        "Noise tail should be zeroed out")
+
+    def test_flat_noise_array(self):
+        """An array of uniform random noise.  Most / all values should be zeroed
+        because there is no clear 'signal' region."""
+        noise = np.random.RandomState(7).uniform(0, 1, 100)
+        filtered = utils.low_pass_adaptive_watershed_filter(noise, confidence_interval=10)
+
+        plt.figure()
+        plt.title("Flat noise (no signal)")
+        plt.plot(noise, label='original')
+        plt.plot(filtered, '--', label='filtered')
+        plt.legend()
+        plt.show()
+
+        # At least half the array should be zeroed (the filter should cut something)
+        self.assertGreater(np.sum(filtered == 0), len(noise) // 2)
+
+    def test_short_array(self):
+        """Arrays shorter than confidence_interval should be returned as-is."""
+        short = np.array([5.0, 3.0, 1.0])
+        filtered = utils.low_pass_adaptive_watershed_filter(short, confidence_interval=10)
+
+        plt.figure()
+        plt.title("Short array (shorter than confidence_interval)")
+        plt.plot(short, 'o-', label='original')
+        plt.plot(filtered, 'x--', label='filtered')
+        plt.legend()
+        plt.show()
+
+        np.testing.assert_array_equal(filtered, short)
+
+    # ---------- comparative_watershed_filter tests ----------
+
+    def test_comparative_signal_crosses_noise(self):
+        """Signal decays and eventually dips below a flat noise floor."""
+        n = 100
+        signal = np.linspace(50, 0, n)        # decays from 50 to 0
+        noise_floor = np.full(n, 10.0)         # constant noise at 10
+        # crossover happens where signal < 10 → around index 80
+
+        filtered = utils.comparative_watershed_filter(signal, noise_floor)
+
+        crossover_idx = np.argmax(noise_floor >= signal)
+
+        plt.figure()
+        plt.title("Comparative filter: signal vs constant noise floor")
+        plt.plot(signal, label='signal (array1)')
+        plt.plot(noise_floor, label='noise floor (array2)')
+        plt.plot(filtered, '--', label='filtered signal')
+        plt.axvline(crossover_idx, color='gray', linestyle=':', label='crossover')
+        plt.legend()
+        plt.show()
+
+        self.assertTrue((filtered[:crossover_idx] > 0).all())
+        self.assertTrue((filtered[crossover_idx:] == 0).all())
+
+    def test_comparative_no_crossing(self):
+        """Signal is always above the noise floor – nothing is filtered."""
+        n = 100
+        signal = np.linspace(100, 20, n)
+        noise_floor = np.linspace(5, 1, n)
+
+        filtered = utils.comparative_watershed_filter(signal, noise_floor)
+
+        plt.figure()
+        plt.title("Comparative filter: signal always above noise")
+        plt.plot(signal, label='signal (array1)')
+        plt.plot(noise_floor, label='noise floor (array2)')
+        plt.plot(filtered, '--', label='filtered signal')
+        plt.legend()
+        plt.show()
+
+        np.testing.assert_array_equal(filtered, signal)
+
+    def test_comparative_immediate_crossing(self):
+        """Noise exceeds signal from the very first element."""
+        n = 50
+        signal = np.linspace(5, 1, n)
+        noise_floor = np.full(n, 10.0)
+
+        filtered = utils.comparative_watershed_filter(signal, noise_floor)
+
+        plt.figure()
+        plt.title("Comparative filter: noise exceeds signal immediately")
+        plt.plot(signal, label='signal (array1)')
+        plt.plot(noise_floor, label='noise floor (array2)')
+        plt.plot(filtered, '--', label='filtered signal')
+        plt.legend()
+        plt.show()
+
+        self.assertTrue((filtered == 0).all())

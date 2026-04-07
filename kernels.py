@@ -110,11 +110,17 @@ def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1
     kernel /= np.sum(kernel) 
     return kernel
 
-def finite_notch_kernel(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0.):
-    return 1 - psf_kernel2d(kernel_size, pixel_size, first_zero_frequency)
+def finite_notch_kernel(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0., p = 1):
+    notch_kernel_ft= 1 - p * hpc_utils.wrapped_fftn(psf_kernel2d(kernel_size, pixel_size, first_zero_frequency))  
+    # plt.imshow(notch_kernel_ft.real, origin='lower')
+    # plt.show()
+    return hpc_utils.wrapped_ifftn(notch_kernel_ft).real
 
 def combined_low_pass_notch_kernel(kernel_size_low_pass: int = 0, kernel_size_notch: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency_low_pass: float = 0., first_zero_frequency_notch: float = 0.):
-    return psf_kernel2d(kernel_size_low_pass, pixel_size, first_zero_frequency_low_pass) * finite_notch_kernel(kernel_size_notch, pixel_size, first_zero_frequency_notch)
+    kernel_low_pass = psf_kernel2d(kernel_size_low_pass, pixel_size, first_zero_frequency_low_pass)
+    kernel_notch = finite_notch_kernel(kernel_size_notch, pixel_size, first_zero_frequency_notch)
+    kernel_combined = scipy.signal.convolve2d(kernel_low_pass, kernel_notch, mode='full')
+    return kernel_combined / np.sum(kernel_combined)
 
 def angular_notch_kernel( 
     kernel_size_px: int, 

@@ -68,7 +68,7 @@ class SSNRBase(metaclass=DimensionMeta):
         averaged_slices = []
         for i in range(ssnri.shape[2]):
             averaged_slices.append(average_rings2d(ssnri[:, :, i], (q_axes[0], q_axes[1]), number_of_samples=number_of_samples))
-        return np.array(averaged_slices)
+        return np.array(averaged_slices).T
 
     def compute_ssnri_volume(self, factor=10, volume_element=1):
         return np.sum(np.abs(self.ssnri)) * volume_element * factor
@@ -217,7 +217,8 @@ class SSNRSIM(SSNRBase):
                  effective_otfs={},
                  effective_kernels_ft={},
                  save_memory=False, 
-                 illumination_reconstruction=None
+                 illumination_reconstruction=None, 
+                 imperfect_phase_shifts=False
                  ):
         
         super().__init__(optical_system, readout_noise_variance)
@@ -241,16 +242,23 @@ class SSNRSIM(SSNRBase):
         self.effective_kernels_ft = {} if not effective_kernels_ft else effective_kernels_ft
         self._kernel = None
         self._kernel_ft = None
+        self._ccM = None
+        self._error_matrix = None
+        
+        self.imperfect_phase_shifts = imperfect_phase_shifts 
+
+        if self.imperfect_phase_shifts:
+            if self.illumination_reconstruction.Mt < len(self.illumination.harmonics) // self.illumination.Mr:
+                raise AttributeError("To rigidly account for phase shifts, phase matrix must have correct dimensions!")
 
         self.save_memory = save_memory
         self.readout_noise_variance = readout_noise_variance
-
         if optical_system.otf is None:
             raise AttributeError("Optical system otf is not computed")
 
         if not self.effective_otfs:
             self._compute_effective_otfs()
-
+        
         if not self.effective_kernels_ft:
             if not kernel is None:
                 self._kernel = utils.expand_kernel(kernel, self.optical_system.psf.shape)
@@ -288,6 +296,8 @@ class SSNRSIM(SSNRBase):
             self._illumination_reconstruction = None 
         self._illumination = new_illumination
         self.effective_otfs = {}
+        self._ccM = None
+        self._error_matrix = None
         self._compute_effective_otfs()
         if self.illumination_reconstruction is None:
             self.illumination_reconstruction = new_illumination
@@ -335,26 +345,13 @@ class SSNRSIM(SSNRBase):
         for m in self.effective_otfs:
             self.otf_sim += np.abs(self.effective_otfs[m])
 
-    def _compute_effective_kernels_ft(self):
-        if np.isclose(self.kernel, self.optical_system.psf).all() and self.illumination_reconstruction is self.illumination:
-            self.effective_kernels_ft = self.effective_otfs
-        else:
-            _, self.effective_kernels_ft = self.illumination_reconstruction.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
-
-    def _compute_Dj(self):
-        d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
-        for m in self.effective_otfs.keys():
-            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()
-        d_j *= self.illumination.Mt
-        # plt.title("Dj")
-        # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
-        # plt.show()
-        return d_j
-
-    def _compute_Vj(self):
+    def _compute_order_ccM(self):
+        Mr = self.illumination.Mr
         center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
-        v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        block_size = self.effective_otfs.keys().__len__()//Mr
 
+        self._ccM = np.zeros((Mr * block_size, Mr * block_size), dtype=np.complex128)
+        # print("m to number matrix", self.illumination.m_to_number_matrix)
         for idx1 in self.effective_otfs.keys():
             for idx2 in self.effective_otfs.keys():
                 if idx1[0] != idx2[0]:
@@ -365,13 +362,54 @@ class SSNRSIM(SSNRBase):
                 m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
                 if (r, m21) not in self.illumination.rearranged_indices:
                     continue
-                idx_diff = (r, m21)
+                self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] = self.effective_otfs[(r, m21)][*center]
+
+    def _compute_error_matrix(self):
+        self._error_matrix = self.illumination.phase_matrix_inverse_array_form.T.conjugate() @ self.illumination.phase_matrix_inverse_array_form
+        self._error_matrix *= self.illumination.Mt
+
+    def _compute_effective_kernels_ft(self):
+        if np.isclose(self.kernel, self.optical_system.psf).all() and self.illumination_reconstruction is self.illumination:
+            self.effective_kernels_ft = self.effective_otfs
+        else:
+            _, self.effective_kernels_ft = self.illumination_reconstruction.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
+
+    def _compute_Dj(self):
+        d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        for m in self.effective_otfs.keys():
+            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()
+        d_j *= self.illumination.Mt            
+        # plt.title("Dj")
+        # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
+        # plt.show()
+        return d_j
+
+    def _compute_Vj(self):
+        if self._ccM is None:
+            self._compute_order_ccM()
+
+        # print("ccM", np.round(self._ccM, 5))
+
+        if self._error_matrix is None:
+            self._compute_error_matrix()
+        
+        # print("error_matrix", np.round(self._error_matrix, 3))
+        # print("phase_matrix", np.round(self.illumination.phase_matrix_array_form, 3))
+        # print("inverse_matrix", np.round(self.illumination.phase_matrix_inverse_array_form, 3))
+        # print("product", self.illumination.phase_matrix_inverse_array_form @ self.illumination.phase_matrix_array_form)
+        v_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+
+        for idx1 in self.effective_otfs.keys():
+            for idx2 in self.effective_otfs.keys():
+                if idx1[0] != idx2[0]:
+                    continue
                 otf1 = self.effective_kernels_ft[idx1]
                 otf2 = self.effective_kernels_ft[idx2]
-                otf3 = self.effective_otfs[idx_diff][*center]
-                term = otf1 * otf2.conjugate() * otf3
+                if self.imperfect_phase_shifts:
+                    term = otf1 * otf2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
+                else: 
+                    term = self.illumination.Mt * otf1 * otf2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 v_j += term
-        v_j *= self.illumination.Mt
         # plt.title("Vj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))
         # plt.show()
@@ -521,15 +559,15 @@ class SSNRSIM2D(SSNRSIM):
         ax.grid()
         plt.show()
 
-    def imshow_effective_kernel_and_otf(self):
+    def imshow_effective_kernel_and_otf(self, m=(0, (0, 0))):
         Nx, Ny = self.optical_system.otf.shape
         scaled_frequencies = self.optical_system.otf_frequencies / (2 * self.optical_system.NA)
         fig, ax = plt.subplots(2)
         ax[0].set_title("OTF")
-        ax[0].imshow(self.optical_system.otf[:, Ny // 2],
+        ax[0].imshow(self.optical_system.effective_otfs[m],
                      extent=(scaled_frequencies[0][0], scaled_frequencies[0][-1], scaled_frequencies[1][0], scaled_frequencies[1][-1]))
         ax[1].set_title("Kernel")
-        ax[1].imshow(self.kernel_ft[:, Ny // 2],
+        ax[1].imshow(self.effective_kernels_ft[m],
                      extent=(scaled_frequencies[0][0], scaled_frequencies[0][-1], scaled_frequencies[1][0], scaled_frequencies[1][-1]))
 
 
@@ -665,36 +703,27 @@ class SSNRSIM3D(SSNRSIM):
         return slider         
 
 class SSNRSIMVectorial(SSNRSIM):
-    def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False, illumination_reconstruction=None):
+    def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False, illumination_reconstruction=None, imperfect_phase_shifts=False):
+        self._mixing_matrix = None
+        self._diagonalizing_matrix = None
         super().__init__(illumination, 
                          optical_system, 
                          kernel,
                          readout_noise_variance,
                          save_memory,
-                         illumination_reconstruction)
+                         illumination_reconstruction,
+                         imperfect_phase_shifts=imperfect_phase_shifts )
 
-    def _compute_order_ccM(self):
-        Mr = self.illumination.Mr
-        center = np.array(self.optical_system.otf.shape, dtype=np.int32) // 2
-        block_size = self.effective_otfs.keys().__len__()//Mr
+    def _compute_mixing_matrix(self):
+        if not self.imperfect_phase_shifts:
+            self._mixing_matrix = np.linalg.inv(self._ccM)
+        else:
+            self._mixing_matrix = np.linalg.inv(np.diag(np.diag(self._error_matrix)))
+            # print("Phase matrix inverse", np.round(self.illumination.phase_matrix_inverse_array_form, 5))
+            # print("CCM inverse", np.round(np.linalg.inv(self._ccM), 5))
+            # print("Error matrix", np.round(self._error_matrix, 5))
+            # print("Mixing matrix", np.round(self._mixing_matrix, 5))
 
-        #ccM - cross-correlation matrix
-        self._ccM = np.zeros((Mr * block_size, Mr * block_size), dtype=np.complex128)
-
-        for idx1 in self.effective_otfs.keys():
-            for idx2 in self.effective_otfs.keys():
-                if idx1[0] != idx2[0]:
-                    continue
-                r = idx1[0]
-                m1 = idx1[1]
-                m2 = idx2[1]
-                m21 = tuple(xy2 - xy1 for xy1, xy2 in zip(m1, m2))
-                if (r, m21) not in self.illumination.rearranged_indices:
-                    continue
-                self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] = self.effective_otfs[(r, m21)][*center]
-
-    def _compute_inverse_ccM(self):
-        self._ccM_inv = np.linalg.inv(self._ccM)
     
     def _compute_diagonalizing_matrix(self):
         self._diagonalizing_matrix = np.linalg.eigh(self._ccM)[1]
@@ -704,17 +733,27 @@ class SSNRSIMVectorial(SSNRSIM):
         return self._ccM
     
     @property
-    def ccM_inv(self):
-        return self._ccM_inv
+    def mixing_matrix(self):
+        return self._mixing_matrix
     
     @property
     def diagonalizing_matrix(self):
         return self._diagonalizing_matrix
     
     def _compute_effective_kernels_ft(self):
-        self._compute_order_ccM()
-        self._compute_inverse_ccM()
-        self._compute_diagonalizing_matrix()
+
+        if self._ccM is None:
+            self._compute_order_ccM()
+
+        if self.imperfect_phase_shifts:
+            if self._error_matrix is None:
+                self._compute_error_matrix()
+        
+        if self._mixing_matrix is None:
+            self._compute_mixing_matrix()
+
+        if self._diagonalizing_matrix is None:
+            self._compute_diagonalizing_matrix()
 
         if np.isclose(self.kernel, self.optical_system.psf).all() and self.illumination_reconstruction is self.illumination:
             effective_kernels_uncorrelated_ft = self.effective_otfs
@@ -725,7 +764,7 @@ class SSNRSIMVectorial(SSNRSIM):
             row = self.illumination.m_to_number_matrix[m]
             effective_kernel_ft = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
             for idx in self.effective_otfs.keys():
-                effective_kernel_ft += self._ccM_inv[row, self.illumination.m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
+                effective_kernel_ft += self._mixing_matrix[row, self.illumination.m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
             self.effective_kernels_ft[m] = effective_kernel_ft
 
 class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
@@ -736,9 +775,16 @@ class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
                 kernel=None,
                 readout_noise_variance=0,
                 save_memory=False,
-                illumination_reconstruction=None):
+                illumination_reconstruction=None, 
+                imperfect_phase_shifts=False):
 
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
+        super().__init__(illumination,
+                         optical_system, 
+                         kernel=kernel, 
+                         readout_noise_variance=readout_noise_variance, 
+                         save_memory=save_memory, 
+                         illumination_reconstruction=illumination_reconstruction, 
+                         imperfect_phase_shifts=imperfect_phase_shifts)
 
 
 class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
@@ -750,6 +796,13 @@ class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
                 kernel=None,
                 readout_noise_variance=0,
                 save_memory=False,
-                illumination_reconstruction=None):
+                illumination_reconstruction=None, 
+                imperfect_phase_shifts=False):
 
-        super().__init__(illumination, optical_system, kernel=kernel, readout_noise_variance=readout_noise_variance, save_memory=save_memory, illumination_reconstruction=illumination_reconstruction)
+        super().__init__(illumination, 
+                         optical_system, 
+                         kernel=kernel, 
+                         readout_noise_variance=readout_noise_variance, 
+                         save_memory=save_memory, 
+                         illumination_reconstruction=illumination_reconstruction, 
+                         imperfect_phase_shifts=imperfect_phase_shifts)
