@@ -518,7 +518,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             # effective_kernel /= np.sum(np.abs(effective_kernel))
             effective_kernels[sim_index] = effective_kernel
             effective_kernels_ft[sim_index] = hpc_utils.wrapped_fftn(effective_kernel)
-            effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
+            effective_kernels_ft[sim_index] *= (self.Mt * self.Mr)
+            # effective_kernels_ft[sim_index] /= np.amax(np.abs(effective_kernels_ft[sim_index]))
             # plt.imshow(np.log1p(10**3 * np.abs(effective_kernels_ft[sim_index])).T, cmap='gray', origin='lower')
             # plt.title(f"Effective kernel {sim_index}")
             # plt.show()

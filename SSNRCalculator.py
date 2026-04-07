@@ -377,8 +377,7 @@ class SSNRSIM(SSNRBase):
     def _compute_Dj(self):
         d_j = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
         for m in self.effective_otfs.keys():
-            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()
-        d_j *= self.illumination.Mt            
+            d_j += self.effective_otfs[m] * self.effective_kernels_ft[m].conjugate()   
         # plt.title("Dj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
         # plt.show()
@@ -403,13 +402,14 @@ class SSNRSIM(SSNRBase):
             for idx2 in self.effective_otfs.keys():
                 if idx1[0] != idx2[0]:
                     continue
-                otf1 = self.effective_kernels_ft[idx1]
-                otf2 = self.effective_kernels_ft[idx2]
+                K1 = self.effective_kernels_ft[idx1]
+                K2 = self.effective_kernels_ft[idx2]
                 if self.imperfect_phase_shifts:
-                    term = otf1 * otf2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
+                    term = K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 else: 
-                    term = self.illumination.Mt * otf1 * otf2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
+                    term = K1 * K2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 v_j += term
+        # v_j *= self.illumination.Mt
         # plt.title("Vj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))
         # plt.show()
@@ -703,22 +703,35 @@ class SSNRSIM3D(SSNRSIM):
         return slider         
 
 class SSNRSIMVectorial(SSNRSIM):
-    def __init__(self, illumination, optical_system, kernel=None, readout_noise_variance=0, save_memory=False, illumination_reconstruction=None, imperfect_phase_shifts=False):
+    def __init__(self,
+                 illumination, 
+                 optical_system, 
+                 kernel=None, 
+                 readout_noise_variance=0, 
+                 save_memory=False, 
+                 illumination_reconstruction=None, 
+                 imperfect_phase_shifts=False, 
+                 neglect_cross_correlation=True):
         self._mixing_matrix = None
         self._diagonalizing_matrix = None
+        self.neglect_cross_correlation = neglect_cross_correlation
         super().__init__(illumination, 
                          optical_system, 
                          kernel,
                          readout_noise_variance,
                          save_memory,
                          illumination_reconstruction,
-                         imperfect_phase_shifts=imperfect_phase_shifts )
+                         imperfect_phase_shifts=imperfect_phase_shifts, 
+                         )
 
     def _compute_mixing_matrix(self):
         if not self.imperfect_phase_shifts:
             self._mixing_matrix = np.linalg.inv(self._ccM)
         else:
-            self._mixing_matrix = np.linalg.inv(np.diag(np.diag(self._error_matrix)))
+            if self.neglect_cross_correlation:
+                self._mixing_matrix = np.linalg.inv(np.diag(np.diag(self._error_matrix)))
+            else:
+                ...
             # print("Phase matrix inverse", np.round(self.illumination.phase_matrix_inverse_array_form, 5))
             # print("CCM inverse", np.round(np.linalg.inv(self._ccM), 5))
             # print("Error matrix", np.round(self._error_matrix, 5))
@@ -766,7 +779,9 @@ class SSNRSIMVectorial(SSNRSIM):
             for idx in self.effective_otfs.keys():
                 effective_kernel_ft += self._mixing_matrix[row, self.illumination.m_to_number_matrix[idx]] * effective_kernels_uncorrelated_ft[idx]
             self.effective_kernels_ft[m] = effective_kernel_ft
-
+            # plt.imshow(np.abs(self.effective_kernels_ft[m]))
+            # plt.title(m)
+            # plt.show()
 class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
     dimensionality = 2
     def __init__(self,
@@ -776,7 +791,8 @@ class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
                 readout_noise_variance=0,
                 save_memory=False,
                 illumination_reconstruction=None, 
-                imperfect_phase_shifts=False):
+                imperfect_phase_shifts=False,
+                neglect_cross_correlation=True):
 
         super().__init__(illumination,
                          optical_system, 
@@ -784,7 +800,8 @@ class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
                          readout_noise_variance=readout_noise_variance, 
                          save_memory=save_memory, 
                          illumination_reconstruction=illumination_reconstruction, 
-                         imperfect_phase_shifts=imperfect_phase_shifts)
+                         imperfect_phase_shifts=imperfect_phase_shifts,
+                         neglect_cross_correlation=neglect_cross_correlation)
 
 
 class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
@@ -797,7 +814,8 @@ class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
                 readout_noise_variance=0,
                 save_memory=False,
                 illumination_reconstruction=None, 
-                imperfect_phase_shifts=False):
+                imperfect_phase_shifts=False,
+                neglect_cross_correlation=True):
 
         super().__init__(illumination, 
                          optical_system, 
@@ -805,4 +823,5 @@ class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
                          readout_noise_variance=readout_noise_variance, 
                          save_memory=save_memory, 
                          illumination_reconstruction=illumination_reconstruction, 
-                         imperfect_phase_shifts=imperfect_phase_shifts)
+                         imperfect_phase_shifts=imperfect_phase_shifts,
+                         neglect_cross_correlation=neglect_cross_correlation)
