@@ -405,7 +405,7 @@ class SSNRSIM(SSNRBase):
                 K1 = self.effective_kernels_ft[idx1]
                 K2 = self.effective_kernels_ft[idx2]
                 if self.imperfect_phase_shifts:
-                    term = K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
+                    term =  K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 else: 
                     term = K1 * K2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 v_j += term
@@ -726,7 +726,7 @@ class SSNRSIMVectorial(SSNRSIM):
 
     def _compute_mixing_matrix(self):
         if not self.imperfect_phase_shifts:
-            self._mixing_matrix = np.linalg.inv(self._ccM)
+            self._mixing_matrix = self.illumination.Mt * np.linalg.inv(self._ccM)
         else:
             if self.neglect_cross_correlation:
                 self._mixing_matrix = np.linalg.inv(np.diag(np.diag(self._error_matrix)))

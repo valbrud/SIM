@@ -18,6 +18,70 @@ from VectorOperations import VectorOperations
 import matplotlib.pyplot as plt
 from Dimensions import DimensionMetaAbstract
 from OpticalSystems import System4f3DCoherent
+from SSNRCalculator import SSNRSIM2D, SSNRSIM3D
+
+class TriangularApodization():
+    def __init__(self, transfer_function, power=1):
+        self._transfer_function = transfer_function
+        self._apodization_function = None
+        self._power = power
+
+        self._compute_apodization_function()
+
+    @property
+    def transfer_function(self):
+        return self._transfer_function
+    
+    @property
+    def apodization_function(self):
+        return self._apodization_function
+    
+    @property
+    def power(self):
+        return self._power
+    
+    @power.setter
+    def power(self, new_power):
+        self._power = new_power
+        self._compute_apodization_function()
+    
+    @abstractmethod
+    def _compute_apodization_function(self, **kwargs):
+        """
+        Computes the apodization function for the given band-limited transfer function.
+        """
+        transfer_function_mask = np.where(np.abs(self.transfer_function) > 0, 1, 0)
+        interior_mask = scipy.ndimage.binary_erosion(transfer_function_mask, iterations=1)
+        surface_mask = transfer_function_mask & ~interior_mask
+        # plt.imshow(surface_mask)
+        # plt.show()
+        triangular_function = utils.radial_ratio(self.transfer_function, surface_mask)
+        triangular_function = np.nan_to_num(triangular_function)
+        self._apodization_function = np.where(triangular_function<=1+1e-10, 1-triangular_function, 0) ** self._power
+        # plt.imshow(self._apodization_function)
+        # plt.show()  
+
+    def _compute_apodization_function_2d(self):
+        pass
+
+    def _compute_apodization_function_3d(self):
+        pass
+
+
+class TriangularApodizationSIM(TriangularApodization):
+    def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, power=1, numeric_noise=10**-4):
+        _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
+        effective_transfer_function = np.zeros_like(optical_system.otf, dtype=np.complex128)
+        for otf_key in effective_otfs.keys():
+            effective_transfer_function += effective_otfs[otf_key]
+        effective_transfer_function /= np.amax(effective_transfer_function)
+        effective_transfer_function = np.where(np.abs(effective_transfer_function) > numeric_noise, np.abs(effective_transfer_function), 0)
+        # plt.imshow(effective_transfer_function)
+        # plt.show()
+        super().__init__(effective_transfer_function, power=power)
+
+
+
 
 class AutoconvolutionApodization(ABC):
     """
@@ -41,6 +105,10 @@ class AutoconvolutionApodization(ABC):
     
     @property
     def ideal_otf(self):
+        return self._ideal_otf
+
+    @property
+    def apodization_function(self):
         return self._ideal_otf
     
     @abstractmethod
@@ -73,8 +141,7 @@ class AutoconvolutionApodizationWidefield(AutoconvolutionApodization):
         self._ideal_psf = hpc_utils.wrapped_ifftn(self._ideal_otf)
         self._ideal_psf /= np.sum(self._ideal_psf)
 
-        
-    
+
 class AutoconvolutionApodizationPointScanning(AutoconvolutionApodizationWidefield):
     def __init__(self, pupil_function_exitation, pupil_function_detection):
         self._pupil_function_exitation = pupil_function_exitation

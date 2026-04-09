@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import scipy    
 import hpc_utils
 from matplotlib.widgets import Slider
+from scipy.interpolate import RBFInterpolator, NearestNDInterpolator
+
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
@@ -827,3 +829,100 @@ def comparative_watershed_filter(array1: np.ndarray, array2: np.ndarray) -> np.n
 
     filtered[crossover:] = 0
     return filtered
+
+def radial_ratio(X, S, smooth=False):
+    """
+    AI-generated function. 
+
+    For each point p in array X compute
+        ratio[p] = |p - origin| / r_surface(direction of p)
+    where r_surface is interpolated from the discretized surface S.
+
+    Parameters
+    ----------
+    X      : ndarray, 1-D, 2-D or 3-D
+    S      : ndarray, same shape as X; non-zero where surface is defined
+    smooth : bool  (3-D only) use RBF instead of nearest-direction interpolation
+
+    Returns
+    -------
+    ratio  : ndarray, same shape as X  (NaN at origin / no coverage)
+    """
+    ndim = X.ndim
+    assert S.shape == X.shape,  "X and S must have the same shape"
+    assert ndim in (1, 2, 3),   "Only 1-D, 2-D and 3-D arrays are supported"
+
+    shape  = np.array(X.shape, dtype=float)
+    origin = (shape - 1) / 2.0
+
+    # ── surface points ────────────────────────────────────────────────────────
+    surf_idx  = np.argwhere(S != 0).astype(float)        # (N, ndim)
+    surf_vecs = surf_idx - origin                         # displacement from centre
+
+    if ndim == 1:
+        surf_r    = np.abs(surf_vecs[:, 0])
+        valid     = surf_r > 0
+        surf_vecs = surf_vecs[valid]
+        surf_r    = surf_r[valid]
+        surf_dirs = np.sign(surf_vecs[:, 0])              # ±1
+    else:
+        surf_r    = np.linalg.norm(surf_vecs, axis=1)
+        valid     = surf_r > 0
+        surf_vecs = surf_vecs[valid]
+        surf_r    = surf_r[valid]
+        surf_dirs = surf_vecs / surf_r[:, None]           # unit vectors
+
+    # ── all pixel / voxel coordinates ─────────────────────────────────────────
+    grid     = np.indices(X.shape, dtype=float)           # (ndim, *shape)
+    all_vecs = (grid - origin.reshape((-1,) + (1,) * ndim)).reshape(ndim, -1).T
+
+    if ndim == 1:
+        all_r    = np.abs(all_vecs[:, 0])
+        all_dirs = np.sign(all_vecs[:, 0])                # ±1 (0 at origin)
+    else:
+        all_r    = np.linalg.norm(all_vecs, axis=1)
+
+    nz = all_r > 0
+
+    if ndim > 1:
+        all_dirs = np.zeros_like(all_vecs)
+        all_dirs[nz] = all_vecs[nz] / all_r[nz, None]
+
+    # ── interpolate r_surface at each direction ───────────────────────────────
+    r_surf = np.full(len(all_r), np.nan)
+
+    if ndim == 1:
+        # Only two directions: simply look up the surface distance on each side
+        for sign in [+1.0, -1.0]:
+            mask_surf = surf_dirs == sign
+            mask_pts  = all_dirs  == sign
+            if np.any(mask_surf):
+                r_surf[mask_pts] = np.mean(surf_r[mask_surf])
+
+    elif ndim == 2:
+        surf_theta = np.arctan2(surf_dirs[:, 0], surf_dirs[:, 1])
+        all_theta  = np.arctan2(all_dirs[nz, 0], all_dirs[nz, 1])
+
+        order     = np.argsort(surf_theta)
+        st, sr    = surf_theta[order], surf_r[order]
+
+        # Wrap periodically so np.interp handles the ±π boundary cleanly
+        theta_ext = np.concatenate([st - 2*np.pi, st, st + 2*np.pi])
+        r_ext     = np.tile(sr, 3)
+        r_surf[nz] = np.interp(all_theta, theta_ext, r_ext)
+
+    else:  # 3-D: interpolate on the unit sphere via its 3-D embedding
+        if smooth:
+            interp = RBFInterpolator(surf_dirs, surf_r,
+                                     kernel='linear',
+                                     neighbors=min(30, len(surf_r)))
+        else:
+            interp = NearestNDInterpolator(surf_dirs, surf_r)
+        r_surf[nz] = interp(all_dirs[nz])
+
+    # ── ratio ─────────────────────────────────────────────────────────────────
+    ratio = np.full(len(all_r), np.nan)
+    good  = nz & (r_surf > 0) & np.isfinite(r_surf)
+    ratio[good] = all_r[good] / r_surf[good]
+
+    return ratio.reshape(X.shape)

@@ -15,8 +15,67 @@ import hpc_utils
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 import scipy
 import matplotlib.pyplot as plt
-from Apodization import AutoconvolutionApodizationSIM2D, AutoconvolutionApodizationSIM3D
+from Apodization import AutoconvolutionApodizationSIM2D, AutoconvolutionApodizationSIM3D, TriangularApodizationSIM
 
+class TestTriangulareApodization2D(unittest.TestCase):
+    def setUp(self):
+        from config.SIM_N500_NA15_2D import alpha, nobject, N, dx, psf_size, fx, fy, NA, configurations
+        self.N = N
+        self.dx = dx
+        self.psf_size = psf_size
+        self.fx = fx
+        self.fy = fy
+        self.theta = np.asin(0.9 * np.sin(alpha))
+        self.nobject = nobject
+        self.nmedium = 1.5
+        self.NA = NA
+        self.configurations = configurations
+        print(N, dx *  NA)
+        self.optical_system = OpticalSystems.System4f2D(alpha=alpha, refractive_index=nobject)
+        self.optical_system.compute_psf_and_otf(((psf_size[0], psf_size[1]), N))
+    
+    def test_conventional(self):
+        power = 1
+        conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 1, 0, 3, Mt=1, dimensionality=2)
+        apodization = TriangularApodizationSIM(self.optical_system, conventional, power=power)
+        apodization_filter1 = apodization.apodization_function
+        apodization.power = 0.4 
+        apodization_filter04 = apodization.apodization_function
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        axes[0].imshow(apodization_filter1, cmap='gray')
+        axes[0].set_title('Apodization Filter 1')
+        axes[1].imshow(apodization_filter04, cmap='gray')
+        axes[1].set_title('Apodization Filter 0.4')
+        plt.show()
+
+    def test_square(self):
+        power = 1
+        square = self.configurations.get_4_oblique_s_waves_and_circular_normal(self.theta, 1, 0, Mt=1, dimensionality=2)
+        apodization = TriangularApodizationSIM(self.optical_system, square, power=power)
+        apodization_filter1 = apodization.apodization_function
+        apodization.power = 0.4 
+        apodization_filter04 = apodization.apodization_function
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        axes[0].imshow(apodization_filter1, cmap='gray')
+        axes[0].set_title('Apodization Filter 1')
+        axes[1].imshow(apodization_filter04, cmap='gray')
+        axes[1].set_title('Apodization Filter 0.4')
+        plt.show()
+
+    def test_hexagonal(self):
+        power = 1
+        hexagonal = self.configurations.get_3_oblique_s_waves_and_circular_normal(self.theta, 1, 0, Mt=1, dimensionality=2)
+        apodization = TriangularApodizationSIM(self.optical_system, hexagonal, power=power)
+        apodization_filter1 = apodization.apodization_function
+        apodization.power = 0.4 
+        apodization_filter04 = apodization.apodization_function
+        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        axes[0].imshow(apodization_filter1, cmap='gray')
+        axes[0].set_title('Apodization Filter 1')
+        axes[1].imshow(apodization_filter04, cmap='gray')
+        axes[1].set_title('Apodization Filter 0.4')
+        plt.show()
+        
 
 class TestAutoconvolutionSIM2D(unittest.TestCase):
     def setUp(self):

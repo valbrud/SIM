@@ -423,3 +423,122 @@ class TestWatershedFilter(unittest.TestCase):
         plt.show()
 
         self.assertTrue((filtered == 0).all())
+
+class TestCutoffRatioInterpolation(unittest.TestCase):
+    def test_circle(self):
+        """Circle surface: ratio should equal r/R everywhere → smooth cone."""
+        N, R = 201, 80
+        c = (N - 1) / 2
+        yy, xx = np.indices((N, N))
+        rr = np.sqrt((xx - c)**2 + (yy - c)**2)
+        S = ((rr >= R - 0.5) & (rr < R + 0.5)).astype(float)
+        X = np.zeros((N, N))
+
+        ratio = utils.radial_ratio(X, S)
+
+        # Interior midpoint along x-axis: ratio ≈ 0.5
+        self.assertAlmostEqual(ratio[int(c), int(c + R/2)], 0.5, delta=0.02)
+        # On circle: ratio ≈ 1
+        self.assertAlmostEqual(ratio[int(c), int(c + R)],   1.0, delta=0.02)
+
+        fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+        im = axes[0].imshow(ratio, cmap='gray', vmin=0, vmax=1,
+                            origin='lower')
+        axes[0].set_title('2D circle: ratio map')
+        plt.colorbar(im, ax=axes[0])
+        axes[1].imshow(S, cmap='gray', origin='lower')
+        axes[1].set_title('Surface S (circle)')
+        plt.tight_layout()
+        # plt.savefig('test_2d_circle.png', dpi=120)
+        plt.show()
+
+    def test_rhombus(self):
+        """Rhombus (L1 ball) surface: ratio should equal (|dx|+|dy|)/R."""
+        N, R = 201, 70
+        c = (N - 1) / 2
+        yy, xx = np.indices((N, N))
+        l1 = np.abs(xx - c) + np.abs(yy - c)
+        S  = ((l1 >= R - 0.5) & (l1 < R + 0.5)).astype(float)
+        X  = np.zeros((N, N))
+
+        ratio = utils.radial_ratio(X, S)
+
+        # On x-axis at half-range: dx=R/2, dy=0 → r_surf=R, ratio=0.5
+        self.assertAlmostEqual(ratio[int(c), int(c + R/2)], 0.5, delta=0.03)
+        # On the contour along x-axis: ratio ≈ 1
+        self.assertAlmostEqual(ratio[int(c), int(c + R)],   1.0, delta=0.03)
+
+        fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+        im = axes[0].imshow(ratio, cmap='gray', vmin=0, vmax=1,
+                            origin='lower')
+        axes[0].set_title('2D rhombus: ratio map')
+        plt.colorbar(im, ax=axes[0])
+        axes[1].imshow(S, cmap='gray', origin='lower')
+        axes[1].set_title('Surface S (rhombus / L1 ball)')
+        plt.tight_layout()
+        # plt.savefig('test_2d_rhombus.png', dpi=120)
+        plt.show()
+
+    def test_sphere(self):
+        """Sphere surface: ratio = r/R; middle slice should look like a 2-D cone."""
+        N, R = 61, 22
+        c = (N - 1) / 2
+        zz, yy, xx = np.indices((N, N, N))
+        rr = np.sqrt((xx - c)**2 + (yy - c)**2 + (zz - c)**2)
+        S = ((rr >= R - 0.5) & (rr < R + 0.5)).astype(float)
+        X = np.zeros((N, N, N))
+
+        ratio = utils.radial_ratio(X, S)
+
+        mid = N // 2
+        # On sphere along x-axis at z=mid: ratio ≈ 1
+        self.assertAlmostEqual(ratio[mid, mid, mid + R], 1.0, delta=0.05)
+        # Half-way: ratio ≈ 0.5
+        self.assertAlmostEqual(ratio[mid, mid, mid + R//2], 0.5, delta=0.05)
+
+        fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+        im = axes[0].imshow(ratio[mid], cmap='gray',
+                            vmin=0, vmax=1, origin='lower')
+        axes[0].set_title(f'3D sphere: ratio, z={mid} slice')
+        plt.colorbar(im, ax=axes[0])
+        axes[1].imshow(S[mid], cmap='gray', origin='lower')
+        axes[1].set_title('Surface S (sphere), middle slice')
+        plt.tight_layout()
+        # plt.savefig('test_3d_sphere.png', dpi=120)
+        plt.show()
+
+    def test_cylinder(self):
+        """
+        Cylinder (lateral surface, axis along z): ratio ≈ rho/R in xy-slices,
+        and should grow with |z| in xz-slices since the 3-D distance grows.
+        """
+        N, R = 61, 20
+        c = (N - 1) / 2
+        zz, yy, xx = np.indices((N, N, N))
+        rho = np.sqrt((xx - c)**2 + (yy - c)**2)
+        S   = ((rho >= R - 0.5) & (rho < R + 0.5)).astype(float)
+        X   = np.zeros((N, N, N))
+
+        ratio = utils.radial_ratio(X, S)
+
+        mid = N // 2
+        # At (z=mid, y=mid, x=mid+R): on the cylinder wall → ratio ≈ 1
+        self.assertAlmostEqual(ratio[mid, mid, mid + R], 1.0, delta=0.1)
+
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+
+        im0 = axes[0].imshow(ratio[mid], cmap='gray',
+                             vmin=0, vmax=1, origin='lower')
+        axes[0].set_title('Cylinder ratio — xy slice (z=mid)')
+        plt.colorbar(im0, ax=axes[0])
+
+        im1 = axes[1].imshow(ratio[:, mid, :], cmap='gray',
+                             vmin=0, vmax=1, origin='lower')
+        axes[1].set_title('Cylinder ratio — xz slice (y=mid)')
+        plt.colorbar(im1, ax=axes[1])
+
+        axes[2].imshow(S[mid], cmap='gray', origin='lower')
+        axes[2].set_title('Surface S — xy slice')
+        plt.tight_layout()
+        # plt.savefig('test_3d_cylinder.png', dpi=120)
+        plt.show()
