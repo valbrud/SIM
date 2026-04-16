@@ -39,7 +39,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.widgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">Slider</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">Sources</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">wrappers</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hpc_utils</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">utils</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">config.BFPConfigurations</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">confs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">Illumination</span><span class="w"> </span><span class="kn">import</span> <span class="n">Illumination</span>
@@ -242,13 +242,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">+=</span> <span class="n">field</span><span class="o">.</span><span class="n">field</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span><span class="o">.</span><span class="n">real</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity_fourier_space</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_volume</span><span class="p">)</span></div>
+                <span class="n">hpc_utils</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerically_approximated_intensity</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_volume</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Box.compute_intensity_fourier_space">
 <a class="viewcode-back" href="../source/Box.html#Box.Box.compute_intensity_fourier_space">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_intensity_fourier_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span> <span class="o">=</span> <span class="p">(</span><span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span> <span class="o">*</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span> <span class="o">=</span> <span class="p">(</span><span class="n">hpc_utils</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span> <span class="o">*</span>
                                         <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_volume</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">point_number</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intensity_fourier_space</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intensity</span><span class="p">)</span></div>
 

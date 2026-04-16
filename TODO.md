@@ -1,4 +1,3 @@
-- Implement an interpolation for the object/ssnr for wiener filtering
 - Fix problems with a changelog
 - Fix broken unittests
 - Fix 3D Camera class
@@ -12,10 +11,7 @@
 - Implement the full SIM reconstruction pipeline
   - Implement the ProcessorSIM class as a top-level manager for all SIM classes
   - Implement some reasonable data-reader
-  - Fix errors in the pattern estimation for 3D SIM and TIRF SIM
-- Optimize code performance 
-  - Move some pattern estimation functions to CUDA
-  - Parallelize certain processing steps with MPI
+  - Fix errors in the pattern estimation for TIRF SIM
 - Implement micrscope GUI module
 - Implement SIM GUI module
 - Implement stochastic SIM module

@@ -1,3 +1,21 @@
+"""
+psf_models_fast.py
+
+This module provides fast PSF computation using chirp-Z transform (CZT) based
+Fourier transforms of Cartesian pupil samples. Unlike psf_models.py which uses
+numerical quadrature, this module works with a Cartesian pupil grid and evaluates
+the PSF on arbitrary user-specified coordinates via separable CZT. Supports
+scalar and vectorial models in 2D and 3D, with Fresnel coefficient computation.
+
+Functions:
+    get_fresnel_coefficients - Compute Fresnel transmission coefficients on a pupil grid.
+    compute_2d_psf_coherent - CZT-based 2D coherent PSF from a Cartesian pupil.
+    compute_2d_vectorial_components_free_dipole - Five vectorial field components via CZT (2D).
+    compute_2d_incoherent_vectorial_psf_free_dipole - Incoherent vectorial PSF via CZT (2D).
+    compute_3d_psf_coherent - CZT-based 3D coherent PSF with per-slice defocus.
+    compute_3d_incoherent_vectorial_psf_free_dipole - Incoherent vectorial PSF via CZT (3D).
+"""
+
 import numpy as np
 import hpc_utils
 

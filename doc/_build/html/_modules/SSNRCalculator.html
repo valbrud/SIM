@@ -33,9 +33,19 @@
 <span class="sd">SSNRCalculator.py</span>
 
 <span class="sd">This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)</span>
-<span class="sd">for a given system optical system and illumination.</span>
+<span class="sd">for a given optical system and illumination.</span>
 
 <span class="sd">Mathematical details will be provided in the later documentation versions and in the corresponding papers.</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    SSNRBase - Base class for SSNR calculators with ring-averaging, volume and entropy metrics.</span>
+<span class="sd">    SSNRWidefield2D - SSNR calculator for 2D widefield microscopy.</span>
+<span class="sd">    SSNRWidefield3D - SSNR calculator for 3D widefield microscopy.</span>
+<span class="sd">    SSNRSIM - Abstract base for SIM SSNR calculators.</span>
+<span class="sd">    SSNRSIM2D - SSNR calculator for 2D SIM.</span>
+<span class="sd">    SSNRSIM3D - SSNR calculator for 3D SIM.</span>
+<span class="sd">    SSNRPointScanning2D - SSNR calculator for 2D point-scanning microscopy.</span>
+<span class="sd">    SSNRPointScanning3D - SSNR calculator for 3D point-scanning microscopy.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
@@ -43,8 +53,8 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">Illumination</span><span class="w"> </span><span class="kn">import</span> <span class="n">PlaneWavesSIM</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves2D</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves3D</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">OpticalSystems</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">wrappers</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">average_rings2d</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hpc_utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">average_rings2d</span><span class="p">,</span> <span class="n">expand_ring_averages2d</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">VectorOperations</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
@@ -183,8 +193,8 @@
                 <span class="n">nB</span> <span class="o">=</span> <span class="n">frame</span> <span class="o">-</span> <span class="n">nA</span>
 
                 <span class="c1"># wrappers for centred FFT / IFFT</span>
-                <span class="n">e1</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">nA</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-                <span class="n">e2</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">nB</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">e1</span> <span class="o">=</span> <span class="n">hpc_utils</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">nA</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">e2</span> <span class="o">=</span> <span class="n">hpc_utils</span><span class="o">.</span><span class="n">wrapped_fftn</span><span class="p">(</span><span class="n">nB</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
 
                 <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e1</span> <span class="o">+</span> <span class="n">e2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>        <span class="c1"># |ê₁+ê₂|²</span>
                 <span class="n">den</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e1</span> <span class="o">-</span> <span class="n">e2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>        <span class="c1"># |ê₁–ê₂|²</span>
@@ -283,10 +293,18 @@
                  <span class="n">effective_otfs</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">effective_kernels_ft</span><span class="o">=</span><span class="p">{},</span>
                  <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                 <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span>
+                 <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="kc">False</span>
                  <span class="p">):</span>
         
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">optical_system</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">PlaneWavesSIM</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination data is not of the valid type!&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_dimensionality</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">illumination_reconstruction</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_illumination</span> <span class="o">=</span> <span class="n">illumination</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_illumination_reconstruction</span> <span class="o">=</span> <span class="n">illumination_reconstruction</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">illumination</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vj</span> <span class="o">=</span> <span class="kc">None</span>
@@ -300,24 +318,39 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">effective_kernels_ft</span> <span class="k">else</span> <span class="n">effective_kernels_ft</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_ft</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">imperfect_phase_shifts</span> <span class="o">=</span> <span class="n">imperfect_phase_shifts</span> 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imperfect_phase_shifts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span><span class="o">.</span><span class="n">Mt</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">harmonics</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;To rigidly account for phase shifts, phase matrix must have correct dimensions!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">save_memory</span> <span class="o">=</span> <span class="n">save_memory</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">=</span> <span class="n">readout_noise_variance</span>
-
         <span class="k">if</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Optical system otf is not computed&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_otfs</span><span class="p">()</span>
-
+        
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">kernel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">kernel</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">expand_kernel</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_ssnri</span><span class="p">()</span>
-
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_dimensionality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">illumination_reconstruction</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">illumination</span><span class="o">.</span><span class="n">dimensionality</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination data is not of the valid dimension!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">optical_system</span><span class="o">.</span><span class="n">dimensionality</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Optical system data is not of the valid dimension!&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">illumination_reconstruction</span><span class="o">.</span><span class="n">dimensionality</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination reconstruction data is not of the valid dimension!&quot;</span><span class="p">)</span>
+        
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">optical_system</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optical_system</span>
@@ -339,6 +372,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_illumination_reconstruction</span> <span class="o">=</span> <span class="kc">None</span> 
         <span class="bp">self</span><span class="o">.</span><span class="n">_illumination</span> <span class="o">=</span> <span class="n">new_illumination</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_otfs</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span> <span class="o">=</span> <span class="n">new_illumination</span>
@@ -364,8 +399,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_new</span><span class="p">):</span>
         <span class="n">kernel_new</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">expand_kernel</span><span class="p">(</span><span class="n">kernel_new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_ft</span> <span class="o">=</span> <span class="n">wrappers</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="n">kernel_new</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_ft</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_ft</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_ft</span> <span class="o">=</span> <span class="n">hpc_utils</span><span class="o">.</span><span class="n">wrapped_ifftn</span><span class="p">(</span><span class="n">kernel_new</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_ft</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kernel_ft</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="n">kernel_new</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_kernels_ft</span><span class="p">()</span>
@@ -374,6 +409,11 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_effective_otfs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">compute_effective_kernels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)</span>
+        <span class="c1"># for otf_key in self.effective_otfs:</span>
+            <span class="c1"># plt.imshow(np.log1p(np.abs(self.effective_otfs[otf_key][:, :, self.optical_system.otf.shape[2] // 2])))</span>
+            <span class="c1"># plt.title(otf_key)</span>
+            <span class="c1"># plt.show()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_otf_sim</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_otf_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -381,26 +421,13 @@
         <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">otf_sim</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_effective_kernels_ft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span><span class="o">.</span><span class="n">compute_effective_kernels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_Dj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">d_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">d_j</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
-        <span class="n">d_j</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span>
-        <span class="c1"># plt.title(&quot;Dj&quot;)</span>
-        <span class="c1"># plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))</span>
-        <span class="c1"># plt.show()</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">d_j</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_Vj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_order_ccM</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">Mr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mr</span>
         <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
-        <span class="n">v_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="n">block_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="o">.</span><span class="fm">__len__</span><span class="p">()</span><span class="o">//</span><span class="n">Mr</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Mr</span> <span class="o">*</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">Mr</span> <span class="o">*</span> <span class="n">block_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="c1"># print(&quot;m to number matrix&quot;, self.illumination.m_to_number_matrix)</span>
         <span class="k">for</span> <span class="n">idx1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">idx2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">idx1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">idx2</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
@@ -411,28 +438,72 @@
                 <span class="n">m21</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">xy2</span> <span class="o">-</span> <span class="n">xy1</span> <span class="k">for</span> <span class="n">xy1</span><span class="p">,</span> <span class="n">xy2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">))</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">m21</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">rearranged_indices</span><span class="p">:</span>
                     <span class="k">continue</span>
-                <span class="n">idx_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">m21</span><span class="p">)</span>
-                <span class="n">otf1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span>
-                <span class="n">otf2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span>
-                <span class="n">otf3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">idx_diff</span><span class="p">][</span><span class="o">*</span><span class="n">center</span><span class="p">]</span>
-                <span class="n">term</span> <span class="o">=</span> <span class="n">otf1</span> <span class="o">*</span> <span class="n">otf2</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">otf3</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx2</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">m21</span><span class="p">)][</span><span class="o">*</span><span class="n">center</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_error_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">phase_matrix_inverse_array_form</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">phase_matrix_inverse_array_form</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_effective_kernels_ft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span><span class="o">.</span><span class="n">compute_effective_kernels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_Dj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">d_j</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>   
+        <span class="c1"># plt.title(&quot;Dj&quot;)</span>
+        <span class="c1"># plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))</span>
+        <span class="c1"># plt.show()</span>
+        <span class="k">return</span> <span class="n">d_j</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_Vj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_order_ccM</span><span class="p">()</span>
+
+        <span class="c1"># print(&quot;ccM&quot;, np.round(self._ccM, 5))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_error_matrix</span><span class="p">()</span>
+        
+        <span class="c1"># print(&quot;error_matrix&quot;, np.round(self._error_matrix, 3))</span>
+        <span class="c1"># print(&quot;phase_matrix&quot;, np.round(self.illumination.phase_matrix_array_form, 3))</span>
+        <span class="c1"># print(&quot;inverse_matrix&quot;, np.round(self.illumination.phase_matrix_inverse_array_form, 3))</span>
+        <span class="c1"># print(&quot;product&quot;, self.illumination.phase_matrix_inverse_array_form @ self.illumination.phase_matrix_array_form)</span>
+        <span class="n">v_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">idx2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">idx1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">idx2</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="k">continue</span>
+                <span class="n">K1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span>
+                <span class="n">K2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imperfect_phase_shifts</span><span class="p">:</span>
+                    <span class="n">term</span> <span class="o">=</span>  <span class="n">K1</span> <span class="o">*</span> <span class="n">K2</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span><span class="p">))[</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx2</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span> 
+                    <span class="n">term</span> <span class="o">=</span> <span class="n">K1</span> <span class="o">*</span> <span class="n">K2</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx2</span><span class="p">]]</span>
                 <span class="n">v_j</span> <span class="o">+=</span> <span class="n">term</span>
-        <span class="n">v_j</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span>
+        <span class="c1"># v_j *= self.illumination.Mt</span>
         <span class="c1"># plt.title(&quot;Vj&quot;)</span>
         <span class="c1"># plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))</span>
         <span class="c1"># plt.show()</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_j</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v_j</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_ssnri</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Only needed if effective kernels/otfs were deleted in a memory efficient mode</span>
+        <span class="c1"># Only needed if effective otfs were deleted in a memory efficient mode</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_otfs</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_effective_kernels_ft</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_Dj</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_Vj</span><span class="p">()</span>
         <span class="n">ssnr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">numpy</span><span class="o">.</span><span class="n">putmask</span><span class="p">(</span><span class="n">ssnr</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">)</span>
+        <span class="n">numpy</span><span class="o">.</span><span class="n">putmask</span><span class="p">(</span><span class="n">ssnr</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ssnri</span> <span class="o">=</span> <span class="n">ssnr</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">save_memory</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -441,28 +512,9 @@
 <div class="viewcode-block" id="SSNRSIM.compute_full_ssnr">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM.compute_full_ssnr">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_full_ssnr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_ft</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">object_ft</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span>
-                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">object_ft</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vj</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span> <span class="o">*</span> <span class="n">object_ft</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">object_ft</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vj</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">)))</span></div>
 
-
-<div class="viewcode-block" id="SSNRSIM.ring_average_ssnri_approximated">
-<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM.ring_average_ssnri_approximated">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ring_average_ssnri_approximated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute ring avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; instead of &lt;Dj^2 / Vj&gt;</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">q_axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span>
-        <span class="n">dj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">)</span>
-        <span class="n">vj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_axes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">dj</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_axes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;PSF dimension is not equal to 2 or 3!&quot;</span><span class="p">)</span>
-
-        <span class="n">averaged_slices</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
-            <span class="n">averaged_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">average_rings2d</span><span class="p">(</span><span class="n">dj</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">vj</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">averaged_slices</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
 
 
 <div class="viewcode-block" id="SSNRSIM.compute_analytic_ssnri_volume">
@@ -517,7 +569,7 @@
 <div class="viewcode-block" id="SSNRSIM.compute_maximum_resolved_lateral">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM.compute_maximum_resolved_lateral">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_maximum_resolved_lateral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">fR</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">fR</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">nm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
         <span class="n">fourier_peaks_wavevectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spatial_wave</span><span class="o">.</span><span class="n">wavevector</span> <span class="k">for</span> <span class="n">spatial_wave</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">waves</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
         <span class="n">fI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">wavevector</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="k">for</span> <span class="n">wavevector</span> <span class="ow">in</span> <span class="n">fourier_peaks_wavevectors</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">fR</span> <span class="o">+</span> <span class="n">fI</span></div>
@@ -543,21 +595,58 @@
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SSNRSIM2D</span><span class="p">(</span><span class="n">SSNRSIM</span><span class="p">):</span>
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">illumination</span><span class="p">:</span> <span class="n">IlluminationPlaneWaves2D</span><span class="p">,</span>
-                 <span class="n">optical_system</span><span class="p">,</span>
-                 <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves2D</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination data is not of the valid dimension!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optical_system</span><span class="p">,</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">OpticalSystem2D</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Optical system data is not of the valid dimension!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">illumination_reconstruction</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves2D</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination reconstruction data is not of the valid dimension!&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SSNRSIM2D.ssnri_like_sectorial_average">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D.ssnri_like_sectorial_average">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ssnri_like_sectorial_average</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta0</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; in a sector instead of &lt;Dj^2 / Vj&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">q_axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">)</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_axes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;PSF dimensionality is not equal to 2!&quot;</span><span class="p">)</span>
         
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="n">readout_noise_variance</span><span class="p">,</span> <span class="n">save_memory</span><span class="o">=</span><span class="n">save_memory</span><span class="p">,</span> <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="n">illumination_reconstruction</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">d2ja</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">average_mask</span><span class="p">(</span><span class="n">dj</span> <span class="o">*</span> <span class="n">dj</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;reduced&#39;</span><span class="p">)</span>
+            <span class="n">vja</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">average_mask</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;reduced&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">d2ja</span> <span class="o">/</span> <span class="n">vja</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d2ja</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">dj</span> <span class="o">*</span> <span class="n">dj</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+            <span class="n">vja</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">vj</span><span class="p">,</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">d2ja</span> <span class="o">/</span> <span class="n">vja</span><span class="p">)</span><span class="o">.</span><span class="n">real</span></div>
+
+        
+
+<div class="viewcode-block" id="SSNRSIM2D.ssnr_like_sectorial_average_from_image">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D.ssnr_like_sectorial_average_from_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ssnr_like_sectorial_average_from_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_ft</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta0</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">image_ft</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The image and SSNR calculator dimensions do not match.&quot;</span><span class="p">)</span>
+
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_ft</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+        <span class="c1"># print(image_ft[*center])</span>
+        <span class="c1"># print(self.dj[*center])</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="n">image_ft</span><span class="p">[</span><span class="o">*</span><span class="n">center</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">[</span><span class="o">*</span><span class="n">center</span><span class="p">]</span>
+        <span class="n">bj2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image_ft</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="n">obj2sa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">bj2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>    
+        <span class="n">djsa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+        <span class="n">vjsa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+
+        <span class="n">numeric_noise</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**-</span><span class="mi">12</span>
+        <span class="c1"># print(&#39;total_counts&#39;, f0)</span>
+        <span class="c1"># noise_power_ra = vjra * f0 + image_ft.size * self.readout_noise_variance**2 * djra</span>
+        <span class="n">noise_power</span> <span class="o">=</span> <span class="n">vjsa</span> <span class="o">*</span> <span class="n">f0</span> <span class="o">+</span> <span class="n">image_ft</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">djsa</span>
+        <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="p">((</span><span class="n">obj2sa</span> <span class="o">-</span> <span class="n">noise_power</span> <span class="p">)</span> <span class="o">/</span>
+                    <span class="n">noise_power</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">ssnr_sa</span><span class="p">)</span>
+        <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">djsa</span> <span class="o">&gt;</span> <span class="n">numeric_noise</span><span class="p">,</span> <span class="n">ssnr_sa</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">ssnr_sa</span><span class="o">.</span><span class="n">real</span></div>
+
+
 
 <div class="viewcode-block" id="SSNRSIM2D.plot_effective_kernel_and_otf">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D.plot_effective_kernel_and_otf">[docs]</a>
@@ -572,20 +661,21 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span></div>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="SSNRSIM2D.imshow_effective_kernel_and_otf">
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">imshow_effective_kernel_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">imshow_effective_kernel_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))):</span>
         <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">scaled_frequencies</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">NA</span><span class="p">)</span>
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;OTF&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="p">[:,</span> <span class="n">Ny</span> <span class="o">//</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">m</span><span class="p">],</span>
                      <span class="n">extent</span><span class="o">=</span><span class="p">(</span><span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Kernel&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_ft</span><span class="p">[:,</span> <span class="n">Ny</span> <span class="o">//</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">m</span><span class="p">],</span>
                      <span class="n">extent</span><span class="o">=</span><span class="p">(</span><span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">scaled_frequencies</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></div>
 </div>
 
@@ -595,20 +685,276 @@
 <a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM3D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SSNRSIM3D</span><span class="p">(</span><span class="n">SSNRSIM</span><span class="p">):</span>
     <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="SSNRSIM3D.ssnr_like_sectorial_average">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ssnr_like_sectorial_average</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute ring avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; instead of &lt;Dj^2 / Vj&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">q_axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">)</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_axes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;PSF dimension is not equal to 3!&quot;</span><span class="p">)</span>
+
+        <span class="n">averaged_slices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dja</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">average_mask</span><span class="p">(</span><span class="n">dj</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;reduced&#39;</span><span class="p">)</span>
+                <span class="n">vja</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">average_mask</span><span class="p">(</span><span class="n">vj</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s1">&#39;reduced&#39;</span><span class="p">)</span>
+                <span class="n">averaged_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">dja</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">vja</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">averaged_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">average_rings2d</span><span class="p">(</span><span class="n">dj</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">)</span> <span class="o">/</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">vj</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">q_axes</span><span class="p">,</span> <span class="n">number_of_samples</span><span class="o">=</span><span class="n">number_of_samples</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">averaged_slices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SSNRSIM3D.ssnr_like_sectorial_average_from_image">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average_from_image">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ssnr_like_sectorial_average_from_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_ft</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta0</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the SSNR-like sectorial average from an image, processing slice by slice.</span>
+
+<span class="sd">        The 3-D volume is traversed one 2-D plane at a time, where each plane is</span>
+<span class="sd">        orthogonal to *axis*.  For every plane the same formula as in the 2-D</span>
+<span class="sd">        version is applied:</span>
+
+<span class="sd">            SSNR_sa = (&lt;|B_j|²&gt;_sa - noise_power_sa) / noise_power_sa</span>
+
+<span class="sd">        where the averages are sectorial ring averages computed with</span>
+<span class="sd">        ``average_rings2d``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        image_ft : np.ndarray, shape (Nx, Ny, Nz)</span>
+<span class="sd">            Fourier transform of the observed image.</span>
+<span class="sd">        degree_of_symmetry : int, optional</span>
+<span class="sd">            Rotational degree of symmetry passed to ``average_rings2d`` (default 1).</span>
+<span class="sd">        theta0 : float, optional</span>
+<span class="sd">            Starting angle (radians) of the sector passed to ``average_rings2d``</span>
+<span class="sd">            (default 0.).</span>
+<span class="sd">        axis : int {0, 1, 2} or str {&#39;x&#39;, &#39;y&#39;, &#39;z&#39;}, optional</span>
+<span class="sd">            Axis along which the volume is sliced.  The two remaining axes form</span>
+<span class="sd">            the lateral plane on which the ring average is computed (default 2 / &#39;z&#39;).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Array of shape ``(N_slices, N_rings)`` where ``N_slices`` is the</span>
+<span class="sd">            length of *image_ft* along *axis* and ``N_rings`` is the number of</span>
+<span class="sd">            radial bins returned by ``average_rings2d``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">image_ft</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionality</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The image and SSNR calculator dimensions do not match.&quot;</span><span class="p">)</span>
+        <span class="n">_axis_aliases</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_axis_aliases</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;axis string must be &#39;x&#39;, &#39;y&#39;, or &#39;z&#39;, got </span><span class="si">{</span><span class="n">axis</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="n">_axis_aliases</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;axis must be 0, 1, or 2 (or &#39;x&#39;, &#39;y&#39;, &#39;z&#39;).&quot;</span><span class="p">)</span>
+
+        <span class="n">q_axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf_frequencies</span>  <span class="c1"># tuple of 3 frequency arrays</span>
+        <span class="c1"># Pick the two transverse frequency axes (the ones NOT sliced along)</span>
+        <span class="n">lateral_axes_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">]</span>
+        <span class="n">q_lateral</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_axes</span><span class="p">[</span><span class="n">lateral_axes_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">q_axes</span><span class="p">[</span><span class="n">lateral_axes_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="c1"># Move the averaging axis to the last position for uniform indexing</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">image_ft</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">dj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dj</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">vj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vj</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">n_slices</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">center_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_ft</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="c1"># Centre of the full 3-D array, used to estimate f0 from the DC component</span>
+        <span class="n">center_slice</span> <span class="o">=</span> <span class="p">(</span><span class="n">center_full</span><span class="p">[</span><span class="n">lateral_axes_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">center_full</span><span class="p">[</span><span class="n">lateral_axes_idx</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">center_along_axis</span> <span class="o">=</span> <span class="n">center_full</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+
+        <span class="n">numeric_noise</span> <span class="o">=</span> <span class="mf">1e-12</span>
+
+        <span class="c1"># Estimate the total photon count f0 from the DC component of the</span>
+        <span class="c1"># centre slice — same approach as the 2-D version.  Done once before</span>
+        <span class="c1"># the loop so every slice (including those before centre_along_axis)</span>
+        <span class="c1"># can use it.</span>
+        <span class="n">dc_dj</span> <span class="o">=</span> <span class="n">dj</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">center_along_axis</span><span class="p">][</span><span class="n">center_slice</span><span class="p">]</span>
+        <span class="n">dc_img</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">center_along_axis</span><span class="p">][</span><span class="n">center_slice</span><span class="p">]</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="n">dc_img</span> <span class="o">/</span> <span class="n">dc_dj</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dc_dj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">numeric_noise</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="n">averaged_slices</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_slices</span><span class="p">):</span>
+            <span class="n">img_sl</span> <span class="o">=</span> <span class="n">img</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">dj_sl</span> <span class="o">=</span> <span class="n">dj</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">vj_sl</span> <span class="o">=</span> <span class="n">vj</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span>
+
+            <span class="n">bj2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">img_sl</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+            <span class="n">obj2sa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">bj2</span><span class="p">,</span> <span class="n">q_lateral</span><span class="p">,</span>  <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+            <span class="n">djsa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">dj_sl</span><span class="p">,</span> <span class="n">q_lateral</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+            <span class="n">vjsa</span> <span class="o">=</span> <span class="n">average_rings2d</span><span class="p">(</span><span class="n">vj_sl</span><span class="p">,</span> <span class="n">q_lateral</span><span class="p">,</span> <span class="n">degree_of_symmetry</span><span class="p">,</span> <span class="n">theta0</span><span class="p">)</span>
+
+            <span class="n">noise_power</span> <span class="o">=</span> <span class="n">vjsa</span> <span class="o">*</span> <span class="n">f0</span> <span class="o">+</span> <span class="n">image_ft</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_noise_variance</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">djsa</span>
+            <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="p">((</span><span class="n">obj2sa</span> <span class="o">-</span> <span class="n">noise_power</span><span class="p">)</span> <span class="o">/</span> <span class="n">noise_power</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+            <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">ssnr_sa</span><span class="p">)</span>
+            <span class="n">ssnr_sa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">djsa</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">numeric_noise</span><span class="p">,</span> <span class="n">ssnr_sa</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">averaged_slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ssnr_sa</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">averaged_slices</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+
+<div class="viewcode-block" id="SSNRSIM3D.plot_effective_kernel_and_otf">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIM3D.plot_effective_kernel_and_otf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_effective_kernel_and_otf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))):</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># plt.imshow(np.log1p(np.abs(self.effective_kernels_ft[m][:, :, self.optical_system.otf.shape[2] // 2])))</span>
+        <span class="c1"># plt.show()</span>
+        <span class="c1"># plt.imshow(np.log1p(np.abs(self.effective_otfs[m][:, :, self.optical_system.otf.shape[2] // 2])))</span>
+        <span class="c1"># plt.show()</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Kernel&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;OTF&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$f_r, </span><span class="se">\\</span><span class="s2">frac</span><span class="si">{2NA}</span><span class="s2">{\lambda}$&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;$f_r, </span><span class="se">\\</span><span class="s2">frac</span><span class="si">{2NA}</span><span class="s2">{\lambda}$&quot;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;$f_r, </span><span class="se">\\</span><span class="s2">frac</span><span class="si">{2NA}</span><span class="s2">{\lambda}$&quot;</span><span class="p">)</span>
+        <span class="n">slider</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">wrap_axes3d</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="p">[</span><span class="n">m</span><span class="p">]],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;log1p&#39;</span><span class="p">,</span>  <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">slider</span>         </div>
+</div>
+
+
+<div class="viewcode-block" id="SSNRSIMVectorial">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSNRSIMVectorial</span><span class="p">(</span><span class="n">SSNRSIM</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">illumination</span><span class="p">,</span>
-                 <span class="n">optical_system</span><span class="p">,</span>
-                 <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">illumination</span><span class="p">,</span> 
+                 <span class="n">optical_system</span><span class="p">,</span> 
+                 <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                  <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                 <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves3D</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination data is not of the valid dimension!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optical_system</span><span class="p">,</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">OpticalSystem3D</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Optical system data is not of the valid dimension!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">illumination_reconstruction</span><span class="p">,</span> <span class="n">IlluminationPlaneWaves3D</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Illumination reconstruction data is not of the valid dimension!&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> <span class="n">optical_system</span><span class="p">,</span> <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> <span class="n">readout_noise_variance</span><span class="o">=</span><span class="n">readout_noise_variance</span><span class="p">,</span> <span class="n">save_memory</span><span class="o">=</span><span class="n">save_memory</span><span class="p">,</span> <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="n">illumination_reconstruction</span><span class="p">)</span></div>
+                 <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">neglect_cross_correlation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalizing_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neglect_cross_correlation</span> <span class="o">=</span> <span class="n">neglect_cross_correlation</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> 
+                         <span class="n">optical_system</span><span class="p">,</span> 
+                         <span class="n">kernel</span><span class="p">,</span>
+                         <span class="n">readout_noise_variance</span><span class="p">,</span>
+                         <span class="n">save_memory</span><span class="p">,</span>
+                         <span class="n">illumination_reconstruction</span><span class="p">,</span>
+                         <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="n">imperfect_phase_shifts</span><span class="p">,</span> 
+                         <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_mixing_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">imperfect_phase_shifts</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">Mt</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neglect_cross_correlation</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="o">...</span>
+            <span class="c1"># print(&quot;Phase matrix inverse&quot;, np.round(self.illumination.phase_matrix_inverse_array_form, 5))</span>
+            <span class="c1"># print(&quot;CCM inverse&quot;, np.round(np.linalg.inv(self._ccM), 5))</span>
+            <span class="c1"># print(&quot;Error matrix&quot;, np.round(self._error_matrix, 5))</span>
+            <span class="c1"># print(&quot;Mixing matrix&quot;, np.round(self._mixing_matrix, 5))</span>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_diagonalizing_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalizing_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">ccM</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mixing_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonalizing_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalizing_matrix</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_effective_kernels_ft</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ccM</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_order_ccM</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imperfect_phase_shifts</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_compute_error_matrix</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_mixing_matrix</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diagonalizing_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_diagonalizing_matrix</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="p">:</span>
+            <span class="n">effective_kernels_uncorrelated_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">effective_kernels_uncorrelated_ft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination_reconstruction</span><span class="o">.</span><span class="n">compute_effective_kernels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">psf_coordinates</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+            <span class="n">effective_kernel_ft</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optical_system</span><span class="o">.</span><span class="n">otf</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">effective_otfs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">effective_kernel_ft</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">illumination</span><span class="o">.</span><span class="n">m_to_number_matrix</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="o">*</span> <span class="n">effective_kernels_uncorrelated_ft</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">effective_kernels_ft</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">effective_kernel_ft</span></div>
+
+            <span class="c1"># plt.imshow(np.abs(self.effective_kernels_ft[m]))</span>
+            <span class="c1"># plt.title(m)</span>
+            <span class="c1"># plt.show()</span>
+<div class="viewcode-block" id="SSNRSIMVectorial2D">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial2D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSNRSIMVectorial2D</span><span class="p">(</span><span class="n">SSNRSIMVectorial</span><span class="p">,</span> <span class="n">SSNRSIM2D</span><span class="p">):</span>
+    <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">illumination</span><span class="p">:</span> <span class="n">IlluminationPlaneWaves2D</span><span class="p">,</span>
+                <span class="n">optical_system</span><span class="p">:</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">OpticalSystem2D</span><span class="p">,</span>
+                <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">neglect_cross_correlation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span>
+                         <span class="n">optical_system</span><span class="p">,</span> 
+                         <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> 
+                         <span class="n">readout_noise_variance</span><span class="o">=</span><span class="n">readout_noise_variance</span><span class="p">,</span> 
+                         <span class="n">save_memory</span><span class="o">=</span><span class="n">save_memory</span><span class="p">,</span> 
+                         <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="n">illumination_reconstruction</span><span class="p">,</span> 
+                         <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="n">imperfect_phase_shifts</span><span class="p">,</span>
+                         <span class="n">neglect_cross_correlation</span><span class="o">=</span><span class="n">neglect_cross_correlation</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SSNRSIMVectorial3D">
+<a class="viewcode-back" href="../source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial3D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSNRSIMVectorial3D</span><span class="p">(</span><span class="n">SSNRSIMVectorial</span><span class="p">,</span> <span class="n">SSNRSIM3D</span><span class="p">):</span>
+    <span class="n">dimensionality</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">illumination</span><span class="p">:</span> <span class="n">IlluminationPlaneWaves3D</span><span class="p">,</span>
+                <span class="n">optical_system</span><span class="p">:</span> <span class="n">OpticalSystems</span><span class="o">.</span><span class="n">OpticalSystem3D</span><span class="p">,</span>
+                <span class="n">kernel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">readout_noise_variance</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">neglect_cross_correlation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">illumination</span><span class="p">,</span> 
+                         <span class="n">optical_system</span><span class="p">,</span> 
+                         <span class="n">kernel</span><span class="o">=</span><span class="n">kernel</span><span class="p">,</span> 
+                         <span class="n">readout_noise_variance</span><span class="o">=</span><span class="n">readout_noise_variance</span><span class="p">,</span> 
+                         <span class="n">save_memory</span><span class="o">=</span><span class="n">save_memory</span><span class="p">,</span> 
+                         <span class="n">illumination_reconstruction</span><span class="o">=</span><span class="n">illumination_reconstruction</span><span class="p">,</span> 
+                         <span class="n">imperfect_phase_shifts</span><span class="o">=</span><span class="n">imperfect_phase_shifts</span><span class="p">,</span>
+                         <span class="n">neglect_cross_correlation</span><span class="o">=</span><span class="n">neglect_cross_correlation</span><span class="p">)</span></div>
 
 </pre></div>
 

@@ -1,3 +1,17 @@
+"""
+deconvolution.py
+
+This module provides deconvolution algorithms for microscopy image restoration,
+including iterative Richardson-Lucy methods (standard and blind) and Bayesian
+frequency-domain estimators.
+
+Functions:
+    richardson_lucy_homebrew - Standard Richardson-Lucy deconvolution (custom implementation).
+    richardson_lucy_blind_homebrew - Blind Richardson-Lucy deconvolution estimating both object and PSF.
+    bayesian_gaussian_frequency_estimate - Bayesian Gaussian estimator for spatial frequencies.
+    image_of_maximal_surprise_estimate - Mutual-information-maximizing frequency estimator.
+"""
+
 import numpy as np
 import scipy
 import skimage

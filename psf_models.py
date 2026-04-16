@@ -1,3 +1,20 @@
+"""
+psf_models.py
+
+This module computes point spread functions (PSFs) using numerical quadrature
+over the pupil plane (Gauss-Legendre in radial coordinate, uniform in azimuth).
+Supports both scalar and vectorial (free-dipole) models in 2D and 3D, with
+optional high-NA apodization and defocus. CPU/GPU backends are selected
+automatically via hpc_utils.
+
+Functions:
+    compute_2d_psf_coherent - 2D coherent PSF from a pupil function (scalar or general).
+    compute_3d_psf_coherent - 3D coherent PSF by stacking defocused 2D slices.
+    compute_2d_vectorial_components_free_dipole - Five vectorial field components for a free dipole emitter (2D).
+    compute_2d_incoherent_vectorial_psf_free_dipole - Incoherent vectorial PSF for a free dipole (2D).
+    compute_3d_incoherent_vectorial_psf_free_dipole - Incoherent vectorial PSF for a free dipole (3D).
+"""
+
 import numpy as np
 import hpc_utils
 

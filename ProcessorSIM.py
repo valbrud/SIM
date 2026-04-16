@@ -35,37 +35,7 @@ from Apodization import AutoconvolutionApodizationSIM
 class ProcessorSIM:
     """
     ProcessorSIM class for simulating and reconstructing super-resolution images using structured illumination microscopy (SIM).
-    
-    Attributes:
-        illumination: Illumination object, the illumination configuration for the SIM experiment.
-        optical_system: OpticalSystem object, the optical system used in the experiment.
-        kernel: numpy.ndarray, optional, the kernel used for deconvolution.
-        simulator: SIMulator object, for generating simulated images.
-        reconstructor: Reconstructor object, for reconstructing super-resolution images.
-        ssnr_calculator: SSNRCalculator object, for computing SSNR values.
-        dim: int, the number of dimensions (2 or 3).
-        spatial_domain: bool, whether to use spatial domain reconstruction.
-        estimate_ssnr: bool, whether to estimate SSNR.
-        deconvolution_method: str, the method used for deconvolution.
-        regularization_method: str, the method used for regularization.
-        apodization_method: str, the method used for apodization.
-        estimate_patterns_from_data: bool, whether to estimate patterns from data.
-        pattern_estimation_method: str, the method used for pattern estimation.
-        camera: Camera object, the camera used to capture images.
-    
-    Methods:
-        simulate_sim_images(true_object: np.ndarray, noisy: bool=True) -> np.ndarray:
-            Simulate SIM images using the provided illumination and optical system.
-        generate_super_resolution_image(sim_images: np.ndarray) -> np.ndarray:
-            Generate super-resolution image using the provided SIM images.
-        estimate_total_ssnr_from_data(image: np.ndarray) -> np.ndarray:
-            Estimate the total SSNR from the image by a method of the image splitting.
-        compute_true_ssnr(true_object: np.ndarray) -> np.ndarray:
-            Compute the true SSNR given the object.
-        deconvolve(image: np.ndarray) -> np.ndarray:
-            Deconvolve the image using the specified method.
-        apodize(image: np.ndarray) -> np.ndarray:
-            Apodize the image using the specified method.
+    Yet to be implemented. 
     """
 
     regularizatoinion_methods = ('TrueWiener', 'Flat', 'Constant') 

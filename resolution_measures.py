@@ -1,4 +1,14 @@
 
+""" 
+This file contains functions for a quantitative resolution estimation of 
+a noisy image. Currently contains the Fourier Ring Correlation (FRC) methods.
+The decorrelation method is to be implemented. 
+
+Functions: 
+    - frc: Compute the Fourier Ring Correlation (FRC) between two images.
+    - frc_one_image: Compute the Fourier Ring Correlation (FRC) for a single image.
+"""
+
 import os.path
 import sys
 print(__file__)
@@ -71,6 +81,24 @@ def frc(image1, image2, is_fourier=False, num_bins=100):
 def correct_for_readout_noise(image, readout_noise): ...
 
 def frc_one_image(image, num_bins=50, readout_noise = 0):
+    """
+    Compute the Fourier Ring Correlation (FRC) for a single image.
+    
+    This function splits the image into two halves, computes the FRC between them, 
+    and returns the FRC values and the corresponding spatial frequencies.
+
+    Such a split relies on the property of the Poissonian statistics, and more details
+    can be found in the paper "Single image Fourier ring correlation," Opt. Express 32, 21767-21782 (2024)
+    
+    Parameters:
+    - image: 2D numpy array representing the image.
+    - num_bins: Number of radial bins (rings) to compute the FRC over.
+    - readout_noise: Readout noise level (default is 0).
+    
+    Returns:
+    - freq: 1D array of mean radii (spatial frequency) for each bin.
+    - frc_values: 1D array of FRC values for each radial bin.
+    """
     if readout_noise > 0:
         image = correct_for_readout_noise(image, readout_noise)
     

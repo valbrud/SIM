@@ -16,7 +16,6 @@ SIM
    Illumination
    input_parser
    kernels
-   large_FOV_operations
    OpticalSystems
    ProcessorSIM
    Reconstructor

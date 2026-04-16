@@ -58,7 +58,6 @@
 <li class="toctree-l2"><a class="reference internal" href="source/Illumination.html">Illumination module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/input_parser.html">input_parser module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/kernels.html">kernels module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/large_FOV_operations.html">large_FOV_operations module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html">OpticalSystems module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/ProcessorSIM.html">ProcessorSIM module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html">Reconstructor module</a></li>
@@ -88,9 +87,11 @@
 <li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationPointScanning"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationPointScanning</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationRCM"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationRCM</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationSIM"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationSIM</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationSIM2D"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationSIM2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationSIM3D"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationSIM3D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutionApodizationWidefield"><code class="docutils literal notranslate"><span class="pre">AutoconvolutionApodizationWidefield</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.AutoconvolutuionApodizationSIM2D"><code class="docutils literal notranslate"><span class="pre">AutoconvolutuionApodizationSIM2D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.TriangularApodization"><code class="docutils literal notranslate"><span class="pre">TriangularApodization</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Apodization.html#Apodization.TriangularApodizationSIM"><code class="docutils literal notranslate"><span class="pre">TriangularApodizationSIM</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="source/Box.html">Box module</a><ul>
@@ -149,6 +150,8 @@
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.OpticalSystem2D"><code class="docutils literal notranslate"><span class="pre">OpticalSystem2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.OpticalSystem3D"><code class="docutils literal notranslate"><span class="pre">OpticalSystem3D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.PointScanningImagingSystem"><code class="docutils literal notranslate"><span class="pre">PointScanningImagingSystem</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.PointScanningImagingSystem2D"><code class="docutils literal notranslate"><span class="pre">PointScanningImagingSystem2D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.PointScanningImagingSystem3D"><code class="docutils literal notranslate"><span class="pre">PointScanningImagingSystem3D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.RCM"><code class="docutils literal notranslate"><span class="pre">RCM</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.RCM2D"><code class="docutils literal notranslate"><span class="pre">RCM2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/OpticalSystems.html#OpticalSystems.RCM3D"><code class="docutils literal notranslate"><span class="pre">RCM3D</span></code></a></li>
@@ -173,12 +176,15 @@
 <li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html#Reconstructor.ReconstructorSpatialDomain"><code class="docutils literal notranslate"><span class="pre">ReconstructorSpatialDomain</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html#Reconstructor.ReconstructorSpatialDomain2D"><code class="docutils literal notranslate"><span class="pre">ReconstructorSpatialDomain2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html#Reconstructor.ReconstructorSpatialDomain3D"><code class="docutils literal notranslate"><span class="pre">ReconstructorSpatialDomain3D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html#Reconstructor.ReconstructorSpatialDomain3DSliced"><code class="docutils literal notranslate"><span class="pre">ReconstructorSpatialDomain3DSliced</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Reconstructor.html#Reconstructor.estimate_gain_and_offset"><code class="docutils literal notranslate"><span class="pre">estimate_gain_and_offset()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="source/ShiftsFinder.html">ShiftsFinder module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="source/ShiftsFinder.html#ShiftsFinder.ShiftsFinder"><code class="docutils literal notranslate"><span class="pre">ShiftsFinder</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/ShiftsFinder.html#ShiftsFinder.ShiftsFinder2d"><code class="docutils literal notranslate"><span class="pre">ShiftsFinder2d</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/ShiftsFinder.html#ShiftsFinder.ShiftsFinder3d"><code class="docutils literal notranslate"><span class="pre">ShiftsFinder3d</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/ShiftsFinder.html#ShiftsFinder.build_phase_matrix"><code class="docutils literal notranslate"><span class="pre">build_phase_matrix()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="source/Sources.html">Sources module</a><ul>
@@ -204,6 +210,9 @@
 <li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIM"><code class="docutils literal notranslate"><span class="pre">SSNRSIM</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIM2D"><code class="docutils literal notranslate"><span class="pre">SSNRSIM2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIM3D"><code class="docutils literal notranslate"><span class="pre">SSNRSIM3D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial"><code class="docutils literal notranslate"><span class="pre">SSNRSIMVectorial</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial2D"><code class="docutils literal notranslate"><span class="pre">SSNRSIMVectorial2D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRSIMVectorial3D"><code class="docutils literal notranslate"><span class="pre">SSNRSIMVectorial3D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRWidefield2D"><code class="docutils literal notranslate"><span class="pre">SSNRWidefield2D</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="source/SSNRCalculator.html#SSNRCalculator.SSNRWidefield3D"><code class="docutils literal notranslate"><span class="pre">SSNRWidefield3D</span></code></a></li>
 </ul>
@@ -222,8 +231,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="source/WienerFiltering.html">WienerFiltering module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_constant"><code class="docutils literal notranslate"><span class="pre">filter_constant()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_flat_noise"><code class="docutils literal notranslate"><span class="pre">filter_flat_noise()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_true_wiener"><code class="docutils literal notranslate"><span class="pre">filter_true_wiener()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_flat_noise_sim"><code class="docutils literal notranslate"><span class="pre">filter_flat_noise_sim()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_self_consistent_wiener"><code class="docutils literal notranslate"><span class="pre">filter_self_consistent_wiener()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_simulated_object_wiener"><code class="docutils literal notranslate"><span class="pre">filter_simulated_object_wiener()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/WienerFiltering.html#WienerFiltering.filter_true_wiener_sim"><code class="docutils literal notranslate"><span class="pre">filter_true_wiener_sim()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -1,3 +1,14 @@
+"""
+Camera.py
+
+This module simulates the camera acquisition process, including pixel rebinning,
+shot noise, readout noise, dark current, hot pixels, and saturation effects.
+Supports both 2D and 3D imaging modes.
+
+Classes:
+    Camera - Simulates a camera sensor with realistic noise model and spatial rebinning.
+"""
+
 import numpy as np
 import warnings
 

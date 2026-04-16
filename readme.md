@@ -37,7 +37,7 @@ This module allows to analyze easily the interference of electromagnetic plane w
 # Reproducibility
 ### To reproduce the results from one of the manuscripts below:
 ### 1. Go to the directory `papers` and navigate to the corresponding folder
-### 2. Launch the test of interest. Tests roughly correspond to the figures in the paper. If your IDE doesn't recognize a test with a right-click, use the following syntax 
+### 2. Launch the test or simulation of interest. They roughly correspond to the figures in the paper. If your IDE doesn't recognize a test with a right-click, use the following syntax 
 ```bash
 python -m unittest papers.ssnr_comparison.generate_plots.TestArticlePlots.test_ring_averaged_ssnr 
 ```

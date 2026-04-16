@@ -2,6 +2,27 @@
 utils.py
 
 This module contains commonly used operations on arrays, required in the context of our work.
+
+Functions:
+    off_grid_ft - Compute the discrete Fourier transform at arbitrary (off-grid) query points.
+    find_decreasing_surface_levels3d - Find surface levels of a monotonically decaying 3D function.
+    find_decreasing_surface_levels2d - Find surface levels of a monotonically decaying 2D function.
+    average_mask - Average an array within regions defined by an integer mask.
+    average_rings2d - Radially average a 2D array using polar-coordinate binning.
+    average_rings3d - Radially average a 3D array slice-by-slice.
+    expand_ring_averages2d - Expand a radially averaged 1D profile back to a 2D array.
+    expand_ring_averages3d - Expand radially averaged 2D profiles back to a 3D array.
+    estimate_localized_peaks - Find localized peaks in a 3D array via Gaussian fitting.
+    gaussian_maxima_fitting - Fit Gaussians to maxima in a 3D array.
+    downsample_circular_function - Downsample a circularly symmetric function by block-averaging.
+    reverse_interpolation_nearest - Scatter-interpolate known point values onto a regular grid.
+    expand_kernel - Zero-pad a kernel to match a target array shape.
+    imshow3D - Interactive matplotlib viewer for 3D arrays with a slice slider.
+    wrap_axes3d - Retrofit existing subplots with a shared 3D-slice slider.
+    upsample - Upsample an image by zero-padding its Fourier transform.
+    low_pass_adaptive_watershed_filter - Filter noise tail of a monotonically decaying 1D signal.
+    comparative_watershed_filter - Zero the tail of a signal where it drops below a reference.
+    radial_ratio - Compute for each pixel the ratio of its distance to the origin over the surface distance.
 """
 
 import numpy as np
@@ -16,6 +37,18 @@ from scipy.interpolate import RBFInterpolator, NearestNDInterpolator
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
+    """
+    Compute the discrete Fourier transform at arbitrary (off-grid) frequency points
+    via direct summation of the DFT kernel.
+
+    Args:
+        array (np.ndarray): Input array to transform.
+        grid (np.ndarray): Spatial coordinate grid matching the shape of array.
+        q_values (np.ndarray): Query frequency coordinates.
+
+    Returns:
+        np.ndarray: Fourier transform values evaluated at q_values.
+    """
     x_grid_flat = grid.reshape(-1, len(array.shape))
     q_grid_flat = q_values.reshape(-1, len(array.shape))
     phase_matrix = q_grid_flat @ x_grid_flat.T
@@ -732,6 +765,18 @@ def wrap_axes3d(axes, arrays, mode=None, scaling=1, axis='z', **imshow_kwargs):
     return slider
 
 def upsample(image, factor: int = 2, add_shot_noize: bool = False, naxes: int = 2) -> np.ndarray:
+    """
+    Upsample an image by zero-padding its Fourier transform.
+
+    Args:
+        image (np.ndarray): Input image to upsample.
+        factor (int): Upsampling factor. Default is 2.
+        add_shot_noize (bool): Whether to add simulated shot noise to the padded frequencies.
+        naxes (int): Number of leading axes to upsample (0 = all axes).
+
+    Returns:
+        np.ndarray: Upsampled image.
+    """
     # Compute new shape after upsampling
     original_shape = np.array(image.shape, dtype=np.int32)
     if not naxes:

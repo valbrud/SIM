@@ -3,11 +3,16 @@ kernels.py
 
 This module contains functions for generating finite size real space kernels for the SSNR calculations.
 
-Functions
-    sinc_kernel: Generate a 2D/3D triangular kernel, resulting in :math: `sinc^2` in Fourier space.
-    psf_kernel2d: Generate a 2D kernel that has the shape of PSF in the Fourier domain (and hence the shape of OTF in the real space).
-
+Functions:
+    sinc_kernel1d - Generate a 1D triangular kernel, resulting in sinc^2 in Fourier space.
+    sinc_kernel2d - Generate a 2D triangular kernel, resulting in sinc^2 in Fourier space.
+    sinc_kernel3d - Generate a 3D triangular kernel, resulting in sinc^2 in Fourier space.
+    psf_kernel2d - Generate a 2D kernel with PSF shape in Fourier domain.
+    finite_notch_kernel - Generate a notch-filter kernel from the complement of a PSF kernel.
+    combined_low_pass_notch_kernel - Combine a low-pass and a notch kernel via convolution.
+    angular_notch_kernel - Design a small kernel suppressing m-fold anisotropic peaks.
 """
+
 import hpc_utils
 import utils
 import numpy as np
@@ -111,12 +116,37 @@ def psf_kernel2d(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1
     return kernel
 
 def finite_notch_kernel(kernel_size: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency: float = 0., p = 1):
+    """
+    Generate a notch-filter kernel as the complement (1 - p * OTF-shaped) of a PSF kernel.
+
+    Args:
+        kernel_size (int): Size of the kernel.
+        pixel_size (tuple): Pixel sizes in real space.
+        first_zero_frequency (float): First zero crossing frequency.
+        p (float): Notch depth scaling factor.
+
+    Returns:
+        np.ndarray: Real-space notch-filter kernel.
+    """
     notch_kernel_ft= 1 - p * hpc_utils.wrapped_fftn(psf_kernel2d(kernel_size, pixel_size, first_zero_frequency))  
     # plt.imshow(notch_kernel_ft.real, origin='lower')
     # plt.show()
     return hpc_utils.wrapped_ifftn(notch_kernel_ft).real
 
 def combined_low_pass_notch_kernel(kernel_size_low_pass: int = 0, kernel_size_notch: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency_low_pass: float = 0., first_zero_frequency_notch: float = 0.):
+    """
+    Combine a low-pass PSF kernel and a notch kernel by convolution.
+
+    Args:
+        kernel_size_low_pass (int): Size of the low-pass kernel.
+        kernel_size_notch (int): Size of the notch kernel.
+        pixel_size (tuple): Pixel sizes in real space.
+        first_zero_frequency_low_pass (float): First zero crossing of the low-pass kernel.
+        first_zero_frequency_notch (float): First zero crossing of the notch kernel.
+
+    Returns:
+        np.ndarray: Combined kernel, normalized to unit sum.
+    """
     kernel_low_pass = psf_kernel2d(kernel_size_low_pass, pixel_size, first_zero_frequency_low_pass)
     kernel_notch = finite_notch_kernel(kernel_size_notch, pixel_size, first_zero_frequency_notch)
     kernel_combined = scipy.signal.convolve2d(kernel_low_pass, kernel_notch, mode='full')

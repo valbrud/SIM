@@ -1,3 +1,24 @@
+"""
+Apodization.py
+
+This module provides apodization methods for band-limited imaging systems.
+Apodization functions suppress artifacts near the frequency support boundary, improving
+image quality in widefield, confocal, point-scanning, and SIM modalities.
+
+Classes:
+    TriangularApodization - Apodization based on triangular (linear roll-off) weighting of the transfer function.
+    TriangularApodizationSIM - Triangular apodization specialized for SIM effective transfer functions.
+    AutoconvolutionApodization - Abstract base for autoconvolution-based optimal apodization (Stallinga et al., 2022).
+    AutoconvolutionApodizationWidefield - Autoconvolution apodization for widefield microscopy.
+    AutoconvolutionApodizationPointScanning - Autoconvolution apodization for point-scanning modalities.
+    AutoconvolutionApodizationSIM - Autoconvolution apodization base for SIM (dimension-specific).
+    AutoconvolutionApodizationSIM2D - 2D autoconvolution apodization for SIM.
+    AutoconvolutionApodizationSIM3D - 3D autoconvolution apodization for SIM using Ewald sphere construction.
+
+Functions:
+    _build_edwald_sphere_mask - Build a spherical mask in frequency domain representing the Ewald sphere.
+"""
+
 import os.path
 import sys
 
@@ -21,6 +42,16 @@ from OpticalSystems import System4f3DCoherent
 from SSNRCalculator import SSNRSIM2D, SSNRSIM3D
 
 class TriangularApodization():
+    """
+    Apodization based on triangular (linear roll-off) weighting of a band-limited transfer function.
+    The apodization function equals (1 - r/r_edge)^power, where r is the radial ratio
+    to the transfer function support boundary.
+
+    Attributes:
+        transfer_function (np.ndarray): The band-limited transfer function to apodize.
+        apodization_function (np.ndarray): Computed apodization weights.
+        power (float): Exponent controlling the roll-off steepness.
+    """
     def __init__(self, transfer_function, power=1):
         self._transfer_function = transfer_function
         self._apodization_function = None
@@ -69,6 +100,10 @@ class TriangularApodization():
 
 
 class TriangularApodizationSIM(TriangularApodization):
+    """
+    Triangular apodization specialized for SIM: computes the effective transfer function 
+    from a sum of effective OTFs, then applies the triangular roll-off.
+    """
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, power=1, numeric_noise=10**-4):
         _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
         effective_transfer_function = np.zeros_like(optical_system.otf, dtype=np.complex128)
@@ -180,6 +215,11 @@ AutoconvolutionApodizationISM = AutoconvolutionApodizationPointScanning
 AutoconvolutionApodizationRCM = AutoconvolutionApodizationPointScanning
 
 class AutoconvolutionApodizationSIM(AutoconvolutionApodizationWidefield, metaclass=DimensionMetaAbstract):
+    """
+    Autoconvolution apodization base for SIM. Extends the widefield variant by accounting
+    for illumination plane-wave wavevectors when constructing the ideal CTF support.
+    Dimension-specific subclasses must implement _compute_ideal_transfer_functions.
+    """
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray]):
         if not illumination.dimensionality == optical_system.dimensionality:
             raise ValueError("The illumination and pupil function dimensions do not match.")

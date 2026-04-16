@@ -1,7 +1,14 @@
 """
 WienerFiltering.py
 
-This module contains functions implementing different version of Wiener filtering.
+This module contains functions implementing different versions of Wiener filtering.
+
+Functions:
+    filter_constant - Wiener deconvolution with a constant regularization parameter.
+    filter_flat_noise_sim - Wiener deconvolution ensuring flat noise power after filtering.
+    filter_true_wiener_sim - True Wiener filter with SSNR estimated from the image itself.
+    filter_simulated_object_wiener - True Wiener filter using the known ground truth object.
+    filter_self_consistent_wiener - Self-consistent Wiener filter using measured signal power.
 """
 
 import os.path
@@ -233,6 +240,18 @@ def filter_simulated_object_wiener(image_ft,
 def filter_self_consistent_wiener(image_ft,
                               ssnr_calculator: SSNRBase,
                               numeric_noise=10**-12):
+    """
+    Self-consistent Wiener filter that estimates the SSNR directly from
+    the measured signal power divided by the noise variance.
+
+    Args:
+        image_ft (np.ndarray): Fourier transform of the reconstructed image.
+        ssnr_calculator (SSNRBase): SSNR calculator object.
+        numeric_noise (float): Small regularization constant to avoid division by zero.
+
+    Returns:
+        tuple: (filtered image FT, regularization array w, estimated SSNR).
+    """
     f0 = np.amax(image_ft).real
     nomenator = np.abs(image_ft) ** 2 
     denominator = ssnr_calculator.vj * f0 

@@ -467,7 +467,7 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
                         )
         
 class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
-    #Slice by slice 3D reconstructor in spatial domain.
+    """ Slice by slice 3D reconstructor in spatial domain. """
 
     dimensionality = 3
     def __init__(self,
@@ -497,6 +497,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                         )
         
     def _reconstruct_slice(self, sim_images_slice):
+        """ Reconstruct a separate slice of a 3D image"""
         sliced_reconstructed_image = np.zeros(sim_images_slice.shape[2:], dtype=np.float64)
         for r in range(sim_images_slice.shape[0]):
             image1rotation = np.zeros(sim_images_slice.shape[2:], dtype=np.float64)
@@ -512,6 +513,11 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
         return sliced_reconstructed_image
 
     def reconstruct(self, sim_images, backend='gpu'):
+        """
+        This version of the function reconstructs a 3D image from a stack of SIM images. 
+        Depending on the hardware, it is may be preferable to use gpu or cpu parallelization, 
+        which are both implemented, albeit the CPU version is not well-tested yet. 
+        """
         reconstructed_image = np.zeros(sim_images.shape[2:], dtype=np.float64)
 
         hpc_utils.pick_backend('cpu' if backend == 'cpu' else 'gpu')
@@ -548,6 +554,19 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
         return reconstructed_image
         
 def estimate_gain_and_offset(sim_images, edge_pixels=30):
+    """
+    Estimate camera gain and offset from a stack of SIM images using a linear
+    model relating total intensity to edge-region noise power.
+
+    Args:
+        sim_images (np.ndarray): SIM image stack of shape (Mr, Mt, H, W).
+        edge_pixels (int): Number of edge pixels used for noise estimation.
+
+    Returns:
+        tuple: (gain, offset, f0) where gain is the estimated camera gain,
+               offset is the per-pixel intensity offset, and f0 is the
+               per-image photon flux estimate.
+    """
     # Shapes and constants
     H, W = sim_images.shape[-2:]
     image_size = H * W  # FIX 1: correct number of pixels per image

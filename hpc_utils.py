@@ -1,7 +1,23 @@
-# hpc_utils.py
-# Supplementary utilities for HPC (High-Performance Computing) tasks.
-# Provides backend selection and array manipulation functions to support both CPU and GPU computations.
-# Designed to automatically select GPU if possible by default and not produce overhead when using CPU.
+"""
+hpc_utils.py
+
+Supplementary utilities for HPC (High-Performance Computing) tasks.
+Provides backend selection and array manipulation functions to support both CPU and GPU computations.
+Designed to automatically select GPU if possible by default and not produce overhead when using CPU.
+
+Functions:
+    pick_backend - Configure the global compute backend (CPU/GPU/auto).
+    get_backend - Return the current backend mode and array module.
+    wrapped_fft - Shift-safe 1D FFT wrapper.
+    wrapped_ifft - Shift-safe 1D inverse FFT wrapper.
+    wrapped_fftn - Shift-safe N-D FFT wrapper.
+    wrapped_ifftn - Shift-safe N-D inverse FFT wrapper.
+    convolve2d - 2D convolution via SciPy or CuPy signal module.
+    convolve - N-D convolution via SciPy or CuPy signal module.
+    precompute_czt_1d_from_coords - Precompute chirp-Z transform factors for 1D uniform grids.
+    czt_1d_apply - Apply a precomputed 1D CZT along a given axis.
+    czt_nd_fourier - Multi-dimensional Fourier transform via separable per-axis CZT.
+"""
 
 import numpy as _np
 

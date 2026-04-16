@@ -1,7 +1,12 @@
 """
-widnosing.py
+windowing.py
 
 This module provides functions to modify the image near the edges for different purposes.
+
+Functions:
+    make_mask_cosine_edge2d - Create a 2D weight mask with cosine roll-off at the edges.
+    make_mask_cosine_edge3d - Create a 3D weight mask with cosine roll-off at the edges.
+    gaussian_attenuation - Create a 2D Gaussian attenuation mask.
 """
 
 import numpy as np

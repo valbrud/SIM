@@ -1,3 +1,23 @@
+"""
+pupil_functions.py
+
+This module provides utilities for constructing pupil-plane phase aberrations
+using Zernike polynomials, as well as specialized pupil functions such as
+vortex beams. Supports both polar (radial + azimuthal) and Cartesian grid
+representations.
+
+Functions:
+    setup_phi - Generate uniform azimuthal angle array for pupil sampling.
+    setup_rho_legendre - Generate Gauss-Legendre radial nodes for pupil sampling.
+    noll_to_nm - Convert Noll index to Zernike (n, m) indices.
+    zernike_cartesian_one_aberration - Evaluate a single Zernike polynomial on a Cartesian grid.
+    zernike_cartesian - Sum multiple Zernike polynomials on a Cartesian grid.
+    radial_zernike - Compute the radial part of a Zernike polynomial on a 1D array.
+    azimuthal_zernike - Compute the azimuthal part of a Zernike polynomial.
+    compute_pupil_plane_aberrations - Build a 2D pupil aberration map from Zernike coefficients.
+    make_vortex_pupil - Construct a vortex beam pupil with helical phase.
+"""
+
 import numpy as np
 from math import factorial
 import scipy

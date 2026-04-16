@@ -264,28 +264,13 @@
                 <span class="p">)</span></div>
 
 
-
-<div class="viewcode-block" id="IntensityHarmonic3D">
-<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic3D">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">IntensityHarmonic3D</span><span class="p">(</span><span class="n">IntensityHarmonic</span><span class="p">):</span>
-<div class="viewcode-block" id="IntensityHarmonic3D.get_intensity">
-<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic3D.get_intensity">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">rotated_frame_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">rotated_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-        <span class="n">wavevector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">rotated_angle</span> <span class="k">else</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span><span class="p">,</span> <span class="n">rotated_frame_vector</span><span class="p">,</span> <span class="o">-</span><span class="n">rotated_angle</span><span class="p">)</span>
-        <span class="n">intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
-                                                  <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">intensity</span></div>
-</div>
-
-
-
 <div class="viewcode-block" id="IntensityHarmonic2D">
 <a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">IntensityHarmonic2D</span><span class="p">(</span><span class="n">IntensityHarmonic</span><span class="p">):</span>
 <div class="viewcode-block" id="IntensityHarmonic2D.init_from_3D">
 <a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic2D.init_from_3D">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">init_from_3D</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">harmonic</span><span class="p">:</span> <span class="n">IntensityHarmonic3D</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_from_3D</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">harmonic</span><span class="p">:</span> <span class="s1">&#39;IntensityHarmonic3D&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">harmonic</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">harmonic</span><span class="o">.</span><span class="n">phase</span><span class="p">,</span> <span class="n">harmonic</span><span class="o">.</span><span class="n">wavevector</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span></div>
 
 
@@ -297,6 +282,28 @@
                                                   <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">intensity</span></div>
 </div>
+
+
+<div class="viewcode-block" id="IntensityHarmonic3D">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic3D">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IntensityHarmonic3D</span><span class="p">(</span><span class="n">IntensityHarmonic</span><span class="p">):</span>
+<div class="viewcode-block" id="IntensityHarmonic3D.get_intensity">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic3D.get_intensity">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_intensity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">rotated_frame_vector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">rotated_angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+        <span class="n">wavevector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">rotated_angle</span> <span class="k">else</span> <span class="n">VectorOperations</span><span class="o">.</span><span class="n">rotate_vector3d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavevector</span><span class="p">,</span> <span class="n">rotated_frame_vector</span><span class="p">,</span> <span class="o">-</span><span class="n">rotated_angle</span><span class="p">)</span>
+        <span class="n">intensity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijkl,l -&gt;ijk&#39;</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">wavevector</span><span class="p">)</span>
+                                                  <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">intensity</span></div>
+
+
+<div class="viewcode-block" id="IntensityHarmonic3D.init_from_2D">
+<a class="viewcode-back" href="../source/Sources.html#Sources.IntensityHarmonic3D.init_from_2D">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_from_2D</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">harmonic</span><span class="p">:</span> <span class="n">IntensityHarmonic2D</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">harmonic</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">harmonic</span><span class="o">.</span><span class="n">phase</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">harmonic</span><span class="o">.</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">harmonic</span><span class="o">.</span><span class="n">wavevector</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">]))</span></div>
+</div>
+
+
 
 </pre></div>
 

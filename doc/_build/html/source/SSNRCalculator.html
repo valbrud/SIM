@@ -39,17 +39,31 @@
 <span id="ssnrcalculator-module"></span><h1>SSNRCalculator module<a class="headerlink" href="#module-SSNRCalculator" title="Link to this heading">¶</a></h1>
 <p>SSNRCalculator.py</p>
 <p>This module contains classes for calculating the (image-independent) spectral signal-to-noise ratio (SSNR)
-for a given system optical system and illumination.</p>
+for a given optical system and illumination.</p>
 <p>Mathematical details will be provided in the later documentation versions and in the corresponding papers.</p>
-<div class="graphviz"><img src="../_images/inheritance-6223b4f0774904141cb5b32bacab33b724816fc1.png" alt="Inheritance diagram of SSNRCalculator" usemap="#inheritance5d1c128560" class="inheritance graphviz" /></div>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>SSNRBase - Base class for SSNR calculators with ring-averaging, volume and entropy metrics.
+SSNRWidefield2D - SSNR calculator for 2D widefield microscopy.
+SSNRWidefield3D - SSNR calculator for 3D widefield microscopy.
+SSNRSIM - Abstract base for SIM SSNR calculators.
+SSNRSIM2D - SSNR calculator for 2D SIM.
+SSNRSIM3D - SSNR calculator for 3D SIM.
+SSNRPointScanning2D - SSNR calculator for 2D point-scanning microscopy.
+SSNRPointScanning3D - SSNR calculator for 3D point-scanning microscopy.</p>
+</dd>
+</dl>
+<div class="graphviz"><img src="../_images/inheritance-2f37ed3600de6b994833056ae981a692cd80db8a.png" alt="Inheritance diagram of SSNRCalculator" usemap="#inheritance5d1c128560" class="inheritance graphviz" /></div>
 <map id="inheritance5d1c128560" name="inheritance5d1c128560">
-<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,84,94,112"/>
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,109,94,137"/>
 <area shape="rect" id="node2" href="#SSNRCalculator.SSNRPointScanning" target="_top" title="SSNRPointScanning" alt="" coords="142,57,290,85"/>
-<area shape="rect" id="node5" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="176,109,256,137"/>
+<area shape="rect" id="node5" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="176,135,256,162"/>
 <area shape="rect" id="node3" href="#SSNRCalculator.SSNRPointScanning2D" target="_top" title="SSNRPointScanning2D" alt="" coords="338,5,504,33"/>
 <area shape="rect" id="node4" href="#SSNRCalculator.SSNRPointScanning3D" target="_top" title="SSNRPointScanning3D" alt="" coords="338,57,504,85"/>
 <area shape="rect" id="node6" href="#SSNRCalculator.SSNRSIM2D" target="_top" title="SSNRSIM2D" alt="" coords="372,109,470,137"/>
-<area shape="rect" id="node7" href="#SSNRCalculator.SSNRSIM3D" target="_top" title="SSNRSIM3D" alt="" coords="372,161,470,189"/>
+<area shape="rect" id="node7" href="#SSNRCalculator.SSNRSIM3D" target="_top" title="SSNRSIM3D" alt="" coords="372,213,470,241"/>
+<area shape="rect" id="node8" href="#SSNRCalculator.SSNRSIMVectorial" target="_top" title="SSNRSIMVectorial" alt="" coords="352,161,490,189"/>
+<area shape="rect" id="node9" href="#SSNRCalculator.SSNRSIMVectorial2D" target="_top" title="SSNRSIMVectorial2D" alt="" coords="552,123,708,150"/>
+<area shape="rect" id="node10" href="#SSNRCalculator.SSNRSIMVectorial3D" target="_top" title="SSNRSIMVectorial3D" alt="" coords="552,188,708,216"/>
 </map><dl class="py class">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRBase">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRBase" title="Link to this definition">¶</a></dt>
@@ -280,12 +294,6 @@ for a given system optical system and illumination.</p>
 <em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">optical_system</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIM.optical_system" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM.ring_average_ssnri_approximated">
-<span class="sig-name descname"><span class="pre">ring_average_ssnri_approximated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM.ring_average_ssnri_approximated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM.ring_average_ssnri_approximated" title="Link to this definition">¶</a></dt>
-<dd><p>Compute ring avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; instead of &lt;Dj^2 / Vj&gt;</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -304,13 +312,24 @@ for a given system optical system and illumination.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf">
-<span class="sig-name descname"><span class="pre">imshow_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.imshow_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">imshow_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">(0,</span> <span class="pre">0))</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.imshow_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.imshow_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.plot_effective_kernel_and_otf">
 <span class="sig-name descname"><span class="pre">plot_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.plot_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.plot_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.ssnr_like_sectorial_average_from_image">
+<span class="sig-name descname"><span class="pre">ssnr_like_sectorial_average_from_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_ft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_of_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.ssnr_like_sectorial_average_from_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.ssnr_like_sectorial_average_from_image" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM2D.ssnri_like_sectorial_average">
+<span class="sig-name descname"><span class="pre">ssnri_like_sectorial_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_of_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM2D.ssnri_like_sectorial_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM2D.ssnri_like_sectorial_average" title="Link to this definition">¶</a></dt>
+<dd><p>Compute avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; in a sector instead of &lt;Dj^2 / Vj&gt;</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -326,6 +345,113 @@ for a given system optical system and illumination.</p>
 </map><dl class="py attribute">
 <dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D.dimensionality">
 <span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D.plot_effective_kernel_and_otf">
+<span class="sig-name descname"><span class="pre">plot_effective_kernel_and_otf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">0))</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM3D.plot_effective_kernel_and_otf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D.plot_effective_kernel_and_otf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average">
+<span class="sig-name descname"><span class="pre">ssnr_like_sectorial_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM3D.ssnr_like_sectorial_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average" title="Link to this definition">¶</a></dt>
+<dd><p>Compute ring avergaged ssnri as &lt;Dj^2&gt; / &lt;Vj&gt; instead of &lt;Dj^2 / Vj&gt;</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average_from_image">
+<span class="sig-name descname"><span class="pre">ssnr_like_sectorial_average_from_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_ft</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degree_of_symmetry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIM3D.ssnr_like_sectorial_average_from_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIM3D.ssnr_like_sectorial_average_from_image" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the SSNR-like sectorial average from an image, processing slice by slice.</p>
+<p>The 3-D volume is traversed one 2-D plane at a time, where each plane is
+orthogonal to <em>axis</em>.  For every plane the same formula as in the 2-D
+version is applied:</p>
+<blockquote>
+<div><p>SSNR_sa = (&lt;<a href="#id7"><span class="problematic" id="id8">|</span></a>B_j|²&gt;_sa - noise_power_sa) / noise_power_sa</p>
+</div></blockquote>
+<p>where the averages are sectorial ring averages computed with
+<code class="docutils literal notranslate"><span class="pre">average_rings2d</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_ft</strong> (<em>np.ndarray</em><em>, </em><em>shape</em><em> (</em><em>Nx</em><em>, </em><em>Ny</em><em>, </em><em>Nz</em><em>)</em>) – Fourier transform of the observed image.</p></li>
+<li><p><strong>degree_of_symmetry</strong> (<em>int</em><em>, </em><em>optional</em>) – Rotational degree of symmetry passed to <code class="docutils literal notranslate"><span class="pre">average_rings2d</span></code> (default 1).</p></li>
+<li><p><strong>theta0</strong> (<em>float</em><em>, </em><em>optional</em>) – Starting angle (radians) of the sector passed to <code class="docutils literal notranslate"><span class="pre">average_rings2d</span></code>
+(default 0.).</p></li>
+<li><p><strong>axis</strong> (<em>int {0</em><em>, </em><em>1</em><em>, </em><em>2}</em><em> or </em><em>str {'x'</em><em>, </em><em>'y'</em><em>, </em><em>'z'}</em><em>, </em><em>optional</em>) – Axis along which the volume is sliced.  The two remaining axes form
+the lateral plane on which the ring average is computed (default 2 / ‘z’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of shape <code class="docutils literal notranslate"><span class="pre">(N_slices,</span> <span class="pre">N_rings)</span></code> where <code class="docutils literal notranslate"><span class="pre">N_slices</span></code> is the
+length of <em>image_ft</em> along <em>axis</em> and <code class="docutils literal notranslate"><span class="pre">N_rings</span></code> is the number of
+radial bins returned by <code class="docutils literal notranslate"><span class="pre">average_rings2d</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIMVectorial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIMVectorial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRSIM" title="SSNRCalculator.SSNRSIM"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIM</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-51c445e40a9f01ff6bf9a7555d6a9f3ffac716d2.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIMVectorial" usemap="#inheritance564b157545" class="inheritance graphviz" /></div>
+<map id="inheritance564b157545" name="inheritance564b157545">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,5,94,33"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,5,222,33"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRSIMVectorial" target="_top" title="SSNRSIMVectorial" alt="" coords="270,5,407,33"/>
+</map><dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial.ccM">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ccM</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial.ccM" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial.diagonalizing_matrix">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">diagonalizing_matrix</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial.diagonalizing_matrix" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial.mixing_matrix">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mixing_matrix</span></span><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial.mixing_matrix" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial2D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIMVectorial2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIMVectorial2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial2D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRSIMVectorial" title="SSNRCalculator.SSNRSIMVectorial"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIMVectorial</span></code></a>, <a class="reference internal" href="#SSNRCalculator.SSNRSIM2D" title="SSNRCalculator.SSNRSIM2D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIM2D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-aab99227d3879749841ae52858deffa6632e36af.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIMVectorial2D" usemap="#inheritance12bbc0e5c7" class="inheritance graphviz" /></div>
+<map id="inheritance12bbc0e5c7" name="inheritance12bbc0e5c7">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,32,94,60"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,32,222,60"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRSIM2D" target="_top" title="SSNRSIM2D" alt="" coords="290,5,388,33"/>
+<area shape="rect" id="node4" href="#SSNRCalculator.SSNRSIMVectorial" target="_top" title="SSNRSIMVectorial" alt="" coords="270,57,407,85"/>
+<area shape="rect" id="node5" href="#SSNRCalculator.SSNRSIMVectorial2D" target="_top" title="SSNRSIMVectorial2D" alt="" coords="455,32,611,60"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial2D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial2D.dimensionality" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial3D">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SSNRCalculator.</span></span><span class="sig-name descname"><span class="pre">SSNRSIMVectorial3D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/SSNRCalculator.html#SSNRSIMVectorial3D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial3D" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#SSNRCalculator.SSNRSIMVectorial" title="SSNRCalculator.SSNRSIMVectorial"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIMVectorial</span></code></a>, <a class="reference internal" href="#SSNRCalculator.SSNRSIM3D" title="SSNRCalculator.SSNRSIM3D"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSNRSIM3D</span></code></a></p>
+<div class="graphviz"><img src="../_images/inheritance-89e577e74a1ab98f3c460365c3a1d4c2b95c97af.png" alt="Inheritance diagram of SSNRCalculator.SSNRSIMVectorial3D" usemap="#inheritance248a93d200" class="inheritance graphviz" /></div>
+<map id="inheritance248a93d200" name="inheritance248a93d200">
+<area shape="rect" id="node1" href="#SSNRCalculator.SSNRBase" target="_top" title="Base class for SSNR calculators. " alt="" coords="5,32,94,60"/>
+<area shape="rect" id="node2" href="#SSNRCalculator.SSNRSIM" target="_top" title="SSNRSIM" alt="" coords="142,32,222,60"/>
+<area shape="rect" id="node3" href="#SSNRCalculator.SSNRSIM3D" target="_top" title="SSNRSIM3D" alt="" coords="290,5,388,33"/>
+<area shape="rect" id="node4" href="#SSNRCalculator.SSNRSIMVectorial" target="_top" title="SSNRSIMVectorial" alt="" coords="270,57,407,85"/>
+<area shape="rect" id="node5" href="#SSNRCalculator.SSNRSIMVectorial3D" target="_top" title="SSNRSIMVectorial3D" alt="" coords="455,32,611,60"/>
+</map><dl class="py attribute">
+<dt class="sig sig-object py" id="SSNRCalculator.SSNRSIMVectorial3D.dimensionality">
+<span class="sig-name descname"><span class="pre">dimensionality</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#SSNRCalculator.SSNRSIMVectorial3D.dimensionality" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
