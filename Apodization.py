@@ -352,7 +352,7 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
                                                                       fill_value=0.)
         
         self._ideal_otf = interpolator_otf(self._optical_system.q_grid.flatten()).reshape(self._optical_system.otf.shape)
-        
+        self._ideal_otf /= np.amax(self._ideal_otf)
         # interpolator_ctf = scipy.interpolate.RegularGridInterpolator((qx_dense, qy_dense, qz_dense), ideal_pupil_function, method='linear',
         #                                                               bounds_error=True,
         #                                                               fill_value=0.)

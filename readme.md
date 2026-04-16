@@ -50,6 +50,12 @@ Folder: `ssnr_comparison`
 
 Project version: 1.0.0
 
+- "Generalized low-pass filtering in Structured Illumination Microscopy and spatial domain reconstructions with high Signal-to-Noise ratio", (under review)
+
+Folder `real_space_reconstructions` 
+
+Project version: 1.9.0
+
 # Contact information
 Feel free to address any questions about the code or related articles to:
 - Author(s): Valerii Brudanin
