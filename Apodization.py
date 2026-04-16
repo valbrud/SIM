@@ -295,6 +295,8 @@ def _build_edwald_sphere_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius:
     interior_mask = scipy.ndimage.binary_erosion(sphere_mask, iterations=1)
     sphere_mask = sphere_mask & ~interior_mask
     sphere_mask = sphere_mask & (angle <= angle_cutoff)
+    # plt.imshow(sphere_mask[:, :, 100], cmap='gray')
+    # plt.show()
     # _, _, sldier =utils.imshow3D(sphere_mask, cmap='gray', mode='abs', axis='y')
     # plt.title('Ewald Sphere Mask')
     # plt.show()
@@ -335,30 +337,33 @@ class AutoconvolutionApodizationSIM3D(AutoconvolutionApodizationSIM):
                 # print(sphere_mask.any())
                 ideal_pupil_function = np.where(sphere_mask, 1., ideal_pupil_function)
 
-                # _, _, slider=utils.imshow3D(ideal_pupil_function, cmap='gray', mode='abs', scaling=10**3, axis='y')
-                # plt.title('Ideal CTF Dense')
-                # plt.show()
+        # plt.imshow(ideal_pupil_function[:, :, N_dense//2])
+        # plt.show()
+
+        # fig, ax, slider=utils.imshow3D(ideal_pupil_function, cmap='gray', axis='z', vmin=0, vmax=1)
+        # plt.title('Ideal CTF Dense')
+        # plt.show()
 
         ideal_otf_dense = np.flip(scipy.signal.convolve(ideal_pupil_function, np.flip(ideal_pupil_function).conjugate(), mode='same'))
         # plt.imshow(np.flip(ideal_otf_dense)[:, N_dense//2, :], cmap='gray')
         # plt.show()
-        # _, _, slider = utils.imshow3D(np.log1p(ideal_pupil_function), cmap='gray')
-        # plt.title('Ideal CTF Dense')
-        # plt.show()
-        # plt.imshow(np.where(np.abs(ideal_otf_dense[:, N_dense//2, :]) > 10**-6, 1, 0), cmap='gray')
-
         interpolator_otf = scipy.interpolate.RegularGridInterpolator((qx_dense, qy_dense, qz_dense), ideal_otf_dense, method='linear',
-                                                                      bounds_error=False,
+                                                                      bounds_error=True,
                                                                       fill_value=0.)
         
         self._ideal_otf = interpolator_otf(self._optical_system.q_grid.flatten()).reshape(self._optical_system.otf.shape)
+        
+        # interpolator_ctf = scipy.interpolate.RegularGridInterpolator((qx_dense, qy_dense, qz_dense), ideal_pupil_function, method='linear',
+        #                                                               bounds_error=True,
+        #                                                               fill_value=0.)
 
-        self._ideal_otf /= np.amax(self._ideal_otf)
+        # self._ideal_ctf = interpolator_ctf(self._optical_system.q_grid.flatten()).reshape(self._optical_system.otf.shape)
+        self._ideal_ctf = ideal_pupil_function
         
         self._ideal_psf = hpc_utils.wrapped_ifftn(self._ideal_otf).real
         self._ideal_psf /= np.sum(self._ideal_psf)
 
-        self._ideal_ctf = hpc_utils.wrapped_fftn(self._ideal_psf**0.5).real
+        # self._ideal_ctf = hpc_utils.wrapped_fftn(self._ideal_psf**0.5).real
 
         
 

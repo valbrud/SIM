@@ -133,8 +133,8 @@ def filter_true_wiener_sim(image_ft,
     
 
     # print('total_counts', f0)
-    noise_power = vja * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
-    noise_power_ra = vjra * f0 + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
+    noise_power = vja * np.abs(f0) + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
+    noise_power_ra = vjra * np.abs(f0) + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
  
 
     # if noise_power_ra.ndim == 1:
@@ -153,11 +153,13 @@ def filter_true_wiener_sim(image_ft,
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
     # ax[0].plot(np.log1p(1+ (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
     # ax[0].plot(np.log1p(1 + (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+    # ax[0].legend()
     # ax[1].plot(np.log1p(1  + ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
+    # ax[1].legend()
     # plt.show()
 
-    # ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
-    # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
+    ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
+    ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
 
     # plt.plot(np.log(1 + (obj2ra).real), label='total')
     # plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
@@ -166,7 +168,7 @@ def filter_true_wiener_sim(image_ft,
     # plt.legend()
     # plt.show()
 
-    # unfiltered_image = hpc_utils.wrapped_ifftn(image_ft)
+    # # unfiltered_image = hpc_utils.wrapped_ifftn(image_ft)
 
     
     w = dja / ssnr 

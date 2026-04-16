@@ -391,6 +391,7 @@ class SSNRSIM(SSNRBase):
         # plt.title("Dj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(d_j)[:, :, 50]))
         # plt.show()
+        d_j *= self.illumination.Mt
         return d_j
 
     def _compute_Vj(self):
@@ -415,10 +416,11 @@ class SSNRSIM(SSNRBase):
                 K1 = self.effective_kernels_ft[idx1]
                 K2 = self.effective_kernels_ft[idx2]
                 if self.imperfect_phase_shifts:
-                    term =  K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
+                    term =  K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] / self.illumination.Mt
                 else: 
                     term = K1 * K2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 v_j += term
+        v_j *= self.illumination.Mt
         # v_j *= self.illumination.Mt
         # plt.title("Vj")
         # plt.imshow(np.log(1 + 10**8 * np.abs(v_j)[:, :, 50]))
