@@ -112,6 +112,7 @@ class SIMulator(metaclass=DimensionMetaAbstract):
                 if debug:
                     print(sim_index, n)
                 total_phase_modulation = self.phase_modulation_patterns[sim_index] * self.illumination.phase_matrix[(sim_index[0], n, sim_index[1])]
+                sum = np.sum(self.effective_psfs[sim_index])
                 sim_images[sim_index[0], n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[sim_index] * self.effective_psfs[sim_index], mode='same')
                     
         sim_images = np.real(sim_images) + 10**-10

@@ -271,15 +271,15 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                         # plt.show()
                 # m_inv = tuple([-mi for mi in m])
                 # fig, ax = plt.subplots(1, 2)
-                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft).T), cmap='gray', origin='lower')
+                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft[..., 10]).T), cmap='gray', origin='lower')
                 # ax[0].set_title(f'R={r}, m={m}')
-                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)].T)), cmap='gray', origin='lower')
+                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)][..., 10].T)), cmap='gray', origin='lower')
                 # ax[1].set_title(f'kernel in the rec R={r}, m={m}')
                 # plt.show()
                 image1rotation_ft += sum_shifts_ft * self.effective_kernels[(r, m)].conjugate()
 
             reconstructed_image_ft += image1rotation_ft
-        # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft)))
+        # plt.imshow(np.log(1 + 10**8 * np.abs(reconstructed_image_ft[..., 10].T)), cmap='gray', origin='lower')
         # plt.show()
         if self.return_ft:
             return reconstructed_image_ft
@@ -328,12 +328,13 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                 m = tuple([harmonic[1][dimension] for dimension in range(len(self.illumination.dimensions)) if self.illumination.dimensions[dimension]])
 
                 if self.unitary:
-                    self.modulation_patterns[r, n] += (self.illumination.harmonics[harmonic]* self.illumination.phase_matrix[(r, n, m)].conjugate() * self.phase_modulation_patterns[harmonic].conjugate())
+                    self.modulation_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix[(r, n, m)].conjugate() * self.phase_modulation_patterns[harmonic].conjugate())
                 else:
-                    self.modulation_patterns[r, n] += (self.illumination.Mt * self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix_inverse[(r, n, m)] * self.phase_modulation_patterns[harmonic].conjugate())
+                    self.modulation_patterns[r, n] += (self.illumination.harmonics[harmonic].amplitude.conjugate() * self.illumination.phase_matrix_inverse[(r, n, m)] * self.phase_modulation_patterns[harmonic].conjugate()) * self.illumination.Mt
                 
         self.modulation_patterns = np.array(self.modulation_patterns, dtype=np.float64)
-
+        # plt.imshow(self.modulation_patterns[0, 0])
+        # plt.show()
     @ReconstructorSIM.kernel.setter
     def kernel(self, new_kernel):
         self._kernel = new_kernel
@@ -348,12 +349,16 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
             for n in range(sim_images.shape[1]):
 
                 image_convolved = hpc_utils.convolve2d(
-                    sim_images[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
+                    sim_images[r, n],  self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
                 image1rotation += self.modulation_patterns[r, n] * image_convolved
+                # plt.imshow(sim_images[r, n], cmap='gray')
+                # plt.show()
+                # plt.imshow(image1rotation.real, cmap='gray')
+                # plt.show()
                 del image_convolved
 
-            # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation))))
+            # plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(image1rotation.to_numpy()))))
             # plt.show() 
             reconstructed_image += image1rotation.real
             del image1rotation
@@ -373,7 +378,7 @@ class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
                  phase_modulation_patterns=None,
                  effective_kernels=None,
                  return_ft=False,
-                 **kwargs
+                 unitary=False
                  ):
 
         if not isinstance(illumination, IlluminationPlaneWaves2D):
@@ -388,6 +393,7 @@ class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
                          phase_modulation_patterns=phase_modulation_patterns, 
                          effective_kernels=effective_kernels,
                          return_ft=return_ft,
+                         unitary=unitary
         )
 
 class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
@@ -399,7 +405,7 @@ class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
                  optical_system: OpticalSystem2D = None,
                  kernel=None,
                  phase_modulation_patterns=None,
-                 **kwargs
+                 unitary=True
                  ):
         
         if not isinstance(illumination, IlluminationPlaneWaves2D):
@@ -412,6 +418,7 @@ class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
                          optical_system=optical_system,
                          kernel=kernel,
                          phase_modulation_patterns=phase_modulation_patterns,
+                         unitary=unitary
                         )
         
 class ReconstructorFourierDomain3D(ReconstructorFourierDomain):
@@ -425,7 +432,7 @@ class ReconstructorFourierDomain3D(ReconstructorFourierDomain):
                  phase_modulation_patterns=None,
                  effective_kernels=None,
                  return_ft=False,
-                 **kwargs
+                 unitary=False
                  ):
         
         if not isinstance(illumination, IlluminationPlaneWaves3D):
@@ -440,6 +447,7 @@ class ReconstructorFourierDomain3D(ReconstructorFourierDomain):
                          phase_modulation_patterns=phase_modulation_patterns,
                          effective_kernels=effective_kernels,
                          return_ft=return_ft,
+                         unitary=unitary
                          )
 
 class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
@@ -451,7 +459,7 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
                  optical_system: OpticalSystem3D = None,
                  kernel=None,
                  phase_modulation_patterns=None,
-                 **kwargs
+                 unitary=False, 
                  ):
         
         if not isinstance(illumination, IlluminationPlaneWaves3D):
@@ -464,6 +472,7 @@ class ReconstructorSpatialDomain3D(ReconstructorSpatialDomain):
                          optical_system=optical_system,
                          kernel=kernel,
                          phase_modulation_patterns=phase_modulation_patterns,
+                         unitary=unitary
                         )
         
 class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
@@ -475,7 +484,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 optical_system: OpticalSystem3D = None,
                 kernel=None,
                 phase_modulation_patterns=None,
-                **kwargs
+                unitary=False
                     ):
         
         if not isinstance(illumination, IlluminationPlaneWaves2D):
@@ -494,6 +503,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                             optical_system=optical_system,
                             kernel=kernel,
                             phase_modulation_patterns=phase_modulation_patterns,
+                            unitary=unitary
                         )
         
     def _reconstruct_slice(self, sim_images_slice):
@@ -504,8 +514,9 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 image_convolved = hpc_utils.convolve2d(
                     sim_images_slice[r, n], self.kernel.conjugate(), mode='same', boundary='wrap'
                 )
-                temp = self.modulation_patterns[r, n] * image_convolved
+                temp =  self.modulation_patterns[r, n].conjugate() * image_convolved
                 image1rotation += temp
+
                 del image_convolved, temp  # free intermediates immediately
             sliced_reconstructed_image += image1rotation
             del image1rotation
@@ -519,7 +530,9 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
         if backend != 'cpu':
             for z in range(sim_images.shape[-1]):
                 reconstructed_image[:, :, z] = self._reconstruct_slice(sim_images[:, :, :, :, z])
-                cupy.get_default_memory_pool().free_all_blocks()
+                # plt.imshow(reconstructed_image[:, :, z], cmap='gray', origin='lower')
+                # plt.show()
+                # cupy.get_default_memory_pool().free_all_blocks()
             return reconstructed_image
 
         # ---- CPU multiprocessing path ----

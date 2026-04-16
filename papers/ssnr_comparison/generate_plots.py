@@ -1,9 +1,10 @@
 import os.path
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+project_root = os.path.abspath(os.path.join(current_dir, "../.."))
 sys.path.append(project_root)
 sys.path.append(current_dir)
+
 import matplotlib.pyplot as plt
 import csv
 
@@ -87,12 +88,12 @@ hexagonal = configurations.get_6_oblique_s_waves_and_circular_normal(theta, 1, 1
 widefield = configurations.get_widefield()
 
 illumination_list = {
-    widefield: "Widefield",
-    conventional: "Conventional",
-    squareL: "SquareL",
+    "Widefield" : widefield, 
+    "Conventional": conventional,
+    "SquareL": squareL,
     # squareLNonLinear: "SquareLNonLinear",
-    squareC: "SquareC",
-    hexagonal: "Hexagonal",
+    "SquareC": squareC,
+    "Hexagonal": hexagonal,
 }
 
 

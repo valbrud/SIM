@@ -25,6 +25,39 @@ from config.SIM_N100_NA15 import *
 import hpc_utils
 from windowing import make_mask_cosine_edge2d
 class TestSIMImages(unittest.TestCase):
+    def test_normalization(self):
+        N = 101
+        max_r = N // 2 * dx
+
+        psf_size = 2 * np.array((2 * max_r, 2 * max_r))
+        x = np.linspace(-max_r, max_r, N)
+        y = np.copy(x)
+        dimensions = (1, 1)
+        X, Y = np.meshgrid(x, y)
+        # image = ShapesGenerator.generate_random_lines(psf_size, N, line_width=0.25, num_lines=150, intensity=10000)
+
+        optical_system = System4f2D(alpha=alpha, refractive_index=nmedium)
+        optical_system.compute_psf_and_otf((psf_size, N), )
+        # plt.imshow(optical_system.psf)
+        # plt.show()
+
+        illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 0, 3, Mt=1)
+        illumination_3waves = IlluminationPlaneWaves2D.init_from_3D(illumination_3waves3d, dimensions)
+
+        spatial_shifts = np.array(((0., 0.), (1, 0), (2, 0)))
+        spatial_shifts /= (3 * np.sin(theta))
+        illumination_3waves.spatial_shifts = spatial_shifts
+
+        simulator = SIMulator2D(illumination_3waves, optical_system)
+        image = np.ones((N, N)) * 1000
+        widefield= simulator.generate_widefield(image)
+        noisy_widefield = simulator.add_noise(widefield)
+        images = simulator.generate_noiseless_sim_images(image)
+        # noisy_images = simulator.add_noise(images)
+        print(np.sum(widefield)/(N*N))
+        print(np.sum(images)/(N*N))
+
+
     def test_generate_images2d(self):
         
         N = 101
@@ -169,6 +202,10 @@ class TestSIMImages(unittest.TestCase):
 
         simulator = SIMulator3D(illumination_3waves, optical_system)
         images = simulator.generate_noiseless_sim_images(image)
+
+        print(np.sum(images)/(N*N*N))
+        print(np.sum(image)/(N*N*N))
+        
         mask = make_mask_cosine_edge2d(images[0, 0, :, :, arg].shape, 10)
         images *= mask[None, None, :, :, None]
         images_ft = np.array([np.array([hpc_utils.wrapped_fftn(images[r, n])for n in range(5)])  for r in range(3)])

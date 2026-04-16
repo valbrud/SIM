@@ -120,7 +120,7 @@ def combined_low_pass_notch_kernel(kernel_size_low_pass: int = 0, kernel_size_no
     kernel_low_pass = psf_kernel2d(kernel_size_low_pass, pixel_size, first_zero_frequency_low_pass)
     kernel_notch = finite_notch_kernel(kernel_size_notch, pixel_size, first_zero_frequency_notch)
     kernel_combined = scipy.signal.convolve2d(kernel_low_pass, kernel_notch, mode='full')
-    return kernel_combined / np.sum(kernel_combined)
+    return kernel_combined
 
 def angular_notch_kernel( 
     kernel_size_px: int, 

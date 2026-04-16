@@ -50,7 +50,7 @@ class BFPConfiguration:
         illumination.normalize_spatial_waves()
 
         if dimensionality == 2:
-            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions[:2])
+            illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions[:2], force=True)
 
         return illumination
 
@@ -178,7 +178,7 @@ class BFPConfiguration:
 
         return illumination
 
-    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift=0, alpha0=0, dimensionality=3, dimensions=(1, 1,1)):
+    def get_4_circular_oblique_waves_and_circular_normal(self, angle_oblique, strength_s_oblique, strength_s_normal=1, Mt=1, phase_shift=0, alpha0=0, dimensionality=3, dimensions=(1, 1, 0)):
 
         theta = angle_oblique
         k1 = self.k * np.sin(theta)

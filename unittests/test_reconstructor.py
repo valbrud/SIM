@@ -47,7 +47,7 @@ class TestReconstruction2D(unittest.TestCase):
         self.psf_size = np.array((2 * self.max_r, 2 * self.max_r))
         self.x = np.linspace(-self.max_r, self.max_r, self.N)
         y = np.copy(self.x)
-
+        self.fx = np.linspace(-1/(2*self.dx), 1/(2*self.dx), self.N)
         self.image = ShapesGenerator.generate_random_lines(
             image_size=self.psf_size,
             point_number=self.N,
@@ -70,15 +70,16 @@ class TestReconstruction2D(unittest.TestCase):
         # image = utils.radial_fade(self.image, 0.5, 2)
         # image += 100
         image = self.image
-        plt.title("Image")
-        plt.imshow(image, vmin=0)
-        plt.show()
+        self.image_ft = hpc_utils.wrapped_fftn(image)
+        # plt.title("Image")
+        # plt.imshow(image, vmin=0)
+        # plt.show()
 
         self.optical_system = System4f2D(alpha=self.alpha, refractive_index=self.nmedium)
         self.optical_system.compute_psf_and_otf((self.psf_size, self.N))
-        plt.imshow(self.optical_system.psf[self.N//2-10:self.N//2+10, self.N//2-10:self.N//2+10])
-        # plt.title("PSF")
-        plt.show()
+        # plt.imshow(self.optical_system.psf[self.N//2-10:self.N//2+10, self.N//2-10:self.N//2+10])
+        # # plt.title("PSF")
+        # plt.show()
         # self.image = 10**5 * np.ones(self.optical_system.psf.shape)
 
         self.widefield = scipy.signal.convolve(self.image, self.optical_system.psf, mode='same')
@@ -98,8 +99,8 @@ class TestReconstruction2D(unittest.TestCase):
         # spatial_shifts /= (3 * 2 * self.nmedium * np.sin(self.theta))
         # self.illumination.spatial_shifts = spatial_shifts
         self.illumination.set_spatial_shifts_diagonally()
-        plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, self.x)))
-        plt.show()
+        # plt.imshow(self.illumination.get_illumination_density(coordinates=(self.x, self.x)))
+        # plt.show()
 
         # Create the simulator and generate simulated images.
         self.simulator = SIMulator2D(self.illumination, self.optical_system, readout_noise_variance=1)
@@ -241,6 +242,22 @@ class TestReconstruction2D(unittest.TestCase):
 
         # self.sim_images += np.random.normal(0, 2, self.sim_images.shape)
         reconstructed_image1 = spatial_reconstructor1.reconstruct(self.noisy_images)
+
+        calc = SSNRCalculator.SSNRSIM2D(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            readout_noise_variance=0.1,
+            kernel = psf_kernel2d(1, (self.dx, self.dx))
+        )            
+
+        ssnr_theory = utils.average_rings2d(calc.dj**2 * np.abs(self.image_ft)**2, (self.fx, self.fx) )/utils.average_rings2d(calc.vj * np.amax(np.abs(self.image_ft)), (self.fx, self.fx))
+        filtered, _, ssnr = filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed_image1), calc)
+        plt.plot(np.log1p(ssnr_theory), label='theory')
+        plt.plot(np.log1p(ssnr[self.N//2, self.N//2:]), label='measured')
+        plt.legend()
+        plt.show()
+        plt.plot(ssnr_theory/ssnr[self.N//2, self.N//2:])
+        plt.show()
         reconstructed_image3 = spatial_reconstructor3.reconstruct(self.noisy_images)
         reconstructed_image5 = spatial_reconstructor5.reconstruct(self.noisy_images)
         reconstructed_image7 = spatial_reconstructor7.reconstruct(self.noisy_images)
@@ -281,7 +298,7 @@ class TestReconstruction2D(unittest.TestCase):
         plt.imshow(reconstructed_image7)
         plt.show()
 
-class TesReconstruction3D(unittest.TestCase):
+class TestReconstruction3D(unittest.TestCase):
     def setUp(self):
         np.random.seed(1234)
         # Set simulation parameters similar to the provided example.
@@ -428,7 +445,7 @@ class TesReconstruction3D(unittest.TestCase):
         import copy
         illumination_reconstruction = copy.deepcopy(self.illumination).project_in_quasi_2D()
         # illumination_reconstruction = IlluminationPlaneWaves2D.init_from_3D(illumination_reconstruction)
-        m1, m2 = 1, 1
+        m1, m2 = 10, 5
         for r in range(illumination_reconstruction.Mr):
             illumination_reconstruction.harmonics[(r, (1, 0, 0))].amplitude *= m1
             illumination_reconstruction.harmonics[(r, (-1, 0, 0))].amplitude *= m1
