@@ -56,13 +56,13 @@ if __name__ == "__main__":
     two_NA_fy = fy / (2 * NA)
     two_NA_fz = fz / nmedium / (1 - np.cos(alpha))
     
-    if not os.path.exists(current_dir + '/optical_system3D_vectorial.pkl'):
+    if not os.path.exists(current_dir + '/Data/optical_system3D_vectorial.pkl'):
         optical_system = System4f3D(alpha=alpha, refractive_index_medium=nmedium, refractive_index_sample=nsample)
         optical_system.compute_psf_and_otf((psf_size, (Nl, Nl, Nz)), high_NA=True, vectorial=True)
-        with open(current_dir + '/optical_system3D_vectorial.pkl', 'wb') as f:
+        with open(current_dir + '/Data/optical_system3D_vectorial.pkl', 'wb') as f:
             pickle.dump(optical_system, f)
     else:
-        with open(current_dir + '/optical_system3D_vectorial.pkl', 'rb') as f:
+        with open(current_dir + '/Data/optical_system3D_vectorial.pkl', 'rb') as f:
             optical_system = pickle.load(f)
 
     illumination_conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 0.5, 1, Mr=3, Mt=1, dimensionality=3)

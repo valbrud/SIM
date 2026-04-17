@@ -74,7 +74,7 @@ noise_estimator_finite_conventional = SSNRCalculator.SSNRSIM3D(illumination_conv
 
 # ...existing code...
 
-csv_file = current_dir + '/optimal_notch_kernel_filtering.csv'
+csv_file = current_dir + '/Data/optimal_notch_kernel_filtering.csv'
 
 # Load existing data if file exists, else create empty DataFrame
 if os.path.exists(csv_file):

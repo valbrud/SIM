@@ -102,20 +102,20 @@ print(illumination.angles)
 
 simulator = SIMulator3D(illumination, optical_system, readout_noise_variance=1)
 regenerate = True
-if not os.path.exists(current_dir + '/noisy_cells.pkl') or regenerate:
+if not os.path.exists(current_dir + '/simulation_data/noisy_cells.pkl') or regenerate:
     print("Regenerating SIM images")
     sim_images = simulator.generate_noiseless_sim_images(image, debug=True)
     noisy_images = simulator.add_noise(sim_images)
-    pickle.dump(noisy_images, open(current_dir + '/clean_cells.pkl', 'wb'))
-    pickle.dump(noisy_images, open(current_dir + '/noisy_cells.pkl', 'wb'))
+    pickle.dump(noisy_images, open(current_dir + '/simulation_data/clean_cells.pkl', 'wb'))
+    pickle.dump(noisy_images, open(current_dir + '/simulation_data/noisy_cells.pkl', 'wb'))
 else:
-    # sim_images = pickle.load(open(current_dir + '/clean_cells.pkl', 'rb'))
-    # noisy_images = pickle.load(open(current_dir + '/noisy_cells.pkl', 'rb'))
-    noisy_images = tifffile.imread(current_dir+'\\simulated_cell.tiff')
+    # sim_images = pickle.load(open(current_dir + '/simulation_data/clean_cells.pkl', 'rb'))
+    # noisy_images = pickle.load(open(current_dir + '/simulation_data/noisy_cells.pkl', 'rb'))
+    noisy_images = tifffile.imread(current_dir+'\\simulation_data\\simulated_cell.tiff')
 cut_off_frequency_l = 1 / (4 * dx)
 import copy
 
-# tifffile.imwrite("simulated_cell.tiff", noisy_images)
+# tifffile.imwrite("simulation_data\\simulated_cell.tiff", noisy_images)
 
 illumination_reconstruction_unmodulated = copy.deepcopy(illumination).project_in_quasi_2D()
 illumination_reconstruction_modulated = copy.deepcopy(illumination_reconstruction_unmodulated)
