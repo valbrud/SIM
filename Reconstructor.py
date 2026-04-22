@@ -208,6 +208,8 @@ class ReconstructorFourierDomain(ReconstructorSIM):
 
     @ReconstructorSIM.kernel.setter
     def kernel(self, new_kernel):
+        # plt.imshow(new_kernel.imag)
+        # plt.show()
         self._kernel = utils.expand_kernel(new_kernel, self.optical_system.otf.shape)
         _, self.effective_kernels = self.illumination.compute_effective_kernels(self._kernel, self.optical_system.psf_coordinates)
 

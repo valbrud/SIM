@@ -1,5 +1,5 @@
 """
-aberration_estimation_no_kernels.py
+aberration_estimation_ssnr_based.py
 
 This module implements aberration estimation for SIM without relying on
 user-supplied convolution kernels. Instead, it decomposes the SIM reconstruction

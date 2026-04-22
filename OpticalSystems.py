@@ -293,7 +293,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
         # return OpticalSystem.known_pupil_elements[pupil_element](Nrho, Nphi)
     
     @abstractmethod
-    def get_uniform_pupil(self):
+    def get_transfer_function_support(self):
         """ 
         Returns a uniformly filled with ones pupil function. Beware that the coordinates of this one 
         are not equal to the rho and phi used elsewhere. This function computes the pupil function on a
@@ -357,7 +357,7 @@ class OpticalSystem2D(OpticalSystem):
     def compute_psf_and_otf(self) -> tuple[np.float64, np.float64]:
         pass
     
-    def get_uniform_pupil(self):
+    def get_transfer_function_support(self):
         rho = np.sqrt(self.q_grid[..., 0]**2 + self.q_grid[..., 1]**2)
         pupil_function = np.where(rho <= self.NA, 1., 0.)
         return pupil_function
@@ -445,10 +445,8 @@ class OpticalSystem3D(OpticalSystem):
                                            np.ndarray[tuple[int, int, int], np.float64]]: 
         pass
 
-    def get_uniform_pupil(self):
-        rho = np.sqrt(self.q_grid[..., 0, 0]**2 + self.q_grid[..., 0, 1]**2)
-        pupil_function = np.where(rho <= self.NA, 1., 0.)
-        return pupil_function
+    def get_transfer_function_support(self):
+        return np.uint8(utils.build_edwald_sphere_mask(self.q_grid, np.zeros(3), self.NA / np.sin(self.alpha), self.alpha))
 
 
     def project_in_2D(self):
@@ -638,7 +636,11 @@ class System4f2D(System4f2DCoherent):
             if self.computed_size:
                 psf = utils.expand_kernel(psf, (self.psf_coordinates[0].size, self.psf_coordinates[1].size))
 
-        self._otf = hpc_utils.wrapped_fftn(psf).real
+        self._otf = hpc_utils.wrapped_fftn(psf)
+        # fig, ax = plt.subplots(1, 2)
+        # ax[0].imshow(np.log1p(np.real(self.otf)))
+        # ax[1].imshow(np.log1p(np.imag(self.otf)))
+        # plt.show()
         self._psf = psf.real
         
         self._normalize_psf__and_otf()
@@ -704,7 +706,7 @@ class System4f3D(System4f3DCoherent):
                 RHO=RHO,
                 PHI=PHI,)
 
-        self._otf = hpc_utils.wrapped_fftn(psf).real
+        self._otf = hpc_utils.wrapped_fftn(psf)
         self._psf = psf.real
 
         self._normalize_psf__and_otf()

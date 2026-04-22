@@ -34,6 +34,45 @@ import hpc_utils
 from matplotlib.widgets import Slider
 from scipy.interpolate import RBFInterpolator, NearestNDInterpolator
 
+def build_circular_mask(q_grid: np.ndarray, q_center: np.ndarray, q_radius: float):
+    """
+    Builds a circular mask in the frequency domain.
+
+    Args:
+        q_grid (np.ndarray): Grid of frequency coordinates.
+        q_center (np.ndarray): Center of the circular mask.
+        q_radius (float): Radius of the circular mask.
+    Returns:
+        np.ndarray: Circular mask.
+    """
+    Qx, Qy= q_grid[..., 0], q_grid[..., 1]
+    qx_center, qy_center = q_center
+
+    distance_from_center = np.sqrt((Qx - qx_center) ** 2 + (Qy - qy_center) ** 2)
+    circular_mask = distance_from_center <= q_radius
+    return circular_mask
+
+def build_edwald_sphere_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius: float, angle_cutoff: float):
+    """
+    Builds a spherical mask in the frequency domain representing the Ewald sphere.
+    """
+    Qx, Qy, Qz = q_grid[..., 0], q_grid[..., 1], q_grid[..., 2]
+    qx_center, qy_center, qz_center = q_center
+
+    distance_from_center = np.sqrt((Qx - qx_center)**2 + (Qy - qy_center)**2 + (Qz - qz_center)**2)
+    angle = np.arccos((Qz - qz_center) / (distance_from_center + 1e-12))
+
+    sphere_mask = distance_from_center <= q_radius
+    interior_mask = scipy.ndimage.binary_dilation(sphere_mask, iterations=1)
+    sphere_mask = ~sphere_mask & interior_mask
+    sphere_mask = sphere_mask & (angle <= angle_cutoff)
+    # plt.imshow(sphere_mask[48, :, :], cmap='gray')
+    # plt.show()  
+    # _, _, slider = imshow3D(0.01 + np.float32(sphere_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
+    # plt.title('Ewald Sphere Mask')
+    # plt.show()
+    return sphere_mask
+
 
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:

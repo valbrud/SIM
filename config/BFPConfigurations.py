@@ -11,7 +11,7 @@ class BFPConfiguration:
         self.k = 2 * np.pi * self.n / wavelength
 
     def get_widefield(self, dimensionality=3):
-
+        
         widefield = {
             (0, 0, 0): Sources.IntensityHarmonic3D(1, 0, np.array((0, 0, 0)))
         }

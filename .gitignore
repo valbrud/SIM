@@ -9,7 +9,7 @@ env/
 doc/_build/
 papers/**/*.pkl
 papers/**/*.tif*
-papers/local_ssnr_filtering/simulation_data/
+papers/real_space_reconstructions/simulation_data/
 papers/sim_optimality_aspects/
 Figures/
 __pycache__/
