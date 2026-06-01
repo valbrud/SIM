@@ -473,7 +473,7 @@ class TestReconstruction3D(unittest.TestCase):
         self.sim_images *= mask[None, None, :, :, :]
         self.noisy_images *= mask[None, None, :, :, :]
         self.widefield = np.sum(self.noisy_images, axis=(0,1))
-        apodization = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, self.illumination)
+        apodization = Apodization.ApodizationAutocorrelationSIM3D(self.optical_system, self.illumination)
         apodization_filter = apodization.ideal_otf
 
         reconstructed_image = spatial_reconstructor.reconstruct(self.noisy_images, backend='gpu') 
@@ -500,7 +500,7 @@ class TestReconstruction3D(unittest.TestCase):
         widefield = reconstructor_widefield.reconstruct(self.widefield[None, None, :, :, :])
         # plt.plot(np.log1p(1 + 10**8 * np.real(ssnr_calc.dj[:, self.N//2, self.N//2].T)))
         # plt.show()
-        apodization_widefield = Apodization.AutoconvolutionApodizationSIM3D(self.optical_system, illumination_widefield, plane_wave_wavevectors=[np.array((0, 0, 0))])
+        apodization_widefield = Apodization.ApodizationAutocorrelationSIM3D(self.optical_system, illumination_widefield, plane_wave_wavevectors=[np.array((0, 0, 0))])
         # reconstructed_image_ft *= np.where(np.abs(apodization_filter) > 10**-6, 1, 0)
         widefield_ft = hpc_utils.wrapped_fftn(widefield) * np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)
         # plt.imshow(np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)[:, self.N//2, :])

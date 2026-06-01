@@ -151,9 +151,9 @@ kernel=combined_low_pass_notch_kernel(pixel_size=(dx, dx), first_zero_frequency_
 
 illumination_widefield = BFPConfiguration(refraction_index=1.5).get_widefield(3)
 
-apodization = Apodization.AutoconvolutionApodizationSIM3D(optical_system, illumination)
+apodization = Apodization.ApodizationAutocorrelationSIM3D(optical_system, illumination)
 apodization_filter = apodization.ideal_otf
-apodization_widefield = Apodization.AutoconvolutionApodizationSIM3D(optical_system, illumination_widefield, plane_wave_wavevectors=[np.array((0, 0, 0))])
+apodization_widefield = Apodization.ApodizationAutocorrelationSIM3D(optical_system, illumination_widefield, plane_wave_wavevectors=[np.array((0, 0, 0))])
 
 optical_system.otf = optical_system.otf * np.where(apodization_widefield.ideal_otf > 10**-3, 1, 0)
 

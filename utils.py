@@ -59,21 +59,52 @@ def build_edwald_sphere_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius: 
     Qx, Qy, Qz = q_grid[..., 0], q_grid[..., 1], q_grid[..., 2]
     qx_center, qy_center, qz_center = q_center
 
+    if np.isclose(q_center[2], 0, atol=1e-3):
+        pass
+
     distance_from_center = np.sqrt((Qx - qx_center)**2 + (Qy - qy_center)**2 + (Qz - qz_center)**2)
     angle = np.arccos((Qz - qz_center) / (distance_from_center + 1e-12))
 
     sphere_mask = distance_from_center <= q_radius
-    interior_mask = scipy.ndimage.binary_dilation(sphere_mask, iterations=1)
-    sphere_mask = ~sphere_mask & interior_mask
+    interior_mask = scipy.ndimage.binary_erosion(sphere_mask, iterations=1)
+    sphere_mask = sphere_mask & ~interior_mask
     sphere_mask = sphere_mask & (angle <= angle_cutoff)
     # plt.imshow(sphere_mask[48, :, :], cmap='gray')
     # plt.show()  
-    # _, _, slider = imshow3D(0.01 + np.float32(sphere_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
+    # _, _, slider = imshow3D( np.float32(sphere_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
     # plt.title('Ewald Sphere Mask')
     # plt.show()
     return sphere_mask
 
+def build_edwald_demicylinder_mask(q_grid:np.ndarray, q_center: np.ndarray, q_radius: float, angle_cutoff: float):
+    """
+    Builds a cylindrical mask in the frequency domain representing the Ewald cylinder.
+    """
+    Qx, Qy, Qz = q_grid[..., 0], q_grid[..., 1], q_grid[..., 2]
+    qx_center, qy_center, qz_center = q_center
 
+    distance_from_center = np.sqrt((Qx - qx_center)**2 + (Qy - qy_center)**2 + (Qz - qz_center)**2)
+    # angle = np.arccos((Qz - qz_center) / (distance_from_center + 1e-12))
+    q_bottom = 0
+    q_top = q_center[2] + q_center[2] * np.cos(angle_cutoff)
+    sphere_mask = distance_from_center <= q_radius
+    # _, _, slider = imshow3D( np.float32(sphere_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
+    # plt.title('Ewald Sphere Mask')
+    # plt.show()
+    sphere_mask = sphere_mask & (Qz >= q_top) & (Qz >= q_bottom)
+    # _, _, slider = imshow3D( np.float32(sphere_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
+    # plt.title('Ewald Sphere Mask angle filtered')
+    # plt.show()
+
+    qr_cylinder = q_radius * np.sin(angle_cutoff)
+
+    cylinder_mask = (distance_from_center <= qr_cylinder) & (Qz >= q_bottom) & (Qz <= q_top)
+
+    demicylinder_mask = cylinder_mask | sphere_mask
+    # _, _, slider = imshow3D( np.float32(demicylinder_mask), cmap='gray', mode='real', axis='z', vmin=0, vmax=1)
+    # plt.title('Ewald Cylinder Mask')
+    # plt.show()
+    return demicylinder_mask
     
 def off_grid_ft(array: np.ndarray, grid: np.ndarray, q_values: np.ndarray) -> np.ndarray:
     """

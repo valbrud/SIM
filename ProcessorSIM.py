@@ -30,7 +30,7 @@ import Camera
 import utils
 from deconvolution import richardson_lucy_skimage, bayesian_gaussian_frequency_estimate, image_of_maximal_surprise_estimate
 import WienerFiltering
-from Apodization import AutoconvolutionApodizationSIM
+from Apodization import AutocorrelationApodizationSIM
 
 class ProcessorSIM:
     """
@@ -85,7 +85,7 @@ class ProcessorSIM:
         self.illumination = illumination
         
         if not apodization_method is None:
-            self.apodization = AutoconvolutionApodizationSIM(optical_system=optical_system, illumination=illumination)
+            self.apodization = AutocorrelationApodizationSIM(optical_system=optical_system, illumination=illumination)
         self.kernel = self.optical_system.psf if kernel is None else kernel
         effective_kernels, effective_kernels_ft = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
         effective_psfs, effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates) \

@@ -84,7 +84,7 @@ if __name__ == "__main__":
     airy = kernels.psf_kernel2d(0, (dx, dx), f0)[:, :, None]
     airy_notch = kernels.combined_low_pass_notch_kernel(0, 0, (dx, dx), f0, f0)[:, :, None]
 
-    apodization = Apodization.AutoconvolutionApodizationSIM3D(optical_system, illumination)
+    apodization = Apodization.ApodizationAutocorrelationSIM3D(optical_system, illumination)
     apodization_function_ra = utils.average_rings3d(apodization.apodization_function, (fx, fx, fz))
     apodization_function_ra = np.where(apodization_function_ra.T > 1e-10, 1, 0)
     interior_mask = scipy.ndimage.binary_dilation(apodization_function_ra, iterations=1)

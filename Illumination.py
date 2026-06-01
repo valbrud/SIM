@@ -798,6 +798,20 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.harmonics[harmonic].amplitude = am[harmonic]
         return am
     
+    def clean_plane_waves(self, threshold=1e-3):
+        """
+        Remove plane waves with low amplitude.
+
+        Args:
+            threshold (float): Amplitude threshold for cleaning.
+        """
+        plane_waves_cleaned=[]
+        for plane_wave in self.source_electromagnetic_plane_waves:
+            if np.linalg.norm(np.array(plane_wave.field_vectors)) < threshold:
+                continue
+            plane_waves_cleaned.append(plane_wave)
+        self.source_electromagnetic_plane_waves = plane_waves_cleaned
+        
     def __eq__(self, other):
         """
         Compare illumination classes. 

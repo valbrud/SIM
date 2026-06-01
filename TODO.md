@@ -1,3 +1,4 @@
+- Replace apodization interpolation with the CZT
 - Fix problems with a changelog
 - Fix broken unittests
 - Fix 3D Camera class

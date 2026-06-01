@@ -151,7 +151,7 @@ if __name__ == "__main__":
     noise_estimator_finite_square = SSNRCalculator.SSNRSIM3D(illumination_square, optical_system, kernel)
     noise_estimator_finite_hexagonal = SSNRCalculator.SSNRSIM3D(illumination_hexagonal, optical_system, kernel)
 
-    apodization = Apodization.AutoconvolutionApodizationSIM3D(optical_system, illumination_conventional)
+    apodization = Apodization.ApodizationAutocorrelationSIM3D(optical_system, illumination_conventional)
     apodization_function_ra = utils.average_rings3d(apodization.apodization_function, (fx, fx, fz))
     apodization_function_ra = np.where(apodization_function_ra.T > 1e-10, 1, 0)
     interior_mask = scipy.ndimage.binary_dilation(apodization_function_ra, iterations=1)

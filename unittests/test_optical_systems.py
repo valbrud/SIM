@@ -25,10 +25,10 @@ configurations = BFPConfiguration()
 class TestOpticalSystems2D(unittest.TestCase):
     def test_pixel_size_correction(self):
         # Nyquist sampled
-        theta = np.pi / 4
-        alpha = np.pi / 4
-        dx = 1 / (4 * np.sin(alpha))
-        N = 101
+        theta = 8* np.pi/20
+        alpha = 8* np.pi/20
+        dx = 1 / (64 * np.sin(alpha))
+        N = 401
         max_r = N // 2 * dx
         optical_system = System4f2D(alpha=alpha * 0.5)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
@@ -39,24 +39,24 @@ class TestOpticalSystems2D(unittest.TestCase):
         plt.plot(fxn, optical_system.otf_with_pixel_size_correction[N//2, :])
         plt.show()
 
-        # Twice oversampled
-        dx = 1 / (16 * np.sin(alpha))
-        N = 101
-        max_r = N // 2 * dx
-        optical_system = System4f2D(alpha=alpha)
-        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
-        optical_system.compute_pixel_correction()
-        fxn = optical_system.otf_frequencies[0] / (2 * np.sin(alpha))
-        plt.plot(fxn, optical_system.otf[N//2, :])
-        plt.plot(fxn, optical_system.otf_pixel[N//2, :])
-        plt.plot(fxn, optical_system.otf_with_pixel_size_correction[N//2, :])
-        plt.show()
+        # # Twice oversampled
+        # dx = 1 / (16 * np.sin(alpha))
+        # N = 101
+        # max_r = N // 2 * dx
+        # optical_system = System4f2D(alpha=alpha)
+        # optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
+        # optical_system.compute_pixel_correction()
+        # fxn = optical_system.otf_frequencies[0] / (2 * np.sin(alpha))
+        # plt.plot(fxn, optical_system.otf[N//2, :])
+        # plt.plot(fxn, optical_system.otf_pixel[N//2, :])
+        # plt.plot(fxn, optical_system.otf_with_pixel_size_correction[N//2, :])
+        # plt.show()
 
-        # Extreme pixel_size + vectorial corrections
-        theta = 2 * np.pi / 12
-        alpha = 2 * np.pi / 12
-        dx = 1 / (8 * np.sin(alpha))
-        N = 101
+        # # Extreme pixel_size + vectorial corrections
+        # theta = 2 * np.pi / 12
+        # alpha = 2 * np.pi / 12
+        # dx = 1 / (8 * np.sin(alpha))
+        # N = 101
         max_r = N // 2 * dx
         optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf_coordinates(np.array((2 * max_r, 2 * max_r)), N)
@@ -76,12 +76,30 @@ class TestOpticalSystems2D(unittest.TestCase):
         plt.plot(fxn, optical_system.otf_with_pixel_size_correction[N//2, :], label='vectorial high_NA + pixel correction')
         plt.gca().legend()
         plt.show()
+
+
+        optical_system.high_NA = False
+        optical_system.vectorial = False
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
+        plt.plot(fxn, optical_system.psf[N//2, :], label='scalar paraxial')
+        optical_system.high_NA = True
+        optical_system.vectorial = False
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
+        plt.plot(fxn, optical_system.psf[N//2, :], label='scalar high_NA')
+        psf_scalar = optical_system.psf
+        optical_system.high_NA = True
+        optical_system.vectorial = True
+        optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N)) 
+        psf_vectorial = optical_system.psf
+        plt.plot(fxn, optical_system.psf[N//2, :], label='vectorial high_NA')
+        plt.gca().legend()
+        plt.show()
         
     def test_energy_distribution(self):
         theta = np.pi / 4
         alpha = np.pi / 4
         dx = 1 / (8 * np.sin(alpha))
-        N = 41
+        N = 101
         max_r = N // 2 * dx
         optical_system = System4f2D(alpha=alpha)
         optical_system.compute_psf_and_otf((np.array((2 * max_r, 2 * max_r)), N))
@@ -93,7 +111,7 @@ class TestOpticalSystems2D(unittest.TestCase):
             # "SquareC" : illumination_circular,
             # "Hexagonal" : illumination_seven_waves,
             # "Conventional 3D" : illumination_3waves,
-            "Conventional 2D" : illumination_2waves,
+            # "Conventional 2D" : illumination_2waves,
             "Widefield" : illumination_widefield,
         }
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -104,7 +122,7 @@ class TestOpticalSystems2D(unittest.TestCase):
         ax.grid()
         for config in configs:
             illumination = configs[config]
-            effective_otfs = optical_system.compute_effective_otfs_2dSIM(illumination)
+            _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
             otf_sim = np.zeros(optical_system.otf.shape, dtype = np.complex128)
             for otf in effective_otfs:
                 otf_sim += effective_otfs[otf]

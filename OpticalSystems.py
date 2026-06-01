@@ -99,7 +99,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     
     @property
     def psf_with_pixel_size_correction(self):
-        corrected_psf = hpc_utils.wrapped_iffn(self.pixel_size_corrected_otf)
+        corrected_psf = hpc_utils.wrapped_ifftn(self.otf_with_pixel_size_correction)
         return corrected_psf / np.sum(corrected_psf)
     
     @property
@@ -730,7 +730,9 @@ class PointScanningImagingSystem(OpticalSystem):
                  optical_system_detection, 
                  aperture = None, 
                  interpolation_method = "linear",
-                 normalize_otf = True):
+                 normalize_otf = True, 
+                 pinhole_radius = 1,  #in Airy in accordance with common conventions
+                 ):
         
         if not isinstance(optical_system_excitation, OpticalSystem):
             raise TypeError("optical_system_excitation must be an instance of OpticalSystem")
@@ -748,6 +750,15 @@ class PointScanningImagingSystem(OpticalSystem):
         
         self.optical_system_excitation = optical_system_excitation
         self.optical_system_detection = optical_system_detection
+        self.aperture = None
+        self.pinhole_radius = pinhole_radius
+        if aperture is None and (pinhole_radius <= 0 or pinhole_radius is None):
+            return AttributeError("Explicit aperture function and pinhole radius for circular aperture are not provided!")
+        
+        if aperture is None: 
+            x, y = self.psf_coordinates[0], self.psf_coordinates[1]
+            R = (x[:, None]**2 + y[None, :]**2)**0.5
+            self.aperture = R[R < self.pinhole_radius * 1.22 / self.optical_system_detection.NA]
 
 class PointScanningImagingSystem2D(PointScanningImagingSystem):
     ... 
@@ -781,7 +792,50 @@ class Confocal(PointScanningImagingSystem):
 
 
 class RCM(PointScanningImagingSystem):
-    ...
+    def _integrate_rescan_otf(self, otf_excitation, otf_detection, aperture_ft, rescan_magnification):
+        pass
+
+    def compute_psf_and_otf(self, parameters=None,
+                        recompute_excitation_psf = False, 
+                        recompute_detection_psf = False, 
+                        pupil_element=None,
+                        pupil_function=None, 
+                        zernieke_excitation={}, 
+                        zernieke_detection={}, 
+                        ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                                            np.ndarray[tuple[int, int, int], np.float64]]:
+    
+        if self.psf_coordinates is None and parameters is None and pupil_function is None:
+            raise AttributeError("Compute psf first or provide psf parameters")
+        
+        elif parameters is not None:
+            psf_size, N = parameters
+            self.compute_psf_and_otf_coordinates(psf_size, N)
+        
+        if recompute_excitation_psf: 
+            psf_excitation, otf_excitation = self.optical_system_excitation.compute_psf_and_otf(self, parameters,
+                            pupil_element,
+                            pupil_function, 
+                            zernieke_excitation, )
+        else: 
+            psf_excitation, otf_excitation = self.optical_system_excitation.psf, self.optical_system_excitation.psf
+            if psf_excitation is None: 
+                return AttributeError("Excitation PSF is not computed, set 'recompute_excitation_psf' parameter to True!")
+        
+        if recompute_detection_psf:
+            psf_detection, otf_detection = self.optical_system_detection.compute_psf_and_otf(self, parameters,
+                        pupil_element,
+                        pupil_function, 
+                        zernieke_detection, )
+        else:
+            psf_detection, otf_detection = self.optical_system_detection.psf, self.optical_system_detection.otf
+            if psf_detection is None: 
+                return AttributeError("Detection PSF is not computed, set 'recompute_detection_psf' parameter to True!")
+        
+        aperture_ft = hpc_utils.wrapped_fftn(self.aperture)
+
+        rescan_otf = self._integrate_rescan_otf(otf_excitation, otf_detection, aperture_ft, rescan_magnification)
+
 
 class ISM(PointScanningImagingSystem):
     ...
