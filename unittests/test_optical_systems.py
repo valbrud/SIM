@@ -513,15 +513,15 @@ class TestConstructPupilAberration(unittest.TestCase):
 
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
         aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(4, 0): 0.072})
+                                                                          zernike={(4, 0): 0.072})
         
         # plt.plot(non_aberrated_otf[N//2, N//2:], label='Non-aberrated OTF') 
         # plt.plot(aberrated_otf_spherical[N//2, N//2:], label='Spherical Aberration OTF') 
         # plt.show()
         aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(3, 1): 0.072})
+                                                                          zernike={(3, 1): 0.072})
         aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(2, -2): 0.072})
+                                                                          zernike={(2, -2): 0.072})
         aberrated_psfs = [aberrated_psf_spherical, aberrated_psf_comma, aberrated_psf_astigmatism]
         aberrated_otfs = [aberrated_otf_spherical, aberrated_otf_comma, aberrated_otf_astigmatism]
         i = 0
@@ -607,11 +607,11 @@ class TestConstructPupilAberration(unittest.TestCase):
 
         non_aberrated_psf, non_aberrated_otf = optical_system.compute_psf_and_otf((psf_size, N))
         aberrated_psf_spherical, aberrated_otf_spherical = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(4, 0): 0.144})
+                                                                          zernike={(4, 0): 0.144})
         aberrated_psf_comma, aberrated_otf_comma = optical_system.compute_psf_and_otf((psf_size, N),
-                                                                          zernieke={(3, 1): 0.144})
+                                                                          zernike={(3, 1): 0.144})
         aberrated_psf_astigmatism, aberrated_otf_astigmatism = optical_system.compute_psf_and_otf((psf_size, N), 
-                                                                          zernieke={(2, 2): 0.144})
+                                                                          zernike={(2, 2): 0.144})
         # normalized_paraxial_psf = low_NA_psf / np.amax(low_NA_psf)
         # normalized_high_NA_psf = high_NA_psf / np.amax(high_NA_psf)
         # print(np.sum(low_NA_psf), np.sum(high_NA_psf))

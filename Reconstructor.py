@@ -75,6 +75,19 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
         **kwargs
             Additional keyword arguments.
         """
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            unitary=(unitary, bool),
+        )
+        if optical_system is not None and not isinstance(optical_system, OpticalSystem):
+            raise TypeError(f"optical_system must be of type OpticalSystem when provided, got {type(optical_system).__name__}.")
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if phase_modulation_patterns is not None and not isinstance(phase_modulation_patterns, (dict, np.ndarray)):
+            raise TypeError(
+                "phase_modulation_patterns must be of type dict or ndarray when provided, "
+                f"got {type(phase_modulation_patterns).__name__}."
+            )
         self.illumination = illumination
         self._optical_system = optical_system
 
@@ -181,6 +194,24 @@ class ReconstructorFourierDomain(ReconstructorSIM):
             Whether to return the Fourier transform instead of the spatial image.
 
         """
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            return_ft=(return_ft, bool),
+            unitary=(unitary, bool),
+        )
+        if optical_system is not None and not isinstance(optical_system, OpticalSystem):
+            raise TypeError(f"optical_system must be of type OpticalSystem when provided, got {type(optical_system).__name__}.")
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if phase_modulation_patterns is not None and not isinstance(phase_modulation_patterns, (dict, np.ndarray)):
+            raise TypeError(
+                "phase_modulation_patterns must be of type dict or ndarray when provided, "
+                f"got {type(phase_modulation_patterns).__name__}."
+            )
+        if effective_kernels is not None and not isinstance(effective_kernels, (dict, np.ndarray)):
+            raise TypeError(
+                f"effective_kernels must be of type dict or ndarray when provided, got {type(effective_kernels).__name__}."
+            )
         
         super().__init__(illumination,
                          optical_system,
@@ -273,9 +304,9 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                         # plt.show()
                 # m_inv = tuple([-mi for mi in m])
                 # fig, ax = plt.subplots(1, 2)
-                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft[..., 10]).T), cmap='gray', origin='lower')
+                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft[...]).T), cmap='gray', origin='lower')
                 # ax[0].set_title(f'R={r}, m={m}')
-                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)][..., 10].T)), cmap='gray', origin='lower')
+                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)][...].T)), cmap='gray', origin='lower')
                 # ax[1].set_title(f'kernel in the rec R={r}, m={m}')
                 # plt.show()
                 image1rotation_ft += sum_shifts_ft * self.effective_kernels[(r, m)].conjugate()
@@ -305,6 +336,19 @@ class ReconstructorSpatialDomain(ReconstructorSIM):
                  unitary=False,
                  **kwargs
                  ):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            unitary=(unitary, bool),
+        )
+        if optical_system is not None and not isinstance(optical_system, OpticalSystem):
+            raise TypeError(f"optical_system must be of type OpticalSystem when provided, got {type(optical_system).__name__}.")
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if phase_modulation_patterns is not None and not isinstance(phase_modulation_patterns, (dict, np.ndarray)):
+            raise TypeError(
+                "phase_modulation_patterns must be of type dict or ndarray when provided, "
+                f"got {type(phase_modulation_patterns).__name__}."
+            )
         
         super().__init__(illumination,
                          optical_system,

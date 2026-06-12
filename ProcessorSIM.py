@@ -44,7 +44,7 @@ class ProcessorSIM:
     pattern_estimation_methods = ('CrossCorrelation')
     
     def __init__(self,
-                 illumination: Illumination.IlluminationPlaneWaves,
+                 illumination: Illumination.PlaneWavesSIM,
                  optical_system: OpticalSystems.OpticalSystem,
                  kernel: np.ndarray=None,
                  spatial_domain: bool=False,
@@ -60,6 +60,29 @@ class ProcessorSIM:
                  prioritize_memory: bool=False, 
                  wiener_constant: float = 1e-6, 
                  ):
+        utils.validate_init_types(
+            illumination=(illumination, Illumination.PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystems.OpticalSystem),
+            spatial_domain=(spatial_domain, bool),
+            estimate_ssnr=(estimate_ssnr, bool),
+            estimate_patterns_from_data=(estimate_patterns_from_data, bool),
+            mpi_optimization=(mpi_optimization, bool),
+            cuda_optimization=(cuda_optimization, bool),
+            prioritize_memory=(prioritize_memory, bool),
+            wiener_constant=(wiener_constant, (int, float, np.integer, np.floating)),
+        )
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if deconvolution_method is not None and not isinstance(deconvolution_method, str):
+            raise TypeError(f"deconvolution_method must be of type str when provided, got {type(deconvolution_method).__name__}.")
+        if regularization_method is not None and not isinstance(regularization_method, str):
+            raise TypeError(f"regularization_method must be of type str when provided, got {type(regularization_method).__name__}.")
+        if apodization_method is not None and not isinstance(apodization_method, str):
+            raise TypeError(f"apodization_method must be of type str when provided, got {type(apodization_method).__name__}.")
+        if pattern_estimation_method is not None and not isinstance(pattern_estimation_method, str):
+            raise TypeError(f"pattern_estimation_method must be of type str when provided, got {type(pattern_estimation_method).__name__}.")
+        if camera is not None and not isinstance(camera, Camera.Camera):
+            raise TypeError(f"camera must be of type Camera when provided, got {type(camera).__name__}.")
         
         if illumination.dimensionality != optical_system.dimensionality:
             raise ValueError(f"Illumination and optical system dimensionality do not match: {illumination.dimensionality} vs {optical_system.dimensionality}.")

@@ -43,6 +43,16 @@ from SSNRCalculator import SSNRSIM2D, SSNRSIM3D
 
 class ApodizationSIM(metaclass=DimensionMetaAbstract):
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray], Ndense: int = 201):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystem),
+            illumination=(illumination, Illumination.PlaneWavesSIM),
+            Ndense=(Ndense, (int, np.integer)),
+        )
+        if plane_wave_wavevectors is not None and not isinstance(plane_wave_wavevectors, (list, tuple)):
+            raise TypeError(
+                "plane_wave_wavevectors must be of type list or tuple when provided, "
+                f"got {type(plane_wave_wavevectors).__name__}."
+            )
         self.optical_system = optical_system
         self.illumination = illumination
         if plane_wave_wavevectors: 
@@ -136,6 +146,10 @@ class TriangularApodization(metaclass=DimensionMetaAbstract):
         power (float): Exponent controlling the roll-off steepness.
     """
     def __init__(self, transfer_function, power=1):
+        utils.validate_init_types(
+            transfer_function=(transfer_function, np.ndarray),
+            power=(power, (int, float, np.integer, np.floating)),
+        )
         self._transfer_function = transfer_function
         self._apodization_function = None
         self._power = power
@@ -184,6 +198,13 @@ class TriangularApodizationSIM(ApodizationSIM, TriangularApodization):
     from a sum of effective OTFs, then applies the triangular roll-off.
     """
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, power=1, noise_cutoff=10**-4, Ndense=201):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystem),
+            illumination=(illumination, Illumination.PlaneWavesSIM),
+            power=(power, (int, float, np.integer, np.floating)),
+            noise_cutoff=(noise_cutoff, (int, float, np.integer, np.floating)),
+            Ndense=(Ndense, (int, np.integer)),
+        )
         super().__init__(optical_system, illumination, plane_wave_wavevectors=None, Ndense=Ndense)
         effective_otf = np.zeros(self._get_dense_grid().shape[:-1], dtype=np.float64)
         for r in range(self.illumination.Mr):
@@ -276,6 +297,9 @@ class AutocorrelationApodization(ABC):
     
 class AutocorrelationApodizationWidefield(AutocorrelationApodization):
     def __init__(self, optical_system: OpticalSystem):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystem),
+        )
         self._optical_system = optical_system
         super().__init__()
         
@@ -291,6 +315,10 @@ class AutocorrelationApodizationWidefield(AutocorrelationApodization):
 
 class AutocorrelationApodizationPointScanning(AutocorrelationApodizationWidefield):
     def __init__(self, ctf_support_exitation, ctf_support_detection):
+        utils.validate_init_types(
+            ctf_support_exitation=(ctf_support_exitation, np.ndarray),
+            ctf_support_detection=(ctf_support_detection, OpticalSystem),
+        )
         self._ctf_support_exitation = ctf_support_exitation
         super().__init__(ctf_support_detection)
 
@@ -328,6 +356,16 @@ AutocorrelationApodizationRCM = AutocorrelationApodizationPointScanning
 
 class AutocorrelationApodizationSIM(ApodizationSIM, AutocorrelationApodization):
     def __init__(self, optical_system: OpticalSystem, illumination: Illumination.PlaneWavesSIM, plane_wave_wavevectors: list[np.ndarray] = None, Ndense: int = 201):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystem),
+            illumination=(illumination, Illumination.PlaneWavesSIM),
+            Ndense=(Ndense, (int, np.integer)),
+        )
+        if plane_wave_wavevectors is not None and not isinstance(plane_wave_wavevectors, (list, tuple)):
+            raise TypeError(
+                "plane_wave_wavevectors must be of type list or tuple when provided, "
+                f"got {type(plane_wave_wavevectors).__name__}."
+            )
         super().__init__(optical_system, illumination, plane_wave_wavevectors, Ndense=Ndense)
         AutocorrelationApodization.__init__(self)
 
@@ -359,7 +397,7 @@ class AutocorrelationApodizationSIM2D(AutocorrelationApodizationSIM, Apodization
         super().__init__(optical_system, illumination, plane_wave_wavevectors, Ndense=Ndense)
 
 
-class ApodizationAutocorrelationSIM3D(AutocorrelationApodizationSIM, ApodizationSIM3D):
+class AutocorrelationApodizationSIM3D(AutocorrelationApodizationSIM, ApodizationSIM3D):
     dimensionality = 3
     def __init__(self, optical_system: OpticalSystem3D, illumination: Illumination.IlluminationPlaneWaves3D, plane_wave_wavevectors: list[np.ndarray] = None, Ndense: int = 201):
         super().__init__(optical_system, illumination, plane_wave_wavevectors, Ndense=Ndense)

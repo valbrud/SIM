@@ -80,7 +80,7 @@ with open("Aberrations_widefield.csv", 'w', newline='') as file:
         for configuration in config_methods:
             for power in aberration_power:
                 illumination = config_methods[configuration]
-                optical_system.compute_psf_and_otf(high_NA=True, integrate_rho=True, zernieke={aberrations[aberration]: power * RMS})
+                optical_system.compute_psf_and_otf(high_NA=True, integrate_rho=True, zernike={aberrations[aberration]: power * RMS})
                 ssnr_calc = SSNRSIM3D(illumination, optical_system)
                 ssnr = ssnr_calc.ssnri
                 # plt.imshow(np.log(1 + 10**8 * ssnr[:, N//2, :]))

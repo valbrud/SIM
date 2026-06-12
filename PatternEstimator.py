@@ -46,6 +46,7 @@ from VectorOperations import VectorOperations
 from wrappers import wrapped_fftn, wrapped_ifftn
 from Dimensions import DimensionMetaAbstract
 from abc import abstractmethod
+import utils
 from utils import off_grid_ft
 import hpc_utils
 
@@ -73,6 +74,10 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
     debug_info_levels = (0, 1, 2)
 
     def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystem),
+        )
         self.illumination = illumination
         self.optical_system = optical_system
         if not self.illumination.dimensionality == self.optical_system.dimensionality:
@@ -475,6 +480,10 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
 
 class PeaksEstimator(metaclass=DimensionMetaAbstract):
     def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystem),
+        )
         self.illumination = illumination
         self.optical_system = optical_system
         if self.illumination.dimensionality != self.optical_system.dimensionality:
@@ -1350,6 +1359,11 @@ class PhasesEstimator:
     """
 
     def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem, first_order_phases_only: bool = True):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystem),
+            first_order_phases_only=(first_order_phases_only, bool),
+        )
         self.illumination = illumination
         self.optical_system = optical_system
         if self.illumination.dimensionality != self.optical_system.dimensionality:

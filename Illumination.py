@@ -105,6 +105,25 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             intensity_harmonics_dict (dict): Dictionary of illumination harmonics.
             Mr (int): Number of rotations.
         """
+        utils.validate_init_types(
+            intensity_harmonics_dict=(intensity_harmonics_dict, dict),
+            Mr=(Mr, (int, np.integer)),
+        )
+        if not isinstance(dimensions, (list, tuple, np.ndarray)):
+            raise TypeError(f"dimensions must be of type list, tuple, or ndarray, got {type(dimensions).__name__}.")
+        if spatial_shifts is not None and not isinstance(spatial_shifts, (list, tuple, np.ndarray)):
+            raise TypeError(
+                f"spatial_shifts must be of type list, tuple, or ndarray when provided, got {type(spatial_shifts).__name__}."
+            )
+        if angles is not None and not isinstance(angles, (list, tuple, np.ndarray)):
+            raise TypeError(
+                f"angles must be of type list, tuple, or ndarray when provided, got {type(angles).__name__}."
+            )
+        if source_electromagnetic_plane_waves is not None and not isinstance(source_electromagnetic_plane_waves, (list, tuple)):
+            raise TypeError(
+                "source_electromagnetic_plane_waves must be of type list or tuple when provided, "
+                f"got {type(source_electromagnetic_plane_waves).__name__}."
+            )
         self._Mr = len(angles) if angles is not None else Mr
         
         self.angles = np.array(angles) if angles is not None else np.arange(0, np.pi, np.pi / Mr)
@@ -930,31 +949,39 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
         illumination = cls(intensity_harmonics_dict, dimensions, Mr, spatial_shifts, angles, plane_waves)
         return illumination
     
-    def project_in_quasi_2D(self):
+    def project_in_quasi_2D(self, dz=None, return2D=False):
+        """
+        Project the 3D illumination pattern into a quasi-2D plane by averaging over the non-projective dimension(s).
+        If dz is not provided, preserves only a harmonic structure w.r.t common 3D SIM conventions. If dz is provided, considers the projection to be an actual 
+        slice of the illumination pattern at a given depth. 
+        
+        Args:
+            dz (float, optional): If provided, the projection is considered as an actual slice of the illumination pattern at a given depth.
+            return2D (bool, optional): If True, returns a 2D illumination pattern. Defaults to False.
+        """
         new_harmonics_dict = {}
-        # new_phase_matrix = {}
         for sim_index in self.rearranged_indices:
             off_plane_count = len(self.rearranged_indices[sim_index])
             for off_plane_index in self.rearranged_indices[sim_index]:
                 index = self.glue_indices(sim_index, off_plane_index)
                 harmonic = copy.deepcopy(self.harmonics[index])
-                harmonic.amplitude = np.abs(harmonic.amplitude)
-                harmonic.phase = 0
+                if dz is None:
+                    harmonic.amplitude = np.abs(harmonic.amplitude)
+                else:
+                    harmonic.amplitude *= np.exp(1j * harmonic.phase) * np.exp(1j * harmonic.wavevector[2] * dz)
+                
+                harmonic.phase=0
                 harmonic.wavevector = np.array([harmonic.wavevector[0], harmonic.wavevector[1], 0])
                 if not sim_index in new_harmonics_dict:
                     new_harmonics_dict[sim_index] = harmonic
                 else:
                     new_harmonics_dict[sim_index].amplitude += harmonic.amplitude
                 
-                # if self.phase_matrix is not None:   
-                    # for n in range(self.Mt):
-                        # new_phase_matrix[(sim_index[0], n, sim_index[1])] = self.phase_matrix[(index[0], n, index[1])]
-            new_harmonics_dict[sim_index].amplitude /= off_plane_count
+            if dz is None:
+                new_harmonics_dict[sim_index].amplitude /= off_plane_count
         illumination_projected = IlluminationPlaneWaves3D(new_harmonics_dict, self.dimensions, self.Mr, self.spatial_shifts, self.angles, self.source_electromagnetic_plane_waves)
-        illumination_projected.phase_matrix = self.phase_matrix
-        
-        # illumination_projected.phase_matrix = new_phase_matrix
-        return illumination_projected
+        illumination_projected.phase_matrix = self.phase_matrix        
+        return illumination_projected if not return2D else IlluminationPlaneWaves2D.init_from_3D(illumination_projected, self.dimensions[:2], force=False)
 
     @staticmethod
     def index_harmonics(waves_list: list[Sources.IntensityHarmonic3D], base_vector_lengths: tuple[float, float, float]) -> dict[tuple[int, int, int],

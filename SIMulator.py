@@ -22,6 +22,8 @@ from Illumination import PlaneWavesSIM
 from Camera import Camera
 from VectorOperations import VectorOperations
 from Dimensions import DimensionMeta, DimensionMetaAbstract
+import copy
+import utils
 
 class SIMulator(metaclass=DimensionMetaAbstract):
     """
@@ -75,6 +77,17 @@ class SIMulator(metaclass=DimensionMetaAbstract):
             Precomputed effective PSFs. If None, they will be computed from
             the optical system.
         """
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystem),
+            readout_noise_variance=(readout_noise_variance, (int, float, np.integer, np.floating)),
+        )
+        if camera is not None and not isinstance(camera, Camera):
+            raise TypeError(f"camera must be of type Camera when provided, got {type(camera).__name__}.")
+        if effective_psfs is not None and not isinstance(effective_psfs, (dict, np.ndarray)):
+            raise TypeError(
+                f"effective_psfs must be of type dict or ndarray when provided, got {type(effective_psfs).__name__}."
+            )
         self.optical_system = optical_system
         self.illumination = illumination
         self.readout_noise_variance = readout_noise_variance
@@ -186,7 +199,51 @@ class SIMulator(metaclass=DimensionMetaAbstract):
         """
         widefield_image = scipy.signal.convolve(image, self.optical_system.psf, mode='same')
         return widefield_image
+    
+    @abstractmethod
+    def generate_noiseless_thick_sample_sim_images(self, ground_truth, z_values, zernike = {}):
+        """
+        Abstract method to generate noiseless SIM images for a thick sample.
 
+        This method should be implemented by subclasses to simulate SIM imaging
+        of thick samples, where the ground truth is 3D and the PSF varies with depth.
+
+        Parameters
+        ----------
+        ground_truth : numpy.ndarray
+            The 3D ground truth image to simulate SIM imaging from.
+        z_values : numpy.ndarray
+            The z-values corresponding to each slice of the ground truth and PSF stack.
+        zernike : dict, optional
+            A dictionary of Zernike coefficients to apply to the PSF for each slice.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of shape (Mr, Mt, *psf_shape) containing the simulated noiseless SIM images for the thick sample.
+        """
+        pass
+
+    def generate_noisy_thick_sample_sim_images(self, ground_truth, z_values, zernike = {}):
+        """
+        Generate noisy SIM images for a thick sample.
+
+        This is a convenience method that first generates noiseless SIM images for a thick sample
+        and then adds noise to simulate realistic imaging conditions.
+
+        Parameters
+        ----------
+        ground_truth : numpy.ndarray
+            The 3D ground truth image to simulate SIM imaging from.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of shape (Mr, Mt, *psf_shape) containing the simulated noisy SIM images for the thick sample.
+        """
+        noiseless_images = self.generate_noiseless_thick_sample_sim_images(ground_truth, z_values, zernike=zernike)
+        noisy_images = self.add_noise(noiseless_images)
+        return noisy_images
 
 class SIMulator2D(SIMulator):
     """
@@ -208,6 +265,22 @@ class SIMulator2D(SIMulator):
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 
 
+    def generate_noiseless_thick_sample_sim_images(self, ground_truth, psf_stack): 
+        sim_images_stack = np.zeros((ground_truth.shape[0], self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        effective_psfs_default = self.effective_psfs
+        for i, psf in enumerate(psf_stack):
+            self.effective_psfs, _ = self.illumination.compute_effective_kernels(psf_stack[i], self.optical_system.psf_coordinates)
+            sim_images_stack[i] = self.generate_noiseless_sim_images(ground_truth[..., i])
+        
+        sim_images = np.sum(sim_images_stack, axis=0)
+        sim_images = np.real(sim_images) + 10**-10
+
+        self.effective_psfs = effective_psfs_default
+
+        return sim_images
+        
+
+    
 class SIMulator3D(SIMulator):
     """
     3D SIM image simulator.
@@ -227,3 +300,22 @@ class SIMulator3D(SIMulator):
             raise ValueError("The PSF must be 3D for 3D SIM simulations.")
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 
+
+    def generate_noiseless_thick_sample_sim_images(self, ground_truth, psf_stack, z_values): 
+        illumination_default = copy.deepcopy(self.illumination)
+        
+        sim_images_stack = np.zeros((ground_truth.shape[0], self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        effective_psfs_default = self.effective_psfs
+        for i, psf in enumerate(psf_stack):
+            for harmonic in self.illumination.harmonics:
+                self.illumination.harmonics[harmonic].amplitude = illumination_default.harmonics[harmonic].amplitude * np.exp(-2j * np.pi * illumination_default.harmonics[harmonic].wavevector[2] * z_values[i])
+            
+            self.effective_psfs, _ = self.illumination.compute_effective_kernels(psf, self.optical_system.psf_coordinates)
+            sim_images_stack[i] = self.generate_noiseless_sim_images(ground_truth[..., i])
+        
+        sim_images = np.sum(sim_images_stack, axis=0)
+        sim_images = np.real(sim_images) + 10**-10
+
+        self.effective_psfs = effective_psfs_default
+
+        return sim_images

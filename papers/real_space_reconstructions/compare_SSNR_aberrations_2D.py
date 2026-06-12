@@ -60,7 +60,7 @@ ssnr_ideal__fitlered_ideal_ra = ssnr_calc_ideal_filter_ideal.ring_average_ssnri(
 
 for aberration_strength in (0.072, 2 * 0.072):
     optical_system_aberrated = System4f2D(alpha=alpha, refractive_index=n, high_NA=True, vectorial=True)
-    optical_system_aberrated.compute_psf_and_otf((psf_size, N), zernieke={(4, 0):aberration_strength})
+    optical_system_aberrated.compute_psf_and_otf((psf_size, N), zernike={(4, 0):aberration_strength})
     
     ssnr_calc_ideal_filter_aberrated = SSNRSIM2D(illumination_conventional, optical_system, optical_system_aberrated.psf)
     ssnr_ideal_filtered_aberrated_ra = ssnr_calc_ideal_filter_aberrated.ring_average_ssnri()

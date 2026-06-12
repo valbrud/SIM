@@ -57,6 +57,11 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
     known_pupil_elements = {'vortex' : pupil_functions.make_vortex_pupil} 
 
     def __init__(self, interpolation_method: str, normalize_otf = 'True', computed_size: int = 0):
+        utils.validate_init_types(
+            interpolation_method=(interpolation_method, str),
+            normalize_otf=(normalize_otf, (bool, str)),
+            computed_size=(computed_size, (int, np.integer)),
+        )
         self._psf = None
         self._otf = None
         self._x_grid = None
@@ -242,7 +247,7 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             self._psf /= np.sum(self.psf)
             self._otf /= np.max(np.abs(self.otf))
 
-    def _get_pupil_function(self, RHO, PHI, pupil_element, pupil_function, zernieke={}) -> ndarray[tuple[int, int], np.complex128]:
+    def _get_pupil_function(self, RHO, PHI, pupil_element, pupil_function, zernike={}) -> ndarray[tuple[int, int], np.complex128]:
         
         if pupil_element and pupil_function is not None:
                 raise AttributeError("In the case of a custom pupil_function, pupil element is not accepted!")
@@ -254,9 +259,9 @@ class OpticalSystem(metaclass=DimensionMetaAbstract):
             if not pupil_function.shape == (RHO.shape[0], PHI.shape[1]):
                 raise AttributeError("Dimensions of the pupil_function don't match integration dimensions! ")
 
-        if zernieke:
+        if zernike:
             aberration_phase = pupil_functions.zernike_cartesian(
-                zernieke, RHO, PHI
+                zernike, RHO, PHI
             )
 
             aberration_function = np.exp(1j * 2 * np.pi * aberration_phase)
@@ -473,7 +478,7 @@ class System4f2DCoherent(OpticalSystem2D):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element="",
                             pupil_function=None, 
-                            zernieke={})\
+                            zernike={})\
             -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                      np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -490,7 +495,7 @@ class System4f2DCoherent(OpticalSystem2D):
         Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
         RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
-        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernike)
 
         psf = psf_models_fast.compute_2d_psf_coherent(
             psf_coordinates=self.psf_coordinates, 
@@ -533,7 +538,7 @@ class System4f3DCoherent(OpticalSystem3D):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element=None,
                             pupil_function=None, 
-                            zernieke={},) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
+                            zernike={},) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
             raise AttributeError("Compute psf first or provide psf parameters")
@@ -550,7 +555,7 @@ class System4f3DCoherent(OpticalSystem3D):
         Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
         RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
-        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+        pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernike)
 
         psf = psf_models_fast.compute_3d_psf_coherent(
             psf_coordinates=(self.psf_coordinates[0], self.psf_coordinates[1]),
@@ -599,7 +604,7 @@ class System4f2D(System4f2DCoherent):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element=None,
                             pupil_function=None, 
-                            zernieke={}, 
+                            zernike={}, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         
@@ -612,7 +617,7 @@ class System4f2D(System4f2DCoherent):
         
 
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke)
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernike)
             psf = np.abs(csf) ** 2
 
         else:
@@ -621,7 +626,7 @@ class System4f2D(System4f2DCoherent):
             X, Y = np.meshgrid(rho, rho, indexing='ij')
             RHO, PHI = np.sqrt(X**2 + Y**2), np.arctan2(Y, X)
 
-            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernike)
             
             print(self.NA)
             psf = psf_models_fast.compute_2d_incoherent_vectorial_psf_free_dipole(
@@ -648,7 +653,42 @@ class System4f2D(System4f2DCoherent):
         # self._prepare_interpolator()
         return self.psf, self.otf
 
+    def generate_psf_otf_stack(self, z_values, parameters=None,
+                            pupil_element=None,
+                            pupil_function=None, 
+                            zernike={}):
+        psf_stack = []
+        otf_stack = []
+        psf_default, otf_default = self._psf, self._otf
+        M = self.NA / self.nm
+        for z in z_values:
+            zernike_z = zernike.copy()
+            if (2, 0) in zernike_z.keys():
+                zernike_z[(2, 0)] = zernike_z[(2, 0)] - z * self.nm * M**2 / 4
+            else: 
+                zernike_z[(2, 0)] = - z * self.nm * M**2 / 4
+            if self.high_NA:
+                if (4, 0) in zernike_z.keys():
+                    zernike_z[(4, 0)] = zernike_z[(4, 0)] - z * self.nm * (M**4 / 48 + M**6 / 64 + 5 * M**8 / 448)
+                else :
+                    zernike_z[(4, 0)] = - z * self.nm * (M**4 / 48 + M**6 / 64 + 5 * M**8 / 448)
+                
+                if (6, 0) in zernike_z.keys():
+                    zernike_z[(6, 0)] = zernike_z[(6, 0)] - z * self.nm * (M**6 / 320 + M**8 / 256)
+                else:
+                    zernike_z[(6, 0)] = - z * self.nm * (M**6 / 320 + M**8 / 256)
+                
+            psf, otf = self.compute_psf_and_otf(parameters, pupil_element, pupil_function, zernike_z)
+            psf_stack.append(psf)
+            otf_stack.append(otf)
+        
+        #avoiding chaotical psf replacements due to the default behavior of the compute_psf_and_otf method.
+        self._psf = psf_default
+        self._otf = otf_default
 
+        return psf_stack, otf_stack
+        
+                            
 class System4f3D(System4f3DCoherent):
     def __init__(self,
                  alpha=np.pi / 4, 
@@ -670,7 +710,7 @@ class System4f3D(System4f3DCoherent):
     def compute_psf_and_otf(self, parameters=None,
                             pupil_element=None,
                             pupil_function=None, 
-                            zernieke={}, 
+                            zernike={}, 
                             ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                                 np.ndarray[tuple[int, int, int], np.float64]]:
         if self.psf_coordinates is None and parameters is None:
@@ -681,7 +721,7 @@ class System4f3D(System4f3DCoherent):
             self.compute_psf_and_otf_coordinates(psf_size, N)
 
         if not self.vectorial:
-            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernieke)
+            csf, _ = super().compute_psf_and_otf(parameters, pupil_element, pupil_function, zernike)
             psf = np.abs(csf) ** 2
 
         else:
@@ -693,7 +733,7 @@ class System4f3D(System4f3DCoherent):
             Fx, Fy = np.meshgrid(rho, rho, indexing='ij')
             RHO, PHI = np.sqrt(Fx**2 + Fy**2), np.arctan2(Fy, Fx)
 
-            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernieke)
+            pupil_function = self._get_pupil_function(RHO, PHI, pupil_element, pupil_function, zernike)
             
             psf = psf_models_fast.compute_3d_incoherent_vectorial_psf_free_dipole(
                 psf_coordinates=(self.psf_coordinates[0], self.psf_coordinates[1]),
@@ -800,8 +840,8 @@ class RCM(PointScanningImagingSystem):
                         recompute_detection_psf = False, 
                         pupil_element=None,
                         pupil_function=None, 
-                        zernieke_excitation={}, 
-                        zernieke_detection={}, 
+                        zernike_excitation={}, 
+                        zernike_detection={}, 
                         ) -> tuple[np.ndarray[tuple[int, int, int], np.float64],
                                             np.ndarray[tuple[int, int, int], np.float64]]:
     
@@ -816,7 +856,7 @@ class RCM(PointScanningImagingSystem):
             psf_excitation, otf_excitation = self.optical_system_excitation.compute_psf_and_otf(self, parameters,
                             pupil_element,
                             pupil_function, 
-                            zernieke_excitation, )
+                            zernike_excitation, )
         else: 
             psf_excitation, otf_excitation = self.optical_system_excitation.psf, self.optical_system_excitation.psf
             if psf_excitation is None: 
@@ -826,7 +866,7 @@ class RCM(PointScanningImagingSystem):
             psf_detection, otf_detection = self.optical_system_detection.compute_psf_and_otf(self, parameters,
                         pupil_element,
                         pupil_function, 
-                        zernieke_detection, )
+                        zernike_detection, )
         else:
             psf_detection, otf_detection = self.optical_system_detection.psf, self.optical_system_detection.otf
             if psf_detection is None: 

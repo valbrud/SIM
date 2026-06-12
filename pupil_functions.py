@@ -154,13 +154,13 @@ def azimuthal_zernike(m, phi):
         else:
             return np.sin(abs(m) * phi)
 
-def compute_pupil_plane_aberrations(zernieke_polynomials, Nrho, Nphi, float_type=np.float32):
+def compute_pupil_plane_aberrations(zernike_polynomials, Nrho, Nphi, float_type=np.float32):
     """
     Construct a 2D pupil-plane aberration by summing Zernike modes using HCIPy's zernike().
 
     Parameters
     ----------
-    zernieke_polynomials : dict
+    zernike_polynomials : dict
         Dictionary with keys = (n, m) and values = amplitudes.
         Example: {(2, 2): 0.1, (3, 1): -0.05, (4, -2): 0.07, ...}
     rho : ndarray
@@ -180,7 +180,7 @@ def compute_pupil_plane_aberrations(zernieke_polynomials, Nrho, Nphi, float_type
     RHO, PHI = np.meshgrid(rho, phi, indexing='ij')
     aberration = np.zeros((rho.size, phi.size))
 
-    for (n, m), amplitude in zernieke_polynomials.items():
+    for (n, m), amplitude in zernike_polynomials.items():
         aberration += amplitude * radial_zernike(n, m, RHO, float_type) * azimuthal_zernike(m, PHI)
     return aberration
 

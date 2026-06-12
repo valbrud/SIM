@@ -46,9 +46,13 @@ class SSNRBase(metaclass=DimensionMeta):
         compute_full_ssnr(object_ft): Computes the full SSNR for a given object Fourier transform.        
     """
     def __init__(self, optical_system, readout_noise_variance=0):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystems.OpticalSystem),
+            readout_noise_variance=(readout_noise_variance, (int, float, np.integer, np.floating)),
+        )
         self._optical_system = optical_system
         self._ssnri = None
-        self.readout_noise_variance = 0
+        self.readout_noise_variance = readout_noise_variance
 
     @property
     def ssnri(self):
@@ -183,6 +187,9 @@ class SSNRBase(metaclass=DimensionMeta):
 
 class SSNRPointScanning(SSNRBase):
     def __init__(self, optical_system):
+        utils.validate_init_types(
+            optical_system=(optical_system, OpticalSystems.OpticalSystem),
+        )
         super().__init__(optical_system)
         self._compute_ssnri()
 
@@ -231,10 +238,25 @@ class SSNRSIM(SSNRBase):
                  imperfect_phase_shifts=False
                  ):
         
-        super().__init__(optical_system, readout_noise_variance)
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystems.OpticalSystem),
+            readout_noise_variance=(readout_noise_variance, (int, float, np.integer, np.floating)),
+            effective_otfs=(effective_otfs, dict),
+            effective_kernels_ft=(effective_kernels_ft, dict),
+            save_memory=(save_memory, bool),
+            imperfect_phase_shifts=(imperfect_phase_shifts, bool),
+        )
 
-        if not isinstance(illumination, PlaneWavesSIM):
-            raise AttributeError("Illumination data is not of the valid type!")
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if illumination_reconstruction is not None and not isinstance(illumination_reconstruction, PlaneWavesSIM):
+            raise TypeError(
+                "illumination_reconstruction must be of type PlaneWavesSIM when provided, "
+                f"got {type(illumination_reconstruction).__name__}."
+            )
+        
+        super().__init__(optical_system, readout_noise_variance)
         
         if self.dimensionality is not None: 
             self._check_dimensionality(illumination, optical_system, illumination_reconstruction)
@@ -724,15 +746,30 @@ class SSNRSIMVectorial(SSNRSIM):
                  illumination_reconstruction=None, 
                  imperfect_phase_shifts=False, 
                  neglect_cross_correlation=True):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystems.OpticalSystem),
+            readout_noise_variance=(readout_noise_variance, (int, float, np.integer, np.floating)),
+            save_memory=(save_memory, bool),
+            imperfect_phase_shifts=(imperfect_phase_shifts, bool),
+            neglect_cross_correlation=(neglect_cross_correlation, bool),
+        )
+        if kernel is not None and not isinstance(kernel, np.ndarray):
+            raise TypeError(f"kernel must be of type ndarray when provided, got {type(kernel).__name__}.")
+        if illumination_reconstruction is not None and not isinstance(illumination_reconstruction, PlaneWavesSIM):
+            raise TypeError(
+                "illumination_reconstruction must be of type PlaneWavesSIM when provided, "
+                f"got {type(illumination_reconstruction).__name__}."
+            )
         self._mixing_matrix = None
         self._diagonalizing_matrix = None
         self.neglect_cross_correlation = neglect_cross_correlation
         super().__init__(illumination, 
                          optical_system, 
-                         kernel,
-                         readout_noise_variance,
-                         save_memory,
-                         illumination_reconstruction,
+                         kernel=kernel,
+                         readout_noise_variance=readout_noise_variance,
+                         save_memory=save_memory,
+                         illumination_reconstruction=illumination_reconstruction,
                          imperfect_phase_shifts=imperfect_phase_shifts, 
                          )
 

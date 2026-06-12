@@ -569,8 +569,8 @@ def expand_kernel(kernel: np.ndarray, target_shape: tuple[int]) -> np.ndarray:
         target_shape = (target_shape,) * len(kernel.shape)
     shape = np.array(kernel.shape, dtype=np.int32)
 
-    if ((shape % 2) == 0).any():
-        raise ValueError("Size of the kernel must be odd!")
+    # if ((shape % 2) == 0).any():
+    #     raise ValueError("Size of the kernel must be odd!")
 
     if (shape > target_shape).any():
         raise ValueError("Size of the kernel is bigger than of the PSF!")
@@ -1041,3 +1041,48 @@ def radial_ratio(X, S, smooth=False):
     ratio[good] = all_r[good] / r_surf[good]
 
     return ratio.reshape(X.shape)
+
+def estimate_gain_given_offset(image: np.ndarray, offset: float, edge=50, readout_std=0) -> float:
+    """
+    Estimate the gain of a signal given an offset.
+
+    Args:
+        image (np.ndarray): Input array containing the signal.
+        offset (float): The offset to be subtracted from the signal.
+        edge (int, optional): The size of the edge region to consider as pure noise. Defaults to 50.
+        readout_std (float, optional): The standard deviation of the readout noise. Defaults to 0.
+
+    Returns:
+        float: Estimated gain of the signal.
+    """
+    image_ft = hpc_utils.wrapped_fftn(image)
+    mask = np.zeros(image.shape, dtype=bool)
+    edge = 70
+    mask[0:edge, 0:edge] = True
+    mask[-edge:, 0:edge] = True
+    mask[0:edge, -edge:] = True
+    mask[-edge:, -edge:] = True
+    # plt.imshow(mask)
+    # plt.show()
+    pure_noise_region = image_ft[mask]
+
+    average_noise = np.mean(np.abs(pure_noise_region)**2)
+    I0 = np.sum(image - offset)
+    In = I0**2 / average_noise 
+    f0 = (In + np.sqrt(In**2 + 4 * In * image.size * readout_std**2)) / 2
+    gain = I0 / f0
+    # print("average noise:", round(average_noise), "I0:", I0, "In:", In, "f0:", f0)
+    # coordinates = np.arange(image.shape[0]) - image.shape[0] // 2, np.arange(image.shape[1]) - image.shape[1] // 2
+    # noise = average_rings2d(image_ft**2, axes=coordinates)
+    print("estimated gain:", gain)
+    return gain
+
+def validate_init_types(**type_specs):
+    for name, (value, expected_type) in type_specs.items():
+        if not isinstance(value, expected_type):
+            if isinstance(expected_type, tuple):
+                expected_names = ", ".join(t.__name__ for t in expected_type)
+            else:
+                expected_names = expected_type.__name__
+            actual_name = type(value).__name__
+            raise TypeError(f"{name} must be of type {expected_names}, got {actual_name}.")

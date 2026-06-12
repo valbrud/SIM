@@ -79,6 +79,20 @@ class Box:
             point_number (int or tuple): Number of points in each dimension.
             additional_info (dict, optional): Additional information about the configuration.
         """
+        if not isinstance(sources, (list, tuple)):
+            raise TypeError(f"sources must be of type list or tuple, got {type(sources).__name__}.")
+        if not isinstance(box_size, (int, float, list, tuple, np.ndarray, np.integer, np.floating)):
+            raise TypeError(
+                f"box_size must be numeric or a sequence, got {type(box_size).__name__}."
+            )
+        if not isinstance(point_number, (int, list, tuple, np.ndarray, np.integer)):
+            raise TypeError(
+                f"point_number must be an int or a sequence, got {type(point_number).__name__}."
+            )
+        if additional_info is not None and not isinstance(additional_info, dict):
+            raise TypeError(
+                f"additional_info must be of type dict when provided, got {type(additional_info).__name__}."
+            )
         self.info = additional_info
 
         if type(box_size) == float or type(box_size) == int:

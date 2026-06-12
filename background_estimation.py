@@ -14,82 +14,91 @@ import SSNRCalculator
 import hpc_utils
 import matplotlib.pyplot as plt
 import Apodization
-kernels_test = [kernels.finite_notch_kernel(11), kernels.combined_low_pass_notch_kernel(9, 9), kernels.sinc_kernel2d(1)]
+from Illumination import IlluminationPlaneWaves2D
 
-def generate_OTF_matrix(illumination, illumination_reconstruction, optical_system, n_slices, dz):
+def generate_OTF_matrix(psf_stack, illumination, optical_system, z_values):
+    n_slices = len(psf_stack)
     g_vector = np.zeros((n_slices, optical_system.otf.shape[0], optical_system.otf.shape[1]), dtype=np.complex128)
-    for i in range(-(n_slices//2), n_slices//2 + 1):
-        #low-NaA approximation for now
-        aberration_strength = i * dz * optical_system.NA**2 / (4 * optical_system.nm) 
-        print(aberration_strength)
-        g_vector[n_slices//2 + i] = optical_system.compute_psf_and_otf(zernieke = {(2, 0): aberration_strength, (3, -1): 1 * aberration_strength, (3, 1): 1 * aberration_strength})[1]
+    for i in range(n_slices):
+        g_vector[i] = hpc_utils.wrapped_fftn(psf_stack[i])
     
-    # for i, g_rec in enumerate(g_vector):
-    #     fig, ax = plt.subplots(1, 2)
-    #     ax[0].imshow(np.log1p(g_rec.real))
-    #     ax[1].imshow(np.log1p(g_rec.imag))
-    #     plt.show()
-
     g_matrix_sim = np.zeros((n_slices, *g_vector.shape), dtype=np.complex128)
     for i, g_em in enumerate(g_vector):
-        optical_system.otf = g_em
-        for j, g_rec in enumerate(g_vector):
-            kernel = hpc_utils.wrapped_ifftn(g_rec)
-            # kernel = kernels.combined_low_pass_notch_kernel(kernel_size_low_pass=(j+1)**2 if j%2==0 else (j+1)**2 -1, kernel_size_notch=(i+1)**2 if i%2==0 else (i+1)**2 -1) + 0.1
-            # kernel = kernels.sinc_kernel2d((j+1)**3 if j%2==0 else (j+1)**2 -1) * (1 + 1j)
-            # kernel = kernels_test[j]
-            ssnr_calculator = SSNRCalculator.SSNRSIM2D(illumination, optical_system, kernel, illumination_reconstruction=illumination_reconstruction)
-            g_matrix_sim[i, j] = ssnr_calculator.dj 
-            # fig, ax = plt.subplots(1, 3)
-            # ax[0].imshow(np.log1p(np.imag(g_em)), cmap='gray')
-            # ax[1].imshow(np.log1p(np.imag(g_rec)), cmap='gray')
-            # ax[2].imshow(np.log1p(g_matrix_sim[i, j].imag), cmap='gray')
-            # # plt.title(f'g_matrix_sim[{i}, {j}]')
+        if illumination.dimensionality == 3:
+            illumination_emission = illumination.project_in_quasi_2D(dz=z_values[i], return2D=True)
+            # plt.imshow(illumination_emission.get_illumination_density(optical_system.x_grid), cmap='gray')
             # plt.show()
+        else:
+            illumination_emission = illumination
+        optical_system.otf = g_em
+
+        for j, psf in enumerate(psf_stack):
+            if illumination.dimensionality == 3:
+                illumination_reconstruction = illumination.project_in_quasi_2D(dz=z_values[j], return2D=True)
+                # fig, ax = plt.subplots(2, 5)
+                # for n in range(5):
+                #     ax[0, n].imshow(illumination_emission.get_illumination_density(optical_system.x_grid, r=0, n=n), cmap='gray')
+                #     ax[1, n].imshow(illumination_reconstruction.get_illumination_density(optical_system.x_grid, r=0, n=n), cmap='gray')
+                # plt.show()
+                illumination_sum = (np.sum([illumination_emission.get_illumination_density(optical_system.x_grid, r=0, n=n)*illumination_reconstruction.get_illumination_density(optical_system.x_grid, r=0, n=n) for n in range(5)], axis=0))
+                # im = plt.imshow(illumination_sum, vmin=0, vmax=1 /(5 * 3))
+                # plt.colorbar(im, ax=plt.gca())
+                # plt.title(f"i={i}, j={j}")
+                # plt.show()
+                print(illumination_sum.max(), i, j)
+            else:
+                illumination_reconstruction = illumination
+            kernel = psf
+            ssnr_calculator = SSNRCalculator.SSNRSIM2D(illumination_emission, optical_system, kernel, illumination_reconstruction=illumination_reconstruction)
+            g_matrix_sim[i, j] = ssnr_calculator.dj 
+
     return g_vector, g_matrix_sim
 
 
-def generate_image_vector(stack, illumination_reconstruction, optical_system, g_vector):
-    reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_reconstruction, optical_system, return_ft=True, unitary=False)
-    image_vector_ft = np.zeros((len(g_vector), *stack.shape[2:]), dtype=np.complex128)
-    for i, g_rec in enumerate(g_vector):
-        # fig, ax = plt.subplots(1, 2)
-        # ax[0].imshow(np.log1p(g_rec.real))
-        # ax[1].imshow(np.log1p(g_rec.imag))
-        # plt.show()
-        reconstructor.kernel = hpc_utils.wrapped_ifftn(g_rec)
-        # kernel = kernels.sinc_kernel2d((i+1)**3 if i%2==0 else (i+1)**2 -1) * (1 + 1j)
-        
-        # reconstructor.kernel = kernels_test[i]
+def generate_image_vector(stack, psf_stack, illumination, optical_system, z_values):
+
+    image_vector_ft = np.zeros_like(psf_stack, dtype=np.complex128)
+
+    for i, psf_slice in enumerate(psf_stack):
+        if illumination.dimensionality == 3:
+            illumination_reconstruction = illumination.project_in_quasi_2D(dz=z_values[i], return2D=True)
+            # plt.imshow(illumination_reconstruction.get_illumination_density(optical_system.x_grid), cmap='gray')
+            # plt.show()
+        else:
+            illumination_reconstruction = illumination
+        reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_reconstruction, optical_system, kernel=psf_slice, return_ft=True, unitary=False)
         image_vector_ft[i] = reconstructor.reconstruct(stack)
-        # image_vector_ft[i] /= np.amax(np.abs(image_vector_ft[i]))
-    fig, ax = plt.subplots(2, 3)
-    for i in range(len(g_vector)):
+
+    fig, ax = plt.subplots(2, len(psf_stack))
+    for i in range(len(psf_stack)):
         ax[0, i].imshow(np.log1p(np.abs(image_vector_ft[i])), cmap='gray')
-        ax[1, i].imshow(np.real(hpc_utils.wrapped_ifftn(image_vector_ft[i])), cmap='gray', vmin=-0.1, vmax=0.1)
+        ax[1, i].imshow(np.real(hpc_utils.wrapped_ifftn(image_vector_ft[i])), cmap='gray')
     plt.show()
     return image_vector_ft
 
 
-def estimate_background(stack, illumination, optical_system, n_slices, dz):
-    illumination_reconstruction = copy.deepcopy(illumination)
-    for harmonic in illumination_reconstruction.harmonics:
-        if not harmonic[1] ==(0, 0):
-            illumination_reconstruction.harmonics[harmonic].amplitude *=10
-    g_vector, g_matrix_sim = generate_OTF_matrix(illumination, illumination_reconstruction, optical_system, n_slices, dz)
-    image_vector_ft = generate_image_vector(stack, illumination_reconstruction, optical_system, g_vector)
+def estimate_background(stack, psf_stack, illumination, optical_system, z_values=None):
+    if illumination.dimensionality == 3 and z_values is None:
+        raise ValueError("z_values must be provided for 3D illumination.")
+    if illumination.dimensionality == 3 and len(z_values) != len(psf_stack):
+        raise ValueError("Length of z_values must match the number of PSF slices.")
+    
+    g_vector, g_matrix_sim = generate_OTF_matrix(psf_stack, illumination, optical_system, z_values)
+    image_vector_ft = generate_image_vector(stack, psf_stack, illumination, optical_system, z_values)
     
     # g_matrix_sim.real = np.where(np.abs(g_matrix_sim.real) < 1e-10, 1e-10, g_matrix_sim.real)
     # g_matrix_sim.imag = np.where(np.abs(g_matrix_sim.imag) < 1e-10, 1e-10, g_matrix_sim.imag)
     G = np.moveaxis(g_matrix_sim,    [0, 1], [-1, -2])  # (3,3,N,N) → (N,N,3,3)
     I = np.moveaxis(image_vector_ft,  0,     -1)        # (3,N,N)   → (N,N,3)
 
-    Ginv = np.linalg.pinv(G)
+    Ginv = np.linalg.pinv(G, rcond=1e-6)  # (N,N,3,3)
     # Ginv = np.where(np.abs(Ginv) < 1000, Ginv, 0)
     # Ginv = np.real(Ginv)
-    apodization = Apodization.AutocorrelationApodizationSIM2D(optical_system, illumination, Ndense=101)
-    apodization_mask = np.where(apodization.apodization_function > 0.7, 1, 0)
-    Ginv *= apodization_mask[..., np.newaxis, np.newaxis]
+    # apodization = Apodization.AutocorrelationApodizationSIM2D(optical_system, illumination, Ndense=101)
+    # apodization_mask = np.where(apodization.apodization_function > 0.7, 1, 0)
+    fx, fy = optical_system.otf_frequencies
+    cutoff_mask = (fx[:, None]**2 + fy[None, :]**2) < (2 * 1.0 * optical_system.NA)**2
+    Ginv *= cutoff_mask[..., np.newaxis, np.newaxis]
     Ginv = np.nan_to_num(Ginv)
     # Ginv += 1e-1
     Nk, Ns, Nx, Ny = g_matrix_sim.shape
@@ -119,22 +128,24 @@ def estimate_background(stack, illumination, optical_system, n_slices, dz):
     fig, ax = plt.subplots(1, 4)
     im0 = ax[0].imshow(np.real(g_matrix_expanded_inv))
     im1 = ax[1].imshow(np.imag(g_matrix_expanded_inv))
-    ax[2].imshow(np.real(sanity_check[..., 1, 1]), cmap='gray', vmin=0.99, vmax=1.01)
-    ax[3].imshow(np.imag(sanity_check[..., 1, 1]), cmap='gray', vmin=0.99, vmax=1.01)
+    ax[2].imshow(np.real(sanity_check[..., 1, 1]), cmap='gray', vmin=0.97, vmax=1.03)
+    ax[3].imshow(np.imag(sanity_check[..., 1, 1]), cmap='gray', vmin=0.97, vmax=1.03)
     plt.colorbar(im0, cmap='gray', ax=ax[0])
     plt.colorbar(im1, cmap='gray', ax=ax[1])
     # plt.colorbar(im2, cmap='gray', ax=ax[2])
     # plt.colorbar(im3, cmap='gray', ax=ax[3])
     plt.show()
 
-    # f = (Ginv @ I[..., np.newaxis])[..., 0]
-    f = np.zeros_like(I, dtype=np.complex128)
-    f[..., 0] = Ginv[..., 0, 0] * I[..., 0] + Ginv[..., 0, 1] * I[..., 1] + Ginv[..., 0, 2] * I[..., 2]
-    f[..., 1] = Ginv[..., 1, 0] * I[..., 0] + Ginv[..., 1, 1] * I[..., 1] + Ginv[..., 1, 2] * I[..., 2]
-    f[..., 2] = Ginv[..., 2, 0] * I[..., 0] + Ginv[..., 2, 1] * I[..., 1] + Ginv[..., 2, 2] * I[..., 2]
-    f[..., 0] = np.where(np.abs(sanity_check[..., 0, 0] - 1) < 0.01, f[..., 0], 0)
-    f[..., 1] = np.where(np.abs(sanity_check[..., 1, 1] - 1) < 0.01, f[..., 1], 0)
-    f[..., 2] = np.where(np.abs(sanity_check[..., 2, 2] - 1) < 0.01, f[..., 2], 0)
+    f = (Ginv @ I[..., np.newaxis])[..., 0]
+    # for i in range(len(g_vector)):
+    #     f[..., i] = np.where(np.abs(sanity_check[..., i, i] - 1) < 0.01, f[..., i], 0)
+    # f = np.zeros_like(I, dtype=np.complex128)
+    # f[..., 0] = Ginv[..., 0, 0] * I[..., 0] + Ginv[..., 0, 1] * I[..., 1] + Ginv[..., 0, 2] * I[..., 2]
+    # f[..., 1] = Ginv[..., 1, 0] * I[..., 0] + Ginv[..., 1, 1] * I[..., 1] + Ginv[..., 1, 2] * I[..., 2]
+    # f[..., 2] = Ginv[..., 2, 0] * I[..., 0] + Ginv[..., 2, 1] * I[..., 1] + Ginv[..., 2, 2] * I[..., 2]
+    # f[..., 0] = np.where(np.abs(sanity_check[..., 0, 0] - 1) < 0.01, f[..., 0], 0)
+    # f[..., 1] = np.where(np.abs(sanity_check[..., 1, 1] - 1) < 0.01, f[..., 1], 0)
+    # f[..., 2] = np.where(np.abs(sanity_check[..., 2, 2] - 1) < 0.01, f[..., 2], 0)
     f = np.moveaxis(f, -1, 0) 
     # fig, axis = plt.subplots(1, 2, figsize=(10, 5))                           # (3,N,N)
     # axis[0].imshow(np.log1p(np.real(f[0])), cmap='gray')
