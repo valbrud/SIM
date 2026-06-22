@@ -15,6 +15,9 @@ import hpc_utils
 import matplotlib.pyplot as plt
 import Apodization
 from Illumination import IlluminationPlaneWaves2D
+import scipy
+
+notch_kernel = kernels.finite_notch_kernel(5)
 
 def generate_OTF_matrix(psf_stack, illumination, optical_system, z_values):
     n_slices = len(psf_stack)
@@ -48,6 +51,7 @@ def generate_OTF_matrix(psf_stack, illumination, optical_system, z_values):
                 print(illumination_sum.max(), i, j)
             else:
                 illumination_reconstruction = illumination
+            # kernel = scipy.signal.convolve(psf, notch_kernel, mode='same')
             kernel = psf
             ssnr_calculator = SSNRCalculator.SSNRSIM2D(illumination_emission, optical_system, kernel, illumination_reconstruction=illumination_reconstruction)
             g_matrix_sim[i, j] = ssnr_calculator.dj 
@@ -59,25 +63,29 @@ def generate_image_vector(stack, psf_stack, illumination, optical_system, z_valu
 
     image_vector_ft = np.zeros_like(psf_stack, dtype=np.complex128)
 
-    for i, psf_slice in enumerate(psf_stack):
+    for i, psf in enumerate(psf_stack):
         if illumination.dimensionality == 3:
             illumination_reconstruction = illumination.project_in_quasi_2D(dz=z_values[i], return2D=True)
             # plt.imshow(illumination_reconstruction.get_illumination_density(optical_system.x_grid), cmap='gray')
             # plt.show()
         else:
             illumination_reconstruction = illumination
-        reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_reconstruction, optical_system, kernel=psf_slice, return_ft=True, unitary=False)
+        # kernel = scipy.signal.convolve(psf, notch_kernel, mode='same')
+        kernel = psf
+        reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_reconstruction, optical_system, kernel=kernel, return_ft=True, unitary=False)
         image_vector_ft[i] = reconstructor.reconstruct(stack)
 
     fig, ax = plt.subplots(2, len(psf_stack))
     for i in range(len(psf_stack)):
         ax[0, i].imshow(np.log1p(np.abs(image_vector_ft[i])), cmap='gray')
         ax[1, i].imshow(np.real(hpc_utils.wrapped_ifftn(image_vector_ft[i])), cmap='gray')
+        ax[0, i].axis('off')
+        ax[1, i].axis('off')
     plt.show()
     return image_vector_ft
 
 
-def estimate_background(stack, psf_stack, illumination, optical_system, z_values=None):
+def estimate_background(stack, psf_stack, illumination, optical_system, z_values=None, rcond=1e-6):
     if illumination.dimensionality == 3 and z_values is None:
         raise ValueError("z_values must be provided for 3D illumination.")
     if illumination.dimensionality == 3 and len(z_values) != len(psf_stack):
@@ -91,13 +99,13 @@ def estimate_background(stack, psf_stack, illumination, optical_system, z_values
     G = np.moveaxis(g_matrix_sim,    [0, 1], [-1, -2])  # (3,3,N,N) → (N,N,3,3)
     I = np.moveaxis(image_vector_ft,  0,     -1)        # (3,N,N)   → (N,N,3)
 
-    Ginv = np.linalg.pinv(G, rcond=1e-6)  # (N,N,3,3)
+    Ginv = np.linalg.pinv(G, rcond=rcond)  # (N,N,3,3)
     # Ginv = np.where(np.abs(Ginv) < 1000, Ginv, 0)
     # Ginv = np.real(Ginv)
     # apodization = Apodization.AutocorrelationApodizationSIM2D(optical_system, illumination, Ndense=101)
     # apodization_mask = np.where(apodization.apodization_function > 0.7, 1, 0)
     fx, fy = optical_system.otf_frequencies
-    cutoff_mask = (fx[:, None]**2 + fy[None, :]**2) < (2 * 1.0 * optical_system.NA)**2
+    cutoff_mask = (fx[:, None]**2 + fy[None, :]**2) < (2 * 1. * optical_system.NA)**2
     Ginv *= cutoff_mask[..., np.newaxis, np.newaxis]
     Ginv = np.nan_to_num(Ginv)
     # Ginv += 1e-1
@@ -153,7 +161,7 @@ def estimate_background(stack, psf_stack, illumination, optical_system, z_values
     # plt.show()
     # return f
 
-    object_vector = np.array([np.real(hpc_utils.wrapped_ifftn(g_vector[i] * f[i])) for i in range(len(g_vector))])
+    object_vector = np.array([np.real(hpc_utils.wrapped_ifftn(f[i])) for i in range(len(g_vector))])
     return object_vector
 
     # g_matrix_expanded += 1e-6

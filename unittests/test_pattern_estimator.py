@@ -19,6 +19,7 @@ import ShapesGenerator
 import matplotlib.pyplot as plt
 import skimage
 import utils 
+import Apodization
 
 from config.SIM_N100_NA15 import (
     alpha, theta, dx, dz, configurations, nmedium
@@ -55,7 +56,7 @@ def build_theoretical_illumination_2d():
 class TestPatternEstimator2D(unittest.TestCase):
 
     def setUp(self):
-        N = 101                                   # keep small for speed
+        N = 401                                   # keep small for speed
         max_r = N // 2 * dx
         psf_size = 2 * np.array((max_r, max_r))
         self.optical_system = System4f2D(alpha=alpha-0.2, refractive_index=nmedium)
@@ -68,7 +69,11 @@ class TestPatternEstimator2D(unittest.TestCase):
         self.simulator = SIMulator2D(self.experimenatal_illumination, self.optical_system)
 
         # synthetic object: random dots
-        self.sample = ShapesGenerator.generate_random_lines(psf_size, N, 0.3, 1000, 100)
+        self.sample = ShapesGenerator.generate_random_lines(psf_size, N, 0.3, 1000, 10000)
+        x, y = self.optical_system.psf_coordinates
+        R = np.sqrt(x[:, None]**2 + y[None, :]**2)
+        self.sample = np.where(R < psf_size[0] /3., self.sample, 0)  # circular aperture
+        
         print('total_photon_counts = ', np.sum(self.sample))  # check that the sample is not empty
         print('averaged_photon_counts = ', np.sum(self.sample) / N**2)  # check that the sample is not empty
         # plt.imshow(self.sample, cmap='gray')
@@ -98,18 +103,20 @@ class TestPatternEstimator2D(unittest.TestCase):
         print('true_wavevectors =', np.array(true_vectors) * 4 * np.pi)
 
         # print("base_vectors =", base_vectors)
-
+        print("True modulations", self.experimenatal_illumination.get_all_amplitudes())
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
             peak_estimation_method='cross_correlation', 
             phase_estimation_method='autocorrelation',
-            modulation_coefficients_method='default',
+            modulation_coefficients_method='least_squares',
             zooming_factor=100,
-            peak_search_area_size=21, 
+            peak_search_area_size=11, 
             max_iterations=2,
-            debug_info_level=1       
+            debug_info_level=2    
         )
 
+        am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system.psf, self.optical_system.x_grid, method='peak_height_ratio')
+        print("Estimated modulation coefficients", am)
         print(f"rotation_angles,  {np.round(illumination_estimated.angles * 180 / np.pi, 1)} degrees")
         print("refined_vectors", illumination_estimated.get_base_vectors(2) * 2)
         print('true_wavevectors =', np.array(true_vectors) * 4 * np.pi)
@@ -150,11 +157,10 @@ class TestPatternEstimator2D(unittest.TestCase):
             raw_stack,
             peak_estimation_method='interpolation', 
             phase_estimation_method='autocorrelation',
-            modulation_coefficients_method='default',
+            modulation_coefficients_method='least_squares',
             peak_search_area_size = 5,
             zooming_factor = 100, 
             max_iterations = 3,
-            ssnr_estimation_iters=100, 
             debug_info_level=2
         )
         
@@ -189,7 +195,7 @@ def build_experimental_illumination_3d():
     print('ratio to lens semi-oepning', np.sin(theta) / np.sin(alpha))
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 1, Mr=3, angles=(-5 / 180 * np.pi, 58 / 180 * np.pi, 115 / 180 * np.pi),
+        theta, 1, 0.1, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi),
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -199,7 +205,7 @@ def build_experimental_illumination_3d():
 def build_theoretical_illumination_3d():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta+0.1, 1, 1, Mr=3,
+        theta+0.1, 1, 0.1, Mr=3,
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -211,14 +217,19 @@ class TestPatternEstimator3D(unittest.TestCase):
     
     def setUp(self):
         # ---------- optics --------------------------------------------------
-        N = (201, 201, 5)                               
+        N = (201, 201, 11)                               
         max_r = N[0] // 2 * dx
         max_z = N[2] // 2 * dz
         psf_size = 2 * np.array((max_r, max_r, max_z))
 
         self.optical_system3d = System4f3D(alpha=alpha, refractive_index_medium=nmedium, refractive_index_sample=nmedium)
         self.optical_system3d.compute_psf_and_otf((psf_size, N))
-        # plt.imshow(self.optical_system.otf.real, cmap='gray',)
+        shape = self.optical_system3d.psf.shape
+        apodization = Apodization.AutocorrelationApodizationWidefield(self.optical_system3d)
+        self.optical_system3d.otf *= np.where(apodization.apodization_function, 1, 0)
+        # self.optical_system3d.otf[shape[0]//2, shape[1]//2, :] = 0
+        # self.optical_system3d.otf[shape[0]//2, shape[1]//2, shape[2]//2] = 1
+        # plt.imshow(self.optical_system3d.otf.real[:, shape[1]//2, :], cmap='gray',)
         # plt.show()
 
         self.experimenatal_illumination = build_experimental_illumination_3d()
@@ -240,12 +251,12 @@ class TestPatternEstimator3D(unittest.TestCase):
         self.sample = N_avg * image
         print(np.mean(self.sample))
         print(self.sample.shape)        # self.sample = np.ones(N) * 10000
-        mask = make_mask_cosine_edge2d(self.sample.shape[:2], 20)
+        mask = make_mask_cosine_edge2d(self.sample.shape[:2], 30)
         self.sample *= mask[:, :, None]
         print('total_photon_counts = ', np.sum(self.sample))  # check that the sample is not empty
         print('averaged_photon_counts = ', np.sum(self.sample) / np.prod(np.array(N)))  # check that the sample is not empty
-        # fig, ax, slider = utils.imshow3D(self.sample, cmap='gray')
-        # plt.show()
+        fig, ax, slider = utils.imshow3D(self.sample, cmap='gray')
+        plt.show()
 
 
     def test_estimate_by_averaging_2d_slices(self):
@@ -265,45 +276,46 @@ class TestPatternEstimator3D(unittest.TestCase):
         print('true_wavevectors =', np.array(true_vectors))
 
         # print("base_vectors =", base_vectors)
+        print("theoretical_amplitudes=", self.theoretical_illumination.get_all_amplitudes())
     
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
-            peak_estimation_method='interpolation', 
+            peak_estimation_method='cross_correlation', 
             phase_estimation_method='autocorrelation',
-            modulation_coefficients_method='default',
-            peak_search_area_size = 13,
+            modulation_coefficients_method='least_squares',
+            peak_search_area_size = 7,
             zooming_factor = 100, 
             max_iterations = 2,
             debug_info_level=1
         )
-
         spatial_shifts = illumination_estimated.estimate_spatial_shifts_from_phase_matrix()
         # print('spatial_shifts = ', spatial_shifts)
         illumination_estimated.spatial_shifts = spatial_shifts
-        for sim_index in sorted(illumination_estimated.phase_matrix.keys()):
-            print('r = ', sim_index[0], 'n = ', sim_index[1], 'm = ', sim_index[2], 'phase = ', np.round(np.angle(illumination_estimated.phase_matrix[sim_index]) / np.pi * 180, 1), 'degrees')
+        # for sim_index in sorted(illumination_estimated.phase_matrix.keys()):
+        #     print('r = ', sim_index[0], 'n = ', sim_index[1], 'm = ', sim_index[2], 'phase = ', np.round(np.angle(illumination_estimated.phase_matrix[sim_index]) / np.pi * 180, 1), 'degrees')
 
         # print(illumination_estimated.harmonics)
-        for r in range(3):
-            density_total = np.zeros_like(self.optical_system3d.psf)
-            for n in range(5):
-                density= illumination_estimated.get_illumination_density(self.optical_system3d.x_grid, r=r, n=n)
-                density_total += density
-                # plt.imshow(density[:20, :20, 3])
-                # plt.show()
-            fig, ax, slider = utils.imshow3D(density_total, cmap='gray', vmin=0, vmax=1)
-            plt.show()
+        # for r in range(3):
+        #     density_total = np.zeros_like(self.optical_system3d.psf)
+        #     for n in range(5):
+        #         density= illumination_estimated.get_illumination_density(self.optical_system3d.x_grid, r=r, n=n)
+        #         density_total += density
+        #         # plt.imshow(density[:20, :20, 3])
+        #         # plt.show()
+        #     fig, ax, slider = utils.imshow3D(density_total.real, cmap='gray', vmin=0, vmax=1)
+        #     plt.show()
 
-        rotation_angles = illumination_estimated.angles
-        refined_wavevectors = illumination_estimated.get_all_wavevectors()[0]
-        phase_matrix = illumination_estimated.phase_matrix
-        modulation_coefficients = illumination_estimated.get_all_amplitudes()
+
+        # rotation_angles = illumination_estimated.angles
+        # refined_wavevectors = illumination_estimated.get_all_wavevectors()[0]
+        # phase_matrix = illumination_estimated.phase_matrix
+        # modulation_coefficients = illumination_estimated.get_all_amplitudes()
         
-        print(f"rotation_angles,  {np.round(np.array(rotation_angles) * 180 / np.pi, 1)} degrees")
-        print("refined_vectors", refined_wavevectors[1] / (2 * np.pi))
-        print('true_wavevectors =', np.array(true_vectors))
-        # print('phase_matrix = ', phase_matrix)
-        print('modulation_coefficients = ', modulation_coefficients)
+        # print(f"rotation_angles,  {np.round(np.array(rotation_angles) * 180 / np.pi, 1)} degrees")
+        # print("refined_vectors", refined_wavevectors[1] / (2 * np.pi))
+        # print('true_wavevectors =', np.array(true_vectors))
+        # # print('phase_matrix = ', phase_matrix)
+        # print('modulation_coefficients = ', modulation_coefficients)
 
 
 if __name__ == '__main__':

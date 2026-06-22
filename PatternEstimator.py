@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import Reconstructor
+import kernels
 """
 illumination_pattern_estimator.py
 
@@ -49,8 +52,10 @@ from abc import abstractmethod
 import utils
 from utils import off_grid_ft
 import hpc_utils
+import scipy
 
 from Illumination import (
+    Illumination,
     PlaneWavesSIM,
     IlluminationPlaneWaves2D,
     IlluminationPlaneWaves3D,
@@ -95,8 +100,9 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         zooming_factor: int = 100, 
         max_iterations: int = 2, 
         debug_info_level = 0,
-        first_order_phases_only: bool = True,
         correct_peak_position: bool = True,
+        first_order_phases_only: bool = True,
+        treat_composite_orders_separately_for_modulation: bool = False,
     ) -> PlaneWavesSIM:
         
         """Return a **new illumination object** whose amplitudes and phases come
@@ -133,7 +139,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             for sim_index in sorted(peaks.keys()):
                 print('r = ', sim_index[0], 'm = ', sim_index[1], 'wavevector = ', np.round((peaks[sim_index]), 3), '1 / lambda')
 
-        phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, debug_info_level)
+        phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, first_order_phases_only, debug_info_level)
 
         if debug_info_level > 0:
             for sim_index in sorted(phase_matrix.keys()):
@@ -142,9 +148,10 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         illumination_estimated = self.build_illumination_object(rotation_angles, peaks, phase_matrix, debug_info_level)
         
         if modulation_coefficients_method != 'default':
-            illumination_estimated.estimate_modulation_coefficients(stack, self.optical_system.psf, self.optical_system.x_grid, 
-                                                                    method = modulation_coefficients_method, update=True)
-            
+            am = self.estimate_modulation_coefficients(modulation_coefficients_method, stack, illumination_estimated, treat_composite_orders_separately_for_modulation, debug_info_level)
+            illumination_estimated.update_amplitudes(am)
+            illumination_estimated.normalize_spatial_waves()
+
         if debug_info_level > 0:
             amplitudes, indices = illumination_estimated.get_all_amplitudes()
             for amplitude, index in zip(amplitudes, indices):
@@ -213,6 +220,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                            phase_estimation_method: str = 'autocorrelation',
                            stack: np.ndarray = None,
                            peaks: dict = None,
+                           first_order_phases_only: bool = True,
                            debug_info_level: int = 0) -> dict:
         """
         Build the phase matrix from the image stack and estimated peak positions.
@@ -268,22 +276,33 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
 
         return illumination_estimated
 
-    def compute_ssnr(self, stack: np.ndarray, iterations: int) -> np.ndarray:
+    @abstractmethod
+    def estimate_modulation_coefficients(self,
+                                         modulation_estimation_method: str,
+                                         stack: np.ndarray,
+                                         illumination_raw: PlaneWavesSIM,
+                                         debug_info_level: int = 0
+                                         ) -> dict:
         """
-        Compute the SSNR directly from the image stack.
+        Estimate modulation coefficients a_m from the image stack and estimated illumination parameters.
         """
+        pass
+    # def compute_ssnr(self, stack: np.ndarray, iterations: int) -> np.ndarray:
+    #     """
+    #     Compute the SSNR directly from the image stack.
+    #     """
 
-        ssnr_estimated = SSNRBase.estimate_ssnr_from_image_binomial_splitting(stack, n_iter=iterations, radial=False)
-        ssnr_estimated[ssnr_estimated < 0] = 0
-        # plt.imshow(np.log1p(ssnr_estimated), cmap='gray')
-        # plt.show()
-        # plt.plot(self.optical_system.otf_frequencies[0], ssnr_estimated[:, 50], label='ssnr_estimated')
-        # plt.ylim(0, 100)
-        # plt.plot(2.45, 0, 'cx')
-        # plt.show()
-        print('ssnr_estimated', ssnr_estimated[50, 50])
-        # exit()
-        return ssnr_estimated
+    #     ssnr_estimated = SSNRBase.estimate_ssnr_from_image_binomial_splitting(stack, n_iter=iterations, radial=False)
+    #     ssnr_estimated[ssnr_estimated < 0] = 0
+    #     # plt.imshow(np.log1p(ssnr_estimated), cmap='gray')
+    #     # plt.show()
+    #     # plt.plot(self.optical_system.otf_frequencies[0], ssnr_estimated[:, 50], label='ssnr_estimated')
+    #     # plt.ylim(0, 100)
+    #     # plt.plot(2.45, 0, 'cx')
+    #     # plt.show()
+    #     print('ssnr_estimated', ssnr_estimated[50, 50])
+    #     # exit()
+    #     return ssnr_estimated
 
 class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
     """
@@ -331,7 +350,26 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
         phase_fn = self._make_phase_estimator(self.illumination, self.optical_system, phase_estimation_method, first_order_phases_only)
         return phase_fn(stack, peaks)
 
-
+    def estimate_modulation_coefficients(self,
+                                        modulation_estimation_method: str,
+                                        stack: np.ndarray,
+                                        illumination_raw: IlluminationPlaneWaves2D,
+                                        treat_composite_orders_separately_for_modulation: bool = False,
+                                        debug_info_level: int = 0
+                                        ) -> dict:
+            """
+            Estimate modulation coefficients a_m from the image stack and estimated illumination parameters.
+            """
+            modulation_estimator = ModulationEstimator(self.illumination, self.optical_system)
+            if modulation_estimation_method == 'least_squares':
+                reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_raw, self.optical_system, return_ft=True, unitary=False)
+                spatial_frequency_orders = reconstructor.compute_spatial_frequency_orders(stack)
+                return modulation_estimator.least_squares(spatial_frequency_orders)
+            elif modulation_estimation_method == 'peak_height_ratio':
+                modulation_estimator.peak_height_ratio(stack, self.optical_system.psf, self.optical_system.x_grid, treat_composite_orders_separately_for_modulation, debug_info_level) 
+            else:
+                raise ValueError(f"Unknown method of modulation coefficients estimation '{modulation_estimation_method}'. Available methods are {self.modulation_coefficients_methods}")
+            
 class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
     """
     Class for estimating the illumination parameters from a raw SIM stack in 3D.
@@ -478,6 +516,34 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                     phase_matrix3d[peak[0], n, peak[1]] = phase_matrix2d[(r, n, m[:2])]
             return phase_matrix3d
 
+    def estimate_modulation_coefficients(self,
+                                        modulation_estimation_method: str,
+                                        stack: np.ndarray,
+                                        illumination_raw: IlluminationPlaneWaves3D,
+                                        treat_composite_orders_separately_for_modulation: bool = False,
+                                        debug_info_level: int = 0
+                                        ) -> dict:
+        """
+        Estimate modulation coefficients a_m from the image stack and estimated illumination parameters.
+        """
+        # if not treat_composite_orders_separately_for_modulation:
+        #     illumination_projected = illumination_raw.project_in_quasi_2D()
+        # else:
+        #     if debug_info_level > 0:
+        #         print('Treating composite orders separately for modulation estimation')
+        #     illumination_projected = illumination_raw
+        modulation_estimator = ModulationEstimator(illumination_raw, self.optical_system, treat_composite_orders_separately=treat_composite_orders_separately_for_modulation)
+        
+
+        if modulation_estimation_method == 'least_squares':
+            reconstructor = Reconstructor.ReconstructorFourierDomain3D(illumination_raw, self.optical_system, return_ft=True, unitary=False)
+            spatial_frequency_orders = reconstructor.compute_spatial_frequency_orders(stack)
+            return modulation_estimator.least_squares(spatial_frequency_orders, debug_info_level=debug_info_level)
+        elif modulation_estimation_method == 'peak_height_ratio':
+            raise NotImplementedError("Peak height ratio method is not implemented for 3D illumination.")
+        else:
+            raise ValueError(f"Unknown method of modulation coefficients estimation '{modulation_estimation_method}'. Available methods are {self.modulation_coefficients_methods}")
+        
 class PeaksEstimator(metaclass=DimensionMetaAbstract):
     def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem):
         utils.validate_init_types(
@@ -1486,7 +1552,7 @@ class PhasesEstimator:
                 phase_val = np.angle(Amn[(m_idx, n)][center])
                 phase_matrix[(r, n, m_idx[1])]                    = np.exp( 1j * phase_val)
                 phase_matrix[(r, n, tuple(-v for v in m_idx[1]))] = np.exp(-1j * phase_val)
-
+  
         if self.first_order_phases_only:
             phase_matrix = self._compute_full_phase_matrix_from_first_order_phases(phase_matrix)
 
@@ -1506,6 +1572,14 @@ class PhasesEstimator:
         """
         phase_matrix = {}
         grid = self.optical_system.x_grid
+        fig, ax = plt.subplots(3, 5)
+        for r in range(3):
+            for n in range(5):
+                ax[r, n].imshow(stack[r, n], cmap='gray')
+                ax[r, n].set_title(f"r={r}, n={n}")
+                ax[r, n].axis('off')
+        plt.tight_layout()
+        plt.show()
         for n in range(stack.shape[1]):
             for index in self._m:
                 r = index[0]
@@ -1535,3 +1609,154 @@ class PhasesEstimator3D(PhasesEstimator):
     pass
 
 
+class ModulationEstimator:
+    def __init__(self, illumination: PlaneWavesSIM, optical_system: OpticalSystem, effective_otfs: dict = None, treat_composite_orders_separately: bool = False):
+        utils.validate_init_types(
+            illumination=(illumination, PlaneWavesSIM),
+            optical_system=(optical_system, OpticalSystem),
+        )
+        self.optical_system = optical_system
+
+        if effective_otfs is None:
+            for key, harmonic in illumination.harmonics.items():
+                illumination.harmonics[key].amplitude = 1.0
+            _, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
+        
+        if treat_composite_orders_separately or illumination.dimensionality == 2:
+            self.illumination = illumination
+        else:
+            self.illumination = illumination.project_in_quasi_2D()
+
+        self.effective_otfs = effective_otfs
+
+        if self.illumination.dimensionality != self.optical_system.dimensionality:
+            raise ValueError(
+                f"Illumination and optical system dimensionality do not match: "
+                f"{self.illumination.dimensionality} != {self.optical_system.dimensionality}"
+            )
+    
+    def peak_height_ratio(self, stack: np.ndarray) -> dict:
+        """
+        Estimate the modulation coefficients from a given image.
+
+        Args:
+            stack (np.ndarray): SIM image stack.
+            grid (np.ndarray): Grid of coordinates.
+            update (bool): If True, update the coefficients of the illumination harmonics.
+
+        Returns:
+            np.ndarray: Estimated modulation coefficients.
+        """
+        grid = self.optical_system.x_grid
+        psf = self.optical_system.psf
+        am = {}
+
+        for r in range(self.Mr):
+            harmonics = {index[1]: harmonic for index, harmonic in self.harmonics.items() if index[0] == r}
+            wavevectors = np.zeros((len(harmonics), self.dimensionality))
+            for i, harmonic in enumerate(harmonics.keys()):
+                wavevectors[i] = harmonics[harmonic].wavevector
+            
+            amr = np.zeros((len(harmonics)), dtype=np.complex128)
+            otfs = off_grid_ft(psf, grid, wavevectors / (2 * np.pi))
+            print(otfs)
+            
+            ft = off_grid_ft(stack[r, 0], grid, np.array(wavevectors / (2 * np.pi)))
+
+            amr = np.abs(ft)
+            print(harmonic, amr)
+
+            amr /= np.abs((otfs))
+            amr /= np.amax(np.abs(amr)) 
+            # amr /= (self.Mt * self.Mr)
+            for i in range(len(harmonics)):
+                am[(r, tuple(harmonics.keys())[i])] = amr[i]
+
+        return am
+    
+
+    def least_squares(self, spatial_frequency_orders, debug_info_level=0) -> dict:
+        """
+        Estimate modulation coefficients a_m by least-squares fitting of the
+        model I_n(x) = sum_m a_m exp(2πi k_m · x) to each image in the stack.
+        """
+        am = {}    
+        a0 = 1
+        for r in range(self.illumination.Mr):
+            key_zero = (r, tuple([0] * self.illumination.dimensionality))
+            am[key_zero] = 1.0 + 0.0j
+
+            I0 = spatial_frequency_orders[key_zero]
+            g0 = self.effective_otfs[key_zero]
+
+            for key in spatial_frequency_orders.keys():
+                if key[0] != r or key == key_zero:
+                    continue
+                I = spatial_frequency_orders[key]
+                g = self.effective_otfs[key]
+                # I0f = np.copy(I0)   
+                I0f = np.where((np.abs(g) > 10**-3) & (np.abs(g0) > 10**-3), I0, 0)
+                I = np.where((np.abs(g) > 10**-3) & (np.abs(g0) > 10**-3), I , 0)
+                
+                f1 = np.abs(I0f) / (np.abs(g0) + 10**-3)
+                f2 = np.abs(I) / (np.abs(g) + 10**-3)
+                # plt.imshow(np.log1p(np.abs(10**5 * (0.5 * f1 - f2))), cmap='gray')
+                # plt.show()
+                if debug_info_level >= 2:
+                    fig, ax = plt.subplots(2, 2)
+                    ax[0, 0].imshow(np.log1p(np.abs(10**5 * I0f[:, I.shape[1]//2, :])), cmap='gray')
+                    ax[0, 0].set_title(f"I0f for key {key}")
+                    ax[0, 0].set_aspect('equal')
+                    ax[0, 0].axis('off')
+                    ax[0, 1].imshow(np.log1p(np.abs(10**5 * I[:, I.shape[1]//2, :])), cmap='gray')
+                    ax[0, 1].set_title(f"I for key {key}")
+                    ax[0, 1].axis('off')
+                    ax[0, 0].set_aspect('equal')
+                    ax[1, 0].imshow(np.log1p(np.abs(10**5 * g0[:, g.shape[1]//2, :])), cmap='gray')
+                    ax[1, 0].set_title(f"g0 for key {key}")
+                    ax[1, 0].axis('off')
+                    ax[1, 0].set_aspect('equal')
+                    ax[1, 1].imshow(np.log1p(np.abs(10**5 * g[:, g.shape[1]//2, :])), cmap='gray')
+                    ax[1, 1].set_title(f"g for key {key}")
+                    ax[1, 1].axis('off')   
+                    ax[1, 1].set_aspect('equal') 
+                    plt.tight_layout()
+                    plt.show()
+
+                a = 1  
+
+                # Minimize L2: || a0*g0*I - a*g*I0f ||_2^2, with complex scalar a = a_re + 1j*a_im
+                def obj(x):
+                    a = complex(float(x[0]), float(x[1]))
+                    diff = a0 * g0 * I - a * g * I0f
+                    # print(f"Current a: {a}, objective: {float(np.sum(np.abs(diff) ** 2))}")
+                    return float(np.sum(np.abs(diff) ** 2))
+
+                def grad(x):
+                    a = complex(float(x[0]), float(x[1]))
+                    diff = a0 * g0 * I - a * g * I0f
+                    grad_re = -2.0 * np.real(np.sum(np.conj(g) * I0f * diff))
+                    grad_im = -2.0 * np.imag(np.sum(np.conj(g) * I0f * diff))
+                    return np.array([grad_re, grad_im], dtype=np.float64)
+                
+                x0 = [float(np.real(a)), float(np.imag(a))]
+                bounds = [(-1, 1), (-1, 1)]
+                optimizer = scipy.optimize.minimize(
+                    obj,
+                    x0=x0,
+                    method="L-BFGS-B",
+                    bounds=bounds,
+                    options={"disp": False},
+                    jac=grad,
+                )
+
+                a = complex(float(optimizer.x[0]), float(optimizer.x[1]))
+                am[key] = a
+                diff = a0 * g0 * I - a * g * I0f
+                # plt.imshow(np.log1p(np.abs(10**5 * diff[:, :, diff.shape[2]//2])), cmap='gray')
+                # plt.title(f"Residual for key {key} with a={a}")
+                # plt.axis('off')
+                # plt.show()
+                
+        return am
+        

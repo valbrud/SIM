@@ -319,7 +319,31 @@ class ReconstructorFourierDomain(ReconstructorSIM):
         reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_image_ft))
         return reconstructed_image
 
+    def compute_spatial_frequency_orders(self, sim_images):
+        """
+        Compute the spatial frequency orders present in the SIM images.
+        Parameters        ----------
+        sim_images : numpy.ndarray
+        Returns
+        -------
+        dict
+            A dictionary of estimated unmodulated spatial frequency orders.
+        """
+        spatial_frequency_orders = {}
+        for r in range(sim_images.shape[0]):
+            for _, sim_index in zip(*self.illumination.get_wavevectors_projected(r)):
+                m = sim_index[1]
+                sum_shifts = np.zeros(sim_images.shape[2:], dtype=np.complex128)
+                for n in range(sim_images.shape[1]):
+                    if self.unitary:
+                        sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * sim_images[r, n]
+                    else:
+                        sum_shifts += self.illumination.Mt * self.illumination.phase_matrix_inverse[(r, n, m)] * sim_images[r, n]
+                sum_shifts_ft = self._compute_shifted_image_ft(sum_shifts, r, m)
+                spatial_frequency_orders[(r, m)] = sum_shifts_ft
+        return spatial_frequency_orders
 
+    
 class ReconstructorSpatialDomain(ReconstructorSIM):
     """
     Spatial domain reconstruction for SIM images.

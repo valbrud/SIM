@@ -817,6 +817,15 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.harmonics[harmonic].amplitude = am[harmonic]
         return am
     
+    def update_amplitudes(self, new_amplitudes: dict[tuple[int, ...], complex]):
+        for key in new_amplitudes.keys():
+            if key in self.rearranged_indices.keys():
+                for z_index in self.rearranged_indices[key]:
+                    index = self.glue_indices(key, z_index)
+                    self.harmonics[index].amplitude = new_amplitudes[key]
+            else:
+                raise KeyError(f"Key {key} not found in harmonics!")
+
     def clean_plane_waves(self, threshold=1e-3):
         """
         Remove plane waves with low amplitude.
@@ -972,6 +981,8 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                 
                 harmonic.phase=0
                 harmonic.wavevector = np.array([harmonic.wavevector[0], harmonic.wavevector[1], 0])
+                if return2D:
+                    sim_index = (sim_index[0], sim_index[1])
                 if not sim_index in new_harmonics_dict:
                     new_harmonics_dict[sim_index] = harmonic
                 else:
@@ -979,6 +990,7 @@ class IlluminationPlaneWaves3D(PlaneWavesSIM):
                 
             if dz is None:
                 new_harmonics_dict[sim_index].amplitude /= off_plane_count
+
         illumination_projected = IlluminationPlaneWaves3D(new_harmonics_dict, self.dimensions, self.Mr, self.spatial_shifts, self.angles, self.source_electromagnetic_plane_waves)
         illumination_projected.phase_matrix = self.phase_matrix        
         return illumination_projected if not return2D else IlluminationPlaneWaves2D.init_from_3D(illumination_projected, self.dimensions[:2], force=False)
@@ -1085,11 +1097,13 @@ class IlluminationPlaneWaves2D(PlaneWavesSIM):
                                     for harmonic in illumination_3d.harmonics}
         spatial_shifts = illumination_3d.spatial_shifts[:, :, :2]
         phase_matrix_old = illumination_3d.phase_matrix
+        phase_matrix_new = {}
         illumination = cls(intensity_harmonics_dict, dimensions, illumination_3d.Mr, spatial_shifts, angles=illumination_3d.angles, source_electromagnetic_plane_waves=illumination_3d.source_electromagnetic_plane_waves)
         illumination.Mt = illumination_3d.Mt
         for phase_shift_index in phase_matrix_old:
             phase_shift_index_2d = (phase_shift_index[0], phase_shift_index[1], tuple(phase_shift_index[2][:2]))
-            illumination.phase_matrix[phase_shift_index_2d] = phase_matrix_old[phase_shift_index]
+            phase_matrix_new[phase_shift_index_2d] = phase_matrix_old[phase_shift_index]
+        illumination.phase_matrix = phase_matrix_new
         return illumination
     
     def lift_to_quasi_2D(self):

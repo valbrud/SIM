@@ -301,21 +301,18 @@ class SIMulator3D(SIMulator):
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
 
 
-    def generate_noiseless_thick_sample_sim_images(self, ground_truth, psf_stack, z_values): 
-        illumination_default = copy.deepcopy(self.illumination)
-        
-        sim_images_stack = np.zeros((ground_truth.shape[0], self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
-        effective_psfs_default = self.effective_psfs
-        for i, psf in enumerate(psf_stack):
-            for harmonic in self.illumination.harmonics:
-                self.illumination.harmonics[harmonic].amplitude = illumination_default.harmonics[harmonic].amplitude * np.exp(-2j * np.pi * illumination_default.harmonics[harmonic].wavevector[2] * z_values[i])
-            
-            self.effective_psfs, _ = self.illumination.compute_effective_kernels(psf, self.optical_system.psf_coordinates)
-            sim_images_stack[i] = self.generate_noiseless_sim_images(ground_truth[..., i])
-        
-        sim_images = np.sum(sim_images_stack, axis=0)
+    def generate_noiseless_thick_sample_sim_images(self, image3D, psf_stack, z_values): 
+        x, y = self.optical_system.psf_coordinates
+        grid3d = np.stack(np.meshgrid(x, y, np.array(z_values)), axis=-1)        
+        sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+        for r in range(self.illumination.Mr):
+            for n in range(self.illumination.Mt):
+                illumination_density = self.illumination.get_illumination_density(grid3d, r=r, n=n)
+                image_total = np.zeros((image3D.shape[0], image3D.shape[1]))
+                for i, psf_slice in enumerate(psf_stack):
+                    image_slice = scipy.signal.convolve(illumination_density[i] * image3D[..., i], psf_slice)
+                    image_total += image_slice
+                sim_images[r, n] = image_total
+                    
         sim_images = np.real(sim_images) + 10**-10
-
-        self.effective_psfs = effective_psfs_default
-
         return sim_images
