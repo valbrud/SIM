@@ -551,6 +551,7 @@ class ReconstructorFourierDomain2D1fWF(ReconstructorFourierDomain2D):
             # ax[1].set_title(f'OTF minus minus r={r}, m=(-4, 0)')
             # plt.show()
             otf_mm = self.effective_kernels[(r, (-4, 0))]
+            a0 = self.illumination.harmonics[(r, (0, 0))].amplitude
             a_m = self.illumination.harmonics[(r, (-2, 0))].amplitude
             a_p = self.illumination.harmonics[(r, (2, 0))].amplitude
             area_of_interest_mask = np.where((np.abs(otf_zero) > numeric_noise) & (np.abs(otf_m) > numeric_noise), 1, 0)
@@ -579,7 +580,7 @@ class ReconstructorFourierDomain2D1fWF(ReconstructorFourierDomain2D):
             # plt.show()
             object_plus_ft = self._compute_shifted_image_ft(object_plus, r, (-2, 0))
             # object_plus_ft = np.where((np.abs(otf_minus) > numeric_noise) & (np.abs(otf_zero) < numeric_noise), object_plus_ft, 0)
-            kernel_plus = self.illumination.Mr * self.illumination.Mt * np.abs(otf_mm)**2 * np.abs(otf_m)**2 *  np.abs(a_p)**2 / (2 * np.abs(otf_mm)**2 + np.abs(otf_m)**2 * np.abs(a_m)**2 + numeric_noise) 
+            kernel_plus =  np.abs(otf_mm)**2 * np.abs(otf_m)**2 *  np.abs(a_p / a0)**2 / (2 * np.abs(otf_mm)**2 + np.abs(otf_m)**2 * np.abs(a_m / a0)**2 + numeric_noise) 
             # fig, ax = plt.subplots(1, 2)
             # ax[0].imshow(np.log1p(10**8 * np.abs(kernel_plus)).T, cmap='gray', origin='lower')
             # ax[0].set_title(f'Kernel plus r={r}, m=(2, 0)')
