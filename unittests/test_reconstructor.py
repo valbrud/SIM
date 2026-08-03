@@ -21,7 +21,9 @@ from SIMulator import SIMulator2D, SIMulator3D
 from config.BFPConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D, IlluminationPlaneWaves3D
 import ShapesGenerator
-from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain3D, ReconstructorSpatialDomain3DSliced
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain2D1fWF
+from Reconstructor import ReconstructorFourierDomain3D, ReconstructorSpatialDomain3DSliced
+
 from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel
 from WienerFiltering import filter_true_wiener_sim, filter_flat_noise_sim, filter_constant, filter_simulated_object_wiener
 import hpc_utils
@@ -53,9 +55,10 @@ class TestReconstruction2D(unittest.TestCase):
             point_number=self.N,
             line_width=0.4,
             num_lines=100,
-            intensity=10**4
+            intensity=10**3
         )
 
+        print("average photon per pixel:", np.mean(self.image))
         # self.image = 100 * ShapesGenerator.make_circle_grid(self.N, radius=1)
 
         # self.image = ShapesGenerator.generate_random_spherical_particles(
@@ -215,7 +218,23 @@ class TestReconstruction2D(unittest.TestCase):
             kernel = psf_kernel2d(9, (self.dx, self.dx))
         )            
         filtered = filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed_image), calc)
- 
+    
+    def test_reconstruction_4_images(self):
+        fourier_reconstructor = ReconstructorFourierDomain2D1fWF(
+            illumination=self.illumination,
+            optical_system=self.optical_system,
+            unitary=True
+        )
+        widefield = np.sum(self.sim_images[0], axis=0) / 3
+        sim_images = [widefield, self.sim_images[0, 0], self.sim_images[1, 0], self.sim_images[2, 0]]
+        # Reconstruct the image.
+        reconstructed_image = fourier_reconstructor.reconstruct(sim_images)
+        plt.imshow(np.log1p(np.abs(hpc_utils.wrapped_fftn(reconstructed_image))))
+        plt.title("Reconstructed FT")
+        plt.show()
+        plt.imshow(np.abs(reconstructed_image))
+        plt.title("Reconstructed image")
+        plt.show()
 
     def test_compare_kernel_size_effect(self):
         spatial_reconstructor1 = ReconstructorSpatialDomain2D(

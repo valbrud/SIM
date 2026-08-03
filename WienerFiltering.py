@@ -78,7 +78,7 @@ def filter_true_wiener_sim(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-9, 
+                    numeric_noise=10**-7, 
                     mask = None, 
                     watershed_confidence_interval=20):    
     """
@@ -150,13 +150,13 @@ def filter_true_wiener_sim(image_ft,
     
     ssnr = expand_ring_averages(ssnr_ra, ssnr_calculator.optical_system.otf_frequencies)
 
-    fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    ax[0].plot(np.log1p(1+ (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
-    ax[0].plot(np.log1p(1 + (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
-    ax[0].legend()
-    ax[1].plot(np.log1p(1  + ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
-    ax[1].legend()
-    plt.show()
+    # fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    # ax[0].plot(np.log1p(1+ (np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
+    # ax[0].plot(np.log1p(1 + (noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+    # ax[0].legend()
+    # ax[1].plot(np.log1p(1  + ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
+    # ax[1].legend()
+    # plt.show()
 
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
     ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
@@ -188,11 +188,11 @@ def filter_true_wiener_sim(image_ft,
     filtered = np.nan_to_num(filtered)
     filtered = np.where(ssnr_calculator.dj < numeric_noise, 0, filtered)
     ssnr = np.where(ssnr_calculator.dj < numeric_noise, 0, ssnr)
-    # filtered = np.where(ssnr < 1, 0, filtered)
-    # filtered_image = hpc_utils.wrapped_ifftn(filtered)
+    filtered = np.where(ssnr < 1, 0, filtered)
+    filtered_image = hpc_utils.wrapped_ifftn(filtered)
     # fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 50], cmap='viridis')
-    # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 50], cmap='viridis')
+    # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 3], cmap='viridis')
+    # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 3], cmap='viridis')
     # plt.show()
 
     # plt.imshow(np.abs(filtered_image), cmap='gray')

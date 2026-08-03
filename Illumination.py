@@ -507,7 +507,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
         # plt.show()
         return phase_modulation_patterns
     
-    def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray], preserve_order_structure=True) -> tuple[
+    def compute_effective_kernels(self, kernel: np.ndarray, coordinates: tuple[3, np.ndarray], only_axial_modulation=False) -> tuple[
         dict[tuple[int, tuple[int, ...]], np.ndarray], dict[tuple[int, tuple[int, ...]], np.ndarray]]:
         """
         Compute effective kernels for SIM computations
@@ -530,6 +530,8 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             for projected_index in indices[sim_index]:
                 index = self.glue_indices(sim_index, projected_index)
                 wavevector = harmonics[index].wavevector.copy()
+                if only_axial_modulation:
+                    wavevector[:2] = 0
                 amplitude = harmonics[index].amplitude
                 phase_shifted = np.exp(1j * np.einsum('...l,l ->...', grid, wavevector)) * kernel
                 effective_kernel += amplitude * phase_shifted
@@ -785,7 +787,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
             
             amr = np.zeros((len(harmonics)), dtype=np.complex128)
             otfs = off_grid_ft(psf, grid, wavevectors / (2 * np.pi))
-            print(otfs)
+            # print(otfs)
             
             if method == 'least_squares':
                 phases = flat_grid @ wavevectors.T
@@ -804,7 +806,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 for n in range(self.Mt):
                     ft = off_grid_ft(stack[r, n], grid, np.array(wavevectors / (2 * np.pi)))
                     amr = np.abs(ft)
-                    print(harmonic, amr)
+                    # print(harmonic, amr)
 
             amr /= np.abs((otfs))
             amr /= np.amax(np.abs(amr)) 
@@ -1305,34 +1307,14 @@ class PlaneWavesSIMNonlinear(PlaneWavesSIM):
             f"{linear}\n"
         )
 
+
 class IlluminationNonLinearSIM2D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves2D):
     dimensionality=2
-    def __init__(self,
-                 intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
-                 nonlinear_expansion_coefficients: tuple[int, ...],
-                 dimensions: tuple[int, ...],
-                 Mr=1,
-                 spatial_shifts=None, 
-                 angles=None,
-                 source_electromagnetic_plane_waves=None):
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
-
 
 class IlluminationNonLinearSIM3D(PlaneWavesSIMNonlinear, IlluminationPlaneWaves3D):
     dimensionality=3
-    def __init__(self,
-                 intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
-                 nonlinear_expansion_coefficients: tuple[int, ...],
-                 dimensions: tuple[int, ...],
-                 Mr=1,
-                 spatial_shifts=None, 
-                 angles=None,
-                 source_electromagnetic_plane_waves=None):
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
-
-class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
-    dimensionality=2
+class IlluminationNPhotonSIM(PlaneWavesSIMNonlinear):
     def __init__(self,
                  intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
                  nphoton: int,  
@@ -1341,21 +1323,18 @@ class IlluminationNPhotonSIM2D(IlluminationNonLinearSIM2D):
                  spatial_shifts=None, 
                  angles=None,
                  source_electromagnetic_plane_waves=None):
-        nonlinear_expansion_coefficients = tuple([0] * (nphoton - 1) + [1])
+        nonlinear_expansion_coefficients = tuple([0] * (nphoton) + [1])
         super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)
 
+    @classmethod
+    def init_from_linear_illumination(cls,
+                                      illumination: PlaneWavesSIM,
+                                      nphoton: int):
+        return cls(illumination.harmonics, nphoton, illumination.dimensions, illumination.Mr, illumination.spatial_shifts, illumination.angles, illumination.source_electromagnetic_plane_waves)
 
-class IlluminationNPhotonSIM3D(IlluminationNonLinearSIM3D):
+
+class IlluminationNPhotonSIM2D(IlluminationNPhotonSIM, IlluminationNonLinearSIM2D):
+    dimensionality=2
+
+class IlluminationNPhotonSIM3D(IlluminationNPhotonSIM, IlluminationNonLinearSIM3D):
     dimensionality=3
-    def __init__(self,
-                 intensity_harmonics_dict: dict[tuple[int, ...], Sources.IntensityHarmonic3D],
-                 nphoton: int,
-                 dimensions: tuple[int, ...],
-                 Mr=1,
-                 spatial_shifts=None, 
-                 angles=None,       
-                 source_electromagnetic_plane_waves=None):
-        if nphoton < 1:
-            raise ValueError("The number of photons absorbed must be greater than 0!")
-        nonlinear_expansion_coefficients = tuple([0] * nphoton + [1])
-        super().__init__(intensity_harmonics_dict, nonlinear_expansion_coefficients, dimensions, Mr, spatial_shifts, angles, source_electromagnetic_plane_waves)

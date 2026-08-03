@@ -16,7 +16,7 @@ from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
 from Illumination import IlluminationPlaneWaves3D
-from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase, SSNRSIMVectorial2D, SSNRSIMVectorial3D
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D, SSNRBase, SSNRSIMGLS2D, SSNRSIMGLS3D
 from OpticalSystems import System4f3D, System4f2D
 import utils
 from Sources import IntensityHarmonic3D

@@ -73,8 +73,8 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
 
     dimensionality = None  
 
-    peak_estimation_methods = ('interpolation', 'cross_correlation')
-    phase_estimation_methods = ('peak_phases', 'autocorrelation', 'cross_correlation')
+    peak_estimation_methods = ('default', 'interpolation', 'cross_correlation')
+    phase_estimation_methods = ('default', 'peak_phases', 'autocorrelation', 'cross_correlation')
     modulation_coefficients_methods = ('default', 'least_squares', 'peak_height_ratio')
     debug_info_levels = (0, 1, 2)
 
@@ -130,8 +130,11 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             raise ValueError(
                 f"Unknown method of modulation coefficients estimation {modulation_coefficients_method}. Available methods are {self.modulation_coefficients_methods}"
             )
-    
-        peaks, rotation_angles = self.estimate_peaks(peak_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations, debug_info_level=debug_info_level, correct_peak_position=correct_peak_position)
+        if peak_estimation_method == 'default':
+            peaks = {harmonic: self.illumination.harmonics[harmonic].wavevector for harmonic in self.illumination.harmonics}
+            rotation_angles = self.illumination.angles
+        else:
+            peaks, rotation_angles = self.estimate_peaks(peak_estimation_method, stack, peak_search_area_size, zooming_factor, max_iterations, debug_info_level=debug_info_level, correct_peak_position=correct_peak_position)
         
         if debug_info_level > 0:
             for r in range(Mr):
@@ -139,7 +142,10 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             for sim_index in sorted(peaks.keys()):
                 print('r = ', sim_index[0], 'm = ', sim_index[1], 'wavevector = ', np.round((peaks[sim_index]), 3), '1 / lambda')
 
-        phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, first_order_phases_only, debug_info_level)
+        if phase_estimation_method == 'default':
+            phase_matrix = self.illumination.phase_matrix
+        else:
+            phase_matrix = self.build_phase_matrix(phase_estimation_method, stack, peaks, first_order_phases_only, debug_info_level)
 
         if debug_info_level > 0:
             for sim_index in sorted(phase_matrix.keys()):
@@ -364,7 +370,7 @@ class IlluminationPatternEstimator2D(IlluminationPatternEstimator):
             if modulation_estimation_method == 'least_squares':
                 reconstructor = Reconstructor.ReconstructorFourierDomain2D(illumination_raw, self.optical_system, return_ft=True, unitary=False)
                 spatial_frequency_orders = reconstructor.compute_spatial_frequency_orders(stack)
-                return modulation_estimator.least_squares(spatial_frequency_orders)
+                return modulation_estimator.least_squares(spatial_frequency_orders, debug_info_level=debug_info_level)
             elif modulation_estimation_method == 'peak_height_ratio':
                 modulation_estimator.peak_height_ratio(stack, self.optical_system.psf, self.optical_system.x_grid, treat_composite_orders_separately_for_modulation, debug_info_level) 
             else:
@@ -472,6 +478,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
         for r in range(illumination2d.Mr):
             base_vectors2d = illumination2d.get_base_vectors(r)
             missing_base = (k_vector_length **2 - np.sum(base_vectors2d**2 * np.array(reference_expansion[:2])**2))**0.5 / reference_expansion[2]
+            missing_base -= k_vector_length * reference_expansion[2]  # subtract the reference expansion to get the missing base vector
             base_vectors3d[r, :2] = base_vectors2d
             base_vectors3d[r, 2] = missing_base
             if debug_info:
@@ -510,12 +517,16 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
             phase_fn = self._make_phase_estimator(illumination2d, optical_system2d, phase_estimation_method, first_order_phases_only)
             phase_matrix2d = phase_fn(projected_stack, peaks2d)
             phase_matrix3d = {}
-            for peak in self.illumination.project_in_quasi_2D().harmonics.keys():
-                r, m = peak
+            for peak in phase_matrix2d.keys():
+                r, n, m = peak
+                m_inv = tuple(-np.array(m))
+                phase_matrix3d[(r, n, (m[0], m[1], 0))] = phase_matrix2d[peak]
+                phase_matrix3d[(r, n, (-m[0], m[1], 0))] = phase_matrix2d[peak].conjugate()
+            for r in range(self.illumination.Mr):
                 for n in range(self.illumination.Mt):
-                    phase_matrix3d[peak[0], n, peak[1]] = phase_matrix2d[(r, n, m[:2])]
+                    phase_matrix3d[(r, n, (0, 0, 0))] = 0
             return phase_matrix3d
-
+        
     def estimate_modulation_coefficients(self,
                                         modulation_estimation_method: str,
                                         stack: np.ndarray,
@@ -1677,8 +1688,7 @@ class ModulationEstimator:
 
     def least_squares(self, spatial_frequency_orders, debug_info_level=0) -> dict:
         """
-        Estimate modulation coefficients a_m by least-squares fitting of the
-        model I_n(x) = sum_m a_m exp(2πi k_m · x) to each image in the stack.
+        Estimate modulation coefficients a_m by least-squares between order differences.
         """
         am = {}    
         a0 = 1
@@ -1687,36 +1697,55 @@ class ModulationEstimator:
             am[key_zero] = 1.0 + 0.0j
 
             I0 = spatial_frequency_orders[key_zero]
+
             g0 = self.effective_otfs[key_zero]
+            plt.imshow(hpc_utils.wrapped_ifftn(I0)[..., I0.shape[2]//2].real, cmap='gray')
+            plt.show()
 
             for key in spatial_frequency_orders.keys():
                 if key[0] != r or key == key_zero:
                     continue
                 I = spatial_frequency_orders[key]
                 g = self.effective_otfs[key]
-                # I0f = np.copy(I0)   
-                I0f = np.where((np.abs(g) > 10**-3) & (np.abs(g0) > 10**-3), I0, 0)
-                I = np.where((np.abs(g) > 10**-3) & (np.abs(g0) > 10**-3), I , 0)
+                I0f = np.copy(I0)   
+                # I0f = np.where((np.abs(g) > 10**-3) & (np.abs(g0) > 10**-3), I0, 0)
+                # I = np.where((np.abs(g) > 10**-3)& (np.abs(g0) > 10**-3), I , 0)
                 
-                f1 = np.abs(I0f) / (np.abs(g0) + 10**-3)
-                f2 = np.abs(I) / (np.abs(g) + 10**-3)
+                f1 = g * I0f
+                f2 = g0 * I 
                 # plt.imshow(np.log1p(np.abs(10**5 * (0.5 * f1 - f2))), cmap='gray')
                 # plt.show()
+                fig, ax = plt.subplots(1, 2)
+                ax[0].imshow(hpc_utils.wrapped_ifftn(f1)[..., f1.shape[2]//2].real, cmap='gray')
+                ax[1].imshow(hpc_utils.wrapped_ifftn(f2)[..., f2.shape[2]//2].real, cmap='gray')
+                plt.show()
                 if debug_info_level >= 2:
                     fig, ax = plt.subplots(2, 2)
-                    ax[0, 0].imshow(np.log1p(np.abs(10**5 * I0f[:, I.shape[1]//2, :])), cmap='gray')
+                    if self.illumination.dimensionality == 3:
+                        ax[0, 0].imshow(np.log1p(np.abs(10**5 * (I0f / (g0 + 1e-5))[:, :, I.shape[2]//2])), cmap='gray')
+                    else:
+                        ax[0, 0].imshow(np.log1p(np.abs(10**2 * I0f)), cmap='gray')
                     ax[0, 0].set_title(f"I0f for key {key}")
                     ax[0, 0].set_aspect('equal')
                     ax[0, 0].axis('off')
-                    ax[0, 1].imshow(np.log1p(np.abs(10**5 * I[:, I.shape[1]//2, :])), cmap='gray')
+                    if self.illumination.dimensionality == 3:
+                        ax[0, 1].imshow(np.log1p(np.abs(10**5 * (I / (g + 1e-5))[:, :, I.shape[2]//2])), cmap='gray')
+                    else:
+                        ax[0, 1].imshow(np.log1p(np.abs(10**2 * I)), cmap='gray')
                     ax[0, 1].set_title(f"I for key {key}")
                     ax[0, 1].axis('off')
                     ax[0, 0].set_aspect('equal')
-                    ax[1, 0].imshow(np.log1p(np.abs(10**5 * g0[:, g.shape[1]//2, :])), cmap='gray')
+                    if self.illumination.dimensionality == 3:
+                        ax[1, 0].imshow(np.log1p(np.abs(10**5 * g0[:, g.shape[1]//2, :])), cmap='gray')
+                    else:
+                        ax[1, 0].imshow(np.log1p(np.abs(10**2 * g0)), cmap='gray')
                     ax[1, 0].set_title(f"g0 for key {key}")
                     ax[1, 0].axis('off')
                     ax[1, 0].set_aspect('equal')
-                    ax[1, 1].imshow(np.log1p(np.abs(10**5 * g[:, g.shape[1]//2, :])), cmap='gray')
+                    if self.illumination.dimensionality == 3:
+                        ax[1, 1].imshow(np.log1p(np.abs(10**5 * g[:, g.shape[1]//2, :])), cmap='gray')
+                    else:
+                        ax[1, 1].imshow(np.log1p(np.abs(10**2 * g)), cmap='gray')
                     ax[1, 1].set_title(f"g for key {key}")
                     ax[1, 1].axis('off')   
                     ax[1, 1].set_aspect('equal') 
@@ -1730,7 +1759,7 @@ class ModulationEstimator:
                     a = complex(float(x[0]), float(x[1]))
                     diff = a0 * g0 * I - a * g * I0f
                     # print(f"Current a: {a}, objective: {float(np.sum(np.abs(diff) ** 2))}")
-                    return float(np.sum(np.abs(diff) ** 2))
+                    return float(np.sum((g0 + g) * np.abs(diff) ** 2))
 
                 def grad(x):
                     a = complex(float(x[0]), float(x[1]))
@@ -1740,7 +1769,7 @@ class ModulationEstimator:
                     return np.array([grad_re, grad_im], dtype=np.float64)
                 
                 x0 = [float(np.real(a)), float(np.imag(a))]
-                bounds = [(-1, 1), (-1, 1)]
+                bounds = [(-5, 5), (-5, 5)]
                 optimizer = scipy.optimize.minimize(
                     obj,
                     x0=x0,
@@ -1753,10 +1782,14 @@ class ModulationEstimator:
                 a = complex(float(optimizer.x[0]), float(optimizer.x[1]))
                 am[key] = a
                 diff = a0 * g0 * I - a * g * I0f
-                # plt.imshow(np.log1p(np.abs(10**5 * diff[:, :, diff.shape[2]//2])), cmap='gray')
-                # plt.title(f"Residual for key {key} with a={a}")
-                # plt.axis('off')
-                # plt.show()
+                if debug_info_level >= 2:
+                    if self.illumination.dimensionality == 3:
+                        plt.imshow(np.log1p(np.abs(10**5 * diff[:, :, diff.shape[2]//2])), cmap='gray')
+                    else:
+                        plt.imshow(np.log1p(np.abs(10**2 * diff)), cmap='gray')
+                    plt.title(f"Residual for key {key} with a={a}")
+                    plt.axis('off')
+                    plt.show()
                 
         return am
         

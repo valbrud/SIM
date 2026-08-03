@@ -23,7 +23,7 @@ import Sources
 import hpc_utils
 import hpc_utils
 from Box import BoxSIM, Field
-from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
+from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D, IlluminationNPhotonSIM2D
 from VectorOperations import VectorOperations
 from mpl_toolkits.mplot3d import axes3d
 from Dimensions import DimensionMetaAbstract
@@ -102,6 +102,27 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
                 raise AttributeError("If phase modulation patterns are not provided, optical system must be provided to compute them.")
             self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
 
+    def _compute_effective_kernels(self):
+        """
+        Compute the effective kernels for the reconstruction.
+
+        Parameters
+        ----------
+        kernel : numpy.ndarray
+            The kernel used for convolution in spatial domain reconstruction.
+
+        Returns
+        -------
+        dict
+            A dictionary of effective kernels for each rotation and modulation index.
+        """
+        if self.optical_system is None:
+            raise AttributeError("Optical system must be provided to compute effective kernels.")
+        if self.kernel is None:
+            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
+        else:
+            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+
     @property
     def optical_system(self):
         return self._optical_system
@@ -109,13 +130,16 @@ class ReconstructorSIM(metaclass=DimensionMetaAbstract):
     @optical_system.setter
     def optical_system(self, new_optical_system):
         self._optical_system = new_optical_system
-        if self.kernel is None:
-            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.kernel, self.optical_system.psf_coordinates)
-        else:
-            _, self.effective_kernels = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+        self._compute_effective_kernels()
+
     @property
     def kernel(self):
         return self._kernel
+
+    @kernel.setter
+    def kernel(self, new_kernel):
+        self._kernel = new_kernel
+        self._compute_effective_kernels()
 
     @abstractmethod
     def reconstruct(self, sim_images):
@@ -466,6 +490,116 @@ class ReconstructorFourierDomain2D(ReconstructorFourierDomain):
                          unitary=unitary
         )
 
+
+class ReconstructorFourierDomain2D1fWF(ReconstructorFourierDomain2D):
+    """
+    A specialized 2D Fourier domain reconstructor for a specialized scheme of SIM reconstructions 
+    with the reduced number of images "...". It is assumed that the first image in a stack is widefield, 
+    and other images are images obtained with structured illumination (1 per rotation). 
+    It is also assumed that the illumination is a conventional 2-beams illumination. 
+    """
+
+    def __init__(self,
+                 illumination: IlluminationPlaneWaves2D,
+                 optical_system: OpticalSystem2D = None,
+                 phase_modulation_patterns=None,
+                 return_ft=False,
+                 unitary=False
+                 ):
+
+        illumination_expanded = IlluminationNPhotonSIM2D.init_from_linear_illumination(illumination, nphoton=2)
+        for harmonic in illumination_expanded.harmonics:
+            illumination_expanded.harmonics[harmonic].amplitude = 1
+        effective_kernels = illumination_expanded.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)[1]
+        for kernel in effective_kernels:
+            print(kernel, np.amax(np.abs(effective_kernels[kernel])))
+        super().__init__(illumination=illumination,
+                         optical_system=optical_system,
+                         kernel=None,
+                         effective_kernels=effective_kernels,
+                         phase_modulation_patterns=phase_modulation_patterns, 
+                         return_ft=return_ft,
+                         unitary=unitary
+        )
+
+    def reconstruct(self, sim_images, numeric_noise = 1e-3):
+        widefield_image = sim_images[0]
+        widefield_image_ft = hpc_utils.wrapped_fftn(widefield_image)
+        otf_zero = self.effective_kernels[(0, (0, 0))] 
+        widefield_image_ft = np.where(otf_zero > numeric_noise, widefield_image_ft, 0)
+        print('widefield_image_ft', np.amax(np.abs(widefield_image_ft)))
+        object_zero_ft = widefield_image_ft / (otf_zero + numeric_noise) * self.illumination.Mr * self.illumination.Mt
+        print('object_zero_ft', np.amax(np.abs(object_zero_ft)))
+        reconstructed_ft = np.copy(object_zero_ft) * otf_zero**2
+        object_zero = hpc_utils.wrapped_ifftn(object_zero_ft)
+        for r in range(self.illumination.Mr):
+            object_minus_ft = self._compute_shifted_image_ft(object_zero, r, (-2, 0)) 
+            # print(np.amax(np.abs(object_minus_ft)))
+            sim_image = sim_images[r + 1]
+            sim_image_ft = hpc_utils.wrapped_fftn(sim_image)
+            sim_image_ft = np.where(np.abs(otf_zero) > numeric_noise, sim_image_ft, 0)
+            # plt.plot((sim_image_ft / (otf_zero + numeric_noise))[:, sim_image_ft.shape[1] // 2])
+            # plt.show()
+            otf_p = self.effective_kernels[(r, (2, 0))]
+            otf_m = self.effective_kernels[(r, (-2, 0))]
+            otf_pp = self.effective_kernels[(r, (4, 0))]
+            otf_mm = self.effective_kernels[(r, (-4, 0))]
+            # fig, ax = plt.subplots(1, 2)
+            # ax[0].imshow(np.log1p(10**8 * np.abs(otf_m)).T, cmap='gray', origin='lower')
+            # ax[0].set_title(f'OTF minus r={r}, m=(-2, 0)')
+            # ax[1].imshow(np.log1p(10**8 * np.abs(otf_mm)).T, cmap='gray', origin='lower')
+            # ax[1].set_title(f'OTF minus minus r={r}, m=(-4, 0)')
+            # plt.show()
+            otf_mm = self.effective_kernels[(r, (-4, 0))]
+            a_m = self.illumination.harmonics[(r, (-2, 0))].amplitude
+            a_p = self.illumination.harmonics[(r, (2, 0))].amplitude
+            area_of_interest_mask = np.where((np.abs(otf_zero) > numeric_noise) & (np.abs(otf_m) > numeric_noise), 1, 0)
+            # fig, ax = plt.subplots(1, 2)
+            # ax[0].imshow(np.log1p(10**8 * np.abs(object_minus_ft.T)), cmap='gray', origin='lower')
+            # ax[0].set_title(f'Shifted widefield image r={r}, m=(-2, 0)')
+            # ax[1].imshow(area_of_interest_mask.T, cmap='gray', origin='lower', vmin=0, vmax=1)
+            # ax[1].set_title(f'Area of interest mask r={r}')
+            # plt.show()
+            structured_part = (sim_image_ft - widefield_image_ft)
+            print('sim_image', np.amax(np.abs(sim_image_ft / (otf_zero + numeric_noise))))
+            print('structured_part', np.amax(np.abs(structured_part / (otf_zero + numeric_noise))))
+            print('object_minus_ft rescaled', np.amax(np.abs(object_minus_ft * a_m)))
+            object_plus_shifted_ft = (structured_part * area_of_interest_mask / (otf_zero + numeric_noise) - object_minus_ft * a_m * area_of_interest_mask) / a_p
+            # fig, ax = plt.subplots(1, 3)
+            # ax[0].imshow(np.log1p(10**8 * np.abs(structured_part.T)), cmap='gray', origin='lower')
+            # ax[0].set_title(f'Structured part r={r}')
+            # ax[1].imshow(np.log1p(10**8 * np.abs(object_plus_shifted_ft.T)), cmap='gray', origin='lower')
+            # ax[1].set_title(f'Object plus shifted before rescaling r={r}')
+            # ax[2].imshow(np.log1p(10**8 * np.abs(object_minus_ft.T)), cmap='gray', origin='lower')
+            # ax[2].set_title(f'Object minus shifted r={r}')
+            # plt.show()
+            object_plus = hpc_utils.wrapped_ifftn(object_plus_shifted_ft)
+            # plt.imshow(np.log1p(10**8 * np.abs(object_plus_shifted_ft.T)), cmap='gray', origin='lower')
+            # plt.title(f'Object plus r={r}, m=(2, 0)')
+            # plt.show()
+            object_plus_ft = self._compute_shifted_image_ft(object_plus, r, (-2, 0))
+            # object_plus_ft = np.where((np.abs(otf_minus) > numeric_noise) & (np.abs(otf_zero) < numeric_noise), object_plus_ft, 0)
+            kernel_plus = self.illumination.Mr * self.illumination.Mt * np.abs(otf_mm)**2 * np.abs(otf_m)**2 *  np.abs(a_p)**2 / (2 * np.abs(otf_mm)**2 + np.abs(otf_m)**2 * np.abs(a_m)**2 + numeric_noise) 
+            # fig, ax = plt.subplots(1, 2)
+            # ax[0].imshow(np.log1p(10**8 * np.abs(kernel_plus)).T, cmap='gray', origin='lower')
+            # ax[0].set_title(f'Kernel plus r={r}, m=(2, 0)')
+            # ax[1].imshow(np.log1p(10**8 * np.abs(object_plus_ft)).T, cmap='gray', origin='lower')
+            # ax[1].set_title(f'Object plus r={r}, m=(2, 0)')
+            # plt.show()
+            reconstructed_ft += object_plus_ft * kernel_plus
+            reconstructed_ft += np.flip(object_plus_ft, axis=(0, 1)).conjugate() * np.flip(kernel_plus, axis=(0, 1)).conjugate()  # Add the conjugate symmetric part
+            # plt.imshow(np.log1p(10**8 * np.abs(reconstructed_ft.T)), cmap='gray', origin='lower')
+            # plt.show()
+
+        if self.return_ft:
+            return reconstructed_ft * self.illumination.Mr * self.illumination.Mt
+        reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_ft))
+        return reconstructed_image
+
+
+
+class ReconstructorFourierDomain2D6Images(ReconstructorFourierDomain2D):
+    ...
 class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
 
     dimensionality = 2

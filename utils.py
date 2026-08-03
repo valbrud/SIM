@@ -363,11 +363,11 @@ def expand_ring_averages2d(averaged: np.ndarray[int, ...], axes: tuple[np.ndarra
         np.ndarray: Expanded array.
     """
     if axes is None:
-        ax1, ax2 = np.arange(averaged.shape[0]) - averaged.shape[0] / 2, np.arange(averaged.shape[0]) - averaged.shape[0] / 2
+        ax1, ax2 = np.arange(averaged.shape[0]) - averaged.shape[0] / 2, np.arange(averaged.shape[1]) - averaged.shape[1] / 2
     else:
         ax1, ax2 = axes[0], axes[1]
 
-    x, y = np.meshgrid(ax1, ax2)
+    x, y = np.meshgrid(ax1, ax2, indexing='ij')
     r = (x ** 2 + y ** 2) ** 0.5
     phi = np.angle(x + 1j * y)
     ax1, ax2 = ax1[ax1 >= -1e-10], ax2[ax2 >= -1e-10]
@@ -392,7 +392,7 @@ def expand_ring_averages3d(averaged: np.ndarray[tuple[int, int], ...], axes: tup
         np.ndarray: Expanded array.
     """
     if axes is None:
-        axes = (np.arange(averaged.shape[0]) - averaged.shape[0] / 2, np.arange(averaged.shape[0]) - averaged.shape[0] / 2, np.arange(averaged.shape[1]) - averaged.shape[1] / 2)
+        axes = (np.arange(averaged.shape[0]) - averaged.shape[0] / 2, np.arange(averaged.shape[1]) - averaged.shape[1] / 2, np.arange(averaged.shape[2]) - averaged.shape[2] / 2)
     expanded = np.zeros((axes[0].size, axes[1].size, axes[2].size))
     for iz in range(axes[2].size):
         expanded[:, :, iz] = expand_ring_averages2d(averaged[:, iz], axes=(axes[0], axes[1]))

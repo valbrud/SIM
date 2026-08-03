@@ -20,7 +20,7 @@ Classes:
 import numpy
 import numpy as np
 
-from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D
+from Illumination import PlaneWavesSIM, IlluminationPlaneWaves2D, IlluminationPlaneWaves3D, IlluminationNPhotonSIM2D
 import OpticalSystems
 import hpc_utils
 from utils import average_rings2d, expand_ring_averages2d
@@ -736,7 +736,7 @@ class SSNRSIM3D(SSNRSIM):
         slider = utils.wrap_axes3d(ax, [self.effective_kernels_ft[m], self.effective_otfs[m]], mode='log1p',  extent=[-4, 4, -4, 4])
         return slider         
 
-class SSNRSIMVectorial(SSNRSIM):
+class SSNRSIMGLS(SSNRSIM):
     def __init__(self,
                  illumination, 
                  optical_system, 
@@ -831,7 +831,7 @@ class SSNRSIMVectorial(SSNRSIM):
             # plt.imshow(np.abs(self.effective_kernels_ft[m]))
             # plt.title(m)
             # plt.show()
-class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
+class SSNRSIMGLS2D(SSNRSIMGLS, SSNRSIM2D):
     dimensionality = 2
     def __init__(self,
                 illumination: IlluminationPlaneWaves2D,
@@ -853,7 +853,7 @@ class SSNRSIMVectorial2D(SSNRSIMVectorial, SSNRSIM2D):
                          neglect_cross_correlation=neglect_cross_correlation)
 
 
-class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
+class SSNRSIMGLS3D(SSNRSIMGLS, SSNRSIM3D):
     dimensionality = 3
 
     def __init__(self,
@@ -865,7 +865,7 @@ class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
                 illumination_reconstruction=None, 
                 imperfect_phase_shifts=False,
                 neglect_cross_correlation=True):
-
+        self.numeric_noise = 1e-3
         super().__init__(illumination, 
                          optical_system, 
                          kernel=kernel, 
@@ -874,3 +874,80 @@ class SSNRSIMVectorial3D(SSNRSIMVectorial, SSNRSIM3D):
                          illumination_reconstruction=illumination_reconstruction, 
                          imperfect_phase_shifts=imperfect_phase_shifts,
                          neglect_cross_correlation=neglect_cross_correlation)
+
+class SSNRSIM2D1fWF(SSNRSIM2D):
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system:OpticalSystems.OpticalSystem,
+                 kernel: np.ndarray=None,
+                 readout_noise_variance:float=0,
+                 effective_otfs={},
+                 effective_kernels_ft={},
+                 save_memory=False, 
+                 illumination_reconstruction=None, 
+                 imperfect_phase_shifts=False, 
+                 p = 1, 
+                 numeric_noise=1e-3
+                 ):
+        # p is an intensity weigting parameter
+        self.p = p
+        self.numeric_noise = numeric_noise
+
+        illumination_expanded = IlluminationNPhotonSIM2D.init_from_linear_illumination(illumination, nphoton=2)
+        for harmonic in illumination_expanded.harmonics:
+            illumination_expanded.harmonics[harmonic].amplitude = 1
+        effective_kernels_ft = illumination_expanded.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)[1]
+    
+        super().__init__(illumination, 
+                         optical_system, 
+                         kernel=kernel, 
+                         readout_noise_variance=readout_noise_variance, 
+                         effective_otfs=effective_otfs, 
+                         effective_kernels_ft=effective_kernels_ft, 
+                         save_memory=save_memory, 
+                         illumination_reconstruction=illumination_reconstruction, 
+                         imperfect_phase_shifts=imperfect_phase_shifts)
+        self._compute_ssnri()
+
+    def _compute_Dj(self):
+        dj = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        norm = self.illumination.Mr + 1
+        dj += np.abs(self.effective_kernels_ft[(0, (0, 0))])**2 
+        for r in range(self.illumination.Mr):
+            otf_p = self.effective_kernels_ft[(r, (2, 0))]
+            otf_m = self.effective_kernels_ft[(r, (-2, 0))]
+            otf_pp = self.effective_kernels_ft[(r, (4, 0))]
+            otf_mm = self.effective_kernels_ft[(r, (-4, 0))]
+            a0 = self.illumination.harmonics[(r, (0, 0))].amplitude 
+            a_m = self.illumination.harmonics[(r, (-2, 0))].amplitude / a0 
+            a_p = self.illumination.harmonics[(r, (2, 0))].amplitude / a0 
+            kernel_plus = np.abs(self.p)**2 * np.abs(otf_mm)**2 * np.abs(otf_m)**2 * np.abs(a_p)**2 / ((np.abs(self.p)**2 + 1) * np.abs(otf_mm)**2 + np.abs(self.p)**2 * np.abs(otf_m)**2 * np.abs(a_m)**2 + self.numeric_noise)
+            dj += kernel_plus
+            dj += np.flip(kernel_plus, axis=(0, 1)).conjugate()
+        return 4 / (self.p + 1)**2 * dj / norm
+
+    def _compute_Vj(self):
+        return self.dj
+
+
+
+class SSNRSIMR2fPiShift(SSNRSIM):
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system:OpticalSystems.OpticalSystem,
+                 kernel: np.ndarray=None,
+                 readout_noise_variance:float=0,
+                 effective_otfs={},
+                 effective_kernels_ft={},
+                 save_memory=False, 
+                 illumination_reconstruction=None, 
+                 imperfect_phase_shifts=False
+                 ):
+        super().__init__(illumination, 
+                         optical_system, 
+                         kernel=kernel, 
+                         readout_noise_variance=readout_noise_variance, 
+                         effective_otfs=effective_otfs, 
+                         effective_kernels_ft=effective_kernels_ft, 
+                         save_memory=save_memory, 
+                         illumination_reconstruction=illumination_reconstruction, 
+                         imperfect_phase_shifts=imperfect_phase_shifts)
+        self._compute_ssnri()

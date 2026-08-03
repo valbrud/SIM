@@ -76,7 +76,7 @@ def frc(image1, image2, is_fourier=False, num_bins=100):
             denominator = np.sqrt(np.sum(np.abs(f1[mask])**2) * np.sum(np.abs(f2[mask])**2))
             frc_values[i] = np.abs(numerator) / denominator if denominator != 0 else 0.0
             # Define the spatial frequency for the bin as the mean radius
-    return frc_values, freq
+    return freq, frc_values
 
 def correct_for_readout_noise(image, readout_noise): ...
 
