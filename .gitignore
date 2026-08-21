@@ -21,3 +21,5 @@ simulations/BlindSIM/
 simulations/statistics/
 aberration_estimation/
 unittests/test_data/
+deck/
+

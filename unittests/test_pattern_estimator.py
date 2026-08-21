@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import skimage
 import utils 
 import Apodization
+import pdb 
 
 from config.SIM_N100_NA15 import (
     alpha, theta, dx, dz, configurations, nmedium
@@ -204,7 +205,7 @@ def build_experimental_illumination_3d():
     print('ratio to lens semi-oepning', np.sin(theta) / np.sin(alpha))
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 0.3, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi),
+        theta, 1, 0.5, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi),
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -214,7 +215,7 @@ def build_experimental_illumination_3d():
 def build_theoretical_illumination_3d():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 0.3, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi)
+        theta, 0.5, 1, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi)
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -226,7 +227,7 @@ class TestPatternEstimator3D(unittest.TestCase):
     
     def setUp(self):
         # ---------- optics --------------------------------------------------
-        N = (201, 201, 11)                               
+        N = (201, 201, 31)                               
         max_r = N[0] // 2 * dx
         max_z = N[2] // 2 * dz
         psf_size = 2 * np.array((max_r, max_r, max_z))
@@ -238,8 +239,8 @@ class TestPatternEstimator3D(unittest.TestCase):
         # plt.show()
         apodization = Apodization.AutocorrelationApodizationWidefield(self.optical_system3d)
         self.optical_system3d.otf = np.where(apodization.apodization_function>1e-16, self.optical_system3d.otf, 0)
-        plt.imshow(np.log1p(10**5 * np.abs(apodization.apodization_function.real[:, shape[1]//2, :])), cmap='gray',)
-        plt.show()
+        # plt.imshow(np.log1p(10**5 * np.abs(apodization.apodization_function.real[:, shape[1]//2, :])), cmap='gray',)
+        # plt.show()
         # self.optical_system3d.otf[shape[0]//2, shape[1]//2, :] = 0
         # self.optical_system3d.otf[shape[0]//2, shape[1]//2, shape[2]//2] = 1
         # plt.imshow(np.log1p(10**5 * np.abs(self.optical_system3d.otf.real[:, shape[1]//2, :])), cmap='gray',)
@@ -279,8 +280,8 @@ class TestPatternEstimator3D(unittest.TestCase):
         # self.sample *= mask[:, :, None]
         print('total_photon_counts = ', np.sum(self.sample))  # check that the sample is not empty
         print('averaged_photon_counts = ', np.sum(self.sample) / np.prod(np.array(N)))  # check that the sample is not empty
-        fig, ax, slider = utils.imshow3D(self.sample, cmap='gray')
-        plt.show()
+        # fig, ax, slider = utils.imshow3D(self.sample, cmap='gray')
+        # plt.show()
 
 
     def test_estimate_by_averaging_2d_slices(self):
@@ -305,21 +306,22 @@ class TestPatternEstimator3D(unittest.TestCase):
 
         # print("base_vectors =", base_vectors)
         print("theoretical_amplitudes=", self.theoretical_illumination.get_all_amplitudes())
-    
+        # pdb.set_trace()
+
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
-            peak_estimation_method='cross_correlation', 
+            peak_estimation_method='default', 
             phase_estimation_method='default',
-            modulation_coefficients_method='least_squares',
+            modulation_coefficients_method='peak_height_ratio',
             peak_search_area_size = 3,
             zooming_factor = 100, 
             max_iterations = 2,
-            debug_info_level=2, 
+            debug_info_level=1, 
             first_order_phases_only=True
         )
-        
-        am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system3d.psf, self.optical_system3d.x_grid, method='peak_height_ratio')
-        print("Estimated modulation coefficients", am)
+        # print(ilumination)
+        # am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system3d.psf, self.optical_system3d.x_grid, method='peak_height_ratio')
+        print("Estimated modulation coefficients", illumination_estimated.get_all_amplitudes())
         spatial_shifts = illumination_estimated.estimate_spatial_shifts_from_phase_matrix()
         # print('spatial_shifts = ', spatial_shifts)
         illumination_estimated.spatial_shifts = spatial_shifts

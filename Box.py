@@ -69,7 +69,7 @@ class Box:
         analytic_frequencies (list): List of analytic frequencies.
     """
 
-    def __init__(self, sources=(), box_size=10, point_number=100, additional_info=None):
+    def __init__(self, sources=(), box_size=10, point_number: (int|tuple[int, int]|tuple[int, int, int])=100, additional_info=None):
         """
         Initializes the Box with given sources, size, and point number.
 

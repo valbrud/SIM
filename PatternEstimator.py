@@ -551,7 +551,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
             spatial_frequency_orders = reconstructor.compute_spatial_frequency_orders(stack)
             return modulation_estimator.least_squares(spatial_frequency_orders, debug_info_level=debug_info_level)
         elif modulation_estimation_method == 'peak_height_ratio':
-            raise NotImplementedError("Peak height ratio method is not implemented for 3D illumination.")
+            return modulation_estimator.peak_height_ratio(stack)
         else:
             raise ValueError(f"Unknown method of modulation coefficients estimation '{modulation_estimation_method}'. Available methods are {self.modulation_coefficients_methods}")
         
@@ -1659,29 +1659,27 @@ class ModulationEstimator:
             np.ndarray: Estimated modulation coefficients.
         """
         grid = self.optical_system.x_grid
-        psf = self.optical_system.psf
         am = {}
+        # am[(0, tuple([0] * self.illumination.dimensionality))] = 1.0  / self.illumination.Mt / self.illumination.Mr
+        ft0 = off_grid_ft(stack[0, 0], grid, (np.array([0.]*self.illumination.dimensionality)), )
 
-        for r in range(self.Mr):
-            harmonics = {index[1]: harmonic for index, harmonic in self.harmonics.items() if index[0] == r}
-            wavevectors = np.zeros((len(harmonics), self.dimensionality))
-            for i, harmonic in enumerate(harmonics.keys()):
-                wavevectors[i] = harmonics[harmonic].wavevector
-            
-            amr = np.zeros((len(harmonics)), dtype=np.complex128)
-            otfs = off_grid_ft(psf, grid, wavevectors / (2 * np.pi))
-            print(otfs)
-            
-            ft = off_grid_ft(stack[r, 0], grid, np.array(wavevectors / (2 * np.pi)))
-
-            amr = np.abs(ft)
-            print(harmonic, amr)
-
-            amr /= np.abs((otfs))
-            amr /= np.amax(np.abs(amr)) 
-            # amr /= (self.Mt * self.Mr)
-            for i in range(len(harmonics)):
-                am[(r, tuple(harmonics.keys())[i])] = amr[i]
+        for r in range(self.illumination.Mr):
+            # amr = np.zeros((len(harmonics)), dtype=np.complex128)
+            harmonics = {index[1]: harmonic for index, harmonic in self.illumination.harmonics.items() if index[0] == r}
+            # import pdb; pdb.set_trace()
+            for harmonic in harmonics.keys():
+                if np.isclose(np.sum(np.abs(np.array(harmonic))), 0):
+                    am[(r, harmonic)] = 1.0 / self.illumination.Mt / self.illumination.Mr
+                    continue
+                wavevector = self.illumination.harmonics[(r, harmonic)].wavevector / (2 * np.pi)
+                otf = self.effective_otfs[(r, harmonic)]
+                otf_value = otf[tuple([s // 2 for s in otf.shape])]
+                ft = off_grid_ft(stack[r, 0], grid, np.array((wavevector, )))
+                # otf_value = off_grid_ft(otf, grid, (np.array([0.]*self.illumination.dimensionality)), ) ??? not clear why not working
+                amr = np.abs(ft)[0] / ft0 / np.abs(otf_value)
+                print(harmonic, amr)
+                amr /= (self.illumination.Mt * self.illumination.Mr)
+                am[(r, harmonic)] = amr
 
         return am
     

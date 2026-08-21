@@ -117,7 +117,7 @@ class BFPConfiguration:
                                                                       )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
+        print(len(illumination.harmonics))
         if dimensionality == 2:
             illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=dimensions[:2], force=True)
 
@@ -134,13 +134,13 @@ class BFPConfiguration:
         b = strength_oblique
         a0 = (2 * p ** 2 + 4 * b ** 2)
 
-        sources = {
+        sources = [
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, k1, k2))),
             Sources.PlaneWave(0, b / a0 ** 0.5, 0, 0, np.array((0, -k1, k2))),
             Sources.PlaneWave(p / a0 ** 0.5 * np.exp(1j * phase_shift), 1j * p / a0 ** 0.5 * np.exp(1j * phase_shift), 0, 0, np.array((1e-9, 0, 1e-6))),
-        }
+        ]
         
         ## The commented lists are for independent check of sources in case of the necessity during debugging or analytical comparison. 
 
@@ -172,7 +172,7 @@ class BFPConfiguration:
                                                                       )
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
-
+        
         if dimensionality == 2:
             illumination = IlluminationPlaneWaves2D.init_from_3D(illumination, dimensions=dimensions[:2], force=True)
 
@@ -188,13 +188,13 @@ class BFPConfiguration:
         b = strength_s_oblique
 
         a0 = (2 * p ** 2 + 8 * b ** 2)
-        sources = {
+        sources = [
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((k1, 0, k2))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((-k1, 0, k2))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, k1, k2))),
             Sources.PlaneWave(b / a0 ** 0.5, 1j * b / a0 ** 0.5, 0, 0, np.array((0, -k1, k2))),
             Sources.PlaneWave(p / a0 ** 0.5 * np.exp(1j * phase_shift), 1j * p / a0 ** 0.5 * np.exp(1j * phase_shift), 0, 0, np.array((1e-9, 0, 1e-6))),
-        }
+        ]
 
         ## The commented lists are for independent check of sources in case of the necessity during debugging or analytical comparison. 
 
@@ -238,6 +238,7 @@ class BFPConfiguration:
                                                                       Mr = 1, 
                                                                       angles=(alpha0, ),
                                                                       )
+        print(illumination.harmonics.keys())
         illumination.Mt = Mt
         illumination.normalize_spatial_waves()
 

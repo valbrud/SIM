@@ -15,7 +15,7 @@ import hpc_utils
 from Sources import PlaneWave, IntensityHarmonic3D, IntensityHarmonic2D
 import scipy
 import matplotlib.pyplot as plt
-from Apodization import AutocorrelationApodizationSIM2D, ApodizationAutocorrelationSIM3D, TriangularApodizationSIM
+from Apodization import AutocorrelationApodizationSIM2D, AutocorrelationApodizationSIM3D, TriangularApodizationSIM
 
 class TestTriangulareApodization2D(unittest.TestCase):
     def setUp(self):
@@ -209,7 +209,7 @@ class TestAutoconvolutionSIM3D(unittest.TestCase):
 
     def test_apodization_sim(self):
         conventional = self.configurations.get_2_oblique_s_waves_and_s_normal(self.theta, 3, 0, 1, Mt=1)
-        apodization = ApodizationAutocorrelationSIM3D(self.optical_system, conventional)
+        apodization = AutocorrelationApodizationSIM3D(self.optical_system, conventional)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf[:, :, self.N//2].real, cmap='gray')
         axes[0].set_title('Ideal CTF')
@@ -219,7 +219,7 @@ class TestAutoconvolutionSIM3D(unittest.TestCase):
         plt.show()
         
         square = self.configurations.get_4_oblique_s_waves_and_s_normal_diagonal(self.theta, 1, 0, Mt=1)
-        apodization = ApodizationAutocorrelationSIM3D(self.optical_system, square)
+        apodization = AutocorrelationApodizationSIM3D(self.optical_system, square)
         fig, axes = plt.subplots(1, 3, figsize=(10, 5))
         axes[0].imshow(apodization.ideal_ctf[self.N//2, :, :].real, cmap='gray')
         axes[0].set_title('Ideal CTF')

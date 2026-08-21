@@ -280,7 +280,7 @@ class SSNRSIM(SSNRBase):
         self.imperfect_phase_shifts = imperfect_phase_shifts 
 
         if self.imperfect_phase_shifts:
-            if self.illumination_reconstruction.Mt < len(self.illumination.harmonics) // self.illumination.Mr:
+            if self.illumination_reconstruction.Mt < len(self.illumination.rearranged_indices) // self.illumination.Mr:
                 raise AttributeError("To rigidly account for phase shifts, phase matrix must have correct dimensions!")
 
         self.save_memory = save_memory
@@ -438,7 +438,7 @@ class SSNRSIM(SSNRBase):
                 K1 = self.effective_kernels_ft[idx1]
                 K2 = self.effective_kernels_ft[idx2]
                 if self.imperfect_phase_shifts:
-                    term =  K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] / self.illumination.Mt
+                    term =  K1 * K2.conjugate() * np.diag(np.diag(self._error_matrix))[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]] / (self.illumination.Mr * self.illumination.Mt)
                 else: 
                     term = K1 * K2.conjugate() * self._ccM[self.illumination.m_to_number_matrix[idx1], self.illumination.m_to_number_matrix[idx2]]
                 v_j += term
@@ -778,7 +778,7 @@ class SSNRSIMGLS(SSNRSIM):
             self._mixing_matrix = self.illumination.Mt * np.linalg.inv(self._ccM)
         else:
             if self.neglect_cross_correlation:
-                self._mixing_matrix = np.linalg.inv(np.diag(np.diag(self._error_matrix)))
+                self._mixing_matrix = self.illumination.Mr * np.linalg.inv(np.diag(np.diag(self._error_matrix)))
             else:
                 ...
             # print("Phase matrix inverse", np.round(self.illumination.phase_matrix_inverse_array_form, 5))
@@ -875,7 +875,7 @@ class SSNRSIMGLS3D(SSNRSIMGLS, SSNRSIM3D):
                          imperfect_phase_shifts=imperfect_phase_shifts,
                          neglect_cross_correlation=neglect_cross_correlation)
 
-class SSNRSIM2D1fWF(SSNRSIM2D):
+class SSNRSIM2D4F(SSNRSIM2D):
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system:OpticalSystems.OpticalSystem,
                  kernel: np.ndarray=None,
@@ -930,7 +930,7 @@ class SSNRSIM2D1fWF(SSNRSIM2D):
 
 
 
-class SSNRSIMR2fPiShift(SSNRSIM):
+class SSNRSIM2D6F(SSNRSIM2D):
     def __init__(self, illumination: PlaneWavesSIM,
                  optical_system:OpticalSystems.OpticalSystem,
                  kernel: np.ndarray=None,
@@ -939,8 +939,16 @@ class SSNRSIMR2fPiShift(SSNRSIM):
                  effective_kernels_ft={},
                  save_memory=False, 
                  illumination_reconstruction=None, 
-                 imperfect_phase_shifts=False
+                 imperfect_phase_shifts=False, 
+                 numeric_noise=1e-3
                  ):
+        self.numeric_noise = numeric_noise
+
+        illumination_expanded = IlluminationNPhotonSIM2D.init_from_linear_illumination(illumination, nphoton=2)
+        for harmonic in illumination_expanded.harmonics:
+            illumination_expanded.harmonics[harmonic].amplitude = 1
+        effective_kernels_ft = illumination_expanded.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)[1]
+    
         super().__init__(illumination, 
                          optical_system, 
                          kernel=kernel, 
@@ -951,3 +959,23 @@ class SSNRSIMR2fPiShift(SSNRSIM):
                          illumination_reconstruction=illumination_reconstruction, 
                          imperfect_phase_shifts=imperfect_phase_shifts)
         self._compute_ssnri()
+
+    def _compute_Dj(self):
+        dj = np.zeros(self.optical_system.otf.shape, dtype=np.complex128)
+        norm = 2 * self.illumination.Mr
+        dj += norm * np.abs(self.effective_kernels_ft[(0, (0, 0))])**2 
+        for r in range(self.illumination.Mr):
+            otf_p = self.effective_kernels_ft[(r, (2, 0))]
+            otf_m = self.effective_kernels_ft[(r, (-2, 0))]
+            otf_pp = self.effective_kernels_ft[(r, (4, 0))]
+            otf_mm = self.effective_kernels_ft[(r, (-4, 0))]
+            a0 = self.illumination.harmonics[(r, (0, 0))].amplitude 
+            a_m = self.illumination.harmonics[(r, (-2, 0))].amplitude / a0 
+            a_p = self.illumination.harmonics[(r, (2, 0))].amplitude / a0 
+            kernel_plus = 2 * np.abs(otf_mm)**2 * np.abs(otf_m)**2 * np.abs(a_p)**2 / (np.abs(otf_mm)**2 + np.abs(otf_m)**2 * np.abs(a_m)**2 + self.numeric_noise)
+            dj += kernel_plus
+            dj += np.flip(kernel_plus, axis=(0, 1)).conjugate()
+        return dj / norm
+
+    def _compute_Vj(self):
+        return self.dj

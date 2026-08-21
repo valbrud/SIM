@@ -22,6 +22,7 @@ import utils
 from Sources import IntensityHarmonic3D
 import tqdm
 import hpc_utils
+import pdb
 
 
 configurations = BFPConfiguration(refraction_index=1)
@@ -215,7 +216,7 @@ class TestSSNRSIM(unittest.TestCase):
         fy = np.linspace(-1 / (2 * dy), 1 / (2 * dy) - 1 / (2 * max_r), N)
         fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz) - 1 / (2 * max_z), N)
         print(fx)
-
+        pdb.set_trace()
         fx_normalized = fx / (2 * NA)
         fy_normalized = fy / (2 * NA)
         fx_normalized = fz / (1 - np.cos(theta))

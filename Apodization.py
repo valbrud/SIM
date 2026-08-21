@@ -13,7 +13,7 @@ Classes:
     AutocorrelationApodizationPointScanning - Autoconvolution apodization for point-scanning modalities.
     AutocorrelationApodizationSIM - Autoconvolution apodization base for SIM (dimension-specific).
     AutocorrelationApodizationSIM2D - 2D autoconvolution apodization for SIM.
-    ApodizationAutocorrelationSIM3D - 3D autoconvolution apodization for SIM using Ewald sphere construction.
+    AutocorrelationApodizationSIM3D - 3D autoconvolution apodization for SIM using Ewald sphere construction.
 
 Functions:
     _build_edwald_sphere_mask - Build a spherical mask in frequency domain representing the Ewald sphere.
@@ -313,14 +313,15 @@ class AutocorrelationApodizationWidefield(AutocorrelationApodization):
         self._ideal_psf /= np.sum(self._ideal_psf)
 
 
-class AutocorrelationApodizationPointScanning(AutocorrelationApodizationWidefield):
-    def __init__(self, ctf_support_exitation, ctf_support_detection):
+class AutocorrelationApodizationPointScanning(AutocorrelationApodization):
+    def __init__(self, ctf_support_exitation: np.ndarray, ctf_support_detection: np.ndarray):
         utils.validate_init_types(
             ctf_support_exitation=(ctf_support_exitation, np.ndarray),
-            ctf_support_detection=(ctf_support_detection, OpticalSystem),
+            ctf_support_detection=(ctf_support_detection, np.ndarray),
         )
         self._ctf_support_exitation = ctf_support_exitation
-        super().__init__(ctf_support_detection)
+        self._ctf_support_detection = ctf_support_detection
+        super().__init__()
 
     @property
     def ctf_support_exitation(self):
@@ -333,15 +334,15 @@ class AutocorrelationApodizationPointScanning(AutocorrelationApodizationWidefiel
 
     @property
     def ctf_support_detection(self):
-        return self.ctf_support
+        return self._ctf_support_detection
 
     @ctf_support_detection.setter
     def ctf_support_detection(self, new_ctf_support_detection):
-        self.ctf_support = new_ctf_support_detection
+        self._ctf_support_detection = new_ctf_support_detection
 
     def _compute_ideal_transfer_functions(self, **kwargs):
         ideal_excitatiton = np.where(np.abs(self.ctf_support_exitation) > 10**-12 * np.amax(self.ctf_support_exitation), 1, 0)
-        ideal_detection = np.where(np.abs(self.ctf_support) > 10**-12 * np.amax(self.ctf_support), 1, 0)
+        ideal_detection = np.where(np.abs(self.ctf_support_detection) > 10**-12 * np.amax(self.ctf_support_detection), 1, 0)
         ctf_effective = scipy.signal.convolve(ideal_excitatiton, ideal_detection, mode='same')
         self._ideal_ctf = np.where(np.abs(ctf_effective) > 10**-12 * np.amax(ctf_effective), 1, 0)
         self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')

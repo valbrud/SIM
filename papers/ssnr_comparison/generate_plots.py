@@ -1,4 +1,5 @@
 import os.path
+import pdb
 import sys
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, "../.."))
@@ -69,7 +70,7 @@ ylim = 10 ** 2
 
 optical_system = System4f3D(alpha=alpha, refractive_index_sample=nobject, refractive_index_medium=nmedium, high_NA=True)
 optical_system.compute_psf_and_otf((psf_size, N))
-
+pdb.set_trace()
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, 3, Mt=1)
 squareL = configurations.get_4_oblique_s_waves_and_s_normal_diagonal(theta, 1, 1, Mt=1)
 squareC = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 0.58, 1, Mt=1, phase_shift=0)

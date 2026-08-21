@@ -138,7 +138,7 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                 self.harmonics = self._compute_harmonics_for_all_rotations(intensity_harmonics_dict)
 
         self._spatial_shifts = spatial_shifts if not spatial_shifts is None else self._get_zero_shifts()
-        self.Mt = self.spatial_shifts.shape[1] 
+        self._Mt = self.spatial_shifts.shape[1] 
 
         self._dimensions = dimensions
         self.rearranged_indices = self._rearrange_indices(dimensions)
@@ -211,8 +211,17 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
     @Mr.setter
     def Mr(self, new_Mr):
-        self.Mr = new_Mr
-        self.angles = np.arange(0, np.pi, np.pi / new_Mr)
+        self._Mr = new_Mr
+        self._angles = np.arange(0, np.pi, np.pi / new_Mr)
+        self.normalize_spatial_waves()
+
+    @property
+    def Mt(self):
+        return self._Mt
+
+    @Mt.setter
+    def Mt(self, new_Mt):
+        self._Mt = new_Mt
         self.normalize_spatial_waves()
 
     @property
