@@ -70,6 +70,6 @@ for (filepath, label) in zip(files, labels):
     im1.colorbar.ax.yaxis.label.set_size(40)
     im2.colorbar.ax.tick_params(labelsize=25)
     im2.colorbar.ax.yaxis.label.set_size(40)
-    fig1.savefig(current_dir + f'/Figures/SSNR/notch_kernel_volume_{label.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
-    fig2.savefig(current_dir + f'/Figures/SSNR/notch_kernel_entropy_{label.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
+    # fig1.savefig(current_dir + f'/Figures/SSNR/notch_kernel_volume_{label.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
+    # fig2.savefig(current_dir + f'/Figures/SSNR/notch_kernel_entropy_{label.replace(" ", "_")}.png', dpi=300, bbox_inches='tight')
 plt.show()

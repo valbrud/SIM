@@ -93,8 +93,13 @@ class SIMulator(metaclass=DimensionMetaAbstract):
         self.readout_noise_variance = readout_noise_variance
         self.camera = camera
         self.readout_noise_variance = 0
+        # fig, ax, slider  = utils.imshow3D(np.log1p(10**3 *np.abs(self.optical_system.otf)), cmap='gray', vmin=0, vmax=np.abs(np.sum(self.optical_system.psf)))
+        plt.show()
         if not effective_psfs:
-            self.effective_psfs, _ = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates)
+            self.effective_psfs, self.effective_otfs = self.illumination.compute_effective_kernels(self.optical_system.psf, self.optical_system.psf_coordinates, only_axial_modulation=True)
+            # for psf in self.effective_psfs.keys():
+            #     fig, ax, slider = utils.imshow3D(np.log1p(10**3 * np.abs(self.effective_otfs[psf])), axis='z', vmin=0, vmax=np.abs(np.sum(self.effective_psfs[psf])))
+            #     plt.show()
         else:
             self.effective_psfs = effective_psfs
         self.phase_modulation_patterns = self.illumination.get_phase_modulation_patterns(self.optical_system.psf_coordinates)
@@ -126,7 +131,14 @@ class SIMulator(metaclass=DimensionMetaAbstract):
                     print(sim_index, n)
                 total_phase_modulation = self.phase_modulation_patterns[sim_index] * self.illumination.phase_matrix[(sim_index[0], n, sim_index[1])]
                 sum = np.sum(self.effective_psfs[sim_index])
-                sim_images[sim_index[0], n] += scipy.signal.convolve(total_phase_modulation * ground_truth, self.phase_modulation_patterns[sim_index] * self.effective_psfs[sim_index], mode='same')
+                order = scipy.signal.convolve(total_phase_modulation * ground_truth, self.effective_psfs[sim_index], mode='same')
+                # if n == 0:
+                #     fig, ax, slider = utils.imshow3D(np.log1p(np.abs(hpc_utils.wrapped_fftn(self.effective_psfs[sim_index]))), axis='y', cmap='gray', vmin=0, vmax=np.amax(self.effective_otfs[sim_index]).real)
+                #     plt.show()
+                #     fig, ax, slider = utils.imshow3D(np.log1p(np.abs(hpc_utils.wrapped_fftn(order))), axis='y', cmap='gray', vmin=0, vmax=np.log1p(np.abs(np.sum(order))))
+                #     ax.set_title(f"Simulated order for sim_index={sim_index}, phase={n}")
+                #     plt.show()
+                sim_images[sim_index[0], n] += order
                     
         sim_images = np.real(sim_images) + 10**-10
         return sim_images
@@ -299,8 +311,7 @@ class SIMulator3D(SIMulator):
         if not optical_system.dimensionality == 3:
             raise ValueError("The PSF must be 3D for 3D SIM simulations.")
         super().__init__(illumination, optical_system, camera, readout_noise_variance, effective_psfs)
-
-
+    
     def generate_noiseless_thick_sample_sim_images(self, image3D, psf_stack, z_values): 
         x, y = self.optical_system.psf_coordinates
         grid3d = np.stack(np.meshgrid(x, y, np.array(z_values)), axis=-1)        
@@ -316,3 +327,26 @@ class SIMulator3D(SIMulator):
                     
         sim_images = np.real(sim_images) + 10**-10
         return sim_images
+
+    # def generate_noiseless_sim_images(self, ground_truth, debug=False):
+    #     """
+    #     Generate noiseless SIM images from ground truth data.
+
+    #     This method simulates the raw SIM images that would be captured by a microscope
+    #     without adding any noise. The simulation convolves the ground truth with effective
+    #     PSFs and applies phase modulation patterns for different illumination conditions.
+
+    #     Parameters
+    #     ----------
+    #     ground_truth : numpy.ndarray
+    #         The ground truth image to simulate SIM imaging from.
+
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #         Array of shape (Mr, Mt, *psf_shape) containing the simulated noiseless SIM images,
+    #         where Mr is the number of rotations and Mt is the number of phases per rotation.
+    #     """
+    #     sim_images = np.zeros((self.illumination.Mr, self.illumination.Mt, *self.optical_system.psf.shape), dtype=np.complex128)
+    #     for 
+    #     return sim_images

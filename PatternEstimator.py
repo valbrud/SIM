@@ -1717,7 +1717,7 @@ class ModulationEstimator:
                 ax[0].imshow(hpc_utils.wrapped_ifftn(f1)[..., f1.shape[2]//2].real, cmap='gray')
                 ax[1].imshow(hpc_utils.wrapped_ifftn(f2)[..., f2.shape[2]//2].real, cmap='gray')
                 plt.show()
-                if debug_info_level >= 2:
+                if debug_info_level >= 3:
                     fig, ax = plt.subplots(2, 2)
                     if self.illumination.dimensionality == 3:
                         ax[0, 0].imshow(np.log1p(np.abs(10**5 * (I0f / (g0 + 1e-5))[:, :, I.shape[2]//2])), cmap='gray')
@@ -1780,7 +1780,7 @@ class ModulationEstimator:
                 a = complex(float(optimizer.x[0]), float(optimizer.x[1]))
                 am[key] = a
                 diff = a0 * g0 * I - a * g * I0f
-                if debug_info_level >= 2:
+                if debug_info_level >= 3:
                     if self.illumination.dimensionality == 3:
                         plt.imshow(np.log1p(np.abs(10**5 * diff[:, :, diff.shape[2]//2])), cmap='gray')
                     else:

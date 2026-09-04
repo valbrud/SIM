@@ -125,6 +125,8 @@ print(image_sparse.shape)
 
 optical_system = System4f3D(alpha=alpha, refractive_index_medium=nmedium, refractive_index_sample=nmedium, vectorial=True)
 optical_system.compute_psf_and_otf((psf_size, (Nl, Nl, Na)))
+optical_system_quasi = System4f3D(alpha=np.pi/2, refractive_index_medium=nmedium, refractive_index_sample=nmedium, vectorial=True)
+optical_system_quasi.compute_psf_and_otf((psf_size, (Nl, Nl, Na)))
 
 widefield_noiseless_sparse = scipy.signal.convolve(image_sparse, optical_system.psf, mode='same')
 widefield_noiseless_dense = scipy.signal.convolve(image_dense, optical_system.psf, mode='same')
@@ -153,17 +155,24 @@ apodization_autoconvolution = Apodization.AutocorrelationApodizationSIM3D(optica
 apodization_filter_auto = apodization_autoconvolution.ideal_otf
 apodization_filter_auto = np.where(apodization_filter1 > 0, apodization_filter_auto, 0)
 
+apodization_ISM = Apodization.AutocorrelationApodizationISM(optical_system_quasi, optical_system)
+apodization_filter_ISM = apodization_ISM.ideal_otf
+apodization_filter_ISM = np.where(apodization_filter1 > 0, apodization_filter_ISM, 0)
+
 epsf_triangular1 = hpc_utils.wrapped_ifftn(apodization_filter1).real
 epsf_triangular04 = hpc_utils.wrapped_ifftn(apodization_filter04).real
 epsf_autoconvolution = hpc_utils.wrapped_ifftn(apodization_filter_auto).real
+epsf_ISM = hpc_utils.wrapped_ifftn(apodization_filter_ISM).real
 
 image_sparse1 = scipy.signal.convolve(image_sparse, epsf_triangular1, mode='same')
 image_sparse04 = scipy.signal.convolve(image_sparse, epsf_triangular04, mode='same')
 image_sparse_auto = scipy.signal.convolve(image_sparse, epsf_autoconvolution, mode='same')
+image_sparse_ISM = scipy.signal.convolve(image_sparse, epsf_ISM, mode='same')
 
 image_dense1 = scipy.signal.convolve(image_dense, epsf_triangular1, mode='same')
 image_dense04 = scipy.signal.convolve(image_dense, epsf_triangular04, mode='same')
 image_dense_auto = scipy.signal.convolve(image_dense, epsf_autoconvolution, mode='same')
+image_dense_ISM = scipy.signal.convolve(image_dense, epsf_ISM, mode='same')
 
 fig, axes = plt.subplots(2, 4, figsize = (16, 8))
 axes[0, 0].imshow(image_dense[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])
@@ -171,13 +180,13 @@ axes[0, 0].add_artist(scalebar_1l)
 axes[0, 0].add_artist(scalebar_1a)
 axes[0, 1].imshow(image_dense1[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])
 axes[0, 2].imshow(image_dense04[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])
-axes[0, 3].imshow(image_dense_auto[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])
+axes[0, 3].imshow(image_dense_ISM[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])
 axes[1, 0].imshow(image_sparse[Nl//2, :, :].T, cmap='Greens', extent=[x[0], x[-1], z[0], z[-1]])
 axes[1, 0].add_artist(scalebar_2l)
 axes[1, 0].add_artist(scalebar_2a)
 axes[1, 1].imshow(image_sparse1[Nl//2, :, :].T, cmap='Greens', extent=[x[0], x[-1], z[0], z[-1]])
 axes[1, 2].imshow(image_sparse04[Nl//2, :, :].T, cmap='Greens', extent=[x[0], x[-1], z[0], z[-1]])
-axes[1, 3].imshow(image_sparse_auto[Nl//2, :, :].T, cmap='Greens', extent=[x[0], x[-1], z[0], z[-1]])
+axes[1, 3].imshow(image_sparse_ISM[Nl//2, :, :].T, cmap='Greens', extent=[x[0], x[-1], z[0], z[-1]])
 
 # axes[0, 0].set_title("a")
 # axes[0, 1].set_title("b")
@@ -221,9 +230,9 @@ fig.savefig(os.path.join(current_dir, "Figures/simulations/effective_apodization
 slider_recon = utils.wrap_axes3d(
     axes,
     [np.transpose(image_dense, (0, 2, 1)), np.transpose(image_dense1, (0, 2, 1)),
-     np.transpose(image_dense04, (0, 2, 1)), np.transpose(image_dense_auto, (0, 2, 1)), 
+     np.transpose(image_dense04, (0, 2, 1)), np.transpose(image_dense_ISM, (0, 2, 1)), 
      np.transpose(image_sparse, (0, 2, 1)), np.transpose(image_sparse1, (0, 2, 1)),
-     np.transpose(image_sparse04, (0, 2, 1)), np.transpose(image_sparse_auto, (0, 2, 1))],
+     np.transpose(image_sparse04, (0, 2, 1)), np.transpose(image_sparse_ISM, (0, 2, 1))],
     axis='x',
 )
 

@@ -1086,3 +1086,25 @@ def validate_init_types(**type_specs):
                 expected_names = expected_type.__name__
             actual_name = type(value).__name__
             raise TypeError(f"{name} must be of type {expected_names}, got {actual_name}.")
+
+def load_grayscale_image(path):
+    """
+    Load image as float32 grayscale in [0,1].
+    Uses matplotlib image reader to avoid extra deps.
+    """
+    img = plt.imread(path)
+    if img.ndim == 2:
+        gray = img
+    else:
+        # Handle RGB/RGBA
+        rgb = img[..., :3].astype(np.float32)
+        # sRGB luma approx
+        gray = 0.2126 * rgb[..., 0] + 0.7152 * rgb[..., 1] + 0.0722 * rgb[..., 2]
+    gray = gray.astype(np.float32)
+    # Normalize to [0,1] robustly
+    gmin, gmax = float(np.min(gray)), float(np.max(gray))
+    if gmax > gmin:
+        gray = (gray - gmin) / (gmax - gmin)
+    else:
+        gray = np.zeros_like(gray, dtype=np.float32)
+    return gray

@@ -727,7 +727,7 @@ class System4f3D(System4f3DCoherent):
         else:
             z_values = self.psf_coordinates[2]
 
-            Nrho = self._czt_sampled_Nrho()
+            Nrho = 3 * self._czt_sampled_Nrho()
 
             rho = np.linspace(-1, 1, Nrho)
             Fx, Fy = np.meshgrid(rho, rho, indexing='ij')

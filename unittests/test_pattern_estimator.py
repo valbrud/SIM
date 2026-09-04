@@ -215,7 +215,7 @@ def build_experimental_illumination_3d():
 def build_theoretical_illumination_3d():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 0.5, 1, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi)
+        theta, 1, 0.5, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi)
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)

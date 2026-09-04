@@ -65,30 +65,9 @@ noise_estimator= SSNRSIM2D(illumination, optical_system, imperfect_phase_shifts=
 # plt.show()
 
 ##################
-def load_grayscale_image(path):
-    """
-    Load image as float32 grayscale in [0,1].
-    Uses matplotlib image reader to avoid extra deps.
-    """
-    img = plt.imread(path)
-    if img.ndim == 2:
-        gray = img
-    else:
-        # Handle RGB/RGBA
-        rgb = img[..., :3].astype(np.float32)
-        # sRGB luma approx
-        gray = 0.2126 * rgb[..., 0] + 0.7152 * rgb[..., 1] + 0.0722 * rgb[..., 2]
-    gray = gray.astype(np.float32)
-    # Normalize to [0,1] robustly
-    gmin, gmax = float(np.min(gray)), float(np.max(gray))
-    if gmax > gmin:
-        gray = (gray - gmin) / (gmax - gmin)
-    else:
-        gray = np.zeros_like(gray, dtype=np.float32)
-    return gray
 
 path = current_dir + "\\image_2d.jpg"
-image = load_grayscale_image(path)
+image = utils.load_grayscale_image(path)
 image = image[:N, 100:100+N]* 10**4
 
 

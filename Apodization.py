@@ -314,37 +314,28 @@ class AutocorrelationApodizationWidefield(AutocorrelationApodization):
 
 
 class AutocorrelationApodizationPointScanning(AutocorrelationApodization):
-    def __init__(self, ctf_support_exitation: np.ndarray, ctf_support_detection: np.ndarray):
+    def __init__(self, optical_system_excitation: OpticalSystem, optical_system_detection: OpticalSystem):
         utils.validate_init_types(
-            ctf_support_exitation=(ctf_support_exitation, np.ndarray),
-            ctf_support_detection=(ctf_support_detection, np.ndarray),
+            optical_system_excitation=(optical_system_excitation, OpticalSystem),
+            optical_system_detection=(optical_system_detection, OpticalSystem),
         )
-        self._ctf_support_exitation = ctf_support_exitation
-        self._ctf_support_detection = ctf_support_detection
+        self._optical_system_excitation = optical_system_excitation
+        self._optical_system = optical_system_detection
         super().__init__()
-
+ 
     @property
     def ctf_support_exitation(self):
-        return self._ctf_support_exitation
-    
-    @ctf_support_exitation.setter
-    def ctf_support_exitation(self, new_ctf_support_exitation):
-        self._ctf_support_exitation = new_ctf_support_exitation
-        self._compute_ideal_transfer_functions()
+        return self._optical_system_excitation.get_transfer_function_support()
 
     @property
     def ctf_support_detection(self):
-        return self._ctf_support_detection
-
-    @ctf_support_detection.setter
-    def ctf_support_detection(self, new_ctf_support_detection):
-        self._ctf_support_detection = new_ctf_support_detection
+        return self._optical_system.get_transfer_function_support()
 
     def _compute_ideal_transfer_functions(self, **kwargs):
-        ideal_excitatiton = np.where(np.abs(self.ctf_support_exitation) > 10**-12 * np.amax(self.ctf_support_exitation), 1, 0)
-        ideal_detection = np.where(np.abs(self.ctf_support_detection) > 10**-12 * np.amax(self.ctf_support_detection), 1, 0)
+        ideal_excitatiton = np.where(np.abs(self.ctf_support_exitation) > 10**-12 * np.amax(self.ctf_support_exitation), 1., 0)
+        ideal_detection = np.where(np.abs(self.ctf_support_detection) > 10**-12 * np.amax(self.ctf_support_detection), 1., 0)
         ctf_effective = scipy.signal.convolve(ideal_excitatiton, ideal_detection, mode='same')
-        self._ideal_ctf = np.where(np.abs(ctf_effective) > 10**-12 * np.amax(ctf_effective), 1, 0)
+        self._ideal_ctf = np.where(np.abs(ctf_effective) > 10**-12 * np.amax(ctf_effective), 1., 0)
         self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
         self._ideal_otf /= np.amax(self._ideal_otf)
         self._ideal_psf = hpc_utils.wrapped_ifftn(self._ideal_otf)

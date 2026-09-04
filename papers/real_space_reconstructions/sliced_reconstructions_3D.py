@@ -101,7 +101,7 @@ print(illumination.angles)
 # plt.show()
 
 simulator = SIMulator3D(illumination, optical_system, readout_noise_variance=1)
-regenerate = True
+regenerate = False
 if not os.path.exists(current_dir + '/simulation_data/noisy_cells.pkl') or regenerate:
     print("Regenerating SIM images")
     sim_images = simulator.generate_noiseless_sim_images(image, debug=True)
