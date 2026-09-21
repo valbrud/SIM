@@ -24,7 +24,7 @@ import ShapesGenerator
 import hpc_utils
 from WienerFiltering import filter_true_wiener_sim
 from kernels import psf_kernel2d
-from PatternEstimator import IlluminationPatternEstimator2D
+from PatternEstimation.PatternEstimator import IlluminationPatternEstimator2D
 np.random.seed(1234)
 from PIL import Image
 from Apodization import AutocorrelationApodizationSIM2D

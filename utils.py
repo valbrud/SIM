@@ -34,6 +34,23 @@ import hpc_utils
 from matplotlib.widgets import Slider
 from scipy.interpolate import RBFInterpolator, NearestNDInterpolator
 
+
+def select_up_to_inversion(keys) -> tuple:
+    """
+    Return a deterministically ordered canonical representative for each
+    inversion-symmetric harmonic pair, skipping the zero order.
+    """
+    canonical_keys = set()
+    for key in keys:
+        if not isinstance(key, tuple) or len(key) != 2:
+            continue
+        if np.isclose(np.sum(np.abs(np.array(key[1]))), 0):
+            continue
+        key_inverse = (key[0], tuple(-np.array(key[1])))
+        canonical_key = key if key > key_inverse else key_inverse
+        canonical_keys.add(canonical_key)
+    return tuple(sorted(canonical_keys, key=lambda item: (item[0], sum(abs(v) for v in item[1]), item[1])))
+
 def build_circular_mask(q_grid: np.ndarray, q_center: np.ndarray, q_radius: float):
     """
     Builds a circular mask in the frequency domain.

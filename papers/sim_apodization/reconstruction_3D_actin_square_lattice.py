@@ -13,7 +13,7 @@ import scipy
 
 from OpticalSystems import System4f3D
 from Illumination import IlluminationPlaneWaves3D, IlluminationPlaneWaves2D
-from PatternEstimator import IlluminationPatternEstimator3D, IlluminationPatternEstimator2D
+from PatternEstimation.PatternEstimator import IlluminationPatternEstimator3D, IlluminationPatternEstimator2D
 from Reconstructor import ReconstructorFourierDomain3D, ReconstructorSpatialDomain3D, ReconstructorSpatialDomain3DSliced, estimate_gain_and_offset
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn

@@ -586,6 +586,24 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
                         break
         return non_degenerate_dimensions
 
+    def filter_first_orders(self, harmonics) -> set:
+        """
+        Keep only the first-order harmonics for each rotation and each
+        non-degenerate dimension.
+        """
+        first_orders = set()
+        non_degenerate_dimensions = self.find_non_degenerate_dimensions()
+        for r in range(self.Mr):
+            harmonics_for_rotation = [harmonic for harmonic in harmonics if harmonic[0] == r]
+            for dimension in non_degenerate_dimensions:
+                candidates = sorted(
+                    (harmonic for harmonic in harmonics_for_rotation if harmonic[1][dimension] > 0),
+                    key=lambda harmonic: 10 ** 8 * (harmonic[1][dimension] - 1) + np.sum(np.abs(np.array(harmonic[1]))),
+                )
+                if candidates:
+                    first_orders.add(candidates[0])
+        return first_orders
+
     def set_spatial_shifts_diagonally(self, Mt: int = 0, ratios=()):
         """ 
         Find the spatial shifts, that satisfy the orthogonality constraint. 

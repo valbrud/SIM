@@ -17,7 +17,7 @@ import re
 
 from OpticalSystems import System4f2D
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
-from PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
+from PatternEstimation.PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
 from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, estimate_gain_and_offset
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn

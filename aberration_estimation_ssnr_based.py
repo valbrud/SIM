@@ -28,6 +28,7 @@ import kernels
 import WienerFiltering
 import SSNRCalculator
 import time
+from PatternEstimation.ModulationEstimator import ModulationPeakHeightRatioEstimator, ModulationRatiosInversionEstimator
 from itertools import combinations
 
 
@@ -92,65 +93,14 @@ def compute_SSNR_ideal(spatial_frequency_orders,
 
 def compute_modulations(spatial_frequency_orders, 
                         illumination: Illumination.PlaneWavesSIM, 
-                        optical_system: OpticalSystems.OpticalSystem2D) -> dict[int, np.ndarray]:
-    reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D
-    reconstructor = reconstructor_class(illumination, optical_system=optical_system, return_ft = True)
-
-    modulations = {}
-    ratios = {}
-    
-    for r in range(illumination.Mr):
-        ReI, ImI = 0, 0
-        m0 = tuple([0] * illumination.dimensionality)
-        order0 = spatial_frequency_orders[(r, m0)][0] + 1j * spatial_frequency_orders[(r, m0)][1]
-        f0 = np.abs(np.amax(np.abs(order0)))
-        Nx, Ny = order0.shape[:2]
-        fig, ax = plt.subplots()
-
-
-        for key in spatial_frequency_orders.keys():
-            if key[0] == r and key != (r, m0):
-                order = spatial_frequency_orders[key][0] + 1j * spatial_frequency_orders[key][1]
-                mask = (reconstructor.effective_kernels[key] > 10**-6) * (reconstructor.effective_kernels[(r, m0)] > 10**-6)
-                # fig, ax = plt.subplots(1, 2)
-                # ax[0].imshow(mask, origin='lower', vmin=0, vmax=1)
-                # ax[1].imshow(np.log1p(np.abs(order * reconstructor.effective_kernels[key])), origin='lower', vmin=0)
-                # plt.show()
-                ratio = np.where(mask, (order / order0 + 1e-12), 0)
-                mask2 = (np.abs(order) > 2 * f0**0.5) * (np.abs(order0) > 2 * f0**0.5)
-                mask_total = mask * mask2
-                # plt.plot(np.log1p(np.abs(order0)[Nx//2, Ny//2:]))
-                # plt.plot(np.log1p(np.abs(order)[Nx//2, Ny//2:]))
-                # plt.hlines([np.log1p(f0**0.5), np.log1p(5 * f0**0.5)], 0, Ny-Ny//2, colors='r', linestyles='dashed')
-                # plt.show()
-                # fig, ax = plt.subplots()
-                # ax.imshow(mask2, origin='lower', vmin=0, vmax=1)
-                # ax.set_title('Mask2')
-                # plt.show()
-                ratio = np.where(mask2, ratio, 0)
-                # fig, ax = plt.subplots(1, 2)
-                # ax[0].imshow(np.log1p(np.abs(order0)), origin='lower', vmin=0)
-                # ax[1].imshow(np.log1p(np.abs(order)), origin='lower', vmin=0)
-                # plt.show()
-
-                ratios[key] = ratio
-                wavevector = illumination.harmonics[key].wavevector / 2
-                phase_modulation_pattern = np.einsum('...l, l->...', optical_system.x_grid, wavevector)
-                mask_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(mask_total) * np.exp(-1j * phase_modulation_pattern))
-                ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
-                ratio_shifted_ft = np.where(mask_shifted > 1e-1, ratio_shifted_ft, 0)
-                # plt.imshow(np.log1p(np.abs(10**8 * ratio_shifted_ft)), origin='lower')
-                # plt.show()
-                inverse_product = ratio_shifted_ft * np.flip(ratio_shifted_ft) 
-                # plt.imshow(np.log1p(np.abs(inverse_product)), origin='lower')
-                # plt.show()
-                modulations[key] = np.mean(inverse_product[inverse_product > 10**-6])**0.5
-                if np.isnan(modulations[key]):
-                    modulations[key] = 0.0
-                # print('weighted', key, modulations[key])
-                print('direct', key, modulations[key])
-                # illumination.harmonics[key].amplitude = modulations[key]
-    return modulations
+                        optical_system: OpticalSystems.OpticalSystem2D, 
+                        effective_kernels: dict[tuple[int, tuple[int, ...]], np.ndarray] = None) -> dict[int, np.ndarray]:
+    modulation_estimator = ModulationRatiosInversionEstimator(
+        illumination,
+        optical_system,
+        effective_otfs=effective_kernels,
+    )
+    return modulation_estimator.estimate_modulations(spatial_frequency_orders=spatial_frequency_orders)
 
 def compute_SSNR_ideal_per_rotation(spatial_frequency_orders,
                                     illumination: Illumination.PlaneWavesSIM) -> dict[int, tuple[np.ndarray, np.ndarray]]:
@@ -245,7 +195,9 @@ def compute_loss_function(stack,
     # start = time.time()
     if estimate_amplitudes_dinamically:
         if interpolation: 
-            am = illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
+            modulation_estimator = ModulationPeakHeightRatioEstimator(illumination, optical_system)
+            am = modulation_estimator.estimate_modulations(stack=stack)
+            illumination.update_amplitudes(am)
             # print('PEAK_HEIGHT', am)
         else: 
             illumination.equalize_amplitudes()

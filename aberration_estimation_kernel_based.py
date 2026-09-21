@@ -28,6 +28,7 @@ import WienerFiltering
 import SSNRCalculator
 import time
 from itertools import combinations
+from PatternEstimation.ModulationEstimator import ModulationPeakHeightRatioEstimator
 
 
 def compute_loss_function_multikernel(stack,
@@ -43,7 +44,8 @@ def compute_loss_function_multikernel(stack,
     end = time.time()
     # print(f"Computed PSF in {end - start} seconds.")
     start = time.time()
-    illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
+    modulation_estimator = ModulationPeakHeightRatioEstimator(illumination, optical_system)
+    illumination.update_amplitudes(modulation_estimator.estimate_modulations(stack=stack))
     end = time.time()
     # print(f"Estimated illumination in {end - start} seconds.")
     # print(illumination.get_all_amplitudes()[0])
@@ -371,7 +373,8 @@ def compute_loss_function(stack,
     end = time.time()
     # print(f"Computed PSF in {end - start} seconds.")
     start = time.time()
-    illumination.estimate_modulation_coefficients(stack, optical_system.psf, grid=optical_system.x_grid, update=True, method='peak_height_ratio')
+    modulation_estimator = ModulationPeakHeightRatioEstimator(illumination, optical_system)
+    illumination.update_amplitudes(modulation_estimator.estimate_modulations(stack=stack))
     end = time.time()
 
     # print(f"Estimated illumination in {end - start} seconds.")
