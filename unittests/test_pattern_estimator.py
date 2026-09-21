@@ -26,7 +26,7 @@ from config.SIM_N100_NA15 import (
     alpha, theta, dx, dz, configurations, nmedium
 )
 
-theta = np.pi/3  # 0.9 is a factor to avoid total internal reflection
+theta = 2.1 * np.pi/5  # 0.9 is a factor to avoid total internal reflection
 # wavelength_ex = 540
 # wavelength_em = 600
 # theta_corrected = np.arcsin(theta * wavelength_ex / wavelength_em)
@@ -205,7 +205,7 @@ def build_experimental_illumination_3d():
     print('ratio to lens semi-oepning', np.sin(theta) / np.sin(alpha))
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 0.5, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi),
+        theta, 1, 0.5, Mr=3, angles=(-20 / 180 * np.pi, 40 / 180 * np.pi, 100 / 180 * np.pi),
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -215,7 +215,7 @@ def build_experimental_illumination_3d():
 def build_theoretical_illumination_3d():
     """Two oblique plus one normal beam, 3 phase shifts."""
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta, 1, 0.5, Mr=3, angles=(-1 / 180 * np.pi, 58 / 180 * np.pi, 119 / 180 * np.pi)
+        theta, 1, 0.5, Mr=3, angles=(-20 / 180 * np.pi, 40 / 180 * np.pi, 100 / 180 * np.pi)
     )
     illum3d.set_spatial_shifts_diagonally()
     # print(illum2d.spatial_shifts)
@@ -256,7 +256,7 @@ class TestPatternEstimator3D(unittest.TestCase):
         self.simulator = SIMulator3D(self.experimenatal_illumination, self.optical_system3d)
 
         np.random.seed(1234)
-        N_avg = 10**5
+        N_avg = 10**7
         image = skimage.util.img_as_float(skimage.data.cells3d()[:, 1, :, :])
         image = image.transpose(1, 2, 0)[:N[0], :N[1], 30 - N[2]//2:30 + (N[2]+1)//2]
         image-=0.1
@@ -310,14 +310,14 @@ class TestPatternEstimator3D(unittest.TestCase):
 
         illumination_estimated = self.estimator.estimate_illumination_parameters(
             raw_stack,
-            peak_estimation_method='default', 
+            peak_estimation_method='cross_correlation', 
             phase_estimation_method='default',
-            modulation_coefficients_method='peak_height_ratio',
-            peak_search_area_size = 3,
+            modulation_coefficients_method='default',
+            peak_search_area_size = 5,
             zooming_factor = 100, 
-            max_iterations = 2,
-            debug_info_level=1, 
-            first_order_phases_only=True
+            max_iterations = 3,
+            debug_info_level=2, 
+            first_order_only=False
         )
         # print(ilumination)
         # am = illumination_estimated.estimate_modulation_coefficients(raw_stack, self.optical_system3d.psf, self.optical_system3d.x_grid, method='peak_height_ratio')

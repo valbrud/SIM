@@ -176,9 +176,10 @@ class TriangularApodization(metaclass=DimensionMetaAbstract):
         """
         Computes the apodization function for the given band-limited transfer function.
         """
-        transfer_function_mask = np.where(np.abs(self.transfer_function) > 0, 1, 0)
+        transfer_function_mask = np.where(np.abs(self.transfer_function) > 10**-10, 1, 0)
         # _, _, slider=utils.imshow3D(transfer_function_mask, cmap='gray', vmin=0, vmax=1)
-        # plt.show()
+        plt.imshow(np.log1p(10**8 *transfer_function_mask), vmin=0)
+        plt.show()
         interior_mask = scipy.ndimage.binary_dilation(transfer_function_mask, iterations=1)
         surface_mask = ~transfer_function_mask & interior_mask
         triangular_function = utils.radial_ratio(self.transfer_function, surface_mask)
@@ -191,6 +192,11 @@ class TriangularApodization(metaclass=DimensionMetaAbstract):
         # plt.imshow(self._apodization_function)
         # plt.show()  
 
+class TriangularApodization2D(TriangularApodization):
+    dimensionality = 2
+
+class TriangularApodization3D(TriangularApodization):
+    dimensionality = 3
 
 class TriangularApodizationSIM(ApodizationSIM, TriangularApodization):
     """

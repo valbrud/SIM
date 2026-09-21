@@ -327,12 +327,12 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                         # ax[1].set_title(f'Effective kernel r={r}, m={m}')
                         # plt.show()
                 # m_inv = tuple([-mi for mi in m])
-                fig, ax = plt.subplots(1, 2)
-                ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft[..., sum_shifts_ft.shape[2]//2]).T), cmap='gray', origin='lower')
-                ax[0].set_title(f'R={r}, m={m}')
-                ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)][..., sum_shifts_ft.shape[2]//2].T)), cmap='gray', origin='lower')
-                ax[1].set_title(f'kernel in the rec R={r}, m={m}')
-                plt.show()
+                # fig, ax = plt.subplots(1, 2)
+                # ax[0].imshow(np.log(1 + 10**8 * np.abs(sum_shifts_ft[..., sum_shifts_ft.shape[2]//2]).T), cmap='gray', origin='lower')
+                # ax[0].set_title(f'R={r}, m={m}')
+                # ax[1].imshow(np.log(1 + 10**8 * np.abs(self.effective_kernels[(r, m)][..., sum_shifts_ft.shape[2]//2].T)), cmap='gray', origin='lower')
+                # ax[1].set_title(f'kernel in the rec R={r}, m={m}')
+                # plt.show()
                 image1rotation_ft += sum_shifts_ft * self.effective_kernels[(r, m)].conjugate()
 
             reconstructed_image_ft += image1rotation_ft
@@ -700,109 +700,6 @@ class ReconstructorFourierDomain2D6F(ReconstructorFourierDomain2D):
             return reconstructed_ft * self.illumination.Mr * self.illumination.Mt
         reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_ft))
         return reconstructed_image
-
-# Kept for reference, but the  idea didn't work. 
-# class ReconstructorFourierDomain9FS(ReconstructorFourierDomain2D6F):
-#     def reconstruct(self, sim_images, numeric_noise = 1e-3):
-#         otf_zero = self.effective_kernels[(0, (0, 0))]  
-#         reconstructed_ft = np.zeros(sim_images.shape[2:], dtype=np.complex128)
-#         a = self.illumination.harmonics[(0, (2, 0))].amplitude / self.illumination.harmonics[(0, (0, 0))].amplitude
-#         for r in range(self.illumination.Mr):
-#             otf_p = self.effective_kernels[(r, (2, 0))]
-#             otf_m = self.effective_kernels[(r, (-2, 0))]
-#             otf_pp = self.effective_kernels[(r, (4, 0))]
-#             otf_mm = self.effective_kernels[(r, (-4, 0))]
-#             I0 = hpc_utils.wrapped_fftn(sim_images[r][0])
-#             I1 = hpc_utils.wrapped_fftn(sim_images[r][1])
-#             I2 = hpc_utils.wrapped_fftn(sim_images[r][2])
-#             Is = hpc_utils.wrapped_fftn(sim_images[r][0] * self.phase_modulation_patterns[(r, (-2, 0))])
-#             mask = np.where((np.abs(otf_zero) > numeric_noise) & (np.abs(otf_p) > numeric_noise), 1, 0)
-#             ephi = self.illumination.phase_matrix[(r, 1, (2, 0))]
-#             emphi = self.illumination.phase_matrix[(r, 1, (-2, 0))]
-#             a_s = 1 / a / (np.abs(otf_p) + numeric_noise)
-#             a_s0 = (-a**2 - 1) / (3 * a**2) / (np.abs(otf_zero) + numeric_noise)
-#             a_sphi = (1 - a**2 + ephi) / (3 * a**2) / (np.abs(otf_zero) + numeric_noise)
-#             a_smphi = (1 - a**2 + emphi) / (3 * a**2) / (np.abs(otf_zero) + numeric_noise)
-#             # fig, ax = plt.subplots(1, 2)
-#             # im0 = ax[0].imshow(np.log1p(10**8 * np.abs(a_s.T *Is.T)), origin='lower')
-#             # ax[0].set_title(f'Is r={r}')
-#             # im1 = ax[1].imshow(np.log1p(10**8 * np.abs(a_s * Is + a_s0 * I0 + a_smphi * I1 + a_sphi * I2).T), origin='lower')
-#             # ax[1].set_title(f'Composite r={r}')
-#             # plt.colorbar(im1, ax=ax[1])
-#             # plt.colorbar(im0, ax=ax[0])
-#             # plt.show()
-
-#             fmm = mask * (a_s * Is + a_s0 * I0 + a_smphi * I1 + a_sphi * I2)
-#             fm = 1 / (3 * a) * (I0 + emphi * I1 + ephi * I2)
-#             f0 = 1 / (3 ) * (I0 + I1 + I2)
-#             fp = 1 / (3 * a) * (I0 + ephi * I1 + emphi * I2)
-
-#             # fig, ax = plt.subplots(1, 4)
-#             # ax[0].imshow(np.log1p(10**3 * np.abs(fmm.T)) * mask.T, cmap='gray', origin='lower')
-#             # ax[0].set_title(f'Fmm r={r}')
-#             # ax[1].imshow(np.log1p(10**8 * np.abs(fm .T)) , cmap='gray', origin='lower')
-#             # ax[1].set_title(f'Fm r={r}')
-#             # ax[2].imshow(np.log1p(10**8 * np.abs(f0 .T)), cmap='gray', origin='lower')
-#             # ax[2].set_title(f'F0 r={r}')
-#             # ax[3].imshow(np.log1p(10**8 * np.abs(fp .T)), cmap='gray', origin='lower')
-#             # ax[3].set_title(f'Fp r={r}')
-#             # plt.show()
-
-#             fmm_shifted = hpc_utils.wrapped_fftn(self.phase_modulation_patterns[(r, (2, 0))]**2 * hpc_utils.wrapped_ifftn(fmm))
-#             fm_shifted = hpc_utils.wrapped_fftn(self.phase_modulation_patterns[(r, (-2, 0))] * hpc_utils.wrapped_ifftn(fm))
-#             f0_shifted = f0
-#             fp_shifted = hpc_utils.wrapped_fftn(self.phase_modulation_patterns[(r, (2, 0))] * hpc_utils.wrapped_ifftn(fp))
-
-#             # fig, ax = plt.subplots(1, 4)
-#             # ax[0].imshow(np.log1p(10**3 * np.abs(fmm_shifted.T)), cmap='gray', origin='lower')
-#             # ax[0].set_title(f'Fmm r={r}')
-#             # ax[1].imshow(np.log1p(10**8 * np.abs(fm_shifted.T)) , cmap='gray', origin='lower')
-#             # ax[1].set_title(f'Fm r={r}')
-#             # ax[2].imshow(np.log1p(10**8 * np.abs(f0_shifted.T)), cmap='gray', origin='lower')
-#             # ax[2].set_title(f'F0 r={r}')
-#             # ax[3].imshow(np.log1p(10**8 * np.abs(fp_shifted.T)), cmap='gray', origin='lower')
-#             # ax[3].set_title(f'Fp r={r}')
-#             # plt.show()
-
-#             K2 = a**4 * np.abs(otf_m)**2 * np.abs(otf_mm)**2 / ((a**4 + 1) *np.abs(otf_m)**2 + 3 * a**2 * otf_mm**2 + numeric_noise)
-#             K1 = a**2 * np.abs(otf_m)**2 
-#             Km1 = a**2 * np.abs(otf_p)**2 
-#             K0 = a**2 * np.abs(otf_zero)**2 
-
-#             # fig, ax = plt.subplots(1, 4)
-#             # ax[0].imshow(np.log1p(10**8 * np.abs(K2.T)), cmap='gray', origin='lower')
-#             # ax[0].set_title(f'K2 r={r}')
-#             # ax[1].imshow(np.log1p(10**8 * np.abs(K1.T)), cmap='gray', origin='lower')
-#             # ax[1].set_title(f'K1 r={r}')
-#             # ax[2].imshow(np.log1p(10**8 * np.abs(K0.T)), cmap='gray', origin='lower')
-#             # ax[2].set_title(f'K0 r={r}')
-#             # ax[3].imshow(np.log1p(10**8 * np.abs(Km1.T)), cmap='gray', origin='lower')
-#             # ax[3].set_title(f'Km1 r={r}')
-#             # # plt.show()
-
-#             # fig, ax = plt.subplots(1, 4)
-#             # ax[0].imshow(np.log1p(10**3 * np.abs(K2.T * fmm_shifted.T)), cmap='gray', origin='lower')
-#             # ax[0].set_title(f'Fmm r={r}')
-#             # ax[1].imshow(np.log1p(10**8 * np.abs(Km1.T * fm_shifted.T)) , cmap='gray', origin='lower')
-#             # ax[1].set_title(f'Fm r={r}')
-#             # ax[2].imshow(np.log1p(10**8 * np.abs(K0.T * f0_shifted.T)), cmap='gray', origin='lower')
-#             # ax[2].set_title(f'F0 r={r}')
-#             # ax[3].imshow(np.log1p(10**8 * np.abs(K1.T * fp_shifted.T)), cmap='gray', origin='lower')
-#             # ax[3].set_title(f'Fp r={r}')
-#             # plt.show()
-
-#             reconstructed_ft += Km1 * fm_shifted + K0 * f0_shifted + K1 * fp_shifted
-#             reconstructed_ft += np.flip(K2 * fmm_shifted, axis=(0, 1)).conjugate() + K2 * fmm_shifted
-#             Nx = sim_images.shape[2]
-#             # reconstructed_ft[Nx//2+1:, :] = np.flip(reconstructed_ft[:Nx//2, :], axis=(0, 1)).conjugate()
-
-#         plt.imshow(np.log1p(10**8 * np.abs(reconstructed_ft.T)), cmap='gray', origin='lower')
-#         plt.show()
-
-#         if self.return_ft:
-#             return reconstructed_ft * self.illumination.Mr * self.illumination.Mt
-#         reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_ft))
-#         return reconstructed_image
 
 class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):
 

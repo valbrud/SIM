@@ -90,6 +90,92 @@ def compute_SSNR_ideal(spatial_frequency_orders,
 
     return (ReSSNR_ideal, ImSSNR_ideal)
 
+def compute_modulations(spatial_frequency_orders, 
+                        illumination: Illumination.PlaneWavesSIM, 
+                        optical_system: OpticalSystems.OpticalSystem2D) -> dict[int, np.ndarray]:
+    reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D
+    reconstructor = reconstructor_class(illumination, optical_system=optical_system, return_ft = True)
+
+    modulations = {}
+    ratios = {}
+    
+    for r in range(illumination.Mr):
+        ReI, ImI = 0, 0
+        m0 = tuple([0] * illumination.dimensionality)
+        order0 = spatial_frequency_orders[(r, m0)][0] + 1j * spatial_frequency_orders[(r, m0)][1]
+        f0 = np.abs(np.amax(np.abs(order0)))
+        Nx, Ny = order0.shape[:2]
+        fig, ax = plt.subplots()
+
+
+        for key in spatial_frequency_orders.keys():
+            if key[0] == r and key != (r, m0):
+                order = spatial_frequency_orders[key][0] + 1j * spatial_frequency_orders[key][1]
+                mask = (reconstructor.effective_kernels[key] > 10**-6) * (reconstructor.effective_kernels[(r, m0)] > 10**-6)
+                # fig, ax = plt.subplots(1, 2)
+                # ax[0].imshow(mask, origin='lower', vmin=0, vmax=1)
+                # ax[1].imshow(np.log1p(np.abs(order * reconstructor.effective_kernels[key])), origin='lower', vmin=0)
+                # plt.show()
+                ratio = np.where(mask, (order / order0 + 1e-12), 0)
+                mask2 = (np.abs(order) > 2 * f0**0.5) * (np.abs(order0) > 2 * f0**0.5)
+                mask_total = mask * mask2
+                # plt.plot(np.log1p(np.abs(order0)[Nx//2, Ny//2:]))
+                # plt.plot(np.log1p(np.abs(order)[Nx//2, Ny//2:]))
+                # plt.hlines([np.log1p(f0**0.5), np.log1p(5 * f0**0.5)], 0, Ny-Ny//2, colors='r', linestyles='dashed')
+                # plt.show()
+                # fig, ax = plt.subplots()
+                # ax.imshow(mask2, origin='lower', vmin=0, vmax=1)
+                # ax.set_title('Mask2')
+                # plt.show()
+                ratio = np.where(mask2, ratio, 0)
+                # fig, ax = plt.subplots(1, 2)
+                # ax[0].imshow(np.log1p(np.abs(order0)), origin='lower', vmin=0)
+                # ax[1].imshow(np.log1p(np.abs(order)), origin='lower', vmin=0)
+                # plt.show()
+
+                ratios[key] = ratio
+                wavevector = illumination.harmonics[key].wavevector / 2
+                phase_modulation_pattern = np.einsum('...l, l->...', optical_system.x_grid, wavevector)
+                mask_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(mask_total) * np.exp(-1j * phase_modulation_pattern))
+                ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
+                ratio_shifted_ft = np.where(mask_shifted > 1e-1, ratio_shifted_ft, 0)
+                # plt.imshow(np.log1p(np.abs(10**8 * ratio_shifted_ft)), origin='lower')
+                # plt.show()
+                inverse_product = ratio_shifted_ft * np.flip(ratio_shifted_ft) 
+                # plt.imshow(np.log1p(np.abs(inverse_product)), origin='lower')
+                # plt.show()
+                modulations[key] = np.mean(inverse_product[inverse_product > 10**-6])**0.5
+                if np.isnan(modulations[key]):
+                    modulations[key] = 0.0
+                # print('weighted', key, modulations[key])
+                print('direct', key, modulations[key])
+                # illumination.harmonics[key].amplitude = modulations[key]
+    return modulations
+
+def compute_SSNR_ideal_per_rotation(spatial_frequency_orders,
+                                    illumination: Illumination.PlaneWavesSIM) -> dict[int, tuple[np.ndarray, np.ndarray]]:
+
+    ssnr_per_rotation = {
+        rotation: (
+            np.zeros_like(next(iter(spatial_frequency_orders.values()))[0], dtype=np.float64),
+            np.zeros_like(next(iter(spatial_frequency_orders.values()))[1], dtype=np.float64),
+        )
+        for rotation in range(illumination.Mr)
+    }
+
+    for key in spatial_frequency_orders.keys():
+        rotation = key[0]
+        ReI = spatial_frequency_orders[key][0]
+        ImI = spatial_frequency_orders[key][1]
+        ssnr_per_rotation[rotation][0][...] += ReI**2
+        ssnr_per_rotation[rotation][1][...] += ImI**2
+
+    for rotation in ssnr_per_rotation.keys():
+        ssnr_per_rotation[rotation][0][...] /= illumination.Mr
+        ssnr_per_rotation[rotation][1][...] /= illumination.Mr
+
+    return ssnr_per_rotation
+
 def compute_SSNR_guess(stack,
                         illumination: Illumination.PlaneWavesSIM,
                         optical_system: OpticalSystems.OpticalSystem2D,
@@ -249,7 +335,7 @@ def compute_loss_function(stack,
 
     # loss_function = -np.sum(log_likelihood)
     loss_function = np.mean(ReD + ImD)
-    return loss_function
+    return loss_function.real
 
 
 def estimate_true_otf(stack,
@@ -279,7 +365,12 @@ def estimate_true_otf(stack,
 
     spatial_frequency_orders = compute_spatial_frequency_orders(stack, illumination, effective_otfs, phase_modulation_patterns, apodization_mask=apodization_mask)
     SSNR_ideal = compute_SSNR_ideal(spatial_frequency_orders, illumination)
-    
+
+    if not estimate_amplitudes_dinamically:
+        am = compute_modulations(spatial_frequency_orders, illumination, optical_system)
+        for key, value in am.items():
+            illumination.harmonics[key].amplitude = np.abs(value) / illumination.Mr / illumination.Mt
+
     zernike_old = initial_aberrations.copy()
     NA_old = optical_system.NA
     print("Starting NA:", NA_old)
@@ -344,6 +435,235 @@ def estimate_true_otf(stack,
 
     return optical_system.NA, zernike_old, loss_function_old
 
+# def estimate_sim_otf_per_frequency(stack, 
+#                                    optical_system: OpticalSystems.OpticalSystem2D,
+#                                    illumination: Illumination.PlaneWavesSIM,
+#                                    apodization_mask = None):
+#     kernel = kernels.sinc_kernel2d(1) if illumination.dimensionality == 2 else kernels.sinc_kernel3d(1, 1)
+#     reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if optical_system.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D 
+#     reconstructor1 = reconstructor_class(illumination, optical_system, kernel)
+
+#     effective_otfs = reconstructor1.effective_kernels
+#     phase_modulation_patterns= reconstructor1.phase_modulation_patterns
+#     # ssnr_calc = SSNRSIM2D(illumination, optical_system)
+
+#     spatial_frequency_orders = compute_spatial_frequency_orders(stack, illumination, effective_otfs, phase_modulation_patterns, apodization_mask=apodization_mask)
+#     SSNR_ideal_per_rotation = compute_SSNR_ideal_per_rotation(spatial_frequency_orders, illumination)
+
+#     order_keys = list(spatial_frequency_orders.keys())
+#     zero_frequency = tuple([0] * illumination.dimensionality)
+#     rotation_to_plot = 0
+#     _, initial_effective_otfs = illumination.compute_effective_kernels(
+#         optical_system.psf,
+#         optical_system.psf_coordinates,
+#     )
+
+#     def _display_slice(array: np.ndarray) -> np.ndarray:
+#         if array.ndim == 2:
+#             return array
+#         if array.ndim == 3:
+#             return array[..., array.shape[2] // 2]
+#         raise ValueError(f"Unsupported array dimensionality for plotting: {array.ndim}")
+
+#     def _center_line(array: np.ndarray) -> np.ndarray:
+#         plane = _display_slice(array)
+#         return plane[plane.shape[0] // 2]
+
+#     def _log_weight(array: np.ndarray) -> np.ndarray:
+#         plane = _display_slice(array)
+#         scaled = 10**4 * plane
+#         return np.where(1 + scaled > 0, np.log1p(scaled), np.nan)
+
+#     def _plot_maps(title: str, maps: dict):
+#         map_items = list(maps.items())
+#         ncols = min(3, max(1, len(map_items)))
+#         nrows = int(np.ceil(len(map_items) / ncols))
+#         fig, axes = plt.subplots(nrows, ncols, squeeze=False)
+#         fig.suptitle(title)
+#         for axis, (key, value) in zip(axes.flat, map_items):
+#             image = axis.imshow(_log_weight(value), origin='lower')
+#             axis.set_title(str(key))
+#             plt.colorbar(image, ax=axis)
+#         for axis in axes.flat[len(map_items):]:
+#             axis.axis('off')
+#         plt.tight_layout()
+#         plt.show()
+
+#     def _plot_rotation_comparison(title: str, weight_maps: dict, order_maps: dict, kernel_maps: dict):
+#         pair_keys = [key for key in weight_maps.keys() if key in order_maps and key in kernel_maps]
+#         if not pair_keys:
+#             return
+#         fig, axes = plt.subplots(3, len(pair_keys), squeeze=False, figsize=(5 * len(pair_keys), 12))
+#         fig.suptitle(title)
+#         for column, key in enumerate(pair_keys):
+#             weight_image = axes[0, column].imshow(_log_weight(np.abs(weight_maps[key])), origin='lower')
+#             axes[0, column].set_title(f"|weight| {key}")
+#             plt.colorbar(weight_image, ax=axes[0, column])
+
+#             order_image = axes[1, column].imshow(_log_weight(np.abs(order_maps[key])), origin='lower')
+#             axes[1, column].set_title(f"|order| {key}")
+#             plt.colorbar(order_image, ax=axes[1, column])
+
+#             kernel_image = axes[2, column].imshow(_log_weight(np.abs(kernel_maps[key])), origin='lower')
+#             axes[2, column].set_title(f"|kernel| {key}")
+#             plt.colorbar(kernel_image, ax=axes[2, column])
+#         plt.tight_layout()
+#         plt.show()
+
+#     def _plot_ssnr_comparison(title: str, target_map: np.ndarray, initial_map: np.ndarray, optimal_map: np.ndarray):
+#         fig, axes = plt.subplots(1, 4, squeeze=False, figsize=(20, 4))
+#         fig.suptitle(title)
+#         comparison_maps = [
+#             ("target", target_map),
+#             ("initial", initial_map),
+#             ("optimized", optimal_map),
+#             ("abs diff", np.abs(optimal_map - target_map)),
+#         ]
+#         for axis, (label, value) in zip(axes.flat, comparison_maps):
+#             image = axis.imshow(_log_weight(np.abs(value)), origin='lower')
+#             axis.set_title(label)
+#             plt.colorbar(image, ax=axis)
+#         plt.tight_layout()
+#         plt.show()
+
+#     def _solve_weights(target: np.ndarray, component_index: int, component_name: str, rotation: int):
+#         rotation_keys = [key for key in order_keys if key[0] == rotation]
+#         zero_key = (rotation, zero_frequency)
+#         if zero_key not in rotation_keys:
+#             raise KeyError(f"Zero-order spatial frequency key {zero_key} is missing.")
+#         zero_index = rotation_keys.index(zero_key)
+
+#         order_stack = np.stack(
+#             [spatial_frequency_orders[key][component_index] for key in rotation_keys],
+#             axis=0,
+#         ).astype(np.float64)
+#         support_stack = np.stack(
+#             [np.abs(initial_effective_otfs[key]) for key in rotation_keys],
+#             axis=0,
+#         ).astype(np.float64)
+#         initial_weight_stack = np.stack(
+#             [
+#                 initial_effective_otfs[key].real if component_index == 0 else initial_effective_otfs[key].imag
+#                 for key in rotation_keys
+#             ],
+#             axis=0,
+#         ).astype(np.float64)
+#         flat_shape = (order_stack.shape[0], -1)
+#         order_stack_flat = order_stack.reshape(flat_shape)
+#         support_flat = support_stack.reshape(flat_shape)
+#         initial_weight_flat = initial_weight_stack.reshape(flat_shape)
+#         target_flat = target.reshape(-1)
+
+#         kernel_support_mask = np.max(support_flat, axis=0) > 10**-6
+#         valid_target_mask = ~np.isclose(target_flat, 0.0)
+#         order_norm_sq = np.sum(order_stack_flat ** 2, axis=0)
+#         order_information_mask = ~np.isclose(order_norm_sq, 0.0)
+#         solvable_mask = valid_target_mask & kernel_support_mask & order_information_mask
+#         weights_flat = np.zeros_like(order_stack_flat, dtype=np.float64)
+#         initial_weights_expanded = initial_weight_flat.copy()
+
+#         if np.any(solvable_mask):
+#             solvable_indices = np.where(solvable_mask)[0]
+#             order_values = order_stack_flat[:, solvable_indices]
+#             initial_weights = initial_weight_flat[:, solvable_indices].copy()
+#             target_values = target_flat[solvable_indices]
+#             max_target = order_norm_sq[solvable_indices]
+#             target_values = np.clip(target_values, 0.0, max_target)
+
+#             weights = initial_weights.copy()
+#             regularization_strength = 1e-3
+#             for _ in range(80):
+#                 numerator = np.sum(weights * order_values, axis=0)
+#                 denominator = np.sum(weights ** 2, axis=0) + 1e-12
+#                 quotient = numerator ** 2 / denominator
+#                 quotient_error = quotient - target_values
+#                 gradient_quotient = (
+#                     2.0 * numerator[None, :] * order_values / denominator[None, :]
+#                     - 2.0 * (numerator ** 2)[None, :] * weights / (denominator ** 2)[None, :]
+#                 )
+#                 gradient = quotient_error[None, :] * gradient_quotient + regularization_strength * (weights - initial_weights)
+#                 step = 0.2 / (order_norm_sq[solvable_indices][None, :] + regularization_strength + 1e-12)
+#                 weights -= step * gradient
+
+#             weights_flat[:, solvable_indices] = weights
+
+#         optimal_guess_flat = np.zeros_like(target_flat)
+#         initial_guess_flat = np.zeros_like(target_flat)
+#         if np.any(solvable_mask):
+#             numerator = np.sum(weights_flat[:, solvable_mask] * order_stack_flat[:, solvable_mask], axis=0)
+#             denominator = np.sum(np.abs(weights_flat[:, solvable_mask]) ** 2, axis=0)
+#             valid_denominator = ~np.isclose(denominator, 0.0)
+#             optimal_guess_flat_indices = np.where(solvable_mask)[0]
+#             optimal_guess_flat[optimal_guess_flat_indices[valid_denominator]] = (
+#                 numerator[valid_denominator] ** 2 / denominator[valid_denominator]
+#             )
+
+#             initial_numerator = np.sum(
+#                 initial_weights_expanded[:, solvable_mask] * order_stack_flat[:, solvable_mask],
+#                 axis=0,
+#             )
+#             initial_denominator = np.sum(np.abs(initial_weights_expanded[:, solvable_mask]) ** 2, axis=0)
+#             valid_initial_denominator = ~np.isclose(initial_denominator, 0.0)
+#             initial_guess_flat[optimal_guess_flat_indices[valid_initial_denominator]] = (
+#                 initial_numerator[valid_initial_denominator] ** 2 / initial_denominator[valid_initial_denominator]
+#             )
+
+#         weights = weights_flat.reshape(order_stack.shape)
+#         optimal_guess = optimal_guess_flat.reshape(target.shape)
+#         initial_guess = initial_guess_flat.reshape(target.shape)
+#         solvable_mask_array = solvable_mask.reshape(target.shape)
+
+#         ratio_mask = solvable_mask_array
+#         ratios = {}
+#         for key_index, key in enumerate(rotation_keys):
+#             if key == zero_key:
+#                 ratios[key] = 1.0
+#                 continue
+#             zero_weight = weights[zero_index]
+#             zero_weight_sum = np.sum(zero_weight[ratio_mask]) if np.any(ratio_mask) else 0.0
+#             if np.isclose(zero_weight_sum, 0.0):
+#                 ratios[key] = np.nan
+#             else:
+#                 ratios[key] = float(np.sum(weights[key_index][ratio_mask]) / zero_weight_sum)
+
+#         print(f"{component_name} rotation {rotation} weight ratios relative to {zero_key}:")
+#         for key in rotation_keys:
+#             print(f"  {key}: {ratios[key]}")
+#         target_total = float(np.sum(target[ratio_mask])) if np.any(ratio_mask) else np.nan
+#         initial_total = float(np.sum(initial_guess[ratio_mask])) if np.any(ratio_mask) else np.nan
+#         optimized_total = float(np.sum(optimal_guess[ratio_mask])) if np.any(ratio_mask) else np.nan
+#         print(
+#             f"{component_name} rotation {rotation} weighted-square residual: "
+#             f"mean={np.nanmean(np.abs(optimal_guess[ratio_mask] - target[ratio_mask])) if np.any(ratio_mask) else np.nan}, "
+#             f"max={np.nanmax(np.abs(optimal_guess[ratio_mask] - target[ratio_mask])) if np.any(ratio_mask) else np.nan}"
+#         )
+#         print(
+#             f"{component_name} rotation {rotation} SSNR totals: "
+#             f"target={target_total}, initial={initial_total}, optimized={optimized_total}, "
+#             f"optimized-initial={optimized_total - initial_total if np.isfinite(optimized_total) and np.isfinite(initial_total) else np.nan}"
+#         )
+
+#         if rotation == rotation_to_plot:
+#             rotation_weight_maps = {key: weights[rotation_keys.index(key)] for key in rotation_keys}
+#             rotation_order_maps = {key: spatial_frequency_orders[key][component_index] for key in rotation_keys}
+#             rotation_kernel_maps = {key: initial_effective_otfs[key] for key in rotation_keys}
+#             _plot_rotation_comparison(
+#                 f"{component_name} absolute values rotation {rotation}",
+#                 rotation_weight_maps,
+#                 rotation_order_maps,
+#                 rotation_kernel_maps,
+#             )
+#             _plot_ssnr_comparison(
+#                 f"{component_name} SSNR comparison rotation {rotation}",
+#                 target,
+#                 initial_guess,
+#                 optimal_guess,
+#             )
+
+#     for rotation in range(illumination.Mr):
+#         _solve_weights(SSNR_ideal_per_rotation[rotation][0], component_index=0, component_name="Real", rotation=rotation)
+#         _solve_weights(SSNR_ideal_per_rotation[rotation][1], component_index=1, component_name="Imag", rotation=rotation)
+#     plt.show()
 
 # def check_local_minima(stack,
 #                        optical_system: OpticalSystems.OpticalSystem2D,

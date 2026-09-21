@@ -164,7 +164,7 @@ else:
         zooming_factor=100,
         max_iterations=2,
         debug_info_level=1,
-        first_order_phases_only=True
+        first_order_only=True
     )
 
     illumination.save(illumination_file)

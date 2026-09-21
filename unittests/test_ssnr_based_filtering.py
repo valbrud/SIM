@@ -21,8 +21,10 @@ import skimage
 from matplotlib.widgets import Slider
 from matplotlib.animation import FuncAnimation
 from matplotlib import colors
-from SSNRCalculator import SSNRSIM3D, SSNRSIM3D3dShifts
-from OpticalSystems import System4f3D
+from SSNRCalculator import SSNRSIM3D, SSNRSIM2D
+from OpticalSystems import System4f3D, System4f2D
+from Reconstructor import ReconstructorFourierDomain2D
+from Illumination import IlluminationPlaneWaves2D
 import ShapesGenerator
 import SIMulator
 from windowing import make_mask_cosine_edge3d
@@ -85,11 +87,10 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
-
-        image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
-        widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
+        filtered_ft, wj, ssnr = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator)
+        widefield_ft, wjw, ssnrw = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_widefield)
+        image_filtered = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+        widefield_benchmark = np.abs(hpc_utils.wrapped_ifftn(widefield_ft))
         wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 
@@ -210,11 +211,10 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
-
-        image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
-        widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
+        filtered_ft, wj, ssnr = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator)
+        widefield_ft, wjw, ssnrw = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_widefield)
+        image_filtered = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+        widefield_benchmark = np.abs(hpc_utils.wrapped_ifftn(widefield_ft))
 
         wjr = hpc_utils.wrapped_ifftn(wj)
         wjrw = hpc_utils.wrapped_ifftn(wjw)
@@ -338,14 +338,11 @@ class TestWiener(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener = WienerFiltering.WienerFilter3dModel(noise_estimator)
-        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
+        filtered_ft, wj, ssnr = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator)
+        widefield_ft, wjw, ssnrw = WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_widefield)
 
-        image_filtered, ssnr, wj, otf_sim, tj = wiener.filter_object(image_ft, real_space=False)
-        widefield_benchmark, ssnrw, wjw, otf_simw, tjw = wiener_widefield.filter_object(image_ft, real_space=False)
-
-        tjr = hpc_utils.wrapped_ifftn(tj)
-        tjrw = hpc_utils.wrapped_ifftn(tjw)
+        filtered_image = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+        widefield_filtered_image = np.abs(hpc_utils.wrapped_ifftn(widefield_ft))
 
         Fx, Fy = np.meshgrid(fx, fy)
         fig = plt.figure(figsize=(15, 9), constrained_layout=True)
@@ -373,10 +370,10 @@ class TestWiener(unittest.TestCase):
         ax4.tick_params(labelsize=20)
 
         mp = 10**4
-        im1 = ax1.imshow(np.real(tjw[:, :, int(N//2)]), vmin=0)
-        im2 = ax2.imshow(np.real(tjrw[:, :, int(N//2)]))
-        im3 = ax3.imshow(np.real(tj[:, :, int(N//2)]), vmin=0)
-        im4 = ax4.imshow(np.real(tjr[:, :, int(N//2)]))
+        im1 = ax1.imshow(np.log10(1 + np.abs(widefield_ft[:, :, int(N//2)])), vmin=0)
+        im2 = ax2.imshow(np.real(widefield_filtered_image[:, :, int(N//2)]))
+        im3 = ax3.imshow(np.log10(1 + np.abs(filtered_ft[:, :, int(N//2)])), vmin=0)
+        im4 = ax4.imshow(np.real(filtered_image[:, :, int(N//2)]))
 
 
         def update1(val):
@@ -390,10 +387,10 @@ class TestWiener(unittest.TestCase):
             ax3.set_title("SIM Fourier", fontsize=25, pad=15)
             ax4.set_title("SIM Real", fontsize=25, pad=15)
 
-            im1 = ax1.imshow(np.real(tjw[:, :, int(val)]), vmin=0)
-            im2 = ax2.imshow(np.real(tjrw[:, :, int(val)]))
-            im3 = ax3.imshow(np.real(tj[:, :, int(val)]), vmin=0)
-            im4 = ax4.imshow(np.real(tjr[:, :, int(val)]))
+            im1 = ax1.imshow(np.log10(1 + np.abs(widefield_ft[:, :, int(val)])), vmin=0)
+            im2 = ax2.imshow(np.real(widefield_filtered_image[:, :, int(val)]))
+            im3 = ax3.imshow(np.log10(1 + np.abs(filtered_ft[:, :, int(val)])), vmin=0)
+            im4 = ax4.imshow(np.real(filtered_image[:, :, int(val)]))
 
         slider_loc = plt.axes((0.2, 0.0, 0.3, 0.03))  # slider location and size
         slider_ssnr = Slider(slider_loc, 'fz', 0, N-1)  # slider properties
@@ -463,25 +460,19 @@ class TestWiener(unittest.TestCase):
         noise_estimator_circular = SSNRSIM3D(illumination_circular, optical_system)
         noise_estimator_hexagonal = SSNRSIM3D(illumination_seven_waves, optical_system)
         noise_estimator_widefield = SSNRSIM3D(illumination_widefield, optical_system)
-        noise_estimator_linear.compute_ssnr()
-        noise_estimator_s_polarized.compute_ssnr()
-        noise_estimator_circular.compute_ssnr()
-        noise_estimator_hexagonal.compute_ssnr()
+        noise_estimator_linear.ssnri
+        noise_estimator_s_polarized.ssnri
+        noise_estimator_circular.ssnri
+        noise_estimator_hexagonal.ssnri
         noise_estimator_widefield.ssnri
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        wiener_linear = WienerFiltering.WienerFilter3dModel(noise_estimator_linear)
-        wiener_s = WienerFiltering.WienerFilter3dModel(noise_estimator_s_polarized)
-        wiener_circular = WienerFiltering.WienerFilter3dModel(noise_estimator_circular)
-        wiener_hexagonal = WienerFiltering.WienerFilter3dModel(noise_estimator_hexagonal)
-        wiener_widefield = WienerFiltering.WienerFilter3dModel(noise_estimator_widefield)
-
-        image_linear = wiener_linear.filter_object(image_ft, real_space=False)[0]
-        image_s = wiener_s.filter_object(image_ft, real_space=False)[0]
-        image_circular = wiener_circular.filter_object(image_ft, real_space=False)[0]
-        image_hexagonal = wiener_hexagonal.filter_object(image_ft, real_space=False)[0]
-        image_widefield = wiener_widefield.filter_object(image_ft, real_space=False)[0]
+        image_linear = np.abs(hpc_utils.wrapped_ifftn(WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_linear)[0]))
+        image_s = np.abs(hpc_utils.wrapped_ifftn(WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_s_polarized)[0]))
+        image_circular = np.abs(hpc_utils.wrapped_ifftn(WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_circular)[0]))
+        image_hexagonal = np.abs(hpc_utils.wrapped_ifftn(WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_hexagonal)[0]))
+        image_widefield = np.abs(hpc_utils.wrapped_ifftn(WienerFiltering.filter_true_wiener_sim(image_ft, noise_estimator_widefield)[0]))
 
 
         Fx, Fy = np.meshgrid(fx, fy)
@@ -595,8 +586,6 @@ class TestWiener(unittest.TestCase):
         noise_estimator_widefield.ssnri
 
 
-        wiener = WienerFiltering.WienerFilter3dModelSDR(noise_estimator)
-        wiener_widefield = WienerFiltering.WienerFilter3dModelSDR(noise_estimator_widefield)
         simulator = SIMulator.SIMulator(illumination_s_polarized, optical_system, psf_size, N)
         images = simulator.generate_noiseless_sim_images(image)
         image_sr = simulator.reconstruct_real_space(images)
@@ -606,8 +595,10 @@ class TestWiener(unittest.TestCase):
         plt.legend()
         plt.show()
         image_widefield = simulator.generate_widefield(images)
-        image_filtered, ssnr,  wj, geff, uj = wiener.filter_SDR_reconstruction(image, image_sr)
-        widefield_benchmark, ssnrw, wjw, geff, uj = wiener_widefield.filter_SDR_reconstruction(image, image_widefield)
+        filtered_ft, wj, ssnr = WienerFiltering.filter_self_consistent_wiener(hpc_utils.wrapped_fftn(image_sr), noise_estimator)
+        widefield_ft, wjw, ssnrw = WienerFiltering.filter_self_consistent_wiener(hpc_utils.wrapped_fftn(image_widefield), noise_estimator_widefield)
+        image_filtered = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+        widefield_benchmark = np.abs(hpc_utils.wrapped_ifftn(widefield_ft))
         wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 
@@ -734,12 +725,15 @@ class TestWiener(unittest.TestCase):
         # plt.plot(np.log(1 + 10**4 * np.abs(hpc_utils.wrapped_fftn(image_widefield)[:, N//2, N//2])))
         plt.legend()
         plt.show()
-        wiener_model = WienerFiltering.WienerFilter3dModel(noise_estimator)
-        expected_image, ssnr, wj, otf_sim, tj = wiener_model.filter_object(image, real_space=True)
+        expected_ft, wj, ssnr = WienerFiltering.filter_simulated_object_wiener(
+            hpc_utils.wrapped_fftn(image),
+            noise_estimator,
+            hpc_utils.wrapped_fftn(image),
+        )
+        expected_image = np.abs(hpc_utils.wrapped_ifftn(expected_ft))
 
-        wiener_reconstruction = WienerFiltering.WienerFilter3dReconstruction(noise_estimator)
-        filtered_image, ssnr_rec, wj_rec, otf_sim_rec, tj_rec = wiener_reconstruction.filter_object(image_sr, real_space=True, average="surface_levels_3d")
-        # filtered_image = np.abs(hpc_utils.wrapped_ifftn(tj_rec * hpc_utils.wrapped_fftn(image_sr)))
+        filtered_ft_rec, wj_rec, ssnr_rec = WienerFiltering.filter_true_wiener_sim(hpc_utils.wrapped_fftn(image_sr), noise_estimator)
+        filtered_image = np.abs(hpc_utils.wrapped_ifftn(filtered_ft_rec))
         plt.plot(np.log(1 + 10 ** 4 * np.abs(ssnr_rec[:, N//2, N//2])), label='ssnr rec')
         plt.plot(np.log(1 + 10 ** 4 * np.abs(ssnr[:, N//2, N//2])))
         plt.legend()
@@ -811,6 +805,129 @@ class TestWiener(unittest.TestCase):
         # fig.savefig(f'{path_to_figures}comparison_of_3d_SIM_modalities_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         # fig.savefig(f'{path_to_figures}square_sim_anisotropies_fz={:.2f}_r_={:.2f}.png'.format(two_NA_fz[arg], r))
         plt.show()
+
+
+class TestWienerTiles(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        np.random.seed(1234)
+
+        cls.N = 501
+        cls.alpha = 2 * np.pi / 5
+        cls.nmedium = 1.5
+        cls.theta = np.arcsin(0.9 * np.sin(cls.alpha))
+        cls.dimensions = (1, 1)
+        cls.center = cls.N // 2
+
+        NA = cls.nmedium * np.sin(cls.alpha)
+        dx = 1 / (8 * NA)
+        max_r = cls.center * dx
+        psf_size = np.array((2 * max_r, 2 * max_r))
+
+        cls.image = ShapesGenerator.generate_random_lines(
+            image_size=psf_size,
+            point_number=cls.N,
+            line_width=0.4,
+            num_lines=100,
+            intensity=10 ** 2,
+            generate_default=True,
+        )
+
+        optical_system = System4f2D(alpha=cls.alpha, refractive_index=cls.nmedium)
+        optical_system.compute_psf_and_otf((psf_size, cls.N))
+
+        illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(
+            cls.theta,
+            1,
+            0,
+            3,
+            Mt=1,
+        )
+        illumination = IlluminationPlaneWaves2D.init_from_3D(illumination_3waves3d, cls.dimensions)
+        illumination.set_spatial_shifts_diagonally()
+
+        cls.noise_estimator = SSNRSIM2D(
+            illumination=illumination,
+            optical_system=optical_system,
+            readout_noise_variance=1,
+        )
+        cls.noise_estimator.ssnri
+
+        simulator = SIMulator.SIMulator2D(illumination, optical_system, readout_noise_variance=1)
+        noiseless_images = simulator.generate_noiseless_sim_images(cls.image)
+        noisy_images = simulator.add_noise(noiseless_images)
+        cls.pseudowidefield_noisy = np.sum(noisy_images, axis=(0, 1))
+        reconstructor = ReconstructorFourierDomain2D(
+            illumination=illumination,
+            optical_system=optical_system,
+            return_ft=True,
+            unitary=True,
+        )
+        cls.image_sr_ft = reconstructor.reconstruct(noisy_images)
+        cls.image_sr = np.abs(hpc_utils.wrapped_ifftn(cls.image_sr_ft))
+
+    def test_simple_tiling(self):
+        filtered_ft, w, ssnr_tiled = WienerFiltering.filter_self_consistent_wiener_tiling(
+            self.image_sr_ft,
+            self.noise_estimator,
+            method='simple',
+            debug=True,
+            debug_iterations=5,
+            SSNRc = 7
+        )
+        filtered_image = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        axes[0].imshow(self.image, vmin=0)
+        axes[0].set_title("Object")
+        axes[1].imshow(self.pseudowidefield_noisy, vmin=0)
+        axes[1].set_title("Pseudo-widefield noisy")
+        axes[2].imshow(self.image_sr, vmin=0)
+        axes[2].set_title("Reconstruction")
+        axes[3].imshow(filtered_image, vmin=0)
+        axes[3].set_title("Filtered")
+        plt.show()
+
+
+    def test_fast_tiling(self):
+        # filtered, _, ssnr = WienerFiltering.filter_true_wiener_sim(
+        #     self.image_sr_ft,
+        #     self.noise_estimator,
+        # )
+        # plt.plot(np.log1p(ssnr[self.N//2, self.N//2:]))
+        # plt.show()
+
+        filtered_fast, w_fast, ssnr_fast = WienerFiltering.filter_self_consistent_wiener_tiling(
+            self.image_sr_ft,
+            self.noise_estimator,
+            method='fast',
+            debug=False,
+            debug_iterations=5,
+            SSNRc = 10
+        )
+
+        fig, ax = plt.subplots(1, 3)
+        ax[0].imshow(np.log1p(np.abs(filtered_fast)))
+        ax[1].imshow(np.log1p(np.abs(w_fast)))
+        imssnr = ax[2].imshow(np.log1p(np.abs(ssnr_fast)))
+        # plt.colorbar(imssnr, cax=ax[2])
+        # plt.show()
+
+        # plt.plot(np.log1p(np.abs(w_fast[self.N//2:, self.N//2])))
+        # plt.show()
+        filtered_image = np.abs(hpc_utils.wrapped_ifftn(filtered_fast))
+        fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+        axes[0].imshow(self.image, vmin=0)
+        axes[0].set_title("Object")
+        axes[1].imshow(self.pseudowidefield_noisy, vmin=0)
+        axes[1].set_title("Pseudo-widefield noisy")
+        axes[2].imshow(self.image_sr, vmin=0)
+        axes[2].set_title("Reconstruction")
+        axes[3].imshow(filtered_image, vmin=0)
+        axes[3].set_title("Filtered fast")
+        plt.show()
+
+
 class TestFlat(unittest.TestCase):
     def test_model_object(self):
         theta = np.pi / 4
@@ -869,11 +986,10 @@ class TestFlat(unittest.TestCase):
 
         # plt.imshow(np.abs(np.log10(1 + 10 ** 4 * noise_estimator.ssnri[:, :, N//2])))
         # plt.show()
-        flat = WienerFiltering.FlatNoiseFilter3dModel(noise_estimator)
-        flat_widefield = WienerFiltering.FlatNoiseFilter3dModel(noise_estimator_widefield)
-
-        image_filtered, wj, otf_sim, tj = flat.filter_object(image_ft, real_space=False)
-        widefield_benchmark, wjw, otf_simw, tjw = flat_widefield.filter_object(image_ft, real_space=False)
+        filtered_ft, wj, _ = WienerFiltering.filter_flat_noise_sim(image_ft, noise_estimator)
+        widefield_ft, wjw, _ = WienerFiltering.filter_flat_noise_sim(image_ft, noise_estimator_widefield)
+        image_filtered = np.abs(hpc_utils.wrapped_ifftn(filtered_ft))
+        widefield_benchmark = np.abs(hpc_utils.wrapped_ifftn(widefield_ft))
         wjr = hpc_utils.wrapped_ifftn(wj)
         wjr /= np.amax(wjr)
 

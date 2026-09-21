@@ -135,5 +135,5 @@ if __name__=="__main__":
             # axes.set_ylabel('y $[A. u.]$')
         # axes.set_xticks('off')
         # axes.set_yticks('off')
-        fig.savefig(os.path.join(path_to_figures, title), bbox_inches='tight', dpi=300)
+        # fig.savefig(os.path.join(path_to_figures, title), bbox_inches='tight', dpi=300)
     # plt.show()
