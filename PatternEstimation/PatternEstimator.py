@@ -94,7 +94,9 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                  first_order_phases: bool = True,
                  treat_composite_orders_separately_for_modulation: bool = False,
                  estimation_strategy: str = 'plane_by_plane',
-                 reference_expansion: tuple = (1, 0, 1)):
+                 reference_expansion: tuple = (1, 0, 1), 
+                 SSNRc: float = 1,
+                 ):
         utils.validate_init_types(
             illumination=(illumination, PlaneWavesSIM),
             optical_system=(optical_system, OpticalSystem),
@@ -121,6 +123,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         self.treat_composite_orders_separately_for_modulation = treat_composite_orders_separately_for_modulation
         self.estimation_strategy = estimation_strategy
         self.reference_expansion = reference_expansion
+        self.SSNRc = SSNRc
 
     def estimate_illumination_parameters(
         self,
@@ -261,6 +264,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         method_name: str,
         treat_composite_orders_separately: bool = False,
         debug_info_level: int = 1,
+        SSNRc: float = 1,
     ) -> 'ModulationEstimator':
         estimator_names = {
             'least_squares': 'ModulationLeastSquaresEstimator',
@@ -275,6 +279,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             modulation_estimation_method=method_name,
             treat_composite_orders_separately=treat_composite_orders_separately,
             debug_info_level=debug_info_level,
+            SSNRc=self.SSNRc,
         )
 
     @abstractmethod

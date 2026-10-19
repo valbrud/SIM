@@ -46,10 +46,10 @@ optical_system = System4f2D(alpha=NA, refractive_index=1)
 optical_system.compute_psf_and_otf((psf_size, N))
 
 illumination = configurations.get_3_oblique_s_waves_and_circular_normal(alpha*0.9, 1, 0, Mt=7, dimensionality=2, dimensions=(1, 1, 1))
+illumination.set_spatial_shifts_diagonally()
 noise_estimator_perfect= SSNRSIM2D(illumination, optical_system,  imperfect_phase_shifts=True)
 
 illumination_imperfect = copy.deepcopy(illumination)
-illumination.set_spatial_shifts_diagonally()
 ssnr_perfect = noise_estimator_perfect.ring_average_ssnri()
 
 phi = np.array([
@@ -131,13 +131,13 @@ for i in range(len(phase_error_strengths)):
     #     ax[i].set_axis_off()
     ax[i].set_title(f'std = {phase_error_strengths[i]}')
     ax[i].plot(fr, 1 + 10**3 * ssnr_perfect / 7, color='black', label="LS unitary")
-    ax[i].plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_imperfect[i], (fx, fx)), color='red', label="LS non-unitary")
-    ax[i].plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_corrected[i], (fx, fx)), color='green', label="GLS non-unitary")
+    ax[i].plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_imperfect[i], (fx, fx)), color='green', label="LS non-unitary")
+    ax[i].plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_corrected[i], (fx, fx)), color='blue', label="GLS non-unitary")
     ax[i].set_ylim(bottom=1)
     ax[i].set_xlim(0, fr[-1])
     # ax[i].legend()
     ax[i].set_aspect(1/ax[i].get_data_ratio())
 
-# fig.savefig(current_dir + f"/Figures/simulations/ssnr_square_imperfect_phase_shifts.png", bbox_inches='tight', pad_inches=0.01)
+fig.savefig(current_dir + f"/Figures/simulations/ssnr_square_imperfect_phase_shifts.png", bbox_inches='tight', pad_inches=0.01)
 
 plt.show()

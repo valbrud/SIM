@@ -155,21 +155,21 @@ def filter_true_wiener_sim(image_ft,
     # plt.show()
     ssnr = expand_ring_averages(ssnr_ra, ssnr_calculator.optical_system.otf_frequencies)
 
-    if image_ft.ndim == 3:
-        fig, ax = plt.subplots(1, 2, figsize=(10,5))
-        ax[0].plot(np.log1p((np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
-        ax[0].plot(np.log1p((noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
-        ax[0].legend()
-        ax[1].plot(np.log1p(ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
-        ax[1].legend()
-        # plt.show()
-    else: 
-        fig, ax = plt.subplots(1, 2, figsize=(10,5))
-        ax[0].plot(np.log1p((np.abs(obj2ra))), label='total power')
-        ax[0].plot(np.log1p((noise_power_ra).real), label='noise power') 
-        ax[0].legend()
-        ax[1].plot(np.log1p(ssnr_ra.real), label='SSNR')
-        ax[1].legend()
+    # if image_ft.ndim == 3:
+    #     fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    #     ax[0].plot(np.log1p((np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
+    #     ax[0].plot(np.log1p((noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+    #     ax[0].legend()
+    #     ax[1].plot(np.log1p(ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
+    #     ax[1].legend()
+    #     # plt.show()
+    # else: 
+    #     fig, ax = plt.subplots(1, 2, figsize=(10,5))
+    #     ax[0].plot(np.log1p((np.abs(obj2ra))), label='total power')
+    #     ax[0].plot(np.log1p((noise_power_ra).real), label='noise power') 
+    #     ax[0].legend()
+    #     ax[1].plot(np.log1p(ssnr_ra.real), label='SSNR')
+    #     ax[1].legend()
         # plt.show()
 
 
@@ -189,23 +189,23 @@ def filter_true_wiener_sim(image_ft,
     
     w = dja / ssnr 
     shape = image_ft.shape
-    if len(shape) == 3: 
-        fig, ax = plt.subplots(1, 3, figsize=(10,5))
-        ax[0].plot(np.log1p(10**8 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
-        ax[1].plot(np.log1p(10**8 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2])
-        ax[2].plot(np.log1p(10**8 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2])
-        ax[0].set_title('SSNR')
-        ax[1].set_title('Dj average')
-        ax[2].set_title('Regularization w')
-        # plt.show()
-    else: 
-        fig, ax = plt.subplots(1, 3, figsize=(10,5))
-        ax[0].plot(np.log1p(ssnr)[shape[0]//2:, shape[1]//2])
-        ax[1].plot(np.log1p((dja)[shape[0]//2:, shape[1]//2]))
-        ax[2].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
-        ax[0].set_title('SSNR')
-        ax[1].set_title('Dj average')
-        ax[2].set_title('Regularization w')
+    # if len(shape) == 3: 
+    #     fig, ax = plt.subplots(1, 3, figsize=(10,5))
+    #     ax[0].plot(np.log1p(10**8 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
+    #     ax[1].plot(np.log1p(10**8 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2])
+    #     ax[2].plot(np.log1p(10**8 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2])
+    #     ax[0].set_title('SSNR')
+    #     ax[1].set_title('Dj average')
+    #     ax[2].set_title('Regularization w')
+    #     # plt.show()
+    # else: 
+    #     fig, ax = plt.subplots(1, 3, figsize=(10,5))
+    #     ax[0].plot(np.log1p(ssnr)[shape[0]//2:, shape[1]//2])
+    #     ax[1].plot(np.log1p((dja)[shape[0]//2:, shape[1]//2]))
+    #     ax[2].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
+    #     ax[0].set_title('SSNR')
+    #     ax[1].set_title('Dj average')
+    #     ax[2].set_title('Regularization w')
         # plt.show()
 
     w = np.where(ssnr < 1, 10**9, w)
@@ -377,30 +377,30 @@ def plot_tiling_debug(ssnr_measured: np.ndarray,
     edge_mean = _edge_band_mean(measured_slice, edge_width=edge_width)
     print(f"Average measured SSNR in {edge_width}-pixel edge band: {edge_mean:.6g}")
     max_panels = max_iterations_to_plot + 1
-    fig, axes = plt.subplots(2, max_panels, figsize=(5 * max_panels, 8))
+    # fig, axes = plt.subplots(2, max_panels, figsize=(5 * max_panels, 8))
 
-    measured_image = _imshow_ssnr(axes[0, 0], measured_slice, 'SSNR measured')
-    plt.colorbar(measured_image, ax=axes[0, 0])
+    # measured_image = _imshow_ssnr(axes[0, 0], measured_slice, 'SSNR measured')
+    # plt.colorbar(measured_image, ax=axes[0, 0])
 
-    tiled_image = _imshow_ssnr(axes[1, 0], tiled_slice, 'SSNR estimated by tiling')
-    plt.colorbar(tiled_image, ax=axes[1, 0])
+    # tiled_image = _imshow_ssnr(axes[1, 0], tiled_slice, 'SSNR estimated by tiling')
+    # plt.colorbar(tiled_image, ax=axes[1, 0])
 
     for iteration in range(max_iterations_to_plot):
         removed_mask = (removal_slice == iteration).astype(float)
-        removal_image = axes[0, iteration + 1].imshow(removed_mask, origin='lower', cmap='magma', vmin=0.0, vmax=1.0)
-        axes[0, iteration + 1].set_title(f'removed {2 * iteration + 1}x{2 * iteration + 1}')
-        plt.colorbar(removal_image, ax=axes[0, iteration + 1])
+        # removal_image = axes[0, iteration + 1].imshow(removed_mask, origin='lower', cmap='magma', vmin=0.0, vmax=1.0)
+        # axes[0, iteration + 1].set_title(f'removed {2 * iteration + 1}x{2 * iteration + 1}')
+        # plt.colorbar(removal_image, ax=axes[0, iteration + 1])
 
         assigned_iteration = np.where(removal_slice == iteration, tiled_slice, 0.0)
-        assigned_image = _imshow_ssnr(
-            axes[1, iteration + 1],
-            assigned_iteration,
-            f'assigned SSNR {2 * iteration + 1}x{2 * iteration + 1}'
-        )
-        plt.colorbar(assigned_image, ax=axes[1, iteration + 1])
+        # assigned_image = _imshow_ssnr(
+        #     axes[1, iteration + 1],
+        #     assigned_iteration,
+        #     f'assigned SSNR {2 * iteration + 1}x{2 * iteration + 1}'
+        # )
+        # plt.colorbar(assigned_image, ax=axes[1, iteration + 1])
 
-    plt.tight_layout()
-    plt.show()
+    # plt.tight_layout()
+    # plt.show()
 
 
 def _finalize_tiled_filter(image_ft,

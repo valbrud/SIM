@@ -790,62 +790,6 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
         return am_scaled
     
-    def estimate_modulation_coefficients(self, stack, psf, grid, update=False, method='least_squares'): 
-        """
-        Estimate the modulation coefficients from a given image.
-
-        Args:
-            stack (np.ndarray): SIM image stack.
-            grid (np.ndarray): Grid of coordinates.
-            update (bool): If True, update the coefficients of the illumination harmonics.
-
-        Returns:
-            np.ndarray: Estimated modulation coefficients.
-        """
-        
-        flat_grid = grid.reshape(-1, self.dimensionality)
-        am = {}
-
-        for r in range(self.Mr):
-            harmonics = {index[1]: harmonic for index, harmonic in self.harmonics.items() if index[0] == r}
-            wavevectors = np.zeros((len(harmonics), self.dimensionality))
-            for i, harmonic in enumerate(harmonics.keys()):
-                wavevectors[i] = harmonics[harmonic].wavevector
-            
-            amr = np.zeros((len(harmonics)), dtype=np.complex128)
-            otfs = off_grid_ft(psf, grid, wavevectors / (2 * np.pi))
-            # print(otfs)
-            
-            if method == 'least_squares':
-                phases = flat_grid @ wavevectors.T
-
-                for n in range(self.Mt):
-                    phase_vector = np.zeros((wavevectors.shape[0]), dtype=np.complex128)
-                    for i in range(len(wavevectors)):
-                        phase_vector[i] = self._phase_matrix[r, n, tuple(harmonics.keys())[i]]
-                    phase_modulation = np.exp(1j * phases) * phase_vector[None, :]
-                    # M = np.hstack((np.cos(phase_modulation), np.sin(phase_modulation)))
-                    image = stack[r, n]
-                    flat_image = image.ravel()
-                    amr, *_ = scipy.linalg.lstsq(phase_modulation, flat_image, cond=None) 
-
-            if method == 'peak_height_ratio':
-                for n in range(self.Mt):
-                    ft = off_grid_ft(stack[r, n], grid, np.array(wavevectors / (2 * np.pi)))
-                    amr = np.abs(ft)
-                    # print(harmonic, amr)
-
-            amr /= np.abs((otfs))
-            amr /= np.amax(np.abs(amr)) 
-            # amr /= (self.Mt * self.Mr)
-            for i in range(len(harmonics)):
-                am[(r, tuple(harmonics.keys())[i])] = amr[i]
-
-        if update:
-            for harmonic in self.harmonics.keys():
-                self.harmonics[harmonic].amplitude = am[harmonic]
-        return am
-    
     def update_amplitudes(self, new_amplitudes: dict[tuple[int, ...], complex]):
         for key in new_amplitudes.keys():
             if key in self.rearranged_indices.keys():

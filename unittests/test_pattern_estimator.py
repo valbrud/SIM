@@ -228,7 +228,7 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         cls.sample = np.array(cls.sample, dtype=np.float32)[80:N+80, 45:N+45]
         cls.sample -= cls.sample.min()
         cls.sample /= cls.sample.max()
-        Nph = 10**5
+        Nph = 10**8
         cls.sample *= Nph
         cls.spatial_shape = cls.sample.shape
         # cls.sample = np.zeros((N, N)) + 10**4
@@ -275,7 +275,7 @@ class PatternEstimator3DFixture(PatternEstimatorAssertionsMixin):
         cls.sample[N[0] // 2, N[1] // 2, :] = 10**7
         cls.sample[N[0] // 2 - 3:N[0] // 2 + 4, N[1] // 2 - 3:N[1] // 2 + 4, N[2] // 2] = 10**7
         cls.raw_stack = cls.simulator.generate_noiseless_sim_images(cls.sample)
-        cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape[:2], 10)[None, None, :, :, None]
+        cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape[:2], 50)[None, None, :, :, None]
         cls.refined_wavevectors = {
             key: harmonic.wavevector for key, harmonic in cls.experimental_illumination.harmonics.items()
         }
@@ -350,7 +350,8 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                     modulation_coefficients_method=modulation_method,
                     treat_composite_orders_separately_for_modulation=False,
                     debug_info_level=0,
-                    modulation_debug_info_level=1,
+                    modulation_debug_info_level=2,
+                    SSNRc=2,
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(

@@ -52,7 +52,7 @@ fr = fx[N//2:] / (2 * NA)
 
 psf_size = 2 * np.array((max_r, max_r))
 
-k = 0.66
+k = 0.65
 optical_system = System4f2D(alpha=alpha, refractive_index=1.5, vectorial=True)
 optical_system.compute_psf_and_otf((psf_size, N))
 illumination_3waves3d = configurations.get_2_oblique_s_waves_and_s_normal(
@@ -63,12 +63,18 @@ illumination = IlluminationPlaneWaves2D.init_from_3D(
 )
 illumination.set_spatial_shifts_diagonally(Mt=3)
 
+illumination_reduced = configurations.get_2_oblique_s_waves_and_s_normal(
+    np.asin(np.sin(alpha) * k), 1, 0, 3, Mt=1, dimensionality=2
+)
+
 noise_estimator = SSNRSIM2D(illumination, optical_system, imperfect_phase_shifts=False)
 ssnr_conventional = noise_estimator.ring_average_ssnri()
 
-noise_estimator_reduced = SSNRSIM2D6F(illumination, optical_system, imperfect_phase_shifts=False)
+noise_estimator_reduced = SSNRSIM2D6F(illumination_reduced, optical_system, imperfect_phase_shifts=False)
 ssnr_reduced = noise_estimator_reduced.ring_average_ssnri()
-# plt.imshow(np.log1p(10**5 *np.abs(noise_estimator_reduced.dj)), extent=(fx[0] / (2*NA), fx[-1] / (2*NA), fy[0] / (2*NA), fy[-1] / (2*NA)))
+# fig, ax = plt.subplots(1, 2, figsize=(10, 8))
+# ax[0].imshow(np.log1p(10**5 *np.abs(noise_estimator_reduced.dj)), extent=(fx[0] / (2*NA), fx[-1] / (2*NA), fy[0] / (2*NA), fy[-1] / (2*NA)))
+# ax[1].imshow(np.log1p(10**5 *np.abs(noise_estimator.dj)), extent=(fx[0] / (2*NA), fx[-1] / (2*NA), fy[0] / (2*NA), fy[-1] / (2*NA)))
 # plt.show()
 # fig, ax = plt.subplots(1, 2, figsize=(10, 8))
 # ax[0].plot(fr, ssnr_conventional, label='conventional')
@@ -79,6 +85,11 @@ ssnr_reduced = noise_estimator_reduced.ring_average_ssnri()
 # ax[1].set_xlim(0, 1.5)
 # ax[1].legend()
 # plt.show()
+
+# entropy_conventional = noise_estimator.compute_ssnri_entropy()
+# entropy_reduced = noise_estimator_reduced.compute_ssnri_entropy()
+# print("Entropy conventional:", entropy_conventional)
+# print("Entropy reduced:", entropy_reduced)
 
 # image = ShapesGenerator.generate_random_lines(
 #     image_size=psf_size,
@@ -101,6 +112,11 @@ scalebar = ScaleBar(
 # image = ShapesGenerator.generate_random_lines(psf_size, N, 0.1, 300, 2*10**4, generate_default=True)
 # np.save(current_dir + f"/Figures/simulations/line_object.npy", image)
 image_n1 = np.load(current_dir + f"/Figures/simulations/line_object.npy")
+shannon_conventional = noise_estimator.compute_shannon_infomation(image_n1)
+shannon_reduced = noise_estimator_reduced.compute_shannon_infomation(image_n1)
+print("Shannon conventional:", shannon_conventional)
+print("Shannon reduced:", shannon_reduced)
+
 image_n2 = np.copy(image_n1)
 print(np.average(image_n1))
 # fig, ax = plt.subplots()
@@ -114,9 +130,8 @@ print(np.average(image_n1))
 # exit()
 
 simulator = SIMulator2D(illumination, optical_system)
-illumination_reduced = copy.deepcopy(illumination)
 phase_matrix_reduced = {}
-for r in range(illumination.Mr):
+for r in range(illumination_reduced.Mr):
     for n in range(2):
         phase_matrix_reduced[(r, n, (0, 0))] = 1 
         phase_matrix_reduced[(r, n, (2, 0))] = np.exp(1j * n * np.pi)
@@ -140,10 +155,10 @@ reconstructed_conventional_ft1 = reconstructor_conventional.reconstruct(noisy_im
 reconstructed_reduced_ft1 = reconstructor_reduced.reconstruct(noisy_images_reduced_n1)
 reconstructed_conventional_ft2 = reconstructor_conventional.reconstruct(noisy_images_n2)
 reconstructed_reduced_ft2 = reconstructor_reduced.reconstruct(noisy_images_reduced_n2)
-# plt.imshow(np.log1p(np.abs(reconstructed_conventional_ft1)))
-# plt.show()
-# plt.imshow(np.log1p(np.abs(reconstructed_reduced_ft1)))
-# plt.show()
+plt.imshow(np.log1p(np.abs(reconstructed_conventional_ft1)))
+plt.show()
+plt.imshow(np.log1p(np.abs(reconstructed_reduced_ft1)))
+plt.show()
 
 frc_ax, frc_conventional = resolution_measures.frc(reconstructed_conventional_ft1, reconstructed_conventional_ft2, is_fourier=True, num_bins=N//2 +1)
 frc_ax, frc_reduced = resolution_measures.frc(reconstructed_reduced_ft1, reconstructed_reduced_ft2, is_fourier=True, num_bins=N//2 + 1)
@@ -156,7 +171,7 @@ ax1.plot(fr, 1 + (1/(1 - frc_reduced)), color='red', label='6f')
 ax1.set_xlim(max(2*k - 1, 0), 1 + k)
 ax1.set_ylim(bottom=1, top = 2* 10**4)
 ax1.legend()
-fig1.savefig(current_dir + f"/Figures/simulations/ssnr_6f.png", bbox_inches='tight', pad_inches=0.05)
+# fig1.savefig(current_dir + f"/Figures/simulations/ssnr_6f.png", bbox_inches='tight', pad_inches=0.05)
 
 fig2, ax2 = plt.subplots(figsize=(9, 8))
 ax2.plot(fr, (1 - frc_reduced) / (1 - frc_conventional), color='red', label='measured')
@@ -169,7 +184,7 @@ ax2.set_ylim(bottom=0, top = 6)
 # ax[1].set_xlim(max(2*k-1, 0), 1 + k)
 # ax[1].set_ylim(0, 100)
 plt.show()
-fig2.savefig(current_dir + f"/Figures/simulations/ssnr_ratios_6f.png", bbox_inches='tight', pad_inches=0.05)
+# fig2.savefig(current_dir + f"/Figures/simulations/ssnr_ratios_6f.png", bbox_inches='tight', pad_inches=0.05)
 # apodization = Apodization.AutocorrelationApodizationSIM2D(optical_system, illumination)
 # apodized_perfect_ft = filtered_perfect_ft * apodization.ideal_otf
 # apodized_imperfect_ft = filtered_imperfect_ft * apodization.ideal_otf

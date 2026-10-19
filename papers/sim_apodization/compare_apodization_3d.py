@@ -68,6 +68,7 @@ apodization_filter_autoconvolution = apodization_autoconvolution.apodization_fun
 apodization_ISM = AutocorrelationApodizationISM(optical_system_quasi, optical_system)
 apodization_filter_ISM = apodization_ISM.apodization_function
 
+
 fig, axes = plt.subplots(2, 2)
 axes[0, 0].imshow(apodization_filter1[:, :, Nz//2], cmap='gray')
 axes[0, 0].set_title("apodization, p=1")
@@ -100,6 +101,55 @@ epsfA /= np.amax(epsfA)
 epsfWf /= np.amax(epsfWf)
 epsfIsm /= np.amax(epsfIsm)
 epsfIsm_co /= np.amax(epsfIsm_co)
+
+print("Triangular 1: ",  np.amin(epsf1))
+print("Triangular 04: ",  np.amin(epsf04))
+print("Triangular epsfA: ",  np.amin(epsfA))
+print("Triangular Wf: ",  np.amin(epsfWf))
+# print("Triangular Ism: ",  np.amin(epsfIsm))
+print("Triangular Ism_co: ",  np.amin(epsfIsm_co))
+
+
+def compute_fwhm(x_values, y_values):
+    half_maximum = 0.5 * (np.max(y_values) + np.min(y_values))
+    peak_index = int(np.argmax(y_values))
+    shifted = y_values - half_maximum
+
+    def interpolate_crossing(left_index, right_index):
+        x0, x1 = x_values[left_index], x_values[right_index]
+        y0, y1 = shifted[left_index], shifted[right_index]
+        if y0 == y1:
+            return x0
+        return x0 - y0 * (x1 - x0) / (y1 - y0)
+
+    left_crossing = None
+    for index in range(peak_index, 0, -1):
+        if shifted[index] == 0:
+            left_crossing = x_values[index]
+            break
+        if shifted[index - 1] == 0:
+            left_crossing = x_values[index - 1]
+            break
+        if shifted[index] * shifted[index - 1] < 0:
+            left_crossing = interpolate_crossing(index - 1, index)
+            break
+
+    right_crossing = None
+    for index in range(peak_index, len(y_values) - 1):
+        if shifted[index] == 0:
+            right_crossing = x_values[index]
+            break
+        if shifted[index + 1] == 0:
+            right_crossing = x_values[index + 1]
+            break
+        if shifted[index] * shifted[index + 1] < 0:
+            right_crossing = interpolate_crossing(index, index + 1)
+            break
+
+    if left_crossing is None or right_crossing is None:
+        return np.nan
+
+    return right_crossing - left_crossing
 
 al = 20
 az = 70
@@ -166,13 +216,50 @@ plt.colorbar(im10, ax=axes[1, 0], fraction=0.046, pad=0.04, format='%.2f')
 plt.colorbar(im11, ax=axes[1, 1], fraction=0.046, pad=0.04, format='%.2f')
 plt.colorbar(im12, ax=axes[1, 2], fraction=0.046, pad=0.04, format='%.2f')
 
+lateral_profile_p1 = epsf1[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+lateral_profile_p04 = epsf04[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+lateral_profile_auto = epsfA[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+lateral_profile_ism_co = epsfIsm_co[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+lateral_profile_wf = epsfWf[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+
+axial_profile_p1 = epsf1z[az, az, ...]
+axial_profile_p04 = epsf04z[az, az, ...]
+axial_profile_auto = epsfAz[az, az, ...]
+axial_profile_ism_co = epsfIsm_coz[az, az, ...]
+axial_profile_wf = epsfWfz[az, az, ...]
+
+fwhm_p1 = compute_fwhm(airy_cut_l, lateral_profile_p1)
+fwhm_p04 = compute_fwhm(airy_cut_l, lateral_profile_p04)
+fwhm_auto = compute_fwhm(airy_cut_l, lateral_profile_auto)
+fwhm_ism_co = compute_fwhm(airy_cut_l, lateral_profile_ism_co)
+fwhm_wf = compute_fwhm(airy_cut_l, lateral_profile_wf)
+
+fwhm_z_p1 = compute_fwhm(airy_cut_z, axial_profile_p1)
+fwhm_z_p04 = compute_fwhm(airy_cut_z, axial_profile_p04)
+fwhm_z_auto = compute_fwhm(airy_cut_z, axial_profile_auto)
+fwhm_z_ism_co = compute_fwhm(airy_cut_z, axial_profile_ism_co)
+fwhm_z_wf = compute_fwhm(airy_cut_z, axial_profile_wf)
+
+print('FWHM p=1 =', fwhm_p1)
+print('FWHM p=0.4 =', fwhm_p04)
+print('FWHM auto =', fwhm_auto)
+print('FWHM ISM_co =', fwhm_ism_co)
+print('FWHM wf =', fwhm_wf)
+print('FWHM z p=1 =', fwhm_z_p1)
+print('FWHM z p=0.4 =', fwhm_z_p04)
+print('FWHM z auto =', fwhm_z_auto)
+print('FWHM z ISM_co =', fwhm_z_ism_co)
+print('FWHM z wf =', fwhm_z_wf)
+
 # fix, axes=plt.subplots(1, 2, figsize=(10, 8))
-axes[2, 0].plot(airy_cut_l, epsf1[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label= 'p=1')
-axes[2, 0].plot(airy_cut_l, epsf04[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label= 'p=0.4')
-axes[2, 0].plot(airy_cut_l, epsfA[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='auto')
-axes[2, 0].plot(airy_cut_l, epsfIsm[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='ISM')
-axes[2, 0].plot(airy_cut_l, epsfIsm_co[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='ISM_co')
-axes[2, 0].plot(airy_cut_l, epsfWf[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='wf')
+axes[2, 0].plot(airy_cut_l, lateral_profile_p1, label= 'p=1')
+axes[2, 0].plot(airy_cut_l, lateral_profile_p04, label= 'p=0.4')
+axes[2, 0].plot(airy_cut_l, lateral_profile_auto, label='auto')
+# axes[2, 0].plot(airy_cut_l, epsfIsm[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='ISM')
+axes[2, 0].plot(airy_cut_l, lateral_profile_ism_co, label='ISM_co')
+axes[2, 0].plot(airy_cut_l, lateral_profile_wf, label='wf')
+axes[2, 0].hlines(0.5, airy_cut_l[0], airy_cut_l[-1], colors='k', linestyles='dashed')
+
 axes[2, 0].legend()
 axes[2, 0].set_ylabel("Intensity [a.u.]")
 axes[2, 0].set_xlabel("r [Airy units]")
@@ -186,17 +273,21 @@ axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfWf[..., Nz//2])[Nl//2-al:Nl//2+
 axes[2, 1].legend()
 axes[2, 1].set_xlabel("r [Airy units]")
 # axes[2, 1].set_title("x=y, z=0")
-axes[2, 2].plot(airy_cut_z, epsf1z[az, az, ...], label= 'p=1')
-axes[2, 2].plot(airy_cut_z, epsf04z[az, az, ...], label= 'p=0.4')
-axes[2, 2].plot(airy_cut_z, epsfAz[az, az, ...], label='auto')
-axes[2, 2].plot(airy_cut_z, epsfIsmz[az, az, ...], label='ISM')
-axes[2, 2].plot(airy_cut_z, epsfIsm_coz[az, az, ...], label='ISM_co')
-axes[2, 2].plot(airy_cut_z, epsfWfz[az, az, ...], label='wf')
+axes[2, 2].plot(airy_cut_z, axial_profile_p1, label= 'p=1')
+axes[2, 2].plot(airy_cut_z, axial_profile_p04, label= 'p=0.4')
+axes[2, 2].plot(airy_cut_z, axial_profile_auto, label='auto')
+# axes[2, 2].plot(airy_cut_z, epsfIsmz[az, az, ...], label='ISM')
+axes[2, 2].plot(airy_cut_z, axial_profile_ism_co, label='ISM_co')
+axes[2, 2].plot(airy_cut_z, axial_profile_wf, label='wf')
+axes[2, 2].hlines(0.5, airy_cut_z[0], airy_cut_z[-1], colors='k', linestyles='dashed')
+
 axes[2, 2].legend()
 axes[2, 2].set_xlabel("z [Airy units]")
 # axes[2, 2].set_title("x=y=0")
 fig.savefig(os.path.join(current_dir, "Figures/simulations/effective_PSF3D.png"), bbox_inches='tight')
 plt.show()
+
+exit()
 
 square = configurations.get_4_circular_oblique_waves_and_circular_normal(theta, 1, 1, Mt=1, dimensionality=3)
 apodization_triangular = TriangularApodizationSIM3D(optical_system, square, power=1)

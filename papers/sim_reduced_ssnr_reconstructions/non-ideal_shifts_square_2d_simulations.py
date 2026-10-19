@@ -95,7 +95,7 @@ phase_matrix_array_form = np.column_stack([
     np.exp(1j * phi[:,1]),
     np.exp(-1j * phi[:,1]),
 ])
-
+np.random.seed(0)
 print(np.linalg.cond(phase_matrix_array_form))
 illumination_imperfect.phase_matrix = phase_matrix
 noise_estimator_perfect= SSNRSIM2D(illumination, optical_system,  imperfect_phase_shifts=True)
@@ -154,10 +154,10 @@ ssnr_imperfect = utils.average_rings2d(noise_estimator_imperfect.dj, (fx, fx))/u
 
 reconstructed_perfect_ft = reconstructor_perfect.reconstruct(noisy_images)
 reconstructed_imperfect_ft = reconstructor_imperfect.reconstruct(noisy_images_imperfect)
-plt.imshow(np.log1p(np.abs(reconstructed_perfect_ft)))
-plt.show()
-plt.imshow(np.log1p(np.abs(reconstructed_imperfect_ft)))
-plt.show()
+# plt.imshow(np.log1p(np.abs(reconstructed_perfect_ft)))
+# plt.show()
+# plt.imshow(np.log1p(np.abs(reconstructed_imperfect_ft)))
+# plt.show()
 
 filtered_perfect_ft, _,ssnr_perfect_measured = filter_true_wiener_sim(reconstructed_perfect_ft, noise_estimator_perfect)
 filtered_imperfect_ft, _, ssnr_imperfect_measured = filter_true_wiener_sim(reconstructed_imperfect_ft, noise_estimator_imperfect)
@@ -176,12 +176,12 @@ apodized_imperfect = hpc_utils.wrapped_ifftn(apodized_imperfect_ft).real
 # plt.show()
 
 fig, ax = plt.subplots(figsize=(10, 8))
-ax.plot(fr, ssnr_imperfect_measured[N//2, N//2:]/ssnr_perfect_measured[N//2, N//2:], label='measured')
-ax.plot(fr, ssnr_imperfect/ssnr_perfect, label='theory')
+ax.plot(fr, ssnr_imperfect_measured[N//2, N//2:]/ssnr_perfect_measured[N//2, N//2:], color = 'blue', label='numerical')
+ax.plot(fr, ssnr_imperfect/ssnr_perfect, color='green', label='theory')
 ax.legend()
 ax.set_xlim(0, 1.5)
 ax.set_ylim(0.4, 0.8)
-ax.set_xlabel('$f_r [LCF]$')
+ax.set_xlabel(r'$f_r [2NA/\lambda]$')
 ax.set_ylabel(r"$\langle SSNR_{n-u} \rangle /\langle SSNR_{u} \rangle$")
 plt.show()
-# fig.savefig(current_dir + f"/Figures/simulations/ssnr_ratios_square.png", bbox_inches='tight', pad_inches=0.01)
+fig.savefig(current_dir + f"/Figures/simulations/ssnr_ratios_square.png", bbox_inches='tight', pad_inches=0.01)

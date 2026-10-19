@@ -27,6 +27,8 @@ plt.rcParams['legend.fontsize'] = 25    # Font size for legend
 
 configurations = BFPConfiguration(refraction_index=1.5)
 
+np.random.seed(0)
+
 alpha = 2 * np.pi / 5
 NA = 1.5 * np.sin(alpha)
 N = 401
@@ -81,15 +83,16 @@ modes = [
 
 n_realizations = 100
 
-phase_error_strengths = [10, 20, 30, 40]
-line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
+phase_error_strengths = [10, 20,]
+# line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
+colors = ['green', 'blue']
 # labels = ['$5\\degree$', '$10\\degree$', '$20\\degree$']
 ssnr_total_imperfect = np.zeros((len(phase_error_strengths), N, N))
 ssnr_total_corrected = np.zeros((len(phase_error_strengths), N, N))
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.set_xlabel('$f_r$ [LCU]')
+ax.set_xlabel('$f_r [2NA/\\lambda]$')
 ax.set_ylabel('$1 + 10^4 SSNR_K$')
-ax.plot(fr, (1 + 10**4 * ssnr_perfect), color='black', label="Ideal", linestyle=line_styles[0])
+ax.plot(fr, (1 + 10**4 * ssnr_perfect), color='black', label="$\\delta = 0\\degree$" )
 
 for i, phase_errors_strength in enumerate(phase_error_strengths):
     phase_matrix = {}
@@ -120,7 +123,7 @@ for i, phase_errors_strength in enumerate(phase_error_strengths):
         ssnr_total_corrected[i] += ssnr_corrected
 
     # fig, ax = plt.subplots()
-    ax.plot(fr, (1 + 10**4 * utils.average_rings2d(ssnr_total_imperfect[i] / n_realizations, (fx, fx))), color='black', linestyle=line_styles[i+1], label="$\\delta$=" + str(phase_error_strengths[i]) + "$\\degree$")
+    ax.plot(fr, (1 + 10**4 * utils.average_rings2d(ssnr_total_imperfect[i] / n_realizations, (fx, fx))), color=colors[i], label="$\\delta$=" + str(phase_error_strengths[i]) + "$\\degree$")
     # ax.plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_corrected[i], (fx, fx)), color='green', label="GLS non-unitary")
 
 ax.set_yscale('log')

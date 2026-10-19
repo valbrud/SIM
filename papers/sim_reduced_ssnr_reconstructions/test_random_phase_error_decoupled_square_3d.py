@@ -103,14 +103,15 @@ modes = [
 
 
 n_realizations = 100
-line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
+# line_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1)), (0, (5, 1))]
 labels = ['$5\\degree$', '$10\\degree$', '$20\\degree$']
-phase_error_strengths = [10, 20, 30, 40]
+phase_error_strengths = [10, 20,]
+colors = ['green', 'blue']
 ssnr_total_imperfect = np.zeros((len(phase_error_strengths), N, N))
 # ssnr_total_corrected = np.zeros((len(phase_error_strengths), N, N))
 fig, ax = plt.subplots(figsize=(10, 10))
-ax.plot(fr, (1 + 10**4 * ssnr_perfect), color='black', label="Ideal", linestyle=line_styles[0])
-ax.set_xlabel('$f_r$ [LCU]')
+ax.plot(fr, (1 + 10**4 * ssnr_perfect), color='black', label="$\\delta = 0\\degree$")
+ax.set_xlabel('$f_r [2NA/\\lambda]$')
 ax.set_ylabel('$1 + 10^4 SSNR_K$')
 
 for i, phase_errors_strength in enumerate(phase_error_strengths):
@@ -143,7 +144,7 @@ for i, phase_errors_strength in enumerate(phase_error_strengths):
         # ssnr_total_corrected[i] += ssnr_corrected
 
     # fig, ax = plt.subplots()
-    ax.plot(fr, (1 + 10**4 * utils.average_rings2d(ssnr_total_imperfect[i] / n_realizations, (fx, fx))), color='black', linestyle=line_styles[i+1], label=f"$\\delta = ${phase_error_strengths[i]}$\\degree$")
+    ax.plot(fr, (1 + 10**4 * utils.average_rings2d(ssnr_total_imperfect[i] / n_realizations, (fx, fx))), color=colors[i], label=f"$\\delta = ${phase_error_strengths[i]}$\\degree$")
     # ax.plot(fr, 1 + 10**3 * utils.average_rings2d(ssnr_total_corrected[i], (fx, fx)), color='green', label="GLS non-unitary")
 
 ax.set_yscale('log')

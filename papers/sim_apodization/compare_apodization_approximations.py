@@ -12,7 +12,7 @@ sys.path.append(current_dir)
 from config.BFPConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D
 from OpticalSystems import System4f2D, System4f3D
-from Apodization import TriangularApodizationSIM3D, AutocorrelationApodizationSIM3D, AutocorrelationApodizationWidefield
+from Apodization import TriangularApodizationSIM3D, AutocorrelationApodizationSIM3D, AutocorrelationApodizationISM  
 import hpc_utils, utils
 from matplotlib_scalebar.scalebar import ScaleBar
 import copy 
@@ -48,6 +48,8 @@ fr = fx[Nl//2:]/(2 * NA)
 
 optical_system = System4f3D(alpha=alpha, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
 optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
+optical_system_effective = System4f3D(alpha=theta, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
+optical_system_effective.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
 
 widefield = configurations.get_widefield(dimensionality=3)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, Mr = 3, Mt=1, dimensionality=3)
@@ -58,7 +60,10 @@ support_triangular_conventional = np.where(apodization_triangular_conventional.a
 support_triangular_hexagonal = np.where(apodization_triangular_hexagonal.apodization_function >= 1e-9* np.max(apodization_triangular_hexagonal.apodization_function), 1, 0)
 apodization_autoconvolution = AutocorrelationApodizationSIM3D(optical_system, conventional, Ndense=201)
 support_autocorrelation = np.where(apodization_autoconvolution.apodization_function >= 1e-9 * np.max(apodization_autoconvolution.apodization_function), 1, 0)
-fig, axes = plt.subplots(2, 3)
+apodization_ism = AutocorrelationApodizationISM(optical_system, optical_system_effective)
+support_ism = np.where(apodization_ism.apodization_function >= 1e-9 * np.max(apodization_ism.apodization_function), 1, 0)
+
+fig, axes = plt.subplots(2, 4)
 
 axes[0, 0].imshow(support_triangular_conventional[:, :, Nz//2], cmap='gray')
 axes[0, 0].set_title("a")
@@ -66,18 +71,24 @@ axes[0, 1].imshow(support_triangular_hexagonal[:, :, Nz//2], cmap='gray')
 axes[0, 1].set_title("b")
 axes[0, 2].imshow(support_autocorrelation[:, :, Nz//2], cmap='gray')
 axes[0, 2].set_title("c")
+axes[0, 3].imshow(support_ism[:, :, Nz//2], cmap='gray')
+axes[0, 3].set_title("d")
 axes[1, 0].imshow(support_triangular_conventional[:, Nl//2, :].T, cmap='gray')
-axes[1, 0].set_title("d")
+axes[1, 0].set_title("e")
 axes[1, 1].imshow(support_triangular_hexagonal[:, Nl//2, :].T, cmap='gray')
-axes[1, 1].set_title("e")
+axes[1, 1].set_title("f")
 axes[1, 2].imshow(support_autocorrelation[:, Nl//2, :].T, cmap='gray')
-axes[1, 2].set_title("f")
+axes[1, 2].set_title("g")
+axes[1, 3].imshow(support_ism[:, Nl//2, :].T, cmap='gray')
+axes[1, 3].set_title("h")
 axes[0, 0].set_axis_off()
 axes[0, 1].set_axis_off()
 axes[0, 2].set_axis_off()
+axes[0, 3].set_axis_off()
 axes[1, 0].set_axis_off()
 axes[1, 1].set_axis_off()
 axes[1, 2].set_axis_off()
+axes[1, 3].set_axis_off()
 fig.tight_layout()
 fig.savefig(current_dir + "/Figures/simulations/compare_apodization_approximations.png", dpi=300, bbox_inches='tight')
 # slider_recon = utils.wrap_axes3d(

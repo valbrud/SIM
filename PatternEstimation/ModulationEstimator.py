@@ -40,6 +40,7 @@ class ModulationEstimator:
 				 modulation_estimation_method: str = 'least_squares',
 				 effective_otfs: dict = None,
 				 treat_composite_orders_separately: bool = False,
+				 SSNRc: float = 1, 
 				 debug_info_level: int = 1):
 		utils.validate_init_types(
 			illumination=(illumination, PlaneWavesSIM),
@@ -48,6 +49,7 @@ class ModulationEstimator:
 		self.optical_system = optical_system
 		self.modulation_estimation_method = modulation_estimation_method
 		self.debug_info_level = debug_info_level
+		self.SSNRc = SSNRc
 
 		if effective_otfs is None:
 			for key in illumination.harmonics:
@@ -222,7 +224,7 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				order = self._as_complex_order(spatial_frequency_orders[key])
 				mask = (self.effective_otfs[key] > 10**-6) * (self.effective_otfs[(r, m0)] > 10**-6)
 				ratio = np.where(mask, order / order0 + 1e-12, 0)
-				mask2 = (np.abs(order) > 2 * f0**0.5) * (np.abs(order0) > 2 * f0**0.5)
+				mask2 = (np.abs(order) > self.SSNRc * f0**0.5) * (np.abs(order0) > self.SSNRc * f0**0.5)
 				mask_total = mask * mask2
 				ratio = np.where(mask2, ratio, 0)
 
@@ -230,21 +232,35 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				phase_modulation_pattern = np.einsum('...l, l->...', self.optical_system.x_grid, wavevector)
 				mask_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(mask_total) * np.exp(-1j * phase_modulation_pattern))
 				ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
-				ratio_shifted_ft = np.where(mask_shifted > 1e-1, ratio_shifted_ft, 0)
+				# plt.imshow(mask_shifted.real, origin='lower')
+				# plt.colorbar()
+				# plt.show()
+				ratio_shifted_ft = np.where(np.abs(mask_shifted) > 1e-1, ratio_shifted_ft, 0)
 				inverse_product = ratio_shifted_ft * np.flip(ratio_shifted_ft)
-				modulation_value = np.mean(inverse_product[inverse_product > 10**-6])**0.5
+				iverse_product_filtered = np.where(np.abs(mask_shifted) > 1e-1, inverse_product, 0)
+				fig, ax = plt.subplots()
+				ax.hist(np.abs(inverse_product[np.abs(inverse_product) > 10**-3]), bins=00)
+				plt.show()
+				print(np.sum(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])), len(inverse_product[np.abs(inverse_product) > 10**-3]), np.mean(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])))
+				if self.debug_info_level >=2:
+					fig, ax = plt.subplots(1, 2)
+					ax[1].imshow(np.abs(inverse_product)**0.5, origin='lower')
+					ax[1].set_title('Inverse Product')
+					plt.colorbar(ax[1].imshow(np.abs(inverse_product)**0.5, origin='lower'))
+					ax[0].imshow(np.abs(ratio_shifted_ft), origin='lower')
+					ax[0].set_title('Shifted Ratio')
+					plt.show()
+
+				modulation_value2 = np.mean(np.abs(inverse_product[np.abs(inverse_product) > 10**-3]))
+				modulation_value = modulation_value2**0.5
+				print(modulation_value2, modulation_value)
 				if np.isnan(modulation_value):
 					modulation_value = 0.0
 				modulations[key] = modulation_value
 				inverse_key = (key[0], tuple(-np.array(key[1])))
 				if inverse_key in self.illumination.harmonics:
 					modulations[inverse_key] = modulation_value
+				if self.debug_info_level:
+					print(key, modulation_value)
 		return modulations
 
-
-__all__ = [
-	'ModulationEstimator',
-	'ModulationLeastSquaresEstimator',
-	'ModulationPeakHeightRatioEstimator',
-	'ModulationRatiosInversionEstimator',
-]

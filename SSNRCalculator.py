@@ -88,10 +88,15 @@ class SSNRBase(metaclass=DimensionMeta):
         return np.sum(np.abs(self.ssnri)) * volume_element * factor
 
     def compute_ssnri_entropy(self, factor=100):
-        noise_filtered = self.ssnri[self.ssnri > 10 ** (-10) * np.amax(self.ssnri)]
+        noise_filtered = np.where(self.ssnri > 10 ** (-10) * np.amax(self.ssnri), self.ssnri, 0)
         sum = np.sum(noise_filtered)
+        print(sum)
         probabilities = noise_filtered / sum
-        S = -np.sum(probabilities * np.log(probabilities))
+        Sdensity = probabilities * np.where(probabilities > 0, np.log(probabilities), 0)
+        # plt.imshow(np.log(np.abs(probabilities)))
+        # plt.colorbar()
+        # plt.show()
+        S = -np.sum(Sdensity)
         return S.real * factor
 
     def compute_radial_ssnri_entropy(self, factor=100):
@@ -103,6 +108,17 @@ class SSNRBase(metaclass=DimensionMeta):
         S = -np.sum(probabilities * np.log(probabilities))
         return S.real * factor
 
+    def compute_shannon_infomation(self, image, readout_noise_variance=0, ft=False):
+        if not ft: 
+            image = hpc_utils.wrapped_fftn(image)
+        shape = image.shape
+        center = tuple(s // 2 for s in shape)
+        poisson_variance = image[center]
+        total_variance = poisson_variance + readout_noise_variance
+        Mdensity = 1/2 * np.log(1 + self.ssnri * np.abs(image)**2 / total_variance)
+        M= np.sum(Mdensity)
+        return M
+    
     @staticmethod
     def estimate_ssnr_from_image_binomial_splitting(
         data: np.ndarray,

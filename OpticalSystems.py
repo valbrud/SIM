@@ -362,7 +362,7 @@ class OpticalSystem2D(OpticalSystem):
     def compute_psf_and_otf(self) -> tuple[np.float64, np.float64]:
         pass
     
-    def get_transfer_function_support(self):
+    def get_transfer_function_support(self,):
         rho = np.sqrt(self.q_grid[..., 0]**2 + self.q_grid[..., 1]**2)
         pupil_function = np.where(rho <= self.NA, 1., 0.)
         return pupil_function
@@ -450,8 +450,12 @@ class OpticalSystem3D(OpticalSystem):
                                            np.ndarray[tuple[int, int, int], np.float64]]: 
         pass
 
-    def get_transfer_function_support(self):
-        return np.uint8(utils.build_edwald_sphere_mask(self.q_grid, np.zeros(3), self.NA / np.sin(self.alpha), self.alpha))
+    def get_transfer_function_support(self, squeeze_to_center=False):
+        if not squeeze_to_center:
+            z_shift = 0.
+        else: 
+            z_shift = - self.NA / np.sin(self.alpha) * (1 - np.cos(self.alpha))
+        return np.uint8(utils.build_edwald_sphere_mask(self.q_grid, np.array((0., 0., z_shift)), self.NA / np.sin(self.alpha), self.alpha))
 
 
     def project_in_2D(self):
