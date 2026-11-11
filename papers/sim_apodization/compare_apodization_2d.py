@@ -14,6 +14,7 @@ from Illumination import IlluminationPlaneWaves2D
 from OpticalSystems import System4f2D, System4f3D
 from Apodization import TriangularApodizationSIM2D, AutocorrelationApodizationSIM2D, AutocorrelationApodizationWidefield
 import hpc_utils
+from utils import compute_fwhm
 from matplotlib_scalebar.scalebar import ScaleBar
 
 plt.rcParams['font.size'] = 30         # Sets default font size
@@ -26,7 +27,7 @@ plt.rcParams['legend.fontsize'] = 20    # Font size for legend
 configurations = BFPConfiguration(refraction_index=1.5)
 
 alpha = 2 * np.pi / 5
-theta = 0.9 * alpha
+theta = np.arcsin(0.9 * np.sin(alpha))
 NA = 1.5 * np.sin(alpha)
 dx = 1 / (128 * NA)
 dy = dx
@@ -76,6 +77,10 @@ epsfA /= np.amax(epsfA)
 ewfA = hpc_utils.wrapped_ifftn(apodization_filter_widefield).real 
 ewfA /= np.amax(np.float32(ewfA))
 
+print("Neg 1 hex: ", np.amin(epsf1))
+print("Neg 04 hex: ", np.amin(epsf04))
+print("Neg A hex: ", np.amin(epsfA))
+print("Neg Wf hex: ", np.amin(ewfA))
 a = 100
 
 airy_cut = airy[N//2-a:N//2+a+1]
@@ -116,6 +121,14 @@ axes[2, 0].plot(airy_cut, epsf1[N//2, N//2-a:N//2+a+1], label= 'p=1')
 axes[2, 0].plot(airy_cut, epsf04[N//2, N//2-a:N//2+a+1], label= 'p=0.4')
 axes[2, 0].plot(airy_cut, epsfA[N//2, N//2-a:N//2+a+1], label='auto')
 axes[2, 0].plot(airy_cut, ewfA[N//2, N//2-a:N//2+a+1], label='wf')
+fwhm1hex = compute_fwhm(airy_cut, epsf1[N//2, N//2-a:N//2+a+1])
+fwhm04hex = compute_fwhm(airy_cut, epsf04[N//2, N//2-a:N//2+a+1])
+fwhmAhex = compute_fwhm(airy_cut, epsfA[N//2, N//2-a:N//2+a+1])
+fwhmWfhex = compute_fwhm(airy_cut, ewfA[N//2, N//2-a:N//2+a+1])
+print("FWHM p=1:", fwhm1hex)
+print("FWHM p=0.4:", fwhm04hex)
+print("FWHM auto:", fwhmAhex)
+print("FWHM wf:", fwhmWfhex)
 axes[2, 0].legend()
 axes[2, 0].set_aspect(1/axes[2, 0].get_data_ratio())
 axes[2, 0].set_xlabel('r [Airy units]')
@@ -137,6 +150,11 @@ epsfA = hpc_utils.wrapped_ifftn(apodization_filter_autoconvolution).real
 epsf1 /= np.amax(epsf1)
 epsf04 /= np.amax(epsf04)
 epsfA /= np.amax(epsfA)
+
+print("Neg 1 sq: ", np.amin(epsf1))
+print("Neg 04 sq: ", np.amin(epsf04))
+print("Neg A sq: ", np.amin(epsfA))
+print("Neg Wf sq: ", np.amin(ewfA))
 
 epsf1z= epsf1[N//2-a:N//2+a+1, N//2-a:N//2+a+1]
 epsf04z= epsf04[N//2-a:N//2+a+1, N//2-a:N//2+a+1]
@@ -164,6 +182,14 @@ axes[2, 1].plot(airy_cut, epsf1[N//2, N//2-a:N//2+a+1], label= 'p=1')
 axes[2, 1].plot(airy_cut, epsf04[N//2, N//2-a:N//2+a+1], label= 'p=0.4')
 axes[2, 1].plot(airy_cut, epsfA[N//2, N//2-a:N//2+a+1], label='auto')
 axes[2, 1].plot(airy_cut, ewfA[N//2, N//2-a:N//2+a+1], label='wf')
+fwhm1sq = compute_fwhm(airy_cut, epsf1[N//2, N//2-a:N//2+a+1])
+fwhm04sq = compute_fwhm(airy_cut, epsf04[N//2, N//2-a:N//2+a+1])
+fwhmAsq = compute_fwhm(airy_cut, epsfA[N//2, N//2-a:N//2+a+1])
+fwhmWfsq = compute_fwhm(airy_cut, ewfA[N//2, N//2-a:N//2+a+1])
+print("FWHM p=1:", fwhm1sq)
+print("FWHM p=0.4:", fwhm04sq)
+print("FWHM auto:", fwhmAsq)
+print("FWHM wf:", fwhmWfsq)
 axes[2, 1].legend()
 axes[2, 1].set_aspect(1/axes[2, 1].get_data_ratio())
 axes[2, 1].set_xlabel('r [Airy units]')
@@ -173,6 +199,14 @@ axes[2, 2].plot(airy_cut * 2 **0.5, np.diag(epsf1)[N//2-a:N//2+a+1], label= 'p=1
 axes[2, 2].plot(airy_cut * 2 **0.5, np.diag(epsf04)[N//2-a:N//2+a+1], label= 'p=0.4')
 axes[2, 2].plot(airy_cut * 2**0.5, np.diag(epsfA)[N//2-a:N//2+a+1], label='auto')
 axes[2, 2].plot(airy_cut * 2**0.5, np.diag(ewfA)[N//2-a:N//2+a+1], label='wf')
+fwhm1sqd = compute_fwhm(airy_cut * 2**0.5, np.diag(epsf1)[N//2-a:N//2+a+1])
+fwhm04sqd = compute_fwhm(airy_cut * 2**0.5, np.diag(epsf04)[N//2-a:N//2+a+1])
+fwhmAsqd = compute_fwhm(airy_cut * 2**0.5, np.diag(epsfA)[N//2-a:N//2+a+1])
+fwhmWfsqd = compute_fwhm(airy_cut * 2**0.5, np.diag(ewfA)[N//2-a:N//2+a+1])
+# print("FWHM p=1:", fwhm1sqd)
+# print("FWHM p=0.4:", fwhm04sqd)
+# print("FWHM auto:", fwhmAsqd)
+# print("FWHM wf:", fwhmWfsqd)
 axes[2, 2].legend()
 axes[2, 2].set_xlabel('r [Airy units]')
 # axes[2, 2].set_ylabel('PSF intensity [a.u.]')

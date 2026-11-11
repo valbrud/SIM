@@ -363,8 +363,19 @@ class ReconstructorFourierDomain(ReconstructorSIM):
                         sum_shifts += self.illumination.phase_matrix[(r, n, m)].conjugate() * sim_images[r, n]
                     else:
                         sum_shifts += self.illumination.Mt * self.illumination.phase_matrix_inverse[(r, n, m)] * sim_images[r, n]
+
                 sum_shifts_ft = self._compute_shifted_image_ft(sum_shifts, r, m)
                 spatial_frequency_orders[(r, m)] = sum_shifts_ft
+
+        # fig, ax = plt.subplots(self.illumination.Mr, len(self.illumination.rearranged_indices)// self.illumination.Mr)
+        # for r in range(sim_images.shape[0]):
+        #     i=0
+        #     for m in [key for key in self.illumination.rearranged_indices.keys() if key[0] == r]:
+        #         im = ax[r, i].imshow(np.log1p(np.abs(spatial_frequency_orders[m][..., sim_images.shape[-1]//2].real)), cmap='gray')
+        #         plt.colorbar(im, ax=ax[r, i])
+        #         ax[r, i].set_title(f'R={r}, M={m}')
+        #         i += 1
+        # plt.show()
         return spatial_frequency_orders
 
     
@@ -826,7 +837,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 del image_convolved, temp  # free intermediates immediately
             sliced_reconstructed_image += image1rotation
             del image1rotation
-        return sliced_reconstructed_image
+        return sliced_reconstructed_image 
 
     def reconstruct(self, sim_images, backend='gpu'):
         """
@@ -844,7 +855,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 # plt.imshow(reconstructed_image[:, :, z], cmap='gray', origin='lower')
                 # plt.show()
                 # cupy.get_default_memory_pool().free_all_blocks()
-            return reconstructed_image
+            return reconstructed_image / reconstructed_image.shape[2]
 
         # ---- CPU multiprocessing path ----
         dtype_size = sim_images.dtype.itemsize

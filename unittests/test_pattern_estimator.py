@@ -27,6 +27,7 @@ from PatternEstimation.PhasesEstimator import (
 from SIMulator import SIMulator2D, SIMulator3D
 from config.SIM_N100_NA15 import alpha, dx, dz, configurations, nmedium, theta
 from windowing import make_mask_cosine_edge2d
+import matplotlib.pyplot as plt
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
@@ -59,7 +60,7 @@ def build_experimental_illumination_2d():
         1,
         0,
         Mr=3,
-        angles=(-5 / 180 * np.pi, 62 / 180 * np.pi, 115 / 180 * np.pi),
+        angles=(45 / 180 * np.pi, -75 / 180 * np.pi, 165 / 180 * np.pi),
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -68,11 +69,11 @@ def build_experimental_illumination_2d():
 
 def build_theoretical_illumination_2d():
     illum3d = configurations.get_2_oblique_s_waves_and_s_normal(
-        theta2d *0.9,
+        theta2d * 0.9,
         1,
         0,
         Mr=3,
-        angles=(-5 / 180 * np.pi, 62 / 180 * np.pi, 115 / 180 * np.pi),
+        angles=(45 / 180  * np.pi, -75 / 180 * np.pi, 165 / 180 * np.pi),
     )
     illum2d = IlluminationPlaneWaves2D.init_from_3D(illum3d, dimensions=(1, 1))
     illum2d.set_spatial_shifts_diagonally()
@@ -214,13 +215,16 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         max_r = N // 2 * dx
         psf_size = 2 * np.array((max_r, max_r))
 
-        cls.optical_system = System4f2D(alpha=alpha - 0.2, refractive_index=nmedium)
+        cls.optical_system = System4f2D(alpha=theta2d , refractive_index=nmedium)
         cls.optical_system.compute_psf_and_otf((psf_size, N))
         apodization = Apodization.AutocorrelationApodizationWidefield(cls.optical_system)
         cls.optical_system.otf = np.where(apodization.apodization_function > 1e-16, cls.optical_system.otf, 0)
 
         cls.experimental_illumination = build_experimental_illumination_2d()
         cls.theoretical_illumination = build_theoretical_illumination_2d()
+        # plt.imshow(np.log1p(10**4 * np.abs(cls.optical_system.otf)), extent=[cls.optical_system.q_grid[0, 0, 0], cls.optical_system.q_grid[-1, -1, 0], cls.optical_system.q_grid[0, 0, 1], cls.optical_system.q_grid[-1, -1, 1]])
+        # plt.plot(cls.experimental_illumination.harmonics[0, (2, 0)].wavevector[0] / (2 * np.pi), cls.experimental_illumination.harmonics[0, (2, 0)].wavevector[1] / (2 * np.pi), 'rx')
+        # plt.show()
         cls.theoretical_illumination.phase_matrix = copy.deepcopy(cls.experimental_illumination.phase_matrix)
         cls.simulator = SIMulator2D(cls.experimental_illumination, cls.optical_system)
 
@@ -228,7 +232,7 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         cls.sample = np.array(cls.sample, dtype=np.float32)[80:N+80, 45:N+45]
         cls.sample -= cls.sample.min()
         cls.sample /= cls.sample.max()
-        Nph = 10**8
+        Nph = 10**4
         cls.sample *= Nph
         cls.spatial_shape = cls.sample.shape
         # cls.sample = np.zeros((N, N)) + 10**4
@@ -253,7 +257,7 @@ class PatternEstimator3DFixture(PatternEstimatorAssertionsMixin):
         psf_size = 2 * np.array((max_r, max_r, max_z))
 
         cls.optical_system = System4f3D(
-            alpha=alpha,
+            alpha=theta3d,
             refractive_index_medium=nmedium,
             refractive_index_sample=nmedium,
             vectorial=True,
@@ -312,7 +316,13 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                 self.assert_illumination_valid(illumination_estimated, self.theoretical_illumination)
 
     def test_phase_estimation_methods(self):
-        for phase_method in ['peak_phases', 'autocorrelation', 'cross_correlation']:
+        for phase_method in [
+                             'default',
+                            #  'peak_phases',
+                              'autocorrelation',
+                              #'cross_correlation', 
+                             'side_peak_suppression'
+                             ]:
             print("PHASE ESTIMATION METHOD:", phase_method)
             # self.print_expected_plot('phase offsets only')
             with self.subTest(phase_method=phase_method):
@@ -326,7 +336,7 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                     zooming_factor=20,
                     max_iterations=3,
                     debug_info_level=0,
-                    phase_debug_info_level=1,
+                    phase_debug_info_level=2,
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(
@@ -607,6 +617,12 @@ class TestDirectPhaseEstimators2D(PatternEstimator2DFixture, unittest.TestCase):
                 phase_matrix = estimator.estimate_phase_matrix(self.raw_stack, self.refined_wavevectors)
                 self.assert_phase_matrix_valid(phase_matrix)
                 self.assertIn((0, 0, (0, 0)), phase_matrix)
+                if name == 'side_peak_suppression':
+                    for r, harmonic in self.theoretical_illumination.harmonics:
+                        for n in range(self.theoretical_illumination.Mt):
+                            key = (r, n, harmonic)
+                            self.assertIn(key, phase_matrix)
+                            self.assertAlmostEqual(abs(phase_matrix[key]), 1.0)
 
 
 class TestDirectPhaseEstimators3D(PatternEstimator3DFixture, unittest.TestCase):

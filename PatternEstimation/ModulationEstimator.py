@@ -23,7 +23,6 @@ sys.path.append(current_dir)
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
 
 import Reconstructor
 import hpc_utils
@@ -37,7 +36,6 @@ class ModulationEstimator:
 	def __init__(self,
 				 illumination: PlaneWavesSIM,
 				 optical_system: OpticalSystem,
-				 modulation_estimation_method: str = 'least_squares',
 				 effective_otfs: dict = None,
 				 treat_composite_orders_separately: bool = False,
 				 SSNRc: float = 1, 
@@ -47,7 +45,6 @@ class ModulationEstimator:
 			optical_system=(optical_system, OpticalSystem),
 		)
 		self.optical_system = optical_system
-		self.modulation_estimation_method = modulation_estimation_method
 		self.debug_info_level = debug_info_level
 		self.SSNRc = SSNRc
 
@@ -84,9 +81,7 @@ class ModulationEstimator:
 							 spatial_frequency_orders: dict | None = None) -> dict:
 		raise NotImplementedError
 
-	def _compute_spatial_frequency_orders(self, stack: np.ndarray | None, spatial_frequency_orders: dict | None) -> dict:
-		if spatial_frequency_orders is not None:
-			return spatial_frequency_orders
+	def _compute_spatial_frequency_orders(self, stack: np.ndarray | None) -> dict:
 		if stack is None:
 			return {}
 		reconstructor_class = Reconstructor.ReconstructorFourierDomain2D if self.illumination.dimensionality == 2 else Reconstructor.ReconstructorFourierDomain3D
@@ -98,17 +93,26 @@ class ModulationLeastSquaresEstimator(ModulationEstimator):
 	def estimate_modulations(self,
 							 stack: np.ndarray | None = None,
 							 spatial_frequency_orders: dict | None = None) -> dict:
-		spatial_frequency_orders = self._compute_spatial_frequency_orders(stack, spatial_frequency_orders)
+		if spatial_frequency_orders is None:
+			spatial_frequency_orders = self._compute_spatial_frequency_orders(stack)
 		am = {}
 		a0 = 1
 		for r in range(self.illumination.Mr):
 			key_zero = (r, tuple([0] * self.illumination.dimensionality))
 			am[key_zero] = 1.0 + 0.0j
 			I0 = spatial_frequency_orders[key_zero]
+			# im = plt.imshow(np.log1p(np.abs(I0[..., I0.shape[2] // 2].real)), cmap='gray')
+			# plt.colorbar(im)
+			# plt.title('I0 (central slice)')
+			# plt.show()
 			g0 = self.effective_otfs[key_zero]
-
+			# print('Max values of I0 and g0 for key', key_zero, ':', np.amax(I0), np.amax(g0))
 			if self.debug_info_level >= 2 and self.illumination.dimensionality == 3:
-				plt.imshow(hpc_utils.wrapped_ifftn(I0)[..., I0.shape[2] // 2].real, cmap='gray')
+				fig, ax = plt.subplots(1, 2)
+				ax[0].imshow(hpc_utils.wrapped_ifftn(I0)[..., I0.shape[2] // 2].real, cmap='gray')
+				ax[0].set_title('I0 (central slice)')
+				ax[1].imshow(I0[..., I0.shape[2] // 2].real, cmap='gray')
+				ax[1].set_title('I0 ft (central slice)')
 				plt.show()
 
 			for key in spatial_frequency_orders.keys():
@@ -119,14 +123,17 @@ class ModulationLeastSquaresEstimator(ModulationEstimator):
 				I0f = np.copy(I0)
 				f1 = g * I0f
 				f2 = g0 * I
+				print('Max values of f1 and f2 for key', key, ':', np.amax(f1), np.amax(f2))
 
 				if self.debug_info_level >= 2 and self.illumination.dimensionality == 3:
 					fig, ax = plt.subplots(1, 2)
 					ax[0].imshow(hpc_utils.wrapped_ifftn(f1)[..., f1.shape[2] // 2].real, cmap='gray')
 					ax[1].imshow(hpc_utils.wrapped_ifftn(f2)[..., f2.shape[2] // 2].real, cmap='gray')
+					ax[0].set_title('g I0')
+					ax[1].set_title('g0 I')
 					plt.show()
 
-				if self.debug_info_level >= 1:
+				if self.debug_info_level >= 3:
 					fig, ax = plt.subplots(2, 2)
 					if self.illumination.dimensionality == 3:
 						ax[0, 0].imshow(np.log1p(np.abs(10**5 * I0f[:, :, I.shape[2] // 2])), cmap='gray')
@@ -144,29 +151,18 @@ class ModulationLeastSquaresEstimator(ModulationEstimator):
 					plt.tight_layout()
 					plt.show()
 
-				def obj(x):
-					a = complex(float(x[0]), float(x[1]))
-					diff = a0 * g0 * I - a * g * I0f
-					return float(np.sum((g0 + g) * np.abs(diff) ** 2))
-
-				def grad(x):
-					diff = a0 * g0 * I - complex(float(x[0]), float(x[1])) * g * I0f
-					grad_re = -2.0 * np.real(np.sum(np.conj(g) * I0f * diff))
-					grad_im = -2.0 * np.imag(np.sum(np.conj(g) * I0f * diff))
-					return np.array([grad_re, grad_im], dtype=np.float64)
-
-				optimizer = scipy.optimize.minimize(
-					obj,
-					x0=[1.0, 0.0],
-					method="L-BFGS-B",
-					bounds=[(-5, 5), (-5, 5)],
-					options={"disp": False},
-					jac=grad,
+				mask = g0 * g > 1e-8
+				template = (g * I0f)[mask]
+				target = (a0 * g0 * I)[mask]
+				denominator = np.vdot(template, template).real
+				a = (
+					1.0 + 0.0j
+					if denominator == 0
+					else np.vdot(template, target) / denominator
 				)
-				a = complex(float(optimizer.x[0]), float(optimizer.x[1]))
 				am[key] = a
 				diff = a0 * g0 * I - a * g * I0f
-				if self.debug_info_level >= 1:
+				if self.debug_info_level >= 2:
 					if self.illumination.dimensionality == 3:
 						plt.imshow(np.log1p(np.abs(10**5 * diff[:, :, diff.shape[2] // 2])), cmap='gray')
 					else:
@@ -182,6 +178,7 @@ class ModulationPeakHeightRatioEstimator(ModulationEstimator):
 							 stack: np.ndarray | None = None,
 							 spatial_frequency_orders: dict | None = None) -> dict:
 		del spatial_frequency_orders
+
 		grid = self.optical_system.x_grid
 		am = {}
 		ft0 = off_grid_ft(stack[0, 0], grid, (np.array([0.] * self.illumination.dimensionality)), )
@@ -196,7 +193,21 @@ class ModulationPeakHeightRatioEstimator(ModulationEstimator):
 				otf = self.effective_otfs[(r, harmonic)]
 				otf_value = otf[tuple([s // 2 for s in otf.shape])]
 				ft = off_grid_ft(stack[r, 0], grid, np.array((wavevector, )))
-				amplitude = np.abs(ft)[0] / ft0 / np.abs(otf_value)
+				if self.debug_info_level >= 2:
+					print(f"ft for key {harmonic}: {ft}")
+					print(f"ft0: {ft0}")
+					print(f"otf_value: {otf_value}")
+
+				if self.debug_info_level >= 3: 
+					extent = [self.optical_system.q_grid[..., 0].min(), self.optical_system.q_grid[..., 0].max(),
+							  self.optical_system.q_grid[..., 1].min(), self.optical_system.q_grid[..., 1].max()]
+					plt.imshow(np.log1p(10**4 * np.abs(otf[..., otf.shape[-1] // 2].real)), extent=extent, cmap='gray', origin='lower')
+					plt.plot(0., 0., 'r+', markersize=10)
+					plt.title(f"OTF for key {harmonic}")
+					plt.axis('off')
+					plt.show()
+
+				amplitude = np.abs(ft)[0] / np.abs(ft0) / np.abs(otf_value)
 				if self.debug_info_level:
 					print(harmonic, amplitude)
 				amplitude /= (self.illumination.Mt * self.illumination.Mr)
@@ -208,7 +219,8 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 	def estimate_modulations(self,
 							 stack: np.ndarray | None = None,
 							 spatial_frequency_orders: dict | None = None) -> dict:
-		spatial_frequency_orders = self._compute_spatial_frequency_orders(stack, spatial_frequency_orders)
+		if spatial_frequency_orders is None:
+			spatial_frequency_orders = self._compute_spatial_frequency_orders(stack)
 		modulations = {}
 		canonical_half = utils.select_up_to_inversion(spatial_frequency_orders.keys())
 

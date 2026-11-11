@@ -155,13 +155,20 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                 f"Unknown method of modulation coefficients estimation {self.modulation_coefficients_method}. Available methods are {self.modulation_coefficients_methods}"
             )
 
-        if self.debug_info_level > 2: 
-            fig, axes = plt.subplots(Mr, Mt, figsize=(Mt * 3, Mr * 3))
+        if self.debug_info_level >=3: 
+            figr, axesr = plt.subplots(Mr, Mt, figsize=(Mt * 3, Mr * 3))
             for r in range(Mr):
                 for n in range(Mt):
-                    axes[r, n].imshow(stack[r, n], cmap='gray')
-                    axes[r, n].set_title(f"r={r}, n={n}")
-                    axes[r, n].axis('off')
+                    axesr[r, n].imshow(stack[r, n], cmap='gray')
+                    axesr[r, n].set_title(f"r={r}, n={n}")
+                    axesr[r, n].axis('off')
+            plt.tight_layout()
+            figf, axesf = plt.subplots(Mr, Mt, figsize=(Mt * 3, Mr * 3))
+            for r in range(Mr):
+                for n in range(Mt):
+                    axesf[r, n].imshow(np.log1p(10**8 * np.abs(wrapped_fftn(stack[r, n]))), cmap='gray')
+                    axesf[r, n].set_title(f"r={r}, n={n}")
+                    axesf[r, n].axis('off')
             plt.tight_layout()
             plt.show()
 
@@ -207,9 +214,9 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             for amplitude, index in zip(amplitudes, indices):
                 print('r = ', index[0], 'm = ', index[1], 'amplitude = ', round(amplitude, 3))
         
-        if self.debug_info_level > 2:
-            image_ft_reference = wrapped_fftn(stack[0, 0])
-            plt.imshow(np.log1p(np.abs(image_ft_reference)).T, cmap='gray', origin='lower')
+        if self.debug_info_level >= 3:
+            image_ft_reference = wrapped_fftn(np.mean(np.abs(stack), axis=(0, 1)))
+            plt.imshow(np.log1p(10**8 * np.abs(image_ft_reference)).T, origin='lower')
             for peak in illumination_estimated.harmonics.keys():
                 qx, qy = self.optical_system.otf_frequencies
                 sizex, sizey = qx.size, qy.size
@@ -276,7 +283,6 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         return estimator_class(
             illumination,
             optical_system,
-            modulation_estimation_method=method_name,
             treat_composite_orders_separately=treat_composite_orders_separately,
             debug_info_level=debug_info_level,
             SSNRc=self.SSNRc,
@@ -587,7 +593,7 @@ class IlluminationPatternEstimator3D(IlluminationPatternEstimator):
                 phase_matrix3d[(r, n, (-m[0], m[1], 0))] = phase_matrix2d[peak].conjugate()
             for r in range(self.illumination.Mr):
                 for n in range(self.illumination.Mt):
-                    phase_matrix3d[(r, n, (0, 0, 0))] = 0
+                    phase_matrix3d[(r, n, (0, 0, 0))] = 1.0 + 0j
             return phase_matrix3d
         
     def estimate_modulation_coefficients(self,

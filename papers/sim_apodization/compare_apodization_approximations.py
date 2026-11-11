@@ -18,7 +18,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 import copy 
 
 plt.rcParams['font.size'] = 30         # Sets default font size
-plt.rcParams['axes.titlesize'] = 30     # Title of the axes
+plt.rcParams['axes.titlesize'] = 20     # Title of the axes
 plt.rcParams['axes.labelsize'] = 30     # Labels on x and y axes
 plt.rcParams['xtick.labelsize'] = 30    # Font size for x-tick labels
 plt.rcParams['ytick.labelsize'] = 30    # Font size for y-tick labels
@@ -27,7 +27,7 @@ plt.rcParams['legend.fontsize'] = 20    # Font size for legend
 configurations = BFPConfiguration(refraction_index=1.5)
 
 alpha = 2 * np.pi / 5
-theta = 0.9 * alpha
+theta = np.arcsin(0.9 * np.sin(alpha))
 NA = 1.5 * np.sin(alpha)
 dx = 1 / (8 * NA)
 # dz= dx
@@ -63,8 +63,7 @@ support_autocorrelation = np.where(apodization_autoconvolution.apodization_funct
 apodization_ism = AutocorrelationApodizationISM(optical_system, optical_system_effective)
 support_ism = np.where(apodization_ism.apodization_function >= 1e-9 * np.max(apodization_ism.apodization_function), 1, 0)
 
-fig, axes = plt.subplots(2, 4)
-
+fig, axes = plt.subplots(2, 4, figsize=(16, 8.5))
 axes[0, 0].imshow(support_triangular_conventional[:, :, Nz//2], cmap='gray')
 axes[0, 0].set_title("a")
 axes[0, 1].imshow(support_triangular_hexagonal[:, :, Nz//2], cmap='gray')
@@ -89,7 +88,8 @@ axes[1, 0].set_axis_off()
 axes[1, 1].set_axis_off()
 axes[1, 2].set_axis_off()
 axes[1, 3].set_axis_off()
-fig.tight_layout()
+plt.tight_layout()
+fig.subplots_adjust(wspace=0.02, hspace=0.12)
 fig.savefig(current_dir + "/Figures/simulations/compare_apodization_approximations.png", dpi=300, bbox_inches='tight')
 # slider_recon = utils.wrap_axes3d(
 #     axes,

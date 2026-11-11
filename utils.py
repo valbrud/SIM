@@ -1125,3 +1125,45 @@ def load_grayscale_image(path):
     else:
         gray = np.zeros_like(gray, dtype=np.float32)
     return gray
+
+
+def compute_fwhm(x_values, y_values):
+    half_maximum = 0.5 * (np.max(y_values) + np.min(y_values))
+    peak_index = int(np.argmax(y_values))
+    shifted = y_values - half_maximum
+
+    def interpolate_crossing(left_index, right_index):
+        x0, x1 = x_values[left_index], x_values[right_index]
+        y0, y1 = shifted[left_index], shifted[right_index]
+        if y0 == y1:
+            return x0
+        return x0 - y0 * (x1 - x0) / (y1 - y0)
+
+    left_crossing = None
+    for index in range(peak_index, 0, -1):
+        if shifted[index] == 0:
+            left_crossing = x_values[index]
+            break
+        if shifted[index - 1] == 0:
+            left_crossing = x_values[index - 1]
+            break
+        if shifted[index] * shifted[index - 1] < 0:
+            left_crossing = interpolate_crossing(index - 1, index)
+            break
+
+    right_crossing = None
+    for index in range(peak_index, len(y_values) - 1):
+        if shifted[index] == 0:
+            right_crossing = x_values[index]
+            break
+        if shifted[index + 1] == 0:
+            right_crossing = x_values[index + 1]
+            break
+        if shifted[index] * shifted[index + 1] < 0:
+            right_crossing = interpolate_crossing(index, index + 1)
+            break
+
+    if left_crossing is None or right_crossing is None:
+        return np.nan
+
+    return right_crossing - left_crossing

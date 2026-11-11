@@ -155,58 +155,49 @@ def filter_true_wiener_sim(image_ft,
     # plt.show()
     ssnr = expand_ring_averages(ssnr_ra, ssnr_calculator.optical_system.otf_frequencies)
 
-    # if image_ft.ndim == 3:
-    #     fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    #     ax[0].plot(np.log1p((np.abs(obj2ra)))[:, obj2ra.shape[1]//2]    , label='total power')
-    #     ax[0].plot(np.log1p((noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
-    #     ax[0].legend()
-    #     ax[1].plot(np.log1p(ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
-    #     ax[1].legend()
-    #     # plt.show()
-    # else: 
-    #     fig, ax = plt.subplots(1, 2, figsize=(10,5))
-    #     ax[0].plot(np.log1p((np.abs(obj2ra))), label='total power')
-    #     ax[0].plot(np.log1p((noise_power_ra).real), label='noise power') 
-    #     ax[0].legend()
-    #     ax[1].plot(np.log1p(ssnr_ra.real), label='SSNR')
-    #     ax[1].legend()
+    if image_ft.ndim == 3:
+        fig, ax = plt.subplots(1, 2, figsize=(10,5))
+        ax[0].plot(np.log1p((np.abs(obj2ra)))[:, obj2ra.shape[1]//2], label='total power')
+        ax[0].plot(np.log1p((noise_power_ra).real)[:, obj2ra.shape[1]//2], label='noise power') 
+        ax[0].legend()
+        ax[1].plot(np.log1p(ssnr_ra[:, obj2ra.shape[1]//2].real), label='SSNR')
+        ax[1].legend()
         # plt.show()
+    else: 
+        fig, ax = plt.subplots(1, 2, figsize=(10,5))
+        ax[0].plot(np.log1p((np.abs(obj2ra))), label='total power')
+        ax[0].plot(np.log1p((noise_power_ra).real), label='noise power') 
+        ax[0].legend()
+        ax[1].plot(np.log1p(ssnr_ra.real), label='SSNR')
+        ax[1].legend()
+        plt.show()
 
 
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
     ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
     ssnr = np.where(ssnr_calculator.dj < numeric_noise, 0, ssnr)
 
-    # plt.plot(np.log(1 + (obj2ra).real), label='total')
-    # plt.plot(np.log(1 + (noise_power_ra).real), label='noise')
-    # plt.plot(np.log(1 + (np.abs(ssnr))[center[0], center[1]:]), label = 'ssnr')
-    
-    # plt.legend()
-    # plt.show()
-
-    # # unfiltered_image = hpc_utils.wrapped_ifftn(image_ft)
-
     
     w = dja / ssnr 
     shape = image_ft.shape
-    # if len(shape) == 3: 
-    #     fig, ax = plt.subplots(1, 3, figsize=(10,5))
-    #     ax[0].plot(np.log1p(10**8 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
-    #     ax[1].plot(np.log1p(10**8 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2])
-    #     ax[2].plot(np.log1p(10**8 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2])
-    #     ax[0].set_title('SSNR')
-    #     ax[1].set_title('Dj average')
-    #     ax[2].set_title('Regularization w')
-    #     # plt.show()
-    # else: 
-    #     fig, ax = plt.subplots(1, 3, figsize=(10,5))
-    #     ax[0].plot(np.log1p(ssnr)[shape[0]//2:, shape[1]//2])
-    #     ax[1].plot(np.log1p((dja)[shape[0]//2:, shape[1]//2]))
-    #     ax[2].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
-    #     ax[0].set_title('SSNR')
-    #     ax[1].set_title('Dj average')
-    #     ax[2].set_title('Regularization w')
+    if len(shape) == 3: 
+        fig, ax = plt.subplots(1, 3, figsize=(10,5))
+        ax[0].plot(np.log1p(10**8 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
+        ax[1].plot(np.log1p(10**8 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2])
+        ax[2].plot(np.log1p(10**8 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2])
+        ax[0].set_title('SSNR')
+        ax[1].set_title('Dj average')
+        ax[2].set_title('Regularization w')
         # plt.show()
+    else: 
+        fig, ax = plt.subplots(1, 3, figsize=(10,5))
+        ax[0].plot(np.log1p(ssnr)[shape[0]//2:, shape[1]//2])
+        ax[1].plot(np.log1p((dja)[shape[0]//2:, shape[1]//2]))
+        ax[2].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
+        ax[0].set_title('SSNR')
+        ax[1].set_title('Dj average')
+        ax[2].set_title('Regularization w')
+        plt.show()
 
     w = np.where(ssnr < 1, 10**9, w)
     # w = noise_power 

@@ -9,9 +9,9 @@ sys.path.append(current_dir)
 from config.BFPConfigurations import BFPConfiguration
 import numpy as np
 
-configurations = BFPConfiguration(refraction_index=1.5)
 alpha = 2 * np.pi / 5
 nmedium = 1.5
+configurations = BFPConfiguration(refraction_index=nmedium)
 nobject = 1.5
 NA = nmedium * np.sin(alpha)
 theta = np.asin(0.9 * np.sin(alpha))

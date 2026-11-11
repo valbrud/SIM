@@ -18,7 +18,7 @@ import re
 from OpticalSystems import System4f2D
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D
 from PatternEstimation.PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
-from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, estimate_gain_and_offset
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D
 from config.BFPConfigurations import BFPConfiguration
 from wrappers import wrapped_fftn, wrapped_ifftn
 from WienerFiltering import filter_true_wiener_sim
@@ -44,7 +44,7 @@ plt.rcParams['xtick.labelsize'] = 30    # Font size for x-tick labels
 plt.rcParams['ytick.labelsize'] = 30    # Font size for y-tick labels
 plt.rcParams['legend.fontsize'] = 30    # Font size for legend
 
-N = 255
+N = 512
 wavelength = 680e-9
 px_scaled = 80e-9
 dx = px_scaled / wavelength
@@ -57,9 +57,13 @@ alpha = np.arcsin(NA / nmedium)
 max_r = dx * N // 2
 x = np.linspace(-max_r, max_r, N)
 y    = np.copy(x)
+
 psf_size = 2 * np.array((max_r, max_r))
-fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
-fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
+# fx = np.linspace(-1 / (2 * dx), 1 / (2 * dx), N)
+# fr = np.linspace(0, 1 / (2 * dx), N//2 + 1)
+
+####### Using FairSIM OTF ######
+
 xml_file = project_root + "/data/OMX-OTF-683nm-2d.xml"        
 otf_cube = load_fairsim_otf(xml_file)
 otf = otf_cube[2]  
@@ -74,7 +78,10 @@ otf = np.fft.fftshift(otf)
 # otf = wrapped_fftn(psf)
 # plt.plot(otf[:, N//2], label='OTF_fairSIM')
 # plt.show()
-otf = otf[2::2, 2::2]
+# otf = otf[2::2, 2::2]
+
+#########
+
 optical_system = System4f2D(alpha = alpha, refractive_index=nmedium, high_NA=True, vectorial=True)
 
 # aberrated_psf_dict_file = current_dir + "\\psf_dicts\\aberrated_psf_vec_dict_expanded_tetraspec_680.pkl"
@@ -86,13 +93,13 @@ optical_system = System4f2D(alpha = alpha, refractive_index=nmedium, high_NA=Tru
 optical_system.compute_psf_and_otf((psf_size, N))
 # optical_system.psf = aberrated_psf_dict[(np.float64(1.17), np.float64(0.1224), np.float64(0.036))]
 # optical_system.otf = otf
-# plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='Estimated OTF')
-# plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='FairSIM OTF')
-# plt.xlabel('q, $1/\lambda$')
-# plt.ylabel('Normalized value')
-# plt.legend()
-# # plt.savefig('reconstructions/images/OTF_comparison.png')
-# plt.show()
+plt.plot(optical_system.otf_frequencies[0], optical_system.otf[:, N//2], label='Estimated OTF')
+plt.plot(optical_system.otf_frequencies[0], otf[:, N//2], label='FairSIM OTF')
+plt.xlabel('q, $1/\lambda$')
+plt.ylabel('Normalized value')
+plt.legend()
+# plt.savefig('reconstructions/images/OTF_comparison.png')
+plt.show()
 
 # optical_system.otf = otf
 # optical_system.otf /= np.amax(np.abs(optical_system.otf))
@@ -101,15 +108,21 @@ optical_system.compute_psf_and_otf((psf_size, N))
 
 # plt.imshow(np.log1p(optical_system.otf.real), cmap='gray')
 # plt.show()
+dataset = 'omx'
 
-data = tifffile.imread(project_root + '/data/OMX_Tetraspeck200_680nm.tif')
+if dataset == 'omx':
+    data = tifffile.imread(project_root + '/data/OMX_Tetraspeck200_680nm.tif')
+    stack = data.reshape((3, -1, 5, 512, 512))
+    stack = stack[:, 3, :, :, :]
+
+if dataset == 'slm':
+    data = tifffile.imread(project_root + '/data/SLM-SIM_Tetraspeck200_680nm.tif')
+    stack = data.reshape((-1, 3, 512, 512))
+
 print(data.shape, data.dtype)
 
-
-stack = data.reshape((3, -1, 5, 512, 512))
 # offset = np.min(data)
 
-stack = stack[:, 3, :, 100:100+N, 100:100+N]
 from windowing import make_mask_cosine_edge2d
 windowing_mask = make_mask_cosine_edge2d(stack.shape[2:], 50)
 
@@ -126,8 +139,10 @@ image = image * windowing_mask
 # plt.imshow(image)
 # plt.show()
 
-# plt.hist(image.flatten(), bins=np.arange(0, 250, 1))
-# plt.show()
+# for i in range(stack.shape[0]):
+#     for j in range(stack.shape[2]):
+#         plt.hist(stack[i, 0, j, ...].flatten(), bins=np.arange(0, 250, 1))
+#         plt.show()
 
 frc1 = frc_one_image(
     image,
@@ -179,11 +194,11 @@ frc2 = frc_one_image(
     num_bins=120,
     readout_noise=readout_std**2,
 )
-# plt.plot(frc2[1], frc2[0], label='After offset correction')
-# plt.xlabel('Spatial frequency, $1/\lambda$')
-# plt.ylabel('FRC')
-# plt.legend()
-# plt.show()
+plt.plot(frc2[0], frc2[1], label='After offset correction')
+plt.xlabel('Spatial frequency, $1/\lambda$')
+plt.ylabel('FRC')
+plt.legend()
+plt.show()
 
 stack = (stack - offset) / gain
 stack[stack < 0] = 0
@@ -208,7 +223,17 @@ print(stack.shape)
 
 configurations = BFPConfiguration(refraction_index=nmedium)
 
-FORCE_RECOMPUTE = False
+if dataset == 'omx':
+    angles=(45 / 180 * np.pi, 165 / 180 * np.pi , 105 / 180 * np.pi)
+    Mr=3
+    Mt=5
+elif dataset == 'slm':
+    angles=(0 / 180 * np.pi, 90 / 180 * np.pi , 45 / 180 * np.pi, 135 / 180 * np.pi)
+    Mr=4
+    Mt=3
+
+
+FORCE_RECOMPUTE = True
 illumination_file = current_dir + '/illumination_vec_tetraspec.pkl'
 if os.path.exists(illumination_file) and not FORCE_RECOMPUTE:
     with open(illumination_file, 'rb') as f:
@@ -218,42 +243,40 @@ if os.path.exists(illumination_file) and not FORCE_RECOMPUTE:
 else:
     print("Estimating illumination pattern")
     illumination = IlluminationPlaneWaves2D.init_from_3D(configurations.get_2_oblique_s_waves_and_s_normal(
-    alpha -0.7, 
+    alpha -0.4, 
     1, 0,
-    Mr=3,
-    Mt=5, 
-    angles=(45 / 180 * np.pi , 165 / 180 * np.pi, 105 / 180 * np.pi),
+    Mr=Mr,
+    Mt=Mt, 
+    angles=angles,
     dimensionality=3
     ).project_in_quasi_2D(),
     )
 
-    illumination.set_spatial_shifts_diagonally(Mt=5)
+    illumination.set_spatial_shifts_diagonally(Mt=Mt)
 
     pattern_estimator = IlluminationPatternEstimator2D(
         illumination=illumination,
         optical_system=optical_system,
+        peak_estimation_method='interpolation',
+        phase_estimation_method='peak_phases',
+        modulation_coefficients_method='peak_height_ratio',
+        peak_search_area_size=21,
+        zooming_factor=100,
+        max_iterations=2,
+        debug_info_level=2,
+        first_order_peaks=False
     )
 
-    illumination = pattern_estimator.estimate_illumination_parameters(
-        stack, 
-        peak_estimation_method = 'cross_correlation',
-        phase_estimation_method = 'autocorrelation',
-        modulation_coefficients_method = 'default',
-        peak_search_area_size=11,
-        zooming_factor=100, 
-        max_iterations=2, 
-        debug_info_level=1
-    )
+    illumination = pattern_estimator.estimate_illumination_parameters(stack)
 
-    if not os.path.exists(illumination_file):
-        illumination.save(illumination_file)
-        print(f"Saved estimated illumination pattern.")
+    illumination.save(illumination_file)
+    print(f"Saved estimated illumination pattern.")
 
 # for r in illumination.Mr:
 #     wavevector = illumination.get_wavevector((r, (2, 0)))
     
 # illumination = IlluminationNonLinearSIM2D.init_from_linear_illumination(illumination, (0, 0, 1))
-illumination.estimate_modulation_coefficients(stack, optical_system.psf, optical_system.x_grid, update=True)
+# illumination.estimate_modulation_coefficients(stack, optical_system.psf, optical_system.x_grid, update=True)
 
 
 illumination_experimental = copy.deepcopy(illumination)
@@ -297,12 +320,16 @@ reconstructed_fourier = reconstructor_fourier.reconstruct(stack)
 widefield  = reconstructor_fourier.get_widefield(stack)
 reconstructed_widefield = reconstructor_widefield.reconstruct(widefield[None, None, ...])
 pseudo_widefield = np.sum(stack, axis=(0, 1)) 
-fig, ax = plt.subplots(1, 2, figsize=(15, 5))
+fig, ax = plt.subplots(2, 2, figsize=(15, 5))
 fig.suptitle('Reconstructed images')
-ax[0].imshow(np.log1p(np.abs(wrapped_fftn(reconstructed_fourier))).T, cmap='gray', origin='lower')
-ax[0].set_title('Fourier')
-ax[1].imshow(np.log1p(np.abs(wrapped_fftn(reconstructed_widefield))).T, cmap='gray', origin='lower')
-ax[1].set_title('Widefield')
+ax[0, 0].imshow(np.log1p(np.abs(wrapped_fftn(reconstructed_fourier))).T, cmap='gray', origin='lower')
+ax[0, 0].set_title('Fourier')
+ax[0, 1].imshow(np.log1p(np.abs(wrapped_fftn(reconstructed_widefield))).T, cmap='gray', origin='lower')
+ax[0, 1].set_title('Widefield')
+ax[1, 0].imshow(reconstructed_widefield.T, cmap='gray', origin='lower')
+ax[1, 0].set_title('Reconstructed Widefield')
+ax[1, 1].imshow(reconstructed_fourier.T, cmap='gray', origin='lower')
+ax[1, 1].set_title('Reconstructed Fourier')
 plt.show()
 
 
@@ -376,5 +403,5 @@ scalebar = ScaleBar(
     )
 ax[0].add_artist(scalebar)
 plt.show()
-fig.savefig(os.path.join(current_dir, "Figures/experiments/apodization_comparison_tetraspec_680.png"), bbox_inches='tight')
+# fig.savefig(os.path.join(current_dir, "Figures/experiments/apodization_comparison_tetraspec_680.png"), bbox_inches='tight')
 

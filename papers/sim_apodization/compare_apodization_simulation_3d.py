@@ -155,14 +155,26 @@ apodization_autoconvolution = Apodization.AutocorrelationApodizationSIM3D(optica
 apodization_filter_auto = apodization_autoconvolution.ideal_otf
 apodization_filter_auto = np.where(apodization_filter1 > 0, apodization_filter_auto, 0)
 
-apodization_ISM = Apodization.AutocorrelationApodizationISM(optical_system_quasi, optical_system)
-apodization_filter_ISM = apodization_ISM.ideal_otf
-apodization_filter_ISM = np.where(apodization_filter1 > 0, apodization_filter_ISM, 0)
+
+angle1 = 82 * np.pi / 180 
+angle2 = 54 * np.pi / 180
+
+optical_system1p = System4f3D(alpha=angle1, refractive_index_medium=1.5 * 1.15, refractive_index_sample=1.5 * 1.15, high_NA=True, vectorial=True)
+optical_system1p.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Na)))
+optical_system2p = System4f3D(alpha=angle2, refractive_index_medium=1.5 * 1.15, refractive_index_sample=1.5 * 1.15, high_NA=True, vectorial=True)
+optical_system2p.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Na)))
+
+apodization_ISMp = Apodization.AutocorrelationApodizationISM(optical_system1p, optical_system2p)
+apodization_filter_ISMp = apodization_ISMp.apodization_function
+
+# apodization_ISM = Apodization.AutocorrelationApodizationISM(optical_system_quasi, optical_system)
+# apodization_filter_ISM = apodization_ISM.ideal_otf
+# apodization_filter_ISM = np.where(apodization_filter1 > 0, apodization_filter_ISM, 0)
 
 epsf_triangular1 = hpc_utils.wrapped_ifftn(apodization_filter1).real
 epsf_triangular04 = hpc_utils.wrapped_ifftn(apodization_filter04).real
 epsf_autoconvolution = hpc_utils.wrapped_ifftn(apodization_filter_auto).real
-epsf_ISM = hpc_utils.wrapped_ifftn(apodization_filter_ISM).real
+epsf_ISM = hpc_utils.wrapped_ifftn(apodization_filter_ISMp).real
 
 image_sparse1 = scipy.signal.convolve(image_sparse, epsf_triangular1, mode='same')
 image_sparse04 = scipy.signal.convolve(image_sparse, epsf_triangular04, mode='same')
@@ -173,6 +185,17 @@ image_dense1 = scipy.signal.convolve(image_dense, epsf_triangular1, mode='same')
 image_dense04 = scipy.signal.convolve(image_dense, epsf_triangular04, mode='same')
 image_dense_auto = scipy.signal.convolve(image_dense, epsf_autoconvolution, mode='same')
 image_dense_ISM = scipy.signal.convolve(image_dense, epsf_ISM, mode='same')
+
+fig, ax = plt.subplots(1, 2)
+ax[0].imshow(epsf_triangular1[Nl//2, :, :].T, origin='lower')
+ax[1].imshow(epsf_ISM[Nl//2, :, :].T, origin='lower')
+# plt.show()
+slider_recon = utils.wrap_axes3d(
+    ax,
+     [epsf_triangular1, epsf_ISM],
+    axis='x',
+)
+plt.show()
 
 fig, axes = plt.subplots(2, 4, figsize = (16, 8))
 axes[0, 0].imshow(image_dense[Nl//2, :, :].T, cmap='Reds', extent=[x[0], x[-1], z[0], z[-1]])

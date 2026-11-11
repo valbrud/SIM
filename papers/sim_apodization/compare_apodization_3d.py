@@ -18,8 +18,10 @@ import hpc_utils, utils
 from matplotlib_scalebar.scalebar import ScaleBar
 import copy 
 
+from utils import compute_fwhm
+
 plt.rcParams['font.size'] = 30         # Sets default font size
-plt.rcParams['axes.titlesize'] = 30     # Title of the axes
+plt.rcParams['axes.titlesize'] = 40     # Title of the axes
 plt.rcParams['axes.labelsize'] = 30     # Labels on x and y axes
 plt.rcParams['xtick.labelsize'] = 30    # Font size for x-tick labels
 plt.rcParams['ytick.labelsize'] = 30    # Font size for y-tick labels
@@ -28,7 +30,7 @@ plt.rcParams['legend.fontsize'] = 20    # Font size for legend
 configurations = BFPConfiguration(refraction_index=1.5)
 
 alpha = 2 * np.pi / 5
-theta = 0.9 * alpha
+theta = np.arcsin(0.9 * np.sin(alpha))
 NA = 1.5 * np.sin(alpha)
 dx = 1 / (24 * NA)
 dz= dx
@@ -46,18 +48,26 @@ fx = np.linspace(-1 / (2 * dy), 1 / (2 * dy), Nl)
 fz = np.linspace(-1 / (2 * dz), 1 / (2 * dz), Nz)
 fr = fx[Nl//2:]/(2 * NA)
 
+angle1 = 82 * np.pi / 180 
+angle2 = 54 * np.pi / 180
 
 optical_system = System4f3D(alpha=alpha, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
 optical_system.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
-optical_system_quasi = System4f3D(alpha=np.pi/2, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
-optical_system_quasi.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
+optical_system1 = System4f3D(alpha=angle1, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
+optical_system1.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
+optical_system2 = System4f3D(alpha=angle2, refractive_index_medium=1.5, refractive_index_sample=1.5, high_NA=True, vectorial=True)
+optical_system2.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
+optical_system1p = System4f3D(alpha=angle1, refractive_index_medium=1.5 * 1.15, refractive_index_sample=1.5 * 1.15, high_NA=True, vectorial=True)
+optical_system1p.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
+optical_system2p = System4f3D(alpha=angle2, refractive_index_medium=1.5 * 1.15, refractive_index_sample=1.5 * 1.15, high_NA=True, vectorial=True)
+optical_system2p.compute_psf_and_otf(((2 * max_r, 2 * max_r, 2* max_z), (Nl, Nl, Nz)))
 
 widefield = configurations.get_widefield(dimensionality=3)
 conventional = configurations.get_2_oblique_s_waves_and_s_normal(theta, 1, 1, Mr = 3, Mt=1, dimensionality=3)
 conventional.clean_plane_waves()
 apodization_triangular = TriangularApodizationSIM3D(optical_system, conventional, power=1, Ndense=201)
 
-
+apodization_triangular.power = 1
 apodization_filter1 = apodization_triangular.apodization_function
 apodization_triangular.power = 0.4 
 apodization_filter04 = apodization_triangular.apodization_function
@@ -65,91 +75,54 @@ apodization_filter04 = apodization_triangular.apodization_function
 apodization_widefield = AutocorrelationApodizationWidefield(optical_system)
 apodization_autoconvolution = AutocorrelationApodizationSIM3D(optical_system, conventional, Ndense=201)
 apodization_filter_autoconvolution = apodization_autoconvolution.apodization_function
-apodization_ISM = AutocorrelationApodizationISM(optical_system_quasi, optical_system)
+
+apodization_ISM = AutocorrelationApodizationISM(optical_system1, optical_system2)
 apodization_filter_ISM = apodization_ISM.apodization_function
 
+apodization_ISMp = AutocorrelationApodizationISM(optical_system1p, optical_system2p)
+apodization_filter_ISMp = apodization_ISMp.apodization_function
+# apodizaition_filter_ISMp = apodiz
 
-fig, axes = plt.subplots(2, 2)
-axes[0, 0].imshow(apodization_filter1[:, :, Nz//2], cmap='gray')
-axes[0, 0].set_title("apodization, p=1")
-axes[0, 1].imshow(apodization_filter_ISM[:, :, Nz//2], cmap='gray')
-axes[0, 1].set_title("ISM")
-axes[1, 0].imshow(apodization_filter1[:, Nl//2, :], cmap='gray')
-axes[1, 0].set_title("apodization, p=1")
-axes[1, 1].imshow(apodization_filter_ISM[:, Nl//2, :], cmap='gray')
-axes[1, 1].set_title("ISM")
+# fig, axes = plt.subplots(2, 2)
+# axes[0, 0].imshow(apodization_filter1[:, :, Nz//2], cmap='gray')
+# axes[0, 0].set_title("apodization, p=1")
+# axes[0, 1].imshow(apodization_filter_ISM[:, :, Nz//2], cmap='gray')
+# axes[0, 1].set_title("ISM")
+# axes[1, 0].imshow(apodization_filter1[:, Nl//2, :], cmap='gray')
+# axes[1, 0].set_title("apodization, p=1")
+# axes[1, 1].imshow(apodization_filter_ISM[:, Nl//2, :], cmap='gray')
+# axes[1, 1].set_title("ISM")
 
-slider_recon = utils.wrap_axes3d(
-    axes,
-    [apodization_filter1, apodization_filter_ISM, np.transpose(apodization_filter1, (0, 2, 1)), np.transpose(apodization_filter_ISM, (0, 2, 1))],
-    axis='z', cmap='gray', mode='log1p', scaling=10**2
-)
-plt.show()
+# slider_recon = utils.wrap_axes3d(
+#     axes,
+#     [apodization_filter1, apodization_filter_ISM, np.transpose(apodization_filter1, (0, 2, 1)), np.transpose(apodization_filter_ISM, (0, 2, 1))],
+#     axis='z', cmap='gray', mode='log1p', scaling=10**2
+# )
+# plt.show()
 
 apodization_filter_autoconvolution = np.where(apodization_filter1, apodization_filter_autoconvolution, 0)
 apodization_filter_ISM_co = np.where(apodization_filter1, apodization_filter_ISM, 0)
+apodization_filter_ISMp_co = np.where(apodization_filter1, apodization_filter_ISMp, 0)
 
 epsf1 = hpc_utils.wrapped_ifftn(apodization_filter1).real
 epsf04 = hpc_utils.wrapped_ifftn(apodization_filter04).real
 epsfA = hpc_utils.wrapped_ifftn(apodization_filter_autoconvolution).real
 epsfWf = hpc_utils.wrapped_ifftn(apodization_widefield.apodization_function).real
-epsfIsm = hpc_utils.wrapped_ifftn(apodization_filter_ISM).real
 epsfIsm_co = hpc_utils.wrapped_ifftn(apodization_filter_ISM_co).real
+epsfIsmp_co = hpc_utils.wrapped_ifftn(apodization_filter_ISMp_co).real
 epsf1 /= np.amax(epsf1)
 epsf04 /= np.amax(epsf04)
 epsfA /= np.amax(epsfA)
 epsfWf /= np.amax(epsfWf)
-epsfIsm /= np.amax(epsfIsm)
 epsfIsm_co /= np.amax(epsfIsm_co)
+epsfIsmp_co /= np.amax(epsfIsmp_co)
 
 print("Triangular 1: ",  np.amin(epsf1))
 print("Triangular 04: ",  np.amin(epsf04))
 print("Triangular epsfA: ",  np.amin(epsfA))
 print("Triangular Wf: ",  np.amin(epsfWf))
-# print("Triangular Ism: ",  np.amin(epsfIsm))
 print("Triangular Ism_co: ",  np.amin(epsfIsm_co))
-
-
-def compute_fwhm(x_values, y_values):
-    half_maximum = 0.5 * (np.max(y_values) + np.min(y_values))
-    peak_index = int(np.argmax(y_values))
-    shifted = y_values - half_maximum
-
-    def interpolate_crossing(left_index, right_index):
-        x0, x1 = x_values[left_index], x_values[right_index]
-        y0, y1 = shifted[left_index], shifted[right_index]
-        if y0 == y1:
-            return x0
-        return x0 - y0 * (x1 - x0) / (y1 - y0)
-
-    left_crossing = None
-    for index in range(peak_index, 0, -1):
-        if shifted[index] == 0:
-            left_crossing = x_values[index]
-            break
-        if shifted[index - 1] == 0:
-            left_crossing = x_values[index - 1]
-            break
-        if shifted[index] * shifted[index - 1] < 0:
-            left_crossing = interpolate_crossing(index - 1, index)
-            break
-
-    right_crossing = None
-    for index in range(peak_index, len(y_values) - 1):
-        if shifted[index] == 0:
-            right_crossing = x_values[index]
-            break
-        if shifted[index + 1] == 0:
-            right_crossing = x_values[index + 1]
-            break
-        if shifted[index] * shifted[index + 1] < 0:
-            right_crossing = interpolate_crossing(index, index + 1)
-            break
-
-    if left_crossing is None or right_crossing is None:
-        return np.nan
-
-    return right_crossing - left_crossing
+print("Triangular Ismp_co: ",  np.amin(epsfIsmp_co))
 
 al = 20
 az = 70
@@ -159,8 +132,8 @@ epsf1z= epsf1[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
 epsf04z= epsf04[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
 epsfAz= epsfA[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
 epsfWfz = epsfWf[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
-epsfIsmz = epsfIsm[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
 epsfIsm_coz = epsfIsm_co[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
+epsfIsmp_coz = epsfIsmp_co[Nl//2-az:Nl//2+az+1, Nl//2-az:Nl//2+az+1, Nz//2-az:Nz//2+az+1]
 
 scalebar_1 = ScaleBar(
     dx= dx*488,  
@@ -181,8 +154,8 @@ axes[0, 0].add_artist(scalebar_1)
 axes[0,0].set_title('tPSF, x=1')
 im01 = axes[0,1].imshow(epsf04z[az-al: az + al + 1, az - al: az + al + 1, az].T, )
 axes[0,1].set_title('tPSF, x=0.4')
-im02 = axes[0,2].imshow(epsfIsmz[az-al: az + al + 1, az - al: az + al + 1, az].T, )
-axes[0,2].set_title('ISM_PSF')
+im02 = axes[0,2].imshow(epsfAz[az-al: az + al + 1, az - al: az + al + 1, az].T, )
+axes[0,2].set_title('Auto+')
 im10 = axes[1,0].imshow(epsf1z[az, ...].T, )
 axes[1,0].set_title('tPSF, x=1')
 axes[1, 0].add_artist(scalebar_2)
@@ -190,8 +163,8 @@ axes[1, 0].add_artist(scalebar_2)
 im11 = axes[1,1].imshow(epsf04z[az, ...].T, )
 axes[1,1].set_title('tPSF, x=0.4')
 # axes[1, 1].set_aspect(1/axes[1,1].get_data_ratio())
-im12 = axes[1,2].imshow(epsfIsmz[az, ...].T, )
-axes[1,2].set_title('ISM_PSF')
+im12 = axes[1,2].imshow(epsfAz[az, ...].T, )
+axes[1,2].set_title('Auto')
 # axes[1,2].set_aspect(1/axes[1,2].get_data_ratio())
 axes[0, 0].set_axis_off()
 axes[0, 1].set_axis_off()
@@ -219,6 +192,7 @@ plt.colorbar(im12, ax=axes[1, 2], fraction=0.046, pad=0.04, format='%.2f')
 lateral_profile_p1 = epsf1[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
 lateral_profile_p04 = epsf04[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
 lateral_profile_auto = epsfA[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
+lateral_profile_ismp_co = epsfIsmp_co[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
 lateral_profile_ism_co = epsfIsm_co[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
 lateral_profile_wf = epsfWf[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2]
 
@@ -226,29 +200,34 @@ axial_profile_p1 = epsf1z[az, az, ...]
 axial_profile_p04 = epsf04z[az, az, ...]
 axial_profile_auto = epsfAz[az, az, ...]
 axial_profile_ism_co = epsfIsm_coz[az, az, ...]
+axial_profile_ismp_co = epsfIsmp_coz[az, az, ...]
 axial_profile_wf = epsfWfz[az, az, ...]
 
 fwhm_p1 = compute_fwhm(airy_cut_l, lateral_profile_p1)
 fwhm_p04 = compute_fwhm(airy_cut_l, lateral_profile_p04)
 fwhm_auto = compute_fwhm(airy_cut_l, lateral_profile_auto)
 fwhm_ism_co = compute_fwhm(airy_cut_l, lateral_profile_ism_co)
+fwhm_ismp_co = compute_fwhm(airy_cut_l, lateral_profile_ismp_co)
 fwhm_wf = compute_fwhm(airy_cut_l, lateral_profile_wf)
 
 fwhm_z_p1 = compute_fwhm(airy_cut_z, axial_profile_p1)
 fwhm_z_p04 = compute_fwhm(airy_cut_z, axial_profile_p04)
 fwhm_z_auto = compute_fwhm(airy_cut_z, axial_profile_auto)
 fwhm_z_ism_co = compute_fwhm(airy_cut_z, axial_profile_ism_co)
+fwhm_z_ismp_co = compute_fwhm(airy_cut_z, axial_profile_ismp_co)
 fwhm_z_wf = compute_fwhm(airy_cut_z, axial_profile_wf)
 
 print('FWHM p=1 =', fwhm_p1)
 print('FWHM p=0.4 =', fwhm_p04)
 print('FWHM auto =', fwhm_auto)
 print('FWHM ISM_co =', fwhm_ism_co)
+print('FWHM ISM+ =', fwhm_ismp_co)
 print('FWHM wf =', fwhm_wf)
 print('FWHM z p=1 =', fwhm_z_p1)
 print('FWHM z p=0.4 =', fwhm_z_p04)
 print('FWHM z auto =', fwhm_z_auto)
 print('FWHM z ISM_co =', fwhm_z_ism_co)
+print('FWHM z ISM+ =', fwhm_z_ismp_co)
 print('FWHM z wf =', fwhm_z_wf)
 
 # fix, axes=plt.subplots(1, 2, figsize=(10, 8))
@@ -256,9 +235,10 @@ axes[2, 0].plot(airy_cut_l, lateral_profile_p1, label= 'p=1')
 axes[2, 0].plot(airy_cut_l, lateral_profile_p04, label= 'p=0.4')
 axes[2, 0].plot(airy_cut_l, lateral_profile_auto, label='auto')
 # axes[2, 0].plot(airy_cut_l, epsfIsm[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='ISM')
-axes[2, 0].plot(airy_cut_l, lateral_profile_ism_co, label='ISM_co')
+# axes[2, 0].plot(airy_cut_l, lateral_profile_ism_co, label='ISM_co')
+# axes[2, 0].plot(airy_cut_l, lateral_profile_ismp_co, label='ISM+')
 axes[2, 0].plot(airy_cut_l, lateral_profile_wf, label='wf')
-axes[2, 0].hlines(0.5, airy_cut_l[0], airy_cut_l[-1], colors='k', linestyles='dashed')
+# axes[2, 0].hlines(0.5, airy_cut_l[0], airy_cut_l[-1], colors='k', linestyles='dashed')
 
 axes[2, 0].legend()
 axes[2, 0].set_ylabel("Intensity [a.u.]")
@@ -267,8 +247,8 @@ axes[2, 0].set_xlabel("r [Airy units]")
 axes[2,1].plot(airy_cut_l * 2**0.5, np.diag(epsf1[..., Nz//2])[Nl//2-al:Nl//2+al+1], label= 'p=1')
 axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsf04[..., Nz//2])[Nl//2-al:Nl//2+al+1], label= 'p=0.4')
 axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfA[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='auto')
-axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfIsm[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='ISM')
-axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfIsm_co[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='ISM_co')
+# axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfIsm_co[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='ISM')
+# axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfIsmp_co[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='ISM+')
 axes[2, 1].plot(airy_cut_l * 2**0.5, np.diag(epsfWf[..., Nz//2])[Nl//2-al:Nl//2+al+1], label='wf')
 axes[2, 1].legend()
 axes[2, 1].set_xlabel("r [Airy units]")
@@ -276,15 +256,74 @@ axes[2, 1].set_xlabel("r [Airy units]")
 axes[2, 2].plot(airy_cut_z, axial_profile_p1, label= 'p=1')
 axes[2, 2].plot(airy_cut_z, axial_profile_p04, label= 'p=0.4')
 axes[2, 2].plot(airy_cut_z, axial_profile_auto, label='auto')
-# axes[2, 2].plot(airy_cut_z, epsfIsmz[az, az, ...], label='ISM')
-axes[2, 2].plot(airy_cut_z, axial_profile_ism_co, label='ISM_co')
+# axes[2, 2].plot(airy_cut_z, epsfIsm_coz[az, az, ...], label='ISM')
+# axes[2, 2].plot(airy_cut_z, epsfIsmp_coz[az, az, ...], label='ISM+')
 axes[2, 2].plot(airy_cut_z, axial_profile_wf, label='wf')
-axes[2, 2].hlines(0.5, airy_cut_z[0], airy_cut_z[-1], colors='k', linestyles='dashed')
+# axes[2, 2].hlines(0.5, airy_cut_z[0], airy_cut_z[-1], colors='k', linestyles='dashed')
 
 axes[2, 2].legend()
 axes[2, 2].set_xlabel("z [Airy units]")
 # axes[2, 2].set_title("x=y=0")
 fig.savefig(os.path.join(current_dir, "Figures/simulations/effective_PSF3D.png"), bbox_inches='tight')
+plt.show()
+
+fig, axes = plt.subplots(2, 3, figsize=(22, 13))
+im00 = axes[0, 0].imshow(epsfAz[az - al: az + al + 1, az - al: az + al + 1, az].T, )
+im01 = axes[0, 1].imshow(epsfIsm_coz[az - al: az + al + 1, az - al: az + al + 1, az].T, )
+im02 = axes[0, 2].imshow(epsfIsmp_coz[az - al: az + al + 1, az - al: az + al + 1, az].T, )
+axes[0, 0].add_artist(scalebar_1)
+im10 = axes[1, 0].imshow(epsfAz[az, ...].T, )
+im11 = axes[1, 1].imshow(epsfIsm_coz[az, ...].T, )
+im12 = axes[1, 2].imshow(epsfIsmp_coz[az, ...].T, )
+axes[1, 0].add_artist(scalebar_2)
+plt.colorbar(im00, ax=axes[0, 0], fraction=0.046, pad=0.04, format='%.2f')
+plt.colorbar(im01, ax=axes[0, 1], fraction=0.046, pad=0.04, format='%.2f')
+plt.colorbar(im02, ax=axes[0, 2], fraction=0.046, pad=0.04, format='%.2f')
+plt.colorbar(im10, ax=axes[1, 0], fraction=0.046, pad=0.04, format='%.2f')
+plt.colorbar(im11, ax=axes[1, 1], fraction=0.046, pad=0.04, format='%.2f')
+plt.colorbar(im12, ax=axes[1, 2], fraction=0.046, pad=0.04, format='%.2f')
+
+# axes[1, 0].plot(airy_cut_l, lateral_profile_auto, label='auto')
+# axes[1, 0].plot(airy_cut_l, lateral_profile_ism_co, label='ISM_co')
+# axes[1, 0].plot(airy_cut_l, lateral_profile_ismp_co, label='ISM+')
+# axes[1, 0].plot(airy_cut_l, lateral_profile_wf, label='wf')
+# axes[1, 0].legend()
+
+
+# lateral_y_profile_auto = epsfA[Nl//2-al:Nl//2+al+1, Nl//2, Nz//2]
+# lateral_y_profile_ismp_co = epsfIsmp_co[Nl//2-al:Nl//2+al+1, Nl//2, Nz//2]
+# lateral_y_profile_ism_co = epsfIsm_co[Nl//2-al:Nl//2+al+1, Nl//2, Nz//2]
+
+# axes[1, 1].set_ylabel("Intensity [a.u.]")
+# axes[1, 1].set_xlabel("r [Airy units]")
+# axes[1, 1].plot(airy_cut_l, lateral_y_profile_auto, label='auto')
+# axes[1, 1].plot(airy_cut_l, lateral_y_profile_ism_co, label='ISM_co')
+# axes[1, 1].plot(airy_cut_l, lateral_y_profile_ismp_co, label='ISM+')
+# axes[1, 1].plot(airy_cut_l, lateral_profile_wf, label='wf')
+# axes[1, 1].legend()
+
+# axes[1, 2].set_xlabel("r [Airy units]")
+# axes[1, 2].plot(airy_cut_z, axial_profile_auto, label='auto')
+# axes[1, 2].plot(airy_cut_z, epsfIsm_coz[az, az, ...], label='ISM')
+# axes[1, 2].plot(airy_cut_z, epsfIsmp_coz[az, az, ...], label='ISM+')
+# axes[1, 2].plot(airy_cut_z, axial_profile_wf, label='wf')
+# axes[1, 2].legend()
+# axes[1, 2].set_xlabel("z [Airy units]")
+
+axes[0, 0].set_axis_off()
+axes[0, 1].set_axis_off()
+axes[0, 2].set_axis_off()
+axes[1, 0].set_axis_off()
+axes[1, 1].set_axis_off()
+axes[1, 2].set_axis_off()
+axes[0, 0].set_title('a')
+axes[0, 1].set_title('b')
+axes[0, 2].set_title('c')
+axes[1, 0].set_title('d')
+axes[1, 1].set_title('e')
+axes[1, 2].set_title('f')
+
+fig.savefig(os.path.join(current_dir, "Figures/simulations/effective_PSF3D_ISM.png"), bbox_inches='tight')
 plt.show()
 
 exit()
@@ -330,51 +369,5 @@ print("t1 sum", np.sum(epsf1))
 print("t1 sum", np.sum(epsf1))
 print("t1 sum", np.sum(epsf1))
 
-fig, axes = plt.subplots(2, 3, figsize=(10, 5))
-axes[0,0].imshow(epsf1z[..., az].T, )
-axes[0,0].set_title('tPSF, x=1')
-axes[0,1].imshow(epsf04z[..., az].T, )
-axes[0,1].set_title('tPSF, x=0.4')
-axes[0,2].imshow(epsfAz[..., az].T, )
-axes[0,2].set_title('aPSF')
-axes[1,0].imshow(epsf1z[al, ...].T, )
-axes[1,0].set_title('tPSF, x=1')
-# axes[1, 0].set_aspect(1/axes[1,0].get_data_ratio()) 
-axes[1,1].imshow(epsf04z[al, ...].T, )
-# axes[1,1].set_aspect(1/axes[1,1].get_data_ratio())
-axes[1,1].set_title('tPSF, x=0.4')
-axes[1,2].imshow(epsfAz[al, ...].T, )
-# axes[1,2].set_aspect(1/axes[1,2].get_data_ratio())
-axes[1,2].set_title('aPSF')
-axes[0, 0].set_axis_off()
-axes[0, 1].set_axis_off()
-axes[0, 2].set_axis_off()
-axes[1, 0].set_axis_off()
-axes[1, 1].set_axis_off()
-axes[1, 2].set_axis_off()
-axes[0, 0].set_title('a')
-axes[0, 1].set_title('b')
-axes[0, 2].set_title('c')
-axes[1, 0].set_title('d')
-axes[1, 1].set_title('e')
-axes[1, 2].set_title('f')
-# plt.show()
 
-fix, axes=plt.subplots(1, 2, figsize=(10, 8))
-axes[0].plot(airy_cut_l, epsf1[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label= 'tPSF, p=1')
-axes[0].plot(airy_cut_l, epsf04[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label= 'tPSF, p=0.4')
-axes[0].plot(airy_cut_l, epsfA[Nl//2, Nl//2-al:Nl//2+al+1, Nz//2], label='aPSF')
-axes[0].legend()
-axes[0].set_title("x=0, z=0")
-# axes[1].plot(np.diag(epsf1)[Nl//2-al:Nl//2+al+1, Nz//2], label= 'tPSF, p=1')
-# axes[1].plot(np.diag(epsf04)[Nl//2-al:Nl//2+al+1, Nz//2], label= 'tPSF, p=0.4')
-# axes[1].plot(np.diag(epsfA)[Nl//2-al:Nl//2+al+1, Nz//2], label='aPSF')
-# axes[1].legend()
-# axes[1].set_title("x=y, z=0")
-axes[1].plot(airy_cut_z, epsf1z[al, al, ...], label= 'tPSF, p=1')
-axes[1].plot(airy_cut_z, epsf04z[al, al, ...], label= 'tPSF, p=0.4')
-axes[1].plot(airy_cut_z, epsfAz[al, al, ...], label='aPSF')
-axes[1].legend()
-axes[1].set_title("x=y=0")
 
-plt.show()
