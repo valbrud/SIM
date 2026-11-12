@@ -259,7 +259,7 @@ else:
         optical_system=optical_system,
         peak_estimation_method='interpolation',
         phase_estimation_method='peak_phases',
-        modulation_coefficients_method='peak_height_ratio',
+        modulation_coefficients_method='ratios_inversion',
         peak_search_area_size=21,
         zooming_factor=100,
         max_iterations=2,
@@ -374,6 +374,24 @@ apodization_filter04 = apodization_triangular.apodization_function
 apodized_auto       = np.abs(wrapped_ifftn(apodization_filter_auto * filtered_fourier))
 apodized1    = np.abs(wrapped_ifftn(apodization_filter1 * filtered_fourier))
 apodized04    = np.abs(wrapped_ifftn(apodization_filter04 * filtered_fourier))
+
+fig, ax = plt.subplots(1, 4, figsize=(15, 5))
+# fig.suptitle('Apodized images')
+ax[0].imshow(np.abs(pseudo_widefield).T, cmap='gray', origin='lower')
+ax[0].set_title('a')
+ax[1].imshow(np.abs(apodized1).T, cmap='gray', origin='lower')
+ax[1].set_title('b')
+im = ax[2].imshow(np.abs(apodized04).T, cmap='gray', origin='lower')
+# plt.colorbar(im, ax=ax[2])
+ax[2].set_title('c')
+ax[3].imshow(np.abs(apodized_auto).T, cmap='gray', origin='lower')
+ax[3].set_title('d')
+ax[0].set_axis_off()
+ax[1].set_axis_off()
+ax[2].set_axis_off()
+ax[3].set_axis_off()
+fig.tight_layout()
+plt.show()
 
 fig, ax = plt.subplots(1, 4, figsize=(15, 5))
 # fig.suptitle('Apodized images')

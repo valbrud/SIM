@@ -342,7 +342,7 @@ class AutocorrelationApodizationPointScanning(AutocorrelationApodization):
         ideal_detection = np.where(np.abs(self.ctf_support_detection) > 10**-12 * np.amax(self.ctf_support_detection), 1., 0)
         ctf_effective = scipy.signal.convolve(ideal_excitatiton, ideal_detection, mode='same')
         self._ideal_ctf = np.where(np.abs(ctf_effective) > 10**-12 * np.amax(ctf_effective), 1., 0)
-        # fig, ax, slider = utils.imshow3D(self._ideal_ctf, cmap='gray', mode='real', vmin=0, vmax=1)
+        # fig, ax, slider = utils.imshow3D(self.ctf_support_detection, cmap='gray', mode='real', vmin=0, vmax=1)
         # plt.show()
         self._ideal_otf = scipy.signal.convolve(self._ideal_ctf, np.flip(self._ideal_ctf).conjugate(), mode='same')
         self._ideal_otf /= np.amax(self._ideal_otf)

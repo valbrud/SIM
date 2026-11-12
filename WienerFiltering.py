@@ -197,7 +197,7 @@ def filter_true_wiener_sim(image_ft,
         ax[0].set_title('SSNR')
         ax[1].set_title('Dj average')
         ax[2].set_title('Regularization w')
-        plt.show()
+        # plt.show()
 
     w = np.where(ssnr < 1, 10**9, w)
     # w = noise_power 

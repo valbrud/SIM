@@ -16,6 +16,7 @@ from PatternEstimation.ModulationEstimator import (
     ModulationLeastSquaresEstimator,
     ModulationPeakHeightRatioEstimator,
     ModulationRatiosInversionEstimator,
+    ModulationEstimatorNoiseVariance,
 )
 from PatternEstimation.PatternEstimator import IlluminationPatternEstimator2D, IlluminationPatternEstimator3D
 from PatternEstimation.PhasesEstimator import (
@@ -49,6 +50,7 @@ MODULATION_ESTIMATOR_CLASSES = {
     'least_squares': ModulationLeastSquaresEstimator,
     'peak_height_ratio': ModulationPeakHeightRatioEstimator,
     'ratios_inversion': ModulationRatiosInversionEstimator,
+    'noise_variance': ModulationEstimatorNoiseVariance,
 }
 
 theta2d = 2. * np.pi / 5
@@ -232,7 +234,7 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         cls.sample = np.array(cls.sample, dtype=np.float32)[80:N+80, 45:N+45]
         cls.sample -= cls.sample.min()
         cls.sample /= cls.sample.max()
-        Nph = 10**4
+        Nph = 10**2
         cls.sample *= Nph
         cls.spatial_shape = cls.sample.shape
         # cls.sample = np.zeros((N, N)) + 10**4
@@ -348,7 +350,11 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                 self.assert_illumination_valid(illumination_estimated, self.theoretical_illumination)
 
     def test_modulation_estimation_methods(self):
-        for modulation_method in ['peak_height_ratio', 'ratios_inversion']:
+        for modulation_method in [
+            'peak_height_ratio',
+              'ratios_inversion',
+                # 'noise_variance'
+                ]:
             print("MODULATION ESTIMATION METHOD:", modulation_method)
             self.print_expected_plot('modulation amplitudes only')
             with self.subTest(modulation_method=modulation_method):
@@ -361,7 +367,7 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                     treat_composite_orders_separately_for_modulation=False,
                     debug_info_level=0,
                     modulation_debug_info_level=2,
-                    SSNRc=2,
+                    SSNRc=0.7,
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(
@@ -651,6 +657,34 @@ class TestDirectModulationEstimators2D(PatternEstimator2DFixture, unittest.TestC
                 )
                 modulations = estimator.estimate_modulations(stack=self.raw_stack)
                 self.assert_modulations_valid(modulations)
+
+    def test_noise_variance_modulation_estimator(self):
+        estimator = ModulationEstimatorNoiseVariance(
+            copy.deepcopy(self.experimental_illumination),
+            self.optical_system,
+            debug_info_level=0,
+        )
+        stack = np.zeros((1, 1, 9, 10))
+        zero_order_key = (0, (0, 0))
+        noise_order_key = (0, (1, 0))
+        zero_order = np.full((9, 10), 4.0)
+        noise_order = np.arange(90, dtype=np.float64).reshape(9, 10) + 1j
+        expected_variance = np.sum(np.abs(noise_order[1:-1, 2:-2]) ** 2) / noise_order.size / 4.0
+        orders = {
+            zero_order_key: zero_order,
+            noise_order_key: noise_order.copy(),
+        }
+
+        with redirect_stdout(StringIO()):
+            modulations = estimator.estimate_modulations(
+                stack=stack,
+                spatial_frequency_orders=orders,
+                edge_lat=1,
+                edge_ax=2,
+            )
+
+        self.assertEqual(modulations[zero_order_key], 1.0)
+        self.assertAlmostEqual(modulations[noise_order_key], expected_variance)
 
 
 class TestDirectModulationEstimators3D(PatternEstimator3DFixture, unittest.TestCase):

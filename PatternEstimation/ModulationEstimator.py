@@ -249,12 +249,13 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				# plt.show()
 				ratio_shifted_ft = np.where(np.abs(mask_shifted) > 1e-1, ratio_shifted_ft, 0)
 				inverse_product = ratio_shifted_ft * np.flip(ratio_shifted_ft)
-				iverse_product_filtered = np.where(np.abs(mask_shifted) > 1e-1, inverse_product, 0)
-				fig, ax = plt.subplots()
-				ax.hist(np.abs(inverse_product[np.abs(inverse_product) > 10**-3]), bins=00)
-				plt.show()
+				inverse_product_filtered = np.where(np.abs(mask_shifted) > 1e-1, inverse_product, 0)
+				# fig, ax = plt.subplots()
+
 				print(np.sum(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])), len(inverse_product[np.abs(inverse_product) > 10**-3]), np.mean(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])))
 				if self.debug_info_level >=2:
+					plt.hist(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])**0.5, bins=100)
+					plt.show()
 					fig, ax = plt.subplots(1, 2)
 					ax[1].imshow(np.abs(inverse_product)**0.5, origin='lower')
 					ax[1].set_title('Inverse Product')
@@ -276,3 +277,30 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 					print(key, modulation_value)
 		return modulations
 
+class ModulationEstimatorNoiseVariance(ModulationEstimator):
+	def estimate_modulations(self,
+							 stack: np.ndarray | None = None,
+							 spatial_frequency_orders: dict | None = None, 
+							 edge_lat: int = 30, 
+							 edge_ax: int = 5) -> dict:
+		if spatial_frequency_orders is None:
+			spatial_frequency_orders = self._compute_spatial_frequency_orders(stack)
+		am = {}
+		dim = stack[0,0].ndim
+		for key in spatial_frequency_orders:
+			print(key)
+			if key[1] == tuple([0] * dim):
+				am[key] = 1.0
+				continue
+			r, m = key
+			f0 = np.amax(spatial_frequency_orders[(r, tuple([0]* dim))]).real
+			pure_noise_region = spatial_frequency_orders[key]
+			if dim == 2: 
+				pure_noise_region[edge_lat:-edge_lat, edge_ax:-edge_ax] = 0.
+			if dim == 3: 
+				pure_noise_region[edge_lat:-edge_lat, edge_lat:-edge_lat, edge_ax:-edge_ax] = 0.
+			variance = np.mean(pure_noise_region * np.conj(pure_noise_region))
+			print(key, variance)
+			a = variance / f0
+			am[key] = a
+		return am

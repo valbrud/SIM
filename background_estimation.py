@@ -161,7 +161,7 @@ def estimate_background(stack, psf_stack, illumination, optical_system, z_values
     # plt.show()
     # return f
 
-    object_vector = np.array([np.real(hpc_utils.wrapped_ifftn(f[i])) for i in range(len(g_vector))])
+    object_vector = np.array([np.real(hpc_utils.wrapped_ifftn(f[i] * g_vector[len(g_vector)//2])) for i in range(len(g_vector))])
     return object_vector
 
     # g_matrix_expanded += 1e-6

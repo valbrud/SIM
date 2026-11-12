@@ -49,6 +49,7 @@ from PatternEstimation.ModulationEstimator import (
     ModulationLeastSquaresEstimator,
     ModulationPeakHeightRatioEstimator,
     ModulationRatiosInversionEstimator,
+    ModulationEstimatorNoiseVariance,
 )
 from PatternEstimation.PeaksEstimator import (
     PeaksEstimatorCrossCorrelation2D,
@@ -73,7 +74,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
 
     peak_estimation_methods = ('default', 'interpolation', 'cross_correlation')
     phase_estimation_methods = ('default', 'peak_phases', 'autocorrelation', 'cross_correlation', 'side_peak_suppression')
-    modulation_coefficients_methods = ('default', 'least_squares', 'peak_height_ratio', 'ratios_inversion')
+    modulation_coefficients_methods = ('default', 'least_squares', 'peak_height_ratio', 'ratios_inversion', 'noise_variance')
     debug_info_levels = (0, 1, 2)
 
     def __init__(self,
@@ -95,7 +96,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                  treat_composite_orders_separately_for_modulation: bool = False,
                  estimation_strategy: str = 'plane_by_plane',
                  reference_expansion: tuple = (1, 0, 1), 
-                 SSNRc: float = 1,
+                 SSNRc: float = 0.7,
                  ):
         utils.validate_init_types(
             illumination=(illumination, PlaneWavesSIM),
@@ -277,6 +278,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
             'least_squares': 'ModulationLeastSquaresEstimator',
             'peak_height_ratio': 'ModulationPeakHeightRatioEstimator',
             'ratios_inversion': 'ModulationRatiosInversionEstimator',
+            'noise_variance': 'ModulationEstimatorNoiseVariance',
         }
         estimator_class_name = estimator_names.get(method_name, 'ModulationEstimator')
         estimator_class = globals().get(estimator_class_name)
