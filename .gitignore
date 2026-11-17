@@ -10,7 +10,7 @@ doc/_build/
 papers/**/*.pkl
 papers/**/*.tif*
 papers/real_space_reconstructions/simulation_data/
-papers/sim_optimality_aspects/
+papers/modulation_coefficients_estimation/
 Figures/
 __pycache__/
 other_projects/

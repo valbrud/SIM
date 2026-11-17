@@ -757,6 +757,9 @@ class ReconstructorFourierDomain3D(ReconstructorFourierDomain):
         if not optical_system is None and not isinstance(optical_system, OpticalSystem3D):
             raise TypeError("optical_system must be an instance of OpticalSystem3D")
         
+        if kernel is not None and kernel.ndim == 2: 
+            kernel = kernel[..., None]
+
         super().__init__(illumination=illumination,
                          optical_system=optical_system,
                          kernel=kernel,
@@ -814,7 +817,7 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 raise TypeError("optical_system must be an instance of OpticalSystem2D")
             else: 
                 optical_system = OpticalSystem2D.init_from_3D(optical_system)
-        
+
         super().__init__(illumination=illumination,
                             optical_system=optical_system,
                             kernel=kernel,
@@ -855,7 +858,8 @@ class ReconstructorSpatialDomain3DSliced(ReconstructorSpatialDomain):
                 # plt.imshow(reconstructed_image[:, :, z], cmap='gray', origin='lower')
                 # plt.show()
                 # cupy.get_default_memory_pool().free_all_blocks()
-            return reconstructed_image / reconstructed_image.shape[2]
+            reconstructed_image 
+            return reconstructed_image
 
         # ---- CPU multiprocessing path ----
         dtype_size = sim_images.dtype.itemsize

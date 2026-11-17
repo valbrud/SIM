@@ -21,11 +21,11 @@ from SIMulator import SIMulator2D, SIMulator3D
 from config.BFPConfigurations import BFPConfiguration
 from Illumination import IlluminationPlaneWaves2D, IlluminationNonLinearSIM2D, IlluminationPlaneWaves3D
 import ShapesGenerator
-from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain2D1fWF
+from Reconstructor import ReconstructorFourierDomain2D, ReconstructorSpatialDomain2D, ReconstructorFourierDomain2D4F
 from Reconstructor import ReconstructorFourierDomain3D, ReconstructorSpatialDomain3DSliced
 
-from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel
-from WienerFiltering import filter_true_wiener_sim, filter_flat_noise_sim, filter_constant, filter_simulated_object_wiener
+from kernels import sinc_kernel2d, psf_kernel2d, angular_notch_kernel, combined_low_pass_notch_kernel, finite_notch_kernel
+from WienerFiltering import filter_true_wiener_sim, filter_flat_noise_sim, filter_self_consistent_wiener_tiling, filter_simulated_object_wiener
 import hpc_utils
 import SSNRCalculator
 import kernels 
@@ -220,7 +220,7 @@ class TestReconstruction2D(unittest.TestCase):
         filtered = filter_true_wiener_sim(hpc_utils.wrapped_fftn(reconstructed_image), calc)
     
     def test_reconstruction_4_images(self):
-        fourier_reconstructor = ReconstructorFourierDomain2D1fWF(
+        fourier_reconstructor = ReconstructorFourierDomain2D4F(
             illumination=self.illumination,
             optical_system=self.optical_system,
             unitary=True
@@ -266,7 +266,7 @@ class TestReconstruction2D(unittest.TestCase):
             illumination=self.illumination,
             optical_system=self.optical_system,
             readout_noise_variance=0.1,
-            kernel = psf_kernel2d(1, (self.dx, self.dx))
+            kernel = (1, (self.dx, self.dx))
         )            
 
         ssnr_theory = utils.average_rings2d(calc.dj**2 * np.abs(self.image_ft)**2, (self.fx, self.fx) )/utils.average_rings2d(calc.vj * np.amax(np.abs(self.image_ft)), (self.fx, self.fx))
@@ -429,7 +429,7 @@ class TestReconstruction3D(unittest.TestCase):
             optical_system=self.optical_system,
         )
 
-        _, _, filtered_image_ft = filter_true_wiener_sim(
+        _, _, filtered_image_ft = filter_self_consistent_wiener_tiling(
             hpc_utils.wrapped_fftn(reconstructed_image), ssnr_calc
         )
         plt.imshow(np.log1p(np.abs(filtered_image_ft[self.N//2, :, :])))
@@ -471,12 +471,16 @@ class TestReconstruction3D(unittest.TestCase):
             illumination_reconstruction.harmonics[(r, (2, 0, 0))].amplitude *= m2
             illumination_reconstruction.harmonics[(r, (-2, 0, 0))].amplitude *= m2
 
-        kernel=kernels.psf_kernel2d(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)
+        # kernel=kernels.finite_notch_kernel(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)
+        kernel=kernels.finite_notch_kernel(3)
+        # kernel=kernels.psf_kernel2d(pixel_size=(self.dx, self.dx), first_zero_frequency=cut_off_frequency_l)
+        kernel = kernels.combined_low_pass_notch_kernel(9, 33)
         spatial_reconstructor = ReconstructorSpatialDomain3DSliced(
             # illumination=self.illumination, 
             illumination=illumination_reconstruction,
             optical_system=self.optical_system,
             kernel=kernel, 
+            unitary=True
         )
         illumination_widefield = BFPConfiguration(refraction_index=1.5).get_widefield(3)
 
@@ -488,7 +492,7 @@ class TestReconstruction3D(unittest.TestCase):
 
         # Reconstruct the image.
         # sim_images_slices = self.noisy_images[:, :, :, : self.N//2]
-        mask = windowing.make_mask_cosine_edge3d((self.N, self.N, self.N), edge=0)
+        mask = windowing.make_mask_cosine_edge3d((self.N, self.N, self.N), edge=20)
         self.sim_images *= mask[None, None, :, :, :]
         self.noisy_images *= mask[None, None, :, :, :]
         self.widefield = np.sum(self.noisy_images, axis=(0,1))
@@ -508,7 +512,8 @@ class TestReconstruction3D(unittest.TestCase):
             illumination = self.illumination, 
             optical_system = self.optical_system,
             kernel=kernel[..., None],
-            illumination_reconstruction=illumination_reconstruction
+            illumination_reconstruction=illumination_reconstruction, 
+            imperfect_phase_shifts=False
             )
 
         ssnr_widefield = SSNRCalculator.SSNRSIM3D(
@@ -525,7 +530,7 @@ class TestReconstruction3D(unittest.TestCase):
         # plt.imshow(np.where(np.abs(apodization_widefield.ideal_otf) > 10**-6, 1, 0)[:, self.N//2, :])
         # plt.show()
         filtered_ft, w, ssnr = filter_true_wiener_sim(
-            reconstructed_image_ft, ssnr_calc, hpc_utils.wrapped_fftn(self.image))
+            reconstructed_image_ft, ssnr_calc, 3)
         
         plt.imshow(np.log1p(np.abs(ssnr[:, self.N//2, :])))
         plt.show()

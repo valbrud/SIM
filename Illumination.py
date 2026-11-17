@@ -790,15 +790,20 @@ class PlaneWavesSIM(Illumination, PeriodicStructure):
 
         return am_scaled
     
-    def update_amplitudes(self, new_amplitudes: dict[tuple[int, ...], complex]):
-        for key in new_amplitudes.keys():
-            if key in self.rearranged_indices.keys():
-                for z_index in self.rearranged_indices[key]:
-                    index = self.glue_indices(key, z_index)
-                    self.harmonics[index].amplitude = new_amplitudes[key]
-            else:
-                raise KeyError(f"Key {key} not found in harmonics!")
-
+    def update_amplitudes(self, new_amplitudes: dict[tuple[int, ...], complex], from_projected: bool = False):
+        for sim_index in self.rearranged_indices.keys():
+            for z_index in self.rearranged_indices[sim_index]:
+                index = self.glue_indices(sim_index, z_index)
+                if from_projected:
+                    if sim_index not in new_amplitudes:
+                        raise KeyError(f"Key {index} not found in new (projected) amplitudes!")
+                    self.harmonics[index].amplitude = new_amplitudes[sim_index] / len(self.rearranged_indices[sim_index])
+                else: 
+                    if index not in new_amplitudes: 
+                        raise KeyError(f"Key {index} not found in new amplitudes!")
+                    self.harmonics[index].amplitude = new_amplitudes[index]
+        self.normalize_spatial_waves()
+        
     def clean_plane_waves(self, threshold=1e-3):
         """
         Remove plane waves with low amplitude.

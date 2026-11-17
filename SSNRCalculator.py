@@ -370,9 +370,9 @@ class SSNRSIM(SSNRBase):
     @kernel.setter
     def kernel(self, kernel_new):
         kernel_new = utils.expand_kernel(kernel_new, self.optical_system.psf.shape)
-
-        self._kernel_ft = hpc_utils.wrapped_ifftn(kernel_new)
-        self._kernel_ft /= np.amax(self._kernel_ft)
+        # center = np.array(kernel_new.shape, dtype=np.int32) // 2
+        self._kernel_ft = hpc_utils.wrapped_fftn(kernel_new)
+        # self._kernel_ft = self._kernel_ft * kernel_new.size  / (kernel_new[center] if kernel_new[center] != 0 else 1) # this gives a consistent noramlization for both notch and low-pass kernels
         self._kernel = kernel_new
         self.effective_kernels_ft = {}
         self._compute_effective_kernels_ft()
@@ -528,7 +528,7 @@ class SSNRSIM(SSNRBase):
         else:
             return self._find_threshold_value(stock, max, average, noise_level, ssnr_widefield)
 
-    def compute_maximum_resolved_lateral(self):
+    def compute_cut_off_lateral(self):
         fR = 2 * self.optical_system.nm * np.sin(self.optical_system.alpha)
         fourier_peaks_wavevectors = np.array([spatial_wave.wavevector for spatial_wave in self.illumination.waves.values()])
         fI = np.max(np.array([(wavevector[0] ** 2 + wavevector[1] ** 2) ** 0.5 for wavevector in fourier_peaks_wavevectors]))
@@ -624,6 +624,32 @@ class SSNRSIM2D(SSNRSIM):
 class SSNRSIM3D(SSNRSIM):
     dimensionality = 3
 
+    def __init__(self, illumination: PlaneWavesSIM,
+                 optical_system:OpticalSystems.OpticalSystem,
+                 kernel: np.ndarray=None,
+                 readout_noise_variance:float=0,
+                 effective_otfs={},
+                 effective_kernels_ft={},
+                 save_memory=False, 
+                 illumination_reconstruction=None, 
+                 imperfect_phase_shifts=False
+                 ):
+        
+        if kernel is not None and kernel.ndim == 2:
+            kernel = kernel[..., None]
+
+        super().__init__(illumination=illumination,
+                         optical_system=optical_system,
+                         kernel=kernel,
+                         readout_noise_variance=readout_noise_variance,
+                         effective_otfs=effective_otfs,
+                         effective_kernels_ft=effective_kernels_ft,
+                         save_memory=save_memory,
+                         illumination_reconstruction=illumination_reconstruction,
+                         imperfect_phase_shifts=imperfect_phase_shifts
+                         )
+
+        
     def ssnr_like_sectorial_average(self, number_of_samples=None, mask=None):
         """
         Compute ring avergaged ssnri as <Dj^2> / <Vj> instead of <Dj^2 / Vj>
@@ -736,7 +762,12 @@ class SSNRSIM3D(SSNRSIM):
 
         return np.array(averaged_slices).T
 
-
+    def compute_cut_off_axial(self):
+        fR = self.optical_system.nm * (np.sqrt(1 - np.cos(self.optical_system.alpha)))
+        fourier_peaks_wavevectors = np.array([spatial_wave.wavevector for spatial_wave in self.illumination.waves.values()])
+        fI = np.max(np.array([wavevector[2] ** 2 for wavevector in fourier_peaks_wavevectors])) ** 0.5
+        return fR + fI
+    
     def plot_effective_kernel_and_otf(self, m=(0, (0, 0, 0))):
         fig, ax = plt.subplots(1, 2)
 

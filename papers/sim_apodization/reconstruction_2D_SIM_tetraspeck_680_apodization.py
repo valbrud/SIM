@@ -263,7 +263,7 @@ else:
         peak_search_area_size=21,
         zooming_factor=100,
         max_iterations=2,
-        debug_info_level=2,
+        debug_info_level=1,
         first_order_peaks=False
     )
 

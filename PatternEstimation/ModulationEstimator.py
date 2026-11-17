@@ -30,7 +30,7 @@ import utils
 from Illumination import PlaneWavesSIM
 from OpticalSystems import OpticalSystem
 from utils import off_grid_ft
-
+from copy import deepcopy
 
 class ModulationEstimator:
 	def __init__(self,
@@ -45,13 +45,25 @@ class ModulationEstimator:
 			optical_system=(optical_system, OpticalSystem),
 		)
 		self.optical_system = optical_system
+		# fig, ax, slider = utils.imshow3D(np.log1p(10**4 * np.abs(optical_system.otf)), cmap='gray', vmin=0, vmax=np.log1p(10**4))
+		# plt.show()
 		self.debug_info_level = debug_info_level
 		self.SSNRc = SSNRc
+		self.treat_composite_orders_separately = treat_composite_orders_separately
 
 		if effective_otfs is None:
 			for key in illumination.harmonics:
 				illumination.harmonics[key].amplitude = 1.0
-			_, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
+			if treat_composite_orders_separately and illumination.dimensionality == 3:
+				illumination_split_orders = deepcopy(illumination)
+				illumination_split_orders.dimensions = (1, 1, 1)
+				_, effective_otfs = illumination_split_orders.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
+				# for key, otf in effective_otfs.items():
+				# 	fig, ax, slider = utils.imshow3D(np.log1p(10**4 * np.abs(otf)), cmap='gray', vmin=0, vmax=np.log1p(10**4)	)
+				# 	ax.set_title(f"OTF for key {key}")
+				# 	plt.show()
+			else:
+				_, effective_otfs = illumination.compute_effective_kernels(optical_system.psf, optical_system.psf_coordinates)
 
 		if treat_composite_orders_separately or illumination.dimensionality == 2:
 			self.illumination = illumination
@@ -66,15 +78,15 @@ class ModulationEstimator:
 				f"{self.illumination.dimensionality} != {self.optical_system.dimensionality}"
 			)
 
-	@staticmethod
-	def _as_complex_order(order):
-		if np.iscomplexobj(order):
-			return order
-		if isinstance(order, (tuple, list)) and len(order) == 2:
-			return order[0] + 1j * order[1]
-		if isinstance(order, np.ndarray) and order.ndim > 0 and order.shape[0] == 2 and not np.iscomplexobj(order):
-			return order[0] + 1j * order[1]
-		return np.asarray(order, dtype=np.complex128)
+	# @staticmethod
+	# def _as_complex_order(order):
+	# 	if np.iscomplexobj(order):
+	# 		return order
+	# 	if isinstance(order, (tuple, list)) and len(order) == 2:
+	# 		return order[0] + 1j * order[1]
+	# 	if isinstance(order, np.ndarray) and order.ndim > 0 and order.shape[0] == 2 and not np.iscomplexobj(order):
+	# 		return order[0] + 1j * order[1]
+	# 	return np.asarray(order, dtype=np.complex128)
 
 	def estimate_modulations(self,
 							 stack: np.ndarray | None = None,
@@ -197,6 +209,8 @@ class ModulationPeakHeightRatioEstimator(ModulationEstimator):
 					print(f"ft for key {harmonic}: {ft}")
 					print(f"ft0: {ft0}")
 					print(f"otf_value: {otf_value}")
+					# fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(otf)), cmap='gray', title=f"OTF for key {harmonic}")
+					# plt.show()
 
 				if self.debug_info_level >= 3: 
 					extent = [self.optical_system.q_grid[..., 0].min(), self.optical_system.q_grid[..., 0].max(),
@@ -222,59 +236,148 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 		if spatial_frequency_orders is None:
 			spatial_frequency_orders = self._compute_spatial_frequency_orders(stack)
 		modulations = {}
-		canonical_half = utils.select_up_to_inversion(spatial_frequency_orders.keys())
+		if self.treat_composite_orders_separately:
+			dimensions = self.illumination.dimensions
+			self.illumination.dimensions = (1, 1, 1)
+		canonical_half = utils.select_up_to_inversion(self.effective_otfs.keys())
 
 		for r in range(self.illumination.Mr):
 			m0 = tuple([0] * self.illumination.dimensionality)
-			order0 = self._as_complex_order(spatial_frequency_orders[(r, m0)])
+			order0 = spatial_frequency_orders[(r, m0)]
 			f0 = np.abs(np.amax(np.abs(order0)))
-
+			modulations[(r, m0)] = 1.0
 			for key in canonical_half:
 				if key[0] != r or key == (r, m0):
 					continue
 
-				order = self._as_complex_order(spatial_frequency_orders[key])
-				mask = (self.effective_otfs[key] > 10**-6) * (self.effective_otfs[(r, m0)] > 10**-6)
-				ratio = np.where(mask, order / order0 + 1e-12, 0)
+				if self.treat_composite_orders_separately:
+					r, m = key
+					m_proj = (m[0], m[1], 0)
+					m_neg  = (m[0], m[1], -m[2])
+					order = spatial_frequency_orders[(r, m_proj)]
+					mask = (self.effective_otfs[key] > 10**-4) * (self.effective_otfs[(r, m0)] > 10**-4) * ((self.effective_otfs[(r, m_neg)] < 10**-4) | (m_neg == m))
+				else:
+					order = spatial_frequency_orders[key]
+					mask = (self.effective_otfs[key] > 10**-4) * (self.effective_otfs[(r, m0)] > 10**-4)
+				# ratio = np.where(mask, order / order0 + 1e-12, 0)
 				mask2 = (np.abs(order) > self.SSNRc * f0**0.5) * (np.abs(order0) > self.SSNRc * f0**0.5)
 				mask_total = mask * mask2
-				ratio = np.where(mask2, ratio, 0)
+				# ratio = np.where(mask2, ratio, 0)
 
 				wavevector = self.illumination.harmonics[key].wavevector / 2
+				print(wavevector)
 				phase_modulation_pattern = np.einsum('...l, l->...', self.optical_system.x_grid, wavevector)
 				mask_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(mask_total) * np.exp(-1j * phase_modulation_pattern))
-				ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
-				# plt.imshow(mask_shifted.real, origin='lower')
+				mask_shifted = np.where(np.abs(mask_shifted) > 1e-1, 1, 0)
+				# fig, ax, slider = utils.imshow3D(mask_total, origin='lower', vmin=0, vmax=1)
+				# plt.show()
+				order_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(order) * np.exp(-1j * phase_modulation_pattern)) * mask_shifted
+				order0_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(order0) * np.exp(-1j * phase_modulation_pattern)) * mask_shifted
+				# ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
+				# fig, ax, slider = utils.imshow3D(np.log1p(10** 4 * np.abs(order_shifted)), origin='lower', axis='z', vmin=0, vmax=np.log1p(10**8))
+				# # plt.colorbar()
+				# plt.show()
+				# ratio_shifted_ft = np.where(np.abs(mask_shifted) > 1e-1, ratio_shifted_ft, 0)
+				inverse_product1 = order_shifted * np.flip(order_shifted)
+				# inverse_product1 = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(inverse_product1) * np.exp(1j * phase_modulation_pattern))
+				inverse_product_filtered1 = np.where(np.abs(mask_shifted) > 1e-1, inverse_product1, 0)
+				np.nan_to_num(inverse_product_filtered1, copy=False)
+				variance = np.abs(np.amax(order0))
+				mu_1 = np.abs(order_shifted)**2 
+				mu_2 = np.abs(np.flip(order_shifted))**2
+
+
+				inverse_product2 = order0_shifted * np.flip(order0_shifted)
+				# inverse_product2 = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(inverse_product2) * np.exp(1j * phase_modulation_pattern))
+				inverse_product_filtered2 = np.where(np.abs(mask_shifted) > 1e-1, inverse_product2, 0)
+				np.nan_to_num(inverse_product_filtered2, copy=False)
+				mu_3 = np.abs(order0_shifted)**2 
+				mu_4 = np.abs(np.flip(order0_shifted))**2 
+
+				correction = 1 + variance / 4 * (1/mu_1 + 1 /mu_2 + 1/mu_3 + 1/mu_4)
+				correction *= mask_shifted
+				# plt.imshow(correction, origin='lower')
 				# plt.colorbar()
 				# plt.show()
-				ratio_shifted_ft = np.where(np.abs(mask_shifted) > 1e-1, ratio_shifted_ft, 0)
-				inverse_product = ratio_shifted_ft * np.flip(ratio_shifted_ft)
-				inverse_product_filtered = np.where(np.abs(mask_shifted) > 1e-1, inverse_product, 0)
-				# fig, ax = plt.subplots()
+				# correction = np.abs(hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(correction) * np.exp(1j * phase_modulation_pattern)))
+				# correction*= mask_total
+				# plt.imshow(correction, origin='lower')
+				# plt.colorbar()
+				# plt.show()
+				ratio = np.abs(inverse_product_filtered1 / (inverse_product_filtered2 + 1e-12))
+				ratio *= mask_shifted 
+				# ratio /= (correction + 1e-12)
+				# plt.imshow(ratio, origin='lower')
+				# plt.colorbar()
+				# plt.show()
+				# ratio = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(1j * phase_modulation_pattern))
+				# print(np.sum(np.abs(inverse_product_filtered1[np.abs(inverse_product_filtered1) > 10**-3])), len(inverse_product_filtered1[np.abs(inverse_product_filtered1) > 10**-3]), np.mean(np.abs(inverse_product_filtered1[np.abs(inverse_product_filtered1) > 10**-3])))
 
-				print(np.sum(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])), len(inverse_product[np.abs(inverse_product) > 10**-3]), np.mean(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])))
+				# print("variance", variance, "correction", correction)
+
 				if self.debug_info_level >=2:
-					plt.hist(np.abs(inverse_product[np.abs(inverse_product) > 10**-3])**0.5, bins=100)
-					plt.show()
 					fig, ax = plt.subplots(1, 2)
-					ax[1].imshow(np.abs(inverse_product)**0.5, origin='lower')
-					ax[1].set_title('Inverse Product')
-					plt.colorbar(ax[1].imshow(np.abs(inverse_product)**0.5, origin='lower'))
-					ax[0].imshow(np.abs(ratio_shifted_ft), origin='lower')
-					ax[0].set_title('Shifted Ratio')
+					ax[0].hist(np.abs(ratio[mask_shifted > 0])**0.5, bins=100)
+					ax[0].set_title('Ratio')
+					ax[1].set_title('Ratio corrected')
+					ax[1].hist(np.abs(ratio[mask_shifted > 0]/correction[mask_shifted > 0])**0.5, bins=100)
+					plt.show()
+					fig, ax = plt.subplots(1, 3)
+					if self.illumination.dimensionality == 3:
+						ax[0].imshow(np.abs(inverse_product_filtered1[..., inverse_product_filtered1.shape[-1]//2]), origin='lower')
+						ax[0].set_title('inverse_product1')
+						plt.colorbar(ax[0].imshow(np.abs(inverse_product_filtered1[..., inverse_product_filtered1.shape[-1]//2])	, origin='lower'))
+						ax[1].imshow(np.abs(inverse_product_filtered2[..., inverse_product_filtered2.shape[-1]//2]), origin='lower')
+						ax[1].set_title('Inverse_product2')
+						plt.colorbar(ax[1].imshow(np.abs(inverse_product_filtered2[..., inverse_product_filtered2.shape[-1]//2]), origin='lower'))
+						ax[2].imshow(np.abs(correction[..., ratio.shape[-1]//2]), origin='lower')
+						ax[2].set_title('Correction')
+						plt.colorbar(ax[2].imshow(np.abs(correction[..., ratio.shape[-1]//2]), origin='lower'))
+					else:
+						ax[0].imshow(np.abs(inverse_product_filtered1), origin='lower')
+						ax[0].set_title('inverse_product1')
+						plt.colorbar(ax[0].imshow(np.abs(inverse_product_filtered1), origin='lower'))
+						ax[1].imshow(np.abs(inverse_product_filtered2), origin='lower')
+						ax[1].set_title('Inverse_product2')
+						plt.colorbar(ax[1].imshow(np.abs(inverse_product_filtered2), origin='lower'))
+						ax[2].imshow(np.abs(correction), origin='lower')
+						ax[2].set_title('Correction')
+						plt.colorbar(ax[2].imshow(np.abs(correction), origin='lower', vmin=1, vmax= 2))
 					plt.show()
 
-				modulation_value2 = np.mean(np.abs(inverse_product[np.abs(inverse_product) > 10**-3]))
-				modulation_value = modulation_value2**0.5
-				print(modulation_value2, modulation_value)
-				if np.isnan(modulation_value):
-					modulation_value = 0.0
-				modulations[key] = modulation_value
+				# ratio = np.where(correction < 2, ratio, 0)
+				# mask_acceptance = (correction < 10**3) * (correction != 0)
+				mask_acceptance = ratio >= 10**-4
+				# plt.imshow(np.where(mask_acceptance, 1, 0), origin='lower')
+				# plt.colorbar()
+				# plt.show()
+				# plt.hist(ratio[mask_acceptance]**0.5, bins=1000)
+				# plt.show()
+				N = np.sum(mask_acceptance)
+				# print(key, N)
+				am2 = np.sum(ratio[mask_acceptance])
+				am = (np.abs(am2)/N )**0.5
+				print(key)
+				print("am avg2", am)
+				am = np.mean(ratio[mask_acceptance]**0.5)
+				print('am avg', am)
+				hist, bin_edges = np.histogram(np.abs(ratio[mask_acceptance])**0.5, bins=100, range=(0, 1))
+				max_bin = np.argmax(hist)
+				am = 0.5 * (bin_edges[max_bin] + bin_edges[max_bin + 1])
+				print("am argmax", np.round(am, 3))
+				if np.isnan(am):
+					am = 0.0
+				modulations[key] = am
 				inverse_key = (key[0], tuple(-np.array(key[1])))
 				if inverse_key in self.illumination.harmonics:
-					modulations[inverse_key] = modulation_value
+					modulations[inverse_key] = am
 				if self.debug_info_level:
-					print(key, modulation_value)
+					print(key, np.round(am, 3))
+
+		if self.treat_composite_orders_separately:
+			self.illumination.dimensions = dimensions
+
+		# print("Final modulations:", modulations)
 		return modulations
 
 class ModulationEstimatorNoiseVariance(ModulationEstimator):

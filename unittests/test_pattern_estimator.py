@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 import Apodization
-import hpc_utils
+import hpc_utils, utils
 from Illumination import IlluminationPlaneWaves2D
 from OpticalSystems import System4f2D, System4f3D
 from PatternEstimation.ModulationEstimator import (
@@ -85,7 +85,7 @@ def build_theoretical_illumination_2d():
 def build_experimental_illumination_3d():
     illumination = configurations.get_2_oblique_s_waves_and_s_normal(
         theta3d,
-        0.9,
+        0.3,
         0.5,
         Mr=3,
         angles=(-20 / 180 * np.pi, 40 / 180 * np.pi, 100 / 180 * np.pi),
@@ -97,7 +97,7 @@ def build_experimental_illumination_3d():
 def build_theoretical_illumination_3d():
     illumination = configurations.get_2_oblique_s_waves_and_s_normal(
         theta3d,
-        0.9,
+        0.3,
         0.5,
         Mr=3,
         angles=(-20 / 180 * np.pi, 40 / 180 * np.pi, 100 / 180 * np.pi),
@@ -223,7 +223,16 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         cls.optical_system.otf = np.where(apodization.apodization_function > 1e-16, cls.optical_system.otf, 0)
 
         cls.experimental_illumination = build_experimental_illumination_2d()
+        cls.experimental_illumination.harmonics[(0, (0, 0))].amplitude *= 1
+        cls.experimental_illumination.harmonics[(1, (0, 0))].amplitude *= 2
+        cls.experimental_illumination.harmonics[(2, (0, 0))].amplitude *= 4
+        cls.experimental_illumination.normalize_spatial_waves()
+
         cls.theoretical_illumination = build_theoretical_illumination_2d()
+        cls.theoretical_illumination.harmonics[(0, (0, 0))].amplitude *= 1
+        cls.theoretical_illumination.harmonics[(1, (0, 0))].amplitude *= 2
+        cls.theoretical_illumination.harmonics[(2, (0, 0))].amplitude *= 4
+        cls.theoretical_illumination.normalize_spatial_waves()
         # plt.imshow(np.log1p(10**4 * np.abs(cls.optical_system.otf)), extent=[cls.optical_system.q_grid[0, 0, 0], cls.optical_system.q_grid[-1, -1, 0], cls.optical_system.q_grid[0, 0, 1], cls.optical_system.q_grid[-1, -1, 1]])
         # plt.plot(cls.experimental_illumination.harmonics[0, (2, 0)].wavevector[0] / (2 * np.pi), cls.experimental_illumination.harmonics[0, (2, 0)].wavevector[1] / (2 * np.pi), 'rx')
         # plt.show()
@@ -234,7 +243,7 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         cls.sample = np.array(cls.sample, dtype=np.float32)[80:N+80, 45:N+45]
         cls.sample -= cls.sample.min()
         cls.sample /= cls.sample.max()
-        Nph = 10**2
+        Nph = 10**4
         cls.sample *= Nph
         cls.spatial_shape = cls.sample.shape
         # cls.sample = np.zeros((N, N)) + 10**4
@@ -242,7 +251,9 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         # cls.sample[N // 2 - 12:N // 2 + 13, N // 2] = 10**8
         # plt.imshow(cls.sample, cmap='gray')
         # plt.show()
-        cls.raw_stack = cls.simulator.generate_noisy_sim_images(cls.sample)
+        cls.raw_stack = cls.simulator.generate_noiseless_sim_images(cls.sample)
+        # cls.raw_stack += 1000
+        cls.raw_stack = cls.simulator.add_noise(cls.raw_stack)
         cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape, 12)[None, None, :, :]
         cls.refined_wavevectors = {
             key: harmonic.wavevector for key, harmonic in cls.experimental_illumination.harmonics.items()
@@ -253,7 +264,7 @@ class PatternEstimator3DFixture(PatternEstimatorAssertionsMixin):
     @classmethod
     def setUpClass(cls):
         np.random.seed(1234)
-        N = (65, 65, 9)
+        N = (65, 65, 31)
         max_r = N[0] // 2 * dx
         max_z = N[2] // 2 * dz
         psf_size = 2 * np.array((max_r, max_r, max_z))
@@ -267,19 +278,21 @@ class PatternEstimator3DFixture(PatternEstimatorAssertionsMixin):
         )
         cls.optical_system.compute_psf_and_otf((psf_size, N))
         apodization = Apodization.AutocorrelationApodizationWidefield(cls.optical_system)
-        cls.optical_system.otf = np.where(apodization.apodization_function > 1e-16, cls.optical_system.otf, 0)
-
+        cls.optical_system.otf = np.where(apodization.apodization_function > 1e-3, cls.optical_system.otf, 0)
+        # fig, ax, slider = utils.imshow3D(np.log1p(10**4 * np.abs(cls.optical_system.otf)), cmap='gray', vmin=0, vmax = np.log1p(10**4))
+        # plt.show()
         cls.experimental_illumination = build_experimental_illumination_3d()
         cls.theoretical_illumination = build_theoretical_illumination_3d()
         cls.theoretical_illumination.phase_matrix = copy.deepcopy(cls.experimental_illumination.phase_matrix)
         cls.simulator = SIMulator3D(cls.experimental_illumination, cls.optical_system)
 
-        cls.sample = np.zeros(N) + 10**3
+        cls.sample = np.zeros(N) + 10**1
         cls.spatial_shape = cls.sample.shape
-        cls.sample[N[0] // 2, :, N[2] // 2] = 10**7
-        cls.sample[:, N[1] // 2, N[2] // 2] = 10**7
-        cls.sample[N[0] // 2, N[1] // 2, :] = 10**7
-        cls.sample[N[0] // 2 - 3:N[0] // 2 + 4, N[1] // 2 - 3:N[1] // 2 + 4, N[2] // 2] = 10**7
+        cls.sample[N[0] // 2, :, N[2] // 2] = 10**5
+        cls.sample[:, N[1] // 2, N[2] // 2] = 10**5
+        cls.sample[N[0] // 2, N[1] // 2, :] = 10**5
+        cls.sample[N[0] // 2 - 3:N[0] // 2 + 4, N[1] // 2 - 3:N[1] // 2 + 4, N[2] // 2] = 10**5
+        print('photon count', np.mean(cls.sample))
         cls.raw_stack = cls.simulator.generate_noiseless_sim_images(cls.sample)
         cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape[:2], 50)[None, None, :, :, None]
         cls.refined_wavevectors = {
@@ -352,6 +365,7 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
     def test_modulation_estimation_methods(self):
         for modulation_method in [
             'peak_height_ratio',
+            # 'least_squares', 
               'ratios_inversion',
                 # 'noise_variance'
                 ]:
@@ -367,7 +381,7 @@ class TestPatternEstimator2DMethods(PatternEstimator2DFixture, unittest.TestCase
                     treat_composite_orders_separately_for_modulation=False,
                     debug_info_level=0,
                     modulation_debug_info_level=2,
-                    SSNRc=0.7,
+                    SSNRc=0.01,
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(
@@ -517,7 +531,15 @@ class TestPatternEstimator3DMethods(PatternEstimator3DFixture, unittest.TestCase
                 self.assert_illumination_valid(illumination_estimated, self.theoretical_illumination)
 
     def test_modulation_estimation_methods(self):
-        for modulation_method in ['default', 'least_squares', 'peak_height_ratio', 'ratios_inversion']:
+        for modulation_method in ['default', 
+                                  'least_squares', 
+                                  'peak_height_ratio', 
+                                  'ratios_inversion'
+                                  ]:
+            if modulation_method == 'ratios_inversion':
+                treat_composite_orders_separately_for_modulation = True
+            else:
+                treat_composite_orders_separately_for_modulation = False
             print("3D modulation estimation method:", modulation_method)
             self.print_expected_plot('3D modulation amplitudes only')
             with self.subTest(modulation_method=modulation_method):
@@ -527,9 +549,10 @@ class TestPatternEstimator3DMethods(PatternEstimator3DFixture, unittest.TestCase
                     peak_estimation_method='default',
                     phase_estimation_method='default',
                     modulation_coefficients_method=modulation_method,
-                    treat_composite_orders_separately_for_modulation=True,
-                    debug_info_level=0,
+                    treat_composite_orders_separately_for_modulation=treat_composite_orders_separately_for_modulation,
+                    debug_info_level=1,
                     estimation_strategy='plane_by_plane',
+                    SSNRc=0.1
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(

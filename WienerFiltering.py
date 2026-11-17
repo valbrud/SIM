@@ -81,7 +81,7 @@ def filter_true_wiener_sim(image_ft,
                     average='rings',
                     numeric_noise=10**-7, 
                     mask = None, 
-                    watershed_confidence_interval=20):    
+                    match_high_frequencies=True):    
     """
     Applies a Winer filtering (deconvolution) procedure with a regularization filter
     set up to ensure the best contrast (True Wiener). In the (realistic) case of the unknown
@@ -93,6 +93,7 @@ def filter_true_wiener_sim(image_ft,
         ssnr_calculator: SSNR calculator object.
         average (str): The method of averaging the SSNR for the self consistent estimation
         of the (full) ssnr (default option is ring averaging).
+        match_high_frequencies (bool): Supplementary option to avoid normalization issues at high frequencies beyond the support region; should match the total signal. 
 
     Returns:
         np.ndarray: The filtered image.
@@ -136,8 +137,18 @@ def filter_true_wiener_sim(image_ft,
     # print('total_counts', f0)
     noise_power = vja * np.abs(f0) + image_ft.size * ssnr_calculator.readout_noise_variance**2 * dja
     noise_power_ra = vjra * np.abs(f0) + image_ft.size * ssnr_calculator.readout_noise_variance**2 * djra
- 
+    mask = np.abs(djra) < numeric_noise
+    mask_size = np.sum(mask, axis=(0,))
+    edge = np.min(mask_size)
+    edge_mask = np.zeros_like(mask)
+    edge_mask[-edge:, :] = 1
+    mask *= edge_mask
+    print(mask.shape)
+    plt.imshow(np.where(mask, 1, 0).T, origin='lower', vmin=0, vmax=1)
+    plt.show()
 
+    # plt.plot(mask)
+    # plt.show()
     # if noise_power_ra.ndim == 1:
     #     signal_power_ra = utils.comparative_watershed_filter(np.abs((obj2ra - noise_power_ra )), noise_power_ra)
     # else:
@@ -145,7 +156,16 @@ def filter_true_wiener_sim(image_ft,
     #     for i in range(noise_power_ra.shape[1]):
     #         signal_power_ra[:, i] = utils.comparative_watershed_filter(np.abs((obj2ra[:, i] - noise_power_ra[:, i])), noise_power_ra[:, i])
 
+    if match_high_frequencies:
+        Cn = np.sum(np.where(mask, obj2ra / noise_power_ra, 0), axis=(0, )).real / np.sum(mask, axis=(0, ))
+        print("Mask size", np.sum(mask, axis=(0,)))
+        print("Normalization Cn:", Cn)
+        plt.plot(Cn)
+        plt.show()
+        obj2ra /= Cn
+
     signal_power_ra = np.abs((obj2ra - noise_power_ra))
+
     # plt.plot(np.log1p(np.abs(obj2ra.real)))
     # plt.show()
     ssnr_ra = signal_power_ra / (noise_power_ra + 10 * numeric_noise)
@@ -170,7 +190,7 @@ def filter_true_wiener_sim(image_ft,
         ax[0].legend()
         ax[1].plot(np.log1p(ssnr_ra.real), label='SSNR')
         ax[1].legend()
-        plt.show()
+        # plt.show()
 
 
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
@@ -212,7 +232,8 @@ def filter_true_wiener_sim(image_ft,
     # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 3], cmap='viridis')
     # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 3], cmap='viridis')
     # plt.show()
-
+    # fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(filtered)), axis='x', vmin=0, vmax=np.log1p(10**8), cmap='gray')
+    # plt.show()
     # plt.imshow(np.abs(filtered_image), cmap='gray')
     # plt.show()
 
