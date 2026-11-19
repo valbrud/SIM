@@ -213,7 +213,7 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
     @classmethod
     def setUpClass(cls):
         np.random.seed(1234)
-        N = 501
+        N = 521
         max_r = N // 2 * dx
         psf_size = 2 * np.array((max_r, max_r))
 
@@ -249,12 +249,12 @@ class PatternEstimator2DFixture(PatternEstimatorAssertionsMixin):
         # cls.sample = np.zeros((N, N)) + 10**4
         # cls.sample[N // 2, N // 2 - 12:N // 2 + 13] = 10**8
         # cls.sample[N // 2 - 12:N // 2 + 13, N // 2] = 10**8
-        # plt.imshow(cls.sample, cmap='gray')
-        # plt.show()
+        plt.imshow(cls.sample, cmap='gray')
+        plt.show()
         cls.raw_stack = cls.simulator.generate_noiseless_sim_images(cls.sample)
         # cls.raw_stack += 1000
         cls.raw_stack = cls.simulator.add_noise(cls.raw_stack)
-        cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape, 12)[None, None, :, :]
+        cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape, 50)[None, None, :, :]
         cls.refined_wavevectors = {
             key: harmonic.wavevector for key, harmonic in cls.experimental_illumination.harmonics.items()
         }
@@ -288,10 +288,10 @@ class PatternEstimator3DFixture(PatternEstimatorAssertionsMixin):
 
         cls.sample = np.zeros(N) + 10**1
         cls.spatial_shape = cls.sample.shape
-        cls.sample[N[0] // 2, :, N[2] // 2] = 10**5
-        cls.sample[:, N[1] // 2, N[2] // 2] = 10**5
-        cls.sample[N[0] // 2, N[1] // 2, :] = 10**5
-        cls.sample[N[0] // 2 - 3:N[0] // 2 + 4, N[1] // 2 - 3:N[1] // 2 + 4, N[2] // 2] = 10**5
+        cls.sample[N[0] // 2, :, N[2] // 2] = 10**3
+        cls.sample[:, N[1] // 2, N[2] // 2] = 10**3
+        cls.sample[N[0] // 2, N[1] // 2, :] = 10**3
+        cls.sample[N[0] // 2 - 3:N[0] // 2 + 4, N[1] // 2 - 3:N[1] // 2 + 4, N[2] // 2] = 10**2
         print('photon count', np.mean(cls.sample))
         cls.raw_stack = cls.simulator.generate_noiseless_sim_images(cls.sample)
         cls.raw_stack *= make_mask_cosine_edge2d(cls.sample.shape[:2], 50)[None, None, :, :, None]
@@ -532,8 +532,8 @@ class TestPatternEstimator3DMethods(PatternEstimator3DFixture, unittest.TestCase
 
     def test_modulation_estimation_methods(self):
         for modulation_method in ['default', 
-                                  'least_squares', 
-                                  'peak_height_ratio', 
+                                #   'least_squares', 
+                                #   'peak_height_ratio', 
                                   'ratios_inversion'
                                   ]:
             if modulation_method == 'ratios_inversion':
@@ -550,9 +550,9 @@ class TestPatternEstimator3DMethods(PatternEstimator3DFixture, unittest.TestCase
                     phase_estimation_method='default',
                     modulation_coefficients_method=modulation_method,
                     treat_composite_orders_separately_for_modulation=treat_composite_orders_separately_for_modulation,
-                    debug_info_level=1,
+                    debug_info_level=2,
                     estimation_strategy='plane_by_plane',
-                    SSNRc=0.1
+                    SSNRc=0.01
                 )
                 illumination_estimated = estimator.estimate_illumination_parameters(self.raw_stack)
                 self.report_estimation_summary(

@@ -157,7 +157,7 @@ illumination = pattern_estimator.estimate_illumination_parameters(
     stack, 
     peaks_estimation_method = 'cross_correlation',
     phase_estimation_method = 'autocorrelation',
-    modulation_coefficients_method = 'least_squares',
+    modulation_coefficients_method = 'ratios_inversion',
     peak_search_area_size=31,
     zooming_factor=3, 
     max_iterations=10, 

@@ -709,7 +709,7 @@ class ReconstructorFourierDomain2D6F(ReconstructorFourierDomain2D):
 
         if self.return_ft:
             return reconstructed_ft * self.illumination.Mr * self.illumination.Mt
-        reconstructed_image = np.abs(hpc_utils.wrapped_ifftn(reconstructed_ft))
+        reconstructed_image = hpc_utils.wrapped_ifftn(reconstructed_ft).real
         return reconstructed_image
 
 class ReconstructorSpatialDomain2D(ReconstructorSpatialDomain):

@@ -93,10 +93,10 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                  correct_peak_position: bool = True,
                  first_order_peaks: bool = True,
                  first_order_phases: bool = True,
-                 treat_composite_orders_separately_for_modulation: bool = False,
                  estimation_strategy: str = 'plane_by_plane',
                  reference_expansion: tuple = (1, 0, 1), 
                  SSNRc: float = 0.7,
+                 assume_uniform_shifts=True
                  ):
         utils.validate_init_types(
             illumination=(illumination, PlaneWavesSIM),
@@ -121,10 +121,11 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         self.correct_peak_position = correct_peak_position
         self.first_order_peaks = first_order_peaks
         self.first_order_phases = first_order_phases
-        self.treat_composite_orders_separately_for_modulation = treat_composite_orders_separately_for_modulation
+        self.treat_composite_orders_separately_for_modulation = True if self.modulation_coefficients_method == 'ratios_inversion' else False
         self.estimation_strategy = estimation_strategy
         self.reference_expansion = reference_expansion
         self.SSNRc = SSNRc
+        self.assume_uniform_shifts = assume_uniform_shifts
 
     def estimate_illumination_parameters(
         self,
@@ -195,7 +196,7 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
         if self.phase_estimation_method == 'default':
             phase_matrix = self.illumination.phase_matrix
         else:
-            phase_matrix = self.build_phase_matrix(stack, peaks)
+            phase_matrix = self.build_phase_matrix(stack, peaks)                
 
         if self.phase_debug_info_level:
             phases = {sim_index: np.round(np.angle(phase_matrix[sim_index]) / np.pi * 180, 1) for sim_index in phase_matrix}
@@ -204,11 +205,75 @@ class IlluminationPatternEstimator(metaclass=DimensionMetaAbstract):
                     print('r = ', sim_index[0], 'n = ', sim_index[1], 'm = ', sim_index[2], 'phase = ', phases[sim_index], 'degrees')
 
         illumination_estimated = self.build_illumination_object(rotation_angles, peaks, phase_matrix, self.peak_debug_info_level)
-        
+        if self.assume_uniform_shifts:
+            phase_matrix_old = phase_matrix.copy()
+            spatial_shifts = np.asarray(
+                illumination_estimated.estimate_spatial_shifts_from_phase_matrix()
+            )
+            # spatial_shifts has shape [r, n, shift]. The shifts are wrapped with the period
+            # 2 pi / |k| along the first-order wavevector k, so unwrap before fitting.
+            first_order_peaks = illumination_estimated.filter_first_orders(
+                utils.select_up_to_inversion(illumination_estimated.harmonics)
+            )
+            n_translations = spatial_shifts.shape[1]
+            translation_index = np.arange(n_translations, dtype=float)
+            design = np.column_stack((np.ones_like(translation_index), translation_index))
+            fitted_shifts = np.zeros_like(spatial_shifts)
+
+            for r in range(spatial_shifts.shape[0]):
+                shifts_r = spatial_shifts[r].copy()  # [n, shift]
+                r_peaks = [peak for peak in first_order_peaks if peak[0] == r]
+                active_dims = [d for d in range(shifts_r.shape[-1]) if illumination_estimated.dimensions[d] == 1]
+                for direction in range(shifts_r.shape[-1]):
+                    # The shift is determined only along the in-plane wavevector k, where it wraps
+                    # with period 2 pi / |k|. Its component along an axis therefore wraps with
+                    # period 2 pi |k_axis| / |k|^2 (the period vector 2 pi k / |k|^2).
+                    # Axes with no wavevector component (e.g. z) are left untouched.
+                    periods = []
+                    for peak in r_peaks:
+                        k = np.asarray(peaks[peak], dtype=float)
+                        k_active_sq = sum(k[d] ** 2 for d in active_dims if d < len(k))
+                        if direction < len(k) and abs(k[direction]) > 1e-10 and k_active_sq > 0:
+                            periods.append(2 * np.pi * abs(k[direction]) / k_active_sq)
+                    if periods:
+                        shifts_r[:, direction] = np.unwrap(
+                            shifts_r[:, direction], period=min(periods)
+                        )
+
+                # Fit shifts_r[n, :] = a + m * n, each direction (column) separately.
+                coefficients, *_ = np.linalg.lstsq(design, shifts_r, rcond=None)
+                fitted_shifts[r] = design @ coefficients
+
+            illumination_estimated.spatial_shifts = fitted_shifts
+            phase_matrix_new = illumination_estimated.phase_matrix.copy()
+
+            if self.phase_debug_info_level or self.debug_info_level:
+                phases = {sim_index: np.round(np.angle(illumination_estimated.phase_matrix[sim_index]) / np.pi * 180, 1) for sim_index in phase_matrix}
+                for sim_index in sorted(phases):
+                    if (sim_index[0], sim_index[2]) in mphases:
+                        if sim_index[1] == 0:
+                            print(f'r = {sim_index[0]}, phase (n = 0) = {phases[sim_index]:.2f} degrees')
+                            delta = (phases[sim_index[0], 1, sim_index[2]] - phases[sim_index])
+                            delta = (delta + 180) % 360 - 180
+                            print(f'r = {sim_index[0]}, phase step = {delta:.2f} degrees')
+                            
+                            r, m = sim_index[0], sim_index[2]
+                            phase_differences = [
+                                np.angle(phase_matrix_new[(r, n, m)] * np.conj(phase_matrix_old[(r, n, m)]))
+                                for n in range(Mt)
+                                if (r, n, m) in phase_matrix_old and (r, n, m) in phase_matrix_new
+                            ]
+                            if phase_differences:
+                                phase_std_degrees = np.std(phase_differences) * 180 / np.pi
+                                print(
+                                    f'r = {r}, m = {m}, '
+                                    f'std of (fitted - original) phase = {phase_std_degrees:.2f} degrees'
+                                )
+
         if self.modulation_coefficients_method != 'default':
             am = self.estimate_modulation_coefficients(stack, illumination_estimated)
-            illumination_estimated.update_amplitudes(am)
-            illumination_estimated.normalize_spatial_waves()
+            from_projected = False if self.modulation_coefficients_method == 'ratios_inversion' else True
+            illumination_estimated.update_amplitudes(am, from_projected=from_projected)
 
         if self.modulation_debug_info_level:
             amplitudes, indices = illumination_estimated.get_all_amplitudes()

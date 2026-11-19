@@ -141,11 +141,14 @@ def filter_true_wiener_sim(image_ft,
     mask_size = np.sum(mask, axis=(0,))
     edge = np.min(mask_size)
     edge_mask = np.zeros_like(mask)
-    edge_mask[-edge:, :] = 1
+    if edge_mask.ndim == 2:
+        edge_mask[-edge:, :] = 1
+    elif edge_mask.ndim == 1:
+        edge_mask[-edge:] = 1
     mask *= edge_mask
-    print(mask.shape)
-    plt.imshow(np.where(mask, 1, 0).T, origin='lower', vmin=0, vmax=1)
-    plt.show()
+    # print(mask.shape)
+    # plt.imshow(np.where(mask, 1, 0).T, origin='lower', vmin=0, vmax=1)
+    # plt.show()
 
     # plt.plot(mask)
     # plt.show()
@@ -158,13 +161,15 @@ def filter_true_wiener_sim(image_ft,
 
     if match_high_frequencies:
         Cn = np.sum(np.where(mask, obj2ra / noise_power_ra, 0), axis=(0, )).real / np.sum(mask, axis=(0, ))
-        print("Mask size", np.sum(mask, axis=(0,)))
-        print("Normalization Cn:", Cn)
-        plt.plot(Cn)
-        plt.show()
+        # print("Mask size", np.sum(mask, axis=(0,)))
+        # print("Normalization Cn:", Cn)
+        # plt.plot(Cn)
+        # plt.show()
+        # Cn = np.mean(np.where(mask, obj2ra / noise_power_ra, 0), axis=(0, )).real
+        print(Cn)
         obj2ra /= Cn
 
-    signal_power_ra = np.abs((obj2ra - noise_power_ra))
+    signal_power_ra = np.where(np.abs(obj2ra) > np.abs(noise_power_ra), np.abs((obj2ra - noise_power_ra)), 0)
 
     # plt.plot(np.log1p(np.abs(obj2ra.real)))
     # plt.show()
@@ -232,8 +237,8 @@ def filter_true_wiener_sim(image_ft,
     # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 3], cmap='viridis')
     # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 3], cmap='viridis')
     # plt.show()
-    # fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(filtered)), axis='x', vmin=0, vmax=np.log1p(10**8), cmap='gray')
-    # plt.show()
+    fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(filtered)), axis='x', vmin=0, vmax=np.log1p(10**8), cmap='gray')
+    plt.show()
     # plt.imshow(np.abs(filtered_image), cmap='gray')
     # plt.show()
 

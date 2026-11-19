@@ -274,11 +274,11 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				order_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(order) * np.exp(-1j * phase_modulation_pattern)) * mask_shifted
 				order0_shifted = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(order0) * np.exp(-1j * phase_modulation_pattern)) * mask_shifted
 				# ratio_shifted_ft = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(ratio) * np.exp(-1j * phase_modulation_pattern))
-				# fig, ax, slider = utils.imshow3D(np.log1p(10** 4 * np.abs(order_shifted)), origin='lower', axis='z', vmin=0, vmax=np.log1p(10**8))
+				# fig, ax, slider = utils.imshow3D(np.log1p(10** 4 * np.abs(self.effective_otfs[key])), origin='lower', axis='x', vmin=0, vmax=np.log1p(10**8))
 				# # plt.colorbar()
 				# plt.show()
 				# ratio_shifted_ft = np.where(np.abs(mask_shifted) > 1e-1, ratio_shifted_ft, 0)
-				inverse_product1 = order_shifted * np.flip(order_shifted)
+				inverse_product1 = order_shifted * np.flip(order_shifted).conjugate()
 				# inverse_product1 = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(inverse_product1) * np.exp(1j * phase_modulation_pattern))
 				inverse_product_filtered1 = np.where(np.abs(mask_shifted) > 1e-1, inverse_product1, 0)
 				np.nan_to_num(inverse_product_filtered1, copy=False)
@@ -287,7 +287,7 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				mu_2 = np.abs(np.flip(order_shifted))**2
 
 
-				inverse_product2 = order0_shifted * np.flip(order0_shifted)
+				inverse_product2 = order0_shifted * np.flip(order0_shifted).conjugate()
 				# inverse_product2 = hpc_utils.wrapped_fftn(hpc_utils.wrapped_ifftn(inverse_product2) * np.exp(1j * phase_modulation_pattern))
 				inverse_product_filtered2 = np.where(np.abs(mask_shifted) > 1e-1, inverse_product2, 0)
 				np.nan_to_num(inverse_product_filtered2, copy=False)
@@ -316,12 +316,12 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				# print("variance", variance, "correction", correction)
 
 				if self.debug_info_level >=2:
-					fig, ax = plt.subplots(1, 2)
-					ax[0].hist(np.abs(ratio[mask_shifted > 0])**0.5, bins=100)
-					ax[0].set_title('Ratio')
-					ax[1].set_title('Ratio corrected')
-					ax[1].hist(np.abs(ratio[mask_shifted > 0]/correction[mask_shifted > 0])**0.5, bins=100)
-					plt.show()
+					# fig, ax = plt.subplots(1, 2)
+					# ax[0].hist(np.abs(ratio[mask_shifted > 0])**0.5, bins=100)
+					# ax[0].set_title('Ratio')
+					# ax[1].set_title('Ratio corrected')
+					# ax[1].hist(np.abs(ratio[mask_shifted > 0]/correction[mask_shifted > 0])**0.5, bins=100)
+					# plt.show()
 					fig, ax = plt.subplots(1, 3)
 					if self.illumination.dimensionality == 3:
 						ax[0].imshow(np.abs(inverse_product_filtered1[..., inverse_product_filtered1.shape[-1]//2]), origin='lower')
@@ -362,9 +362,27 @@ class ModulationRatiosInversionEstimator(ModulationEstimator):
 				am = np.mean(ratio[mask_acceptance]**0.5)
 				print('am avg', am)
 				hist, bin_edges = np.histogram(np.abs(ratio[mask_acceptance])**0.5, bins=100, range=(0, 1))
+				if self.debug_info_level >= 2:
+					# plt.hist(np.abs(ratio[mask_acceptance]), bins=300, range=(0, 1))
+					hist_debug = np.histogram(np.abs(ratio[mask_acceptance])**0.5, bins=100, range=(0, 1))
+					plt.figure()
+					plt.bar(bin_edges[:-1], hist_debug[0], width=bin_edges[1]-bin_edges[0])
+					plt.show()
+
 				max_bin = np.argmax(hist)
-				am = 0.5 * (bin_edges[max_bin] + bin_edges[max_bin + 1])
-				print("am argmax", np.round(am, 3))
+				am = bin_edges[max_bin]
+				if hist[max_bin] > 0:
+					start = max(0, min(max_bin - 5, len(hist) - 10))
+					centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+					x = centers[start:start + 10]
+					a, b, _ = np.polyfit(x, hist[start:start + 10], 2)
+					am = centers[max_bin]
+					if a < 0:
+						peak = -b / (2 * a)
+						if x[0] <= peak <= x[-1]:
+							am = peak
+
+				print("am fitted", np.round(am, 3))
 				if np.isnan(am):
 					am = 0.0
 				modulations[key] = am

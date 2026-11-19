@@ -129,8 +129,6 @@ def finite_notch_kernel(kernel_size: int = 0, pixel_size: tuple[float, float] = 
         np.ndarray: Real-space notch-filter kernel.
     """
     notch_kernel_ft= 1 - p * hpc_utils.wrapped_fftn(psf_kernel2d(kernel_size, pixel_size, first_zero_frequency))  
-    # plt.imshow(notch_kernel_ft.real, origin='lower')
-    # plt.show()
     return hpc_utils.wrapped_ifftn(notch_kernel_ft).real
 
 def combined_low_pass_notch_kernel(kernel_size_low_pass: int = 0, kernel_size_notch: int = 0, pixel_size: tuple[float, float] = (1.0, 1.0), first_zero_frequency_low_pass: float = 0., first_zero_frequency_notch: float = 0.):
