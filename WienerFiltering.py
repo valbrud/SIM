@@ -34,7 +34,7 @@ import utils
 import hpc_utils
 from SSNRCalculator import SSNRBase
 
-def filter_constant(image_ft, otf, w):
+def filter_constant(image_ft, otf, w=10**-4):
     """
     Applies a Wiener filtering (deconvolution) procedure with a regularization filter 
     set up to be a constant (standard procedure). The constant can be given or estimated from the image. 
@@ -79,7 +79,7 @@ def filter_true_wiener_sim(image_ft,
                     vja = None, 
                     dja = None,
                     average='rings',
-                    numeric_noise=10**-7, 
+                    numeric_noise=10**-8, 
                     mask = None, 
                     match_high_frequencies=True):    
     """
@@ -168,6 +168,8 @@ def filter_true_wiener_sim(image_ft,
         # Cn = np.mean(np.where(mask, obj2ra / noise_power_ra, 0), axis=(0, )).real
         print(Cn)
         obj2ra /= Cn
+        # image_ft /= Cn
+        # dja /= Cn
 
     signal_power_ra = np.where(np.abs(obj2ra) > np.abs(noise_power_ra), np.abs((obj2ra - noise_power_ra)), 0)
 
@@ -199,32 +201,36 @@ def filter_true_wiener_sim(image_ft,
 
 
     ssnr = np.where(ssnr_calculator.dj > numeric_noise, ssnr, numeric_noise)
-    ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
-    ssnr = np.where(ssnr_calculator.dj < numeric_noise, 0, ssnr)
-
-    
-    w = dja / ssnr 
+    # ssnr = np.where(ssnr_calculator.dj > ssnr_calculator.dj[*center] * 10**(-9), ssnr, numeric_noise)
+    # ssnr = np.where(ssnr_calculator.dj < numeric_noise, 0, ssnr)
+    w = ssnr_calculator.dj / (ssnr)
     shape = image_ft.shape
     if len(shape) == 3: 
-        fig, ax = plt.subplots(1, 3, figsize=(10,5))
-        ax[0].plot(np.log1p(10**8 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
-        ax[1].plot(np.log1p(10**8 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2])
-        ax[2].plot(np.log1p(10**8 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2])
+        fig, ax = plt.subplots(1, 2, figsize=(10,5))
+        ax[0].plot(np.log1p(10**3 * (ssnr))[shape[0]//2:, shape[1]//2, shape[2]//2])
+        ax[0].axhline(np.log1p(10**3 ), color='r', linestyle='--')
+        ax[0].axhline(np.log1p(10**4 ), color='r', linestyle='--')
+        ax[0].axhline(np.log1p(10**5 ), color='r', linestyle='--')
+        ax[1].plot(np.log1p(10**3 * (dja))[shape[0]//2:, shape[1]//2, shape[2]//2], label='Dj')
+        ax[1].plot(np.log1p(10**3 * (w))[shape[0]//2:, shape[1]//2, shape[2]//2], label='w')
+        # ax[1].axhline(np.log1p(10**-4 * 10**3), color='r', linestyle='--')
         ax[0].set_title('SSNR')
-        ax[1].set_title('Dj average')
-        ax[2].set_title('Regularization w')
+        ax[1].set_title('Regularization w and Dj')
+        ax[1].legend()
         # plt.show()
     else: 
-        fig, ax = plt.subplots(1, 3, figsize=(10,5))
+        fig, ax = plt.subplots(1, 2, figsize=(10,5))
         ax[0].plot(np.log1p(ssnr)[shape[0]//2:, shape[1]//2])
         ax[1].plot(np.log1p((dja)[shape[0]//2:, shape[1]//2]))
-        ax[2].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
+        ax[1].plot(np.log1p((w)[shape[0]//2:, shape[1]//2]))    
         ax[0].set_title('SSNR')
-        ax[1].set_title('Dj average')
-        ax[2].set_title('Regularization w')
+        ax[1].set_title('Regularization w and Dj')
         # plt.show()
 
-    w = np.where(ssnr < 1, 10**9, w)
+    w = np.where(ssnr < 0.2, 10**9, w)
+    w = np.where(ssnr_calculator.dj < numeric_noise, 10**9, w)
+    # w[..., :4] = 10**9
+    # w[..., -4:] = 10**9
     # w = noise_power 
     filtered = image_ft  / (ssnr_calculator.dj + w + numeric_noise)
 
@@ -237,8 +243,8 @@ def filter_true_wiener_sim(image_ft,
     # ax[0].imshow(np.log1p(1 + (np.abs(image_ft)))[:, :, 3], cmap='viridis')
     # ax[1].imshow(np.log1p(1 + (np.abs(filtered)))[:, :, 3], cmap='viridis')
     # plt.show()
-    fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(filtered)), axis='x', vmin=0, vmax=np.log1p(10**8), cmap='gray')
-    plt.show()
+    fig, ax, slider = utils.imshow3D(np.log1p(10**8 * np.abs(w)), axis='z', vmin=0, vmax=np.log1p(10**8), cmap='gray')
+    # plt.show()
     # plt.imshow(np.abs(filtered_image), cmap='gray')
     # plt.show()
 
